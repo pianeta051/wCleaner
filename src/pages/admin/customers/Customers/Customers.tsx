@@ -1,14 +1,16 @@
 import { FC, useState } from "react";
 
-import { Button, Paper } from "@mui/material";
 import {
-  Wrapper,
-  Title,
-  New,
-  TableHead,
-  TableData,
+  Button,
+  Paper,
+  Table,
+  TableCell,
+  TableContainer,
+  TableRow,
   TableBody,
-} from "./Customers.style";
+  TableHead,
+} from "@mui/material";
+import { Wrapper, Title, New } from "./Customers.style";
 import { addCustomer, getCustomers } from "../../../../services/customers";
 import { NewCustomerModal } from "../../../../components/Customer/NewCustomerModal/NewCustomerModal";
 import { Customer } from "../../../../types/types";
@@ -39,60 +41,59 @@ export const Customers: FC = () => {
       <Title>Customers</Title>
 
       <Paper elevation={3}>
-        <div>
-          {customers.length === 0 && (
-            <div className="text-center">
-              <h2>No customer found at the moment</h2>
-            </div>
-          )}
-          <div className="container">
-            <div className="row">
-              <table className="table table-bordered">
-                <thead>
-                  <tr>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead>Postcode</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Additinal phone</TableHead>
-                    <TableHead>email</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </tr>
-                </thead>
-                <TableBody>
-                  {customers &&
-                    customers.map((customer) => (
-                      <tr key={customer.url}>
-                        <TableData>
-                          <Link to={customer.url}>{customer.name}</Link>
-                        </TableData>
-                        <TableData>{customer.address}</TableData>
-                        <TableData>{customer.postcode}</TableData>
-                        <TableData>{customer.mainTelephone}</TableData>
-                        <TableData>{customer.secondTelephone}</TableData>
-                        <TableData>{customer.email}</TableData>
-                        <TableData>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div
-                              className="btn-group"
-                              style={{ marginBottom: "20px" }}
-                            >
-                              <Link
-                                to={`edit/${customer.url}`}
-                                className="btn btn-sm btn-outline-secondary"
-                              >
-                                <CreateIcon />{" "}
-                              </Link>
-                            </div>
-                          </div>
-                        </TableData>
-                      </tr>
-                    ))}
-                </TableBody>
-              </table>
-            </div>
+        {customers.length === 0 && (
+          <div className="text-center">
+            <h2>No customer found at the moment</h2>
           </div>
-        </div>
+        )}
+
+        <TableContainer component={Paper}>
+          <Table aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell align="right">Address</TableCell>
+                <TableCell align="right">Postcode</TableCell>
+                <TableCell align="right">Phone</TableCell>
+                <TableCell align="right">Additinal phone</TableCell>
+                <TableCell align="right">Email</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {customers &&
+                customers.map((customer) => (
+                  <TableRow
+                    key={customer.url}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    component="th"
+                    scope="row"
+                  >
+                    <TableCell component="th" scope="row">
+                      <Link to={customer.url}>{customer.name}</Link>
+                    </TableCell>
+                    <TableCell align="right">{customer.address}</TableCell>
+                    <TableCell align="right">{customer.postcode}</TableCell>
+                    <TableCell align="right">
+                      {customer.mainTelephone}
+                    </TableCell>
+                    <TableCell align="right">
+                      {customer.secondTelephone}
+                    </TableCell>
+                    <TableCell align="right">{customer.email}</TableCell>
+                    <TableCell align="right">
+                      <Link
+                        to={`edit/${customer.url}`}
+                        className="btn btn-sm btn-outline-secondary"
+                      >
+                        <CreateIcon />{" "}
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
       <NewCustomerModal
         open={modalOpen}

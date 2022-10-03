@@ -1,9 +1,8 @@
 import { FC, useState } from "react";
 import { Grid, Button } from "@mui/material";
-import { Field } from "./NewCustomerForm.style";
+import { Field, Wrapper, Background, Title } from "./NewCustomerForm.style";
 import { Customer } from "../../../types/types";
 import { Layout } from "../../../pages/authentication/Layout/Layout";
-import { Link, useNavigate } from "react-router-dom";
 
 const INITIAL_VALUES: Customer = {
   name: "",
@@ -82,91 +81,96 @@ export const NewCustomerForm: FC<NewCustomerFormProps> = ({
     setFormValues(INITIAL_VALUES);
   };
   return (
-    <Layout title="New Customer">
-      <form onSubmit={submitHandler}>
-        <Grid container>
-          <Grid item xs={12}>
-            <Field
-              id="name"
-              label="name"
-              type="text"
-              autoFocus
-              required
-              fullWidth
-              onChange={nameChangeHandler}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Field
-              id="address"
-              label="address"
-              type="text"
-              fullWidth
-              onChange={addressChangeHandler}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Field
-              id="postcode"
-              label="postcode"
-              type="text"
-              fullWidth
-              onChange={postcodeChangeHandler}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Field
-              id="mainTelephone"
-              label="mainTelefhone"
-              type="text"
-              fullWidth
-              onChange={mainTelephoneChangeHandler}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Field
-              id="secondTelephone"
-              label="secondTelephone"
-              type="text"
-              fullWidth
-              onChange={secondTelephoneChangeHandler}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Field
-              id="email"
-              label="email"
-              type="email"
-              fullWidth
-              onChange={emailChangeHandler}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              style={{ textTransform: "none" }}
-              fullWidth
-              type="submit"
-            >
-              Submit
-            </Button>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              disableFocusRipple
-              disableRipple
-              style={{ textTransform: "none" }}
-              variant="text"
-              color="primary"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-          </Grid>
+    <Background>
+      <Wrapper container>
+        <Grid item xs={12}>
+          <Title variant="h4">New Customer</Title>
         </Grid>
-      </form>
-    </Layout>
+        <form onSubmit={submitHandler}>
+          <Grid container>
+            <Grid item xs={12}>
+              <Field
+                id="name"
+                label="name"
+                type="text"
+                autoFocus
+                required
+                fullWidth
+                onChange={nameChangeHandler}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Field
+                id="address"
+                label="address"
+                type="text"
+                fullWidth
+                onChange={addressChangeHandler}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Field
+                id="postcode"
+                label="postcode"
+                type="text"
+                fullWidth
+                onChange={postcodeChangeHandler}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Field
+                id="mainTelephone"
+                label="mainTelefhone"
+                type="text"
+                fullWidth
+                onChange={mainTelephoneChangeHandler}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Field
+                id="secondTelephone"
+                label="secondTelephone"
+                type="text"
+                fullWidth
+                onChange={secondTelephoneChangeHandler}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Field
+                id="email"
+                label="email"
+                type="email"
+                fullWidth
+                onChange={emailChangeHandler}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Button
+                variant="contained"
+                color="primary"
+                style={{ textTransform: "none" }}
+                fullWidth
+                type="submit"
+              >
+                Submit
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                disableFocusRipple
+                disableRipple
+                style={{ textTransform: "none" }}
+                variant="text"
+                color="primary"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            </Grid>
+          </Grid>
+        </form>
+      </Wrapper>
+    </Background>
   );
 };
