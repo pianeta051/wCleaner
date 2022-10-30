@@ -73,6 +73,7 @@ export const NewCustomerForm: FC<NewCustomerFormProps> = ({
     setFormValues((formValues) => ({
       ...formValues,
       email: event.target.value,
+      url: event.target.value,
     }));
   };
   const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
@@ -120,7 +121,7 @@ export const NewCustomerForm: FC<NewCustomerFormProps> = ({
             <Grid item xs={12}>
               <Field
                 id="mainTelephone"
-                label="mainTelefhone"
+                label="Main Telephone"
                 type="text"
                 fullWidth
                 onChange={mainTelephoneChangeHandler}
