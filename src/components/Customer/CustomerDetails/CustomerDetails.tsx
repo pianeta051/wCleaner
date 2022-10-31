@@ -37,11 +37,11 @@ export const CustomerDetails: FC = () => {
             <CustomerAttribute>{customer.secondTelephone}</CustomerAttribute>
             <SubTitle>Email: </SubTitle>
             <CustomerAttribute>{customer.email}</CustomerAttribute>
+            <Edit>Edit</Edit>
           </>
         ) : (
-          <NotFound />
+          <NotFound data-testid="not-found-message" />
         )}
-        <Edit>Edit</Edit>
       </Wrapper>
     </Background>
   );
