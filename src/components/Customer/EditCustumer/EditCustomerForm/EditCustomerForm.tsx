@@ -1,28 +1,20 @@
 import { FC, useState } from "react";
 import { Grid, Button } from "@mui/material";
-import { Field, Wrapper, Background, Title } from "./NewCustomerForm.style";
-import { Customer } from "../../../types/types";
-import { Layout } from "../../../pages/authentication/Layout/Layout";
+import { Field, Wrapper, Background, Title } from "./EditCustomerForm.style";
+import { Customer } from "../../../../types/types";
 
-const INITIAL_VALUES: Customer = {
-  name: "",
-  address: "",
-  postcode: "",
-  mainTelephone: "",
-  secondTelephone: "",
-  email: "",
-  url: "",
-};
-type NewCustomerFormProps = {
-  onSubmit: (customer: Customer) => void;
+type EditCustomerFormProps = {
+  onEdit: (customer: Customer) => void;
   onCancel: () => void;
+  customer: Customer;
 };
 
-export const NewCustomerForm: FC<NewCustomerFormProps> = ({
-  onSubmit,
+export const EditCustomerForm: FC<EditCustomerFormProps> = ({
+  onEdit,
   onCancel,
+  customer,
 }) => {
-  const [formValues, setFormValues] = useState<Customer>(INITIAL_VALUES);
+  const [formValues, setFormValues] = useState<Customer>(customer);
 
   const nameChangeHandler: React.ChangeEventHandler<HTMLInputElement> = (
     event
@@ -78,14 +70,13 @@ export const NewCustomerForm: FC<NewCustomerFormProps> = ({
   };
   const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
-    onSubmit(formValues);
-    setFormValues(INITIAL_VALUES);
+    onEdit(formValues);
   };
   return (
     <Background>
       <Wrapper container>
         <Grid item xs={12}>
-          <Title variant="h4">New Customer</Title>
+          <Title variant="h4">Edit Customer</Title>
         </Grid>
         <form onSubmit={submitHandler}>
           <Grid container>
@@ -97,6 +88,7 @@ export const NewCustomerForm: FC<NewCustomerFormProps> = ({
                 autoFocus
                 required
                 fullWidth
+                value={formValues.name}
                 onChange={nameChangeHandler}
               />
             </Grid>
@@ -154,7 +146,7 @@ export const NewCustomerForm: FC<NewCustomerFormProps> = ({
                 fullWidth
                 type="submit"
               >
-                Submit
+                Update
               </Button>
             </Grid>
             <Grid item xs={12}>

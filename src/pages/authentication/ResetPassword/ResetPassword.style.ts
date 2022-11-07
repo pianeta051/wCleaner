@@ -1,6 +1,6 @@
 import { Grid, Paper, styled, TextField, Typography } from "@mui/material";
 
-export const Background = styled(Grid)(({ theme }) => ({
+export const Background = styled(Grid)(() => ({
   justifyContent: "center",
   flexDirection: "row",
   alignItems: "center",

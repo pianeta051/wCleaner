@@ -20,7 +20,7 @@ describe("CustomerDetails", () => {
     );
     const internalErrorMessage = screen.getByTestId("internal-error-message");
     expect(internalErrorMessage).toBeInTheDocument();
-    const notFoundMessage = screen.getByTestId("not-found-message");
+    const notFoundMessage = screen.queryByTestId("not-found-message");
     expect(notFoundMessage).not.toBeInTheDocument();
   });
 

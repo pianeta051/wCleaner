@@ -1,4 +1,4 @@
-import { styled, Grid, Typography, Paper, Button } from "@mui/material";
+import { styled, Grid, Typography, Button } from "@mui/material";
 
 export const Background = styled(Grid)(() => ({
   justifyContent: "center",
@@ -11,7 +11,7 @@ export const CustomerAttribute = styled(Typography)(() => ({
   fontSize: "14px",
   marginBottom: "20px",
 }));
-export const Edit = styled(Button)(() => ({
+export const ButtonEdit = styled(Button)(() => ({
   float: "right",
   marginTop: "20px",
   marginRight: "20px",

@@ -12,25 +12,54 @@ import {
 } from "@mui/material";
 import { Wrapper, Title, New } from "./Customers.style";
 import { addCustomer, getCustomers } from "../../../../services/customers";
-import { NewCustomerModal } from "../../../../components/Customer/NewCustomerModal/NewCustomerModal";
+import { NewCustomerModal } from "../../../../components/Customer/CreateCustumer/NewCustomerModal/NewCustomerModal";
 import { Customer } from "../../../../types/types";
 import { Link } from "react-router-dom";
 import CreateIcon from "@mui/icons-material/Create";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
+import { EditCustomerModal } from "../../../../components/Customer/EditCustumer/EditCustomerModal/EditCustomerModal";
+
+const initialCustomers = getCustomers();
 
 export const Customers: FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
-  const customers = getCustomers();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [customers, setCustomers] = useState(initialCustomers);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+
   const closeHandler = () => {
     setModalOpen(false);
   };
   const openHandler = () => {
     setModalOpen(true);
   };
+  const closeEditHandler = () => {
+    setEditModalOpen(false);
+    setEditingCustomer(null);
+  };
+
+  const openEditHandler = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setEditModalOpen(true);
+  };
+
   const submitHandler = (customer: Customer) => {
     addCustomer(customer);
     setModalOpen(false);
   };
+
+  const editHandler = (editedCustomer: Customer) => {
+    setCustomers((customers) =>
+      customers.map((customer) => {
+        if (customer.id === editedCustomer.id) {
+          return editedCustomer;
+        }
+        return customer;
+      })
+    );
+    setEditModalOpen(false);
+  };
+
   return (
     <Wrapper>
       <New>
@@ -82,12 +111,20 @@ export const Customers: FC = () => {
                     </TableCell>
                     <TableCell align="right">{customer.email}</TableCell>
                     <TableCell align="right">
-                      <Link
+                      <New>
+                        <Button
+                          variant="contained"
+                          onClick={() => openEditHandler(customer)}
+                        >
+                          <CreateIcon />
+                        </Button>
+                      </New>
+                      {/* <Link
                         to={`edit/${customer.url}`}
                         className="btn btn-sm btn-outline-secondary"
                       >
                         <CreateIcon />{" "}
-                      </Link>
+                      </Link> */}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -100,6 +137,14 @@ export const Customers: FC = () => {
         onClose={closeHandler}
         onSubmit={submitHandler}
       />
+      {editingCustomer && (
+        <EditCustomerModal
+          open={editModalOpen}
+          onClose={closeEditHandler}
+          onEdit={editHandler}
+          customer={editingCustomer}
+        />
+      )}
     </Wrapper>
   );
 };

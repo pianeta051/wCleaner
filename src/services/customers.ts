@@ -2,6 +2,7 @@ import { Customer } from "../types/types";
 
 const customers: Customer[] = [
   {
+    id: 1,
     name: "Carlos",
     address: "123 Fake St",
     postcode: "2005",
@@ -11,6 +12,7 @@ const customers: Customer[] = [
     url: "carlos",
   },
   {
+    id: 2,
     name: "John Smith",
     address: "46 Fauna St",
     postcode: "LU65DF",
@@ -20,6 +22,7 @@ const customers: Customer[] = [
     url: "john",
   },
   {
+    id: 3,
     name: "Amalia Rosso",
     address: "87 Tilling St",
     postcode: "MD35PF",
@@ -30,7 +33,16 @@ const customers: Customer[] = [
   },
 ];
 
-export const addCustomer = (customer: Customer) => customers.push(customer);
+export const addCustomer = (customer: Customer) =>
+  customers.push({ ...customer, id: customers.length + 1 });
+
+export const editCustomer = (editedCustomer: Customer) => {
+  customers.findIndex((customer) => {
+    if (customer.url === editedCustomer.url) {
+      customer = editedCustomer;
+    }
+  });
+};
 
 export const getCustomers = () => customers;
 

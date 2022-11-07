@@ -1,6 +1,6 @@
 import { Modal } from "@mui/material";
 import { FC } from "react";
-import { Customer } from "../../../types/types";
+import { Customer } from "../../../../types/types";
 import { NewCustomerForm } from "../NewCustomerForm/NewCustomerForm";
 import { ModalBox } from "./NewCustomerModal.style";
 
