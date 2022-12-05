@@ -10,7 +10,7 @@ import {
   TableBody,
   TableHead,
 } from "@mui/material";
-import { Wrapper, Title, New } from "./Customers.style";
+import { Wrapper, Title, IconButton } from "./Customers.style";
 import { addCustomer, getCustomers } from "../../../../services/customers";
 import { NewCustomerModal } from "../../../../components/Customer/CreateCustumer/NewCustomerModal/NewCustomerModal";
 import { Customer } from "../../../../types/types";
@@ -62,11 +62,11 @@ export const Customers: FC = () => {
 
   return (
     <Wrapper>
-      <New>
+      <IconButton>
         <Button variant="contained" onClick={openHandler}>
           <PersonAddAltIcon />
         </Button>
-      </New>
+      </IconButton>
       <Title>Customers</Title>
 
       <Paper elevation={3}>
@@ -95,8 +95,6 @@ export const Customers: FC = () => {
                   <TableRow
                     key={customer.url}
                     sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                    component="th"
-                    scope="row"
                   >
                     <TableCell component="th" scope="row">
                       <Link to={customer.url}>{customer.name}</Link>
@@ -111,20 +109,15 @@ export const Customers: FC = () => {
                     </TableCell>
                     <TableCell align="right">{customer.email}</TableCell>
                     <TableCell align="right">
-                      <New>
+                      <IconButton>
                         <Button
+                          id="edit-button"
                           variant="contained"
                           onClick={() => openEditHandler(customer)}
                         >
                           <CreateIcon />
                         </Button>
-                      </New>
-                      {/* <Link
-                        to={`edit/${customer.url}`}
-                        className="btn btn-sm btn-outline-secondary"
-                      >
-                        <CreateIcon />{" "}
-                      </Link> */}
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))}

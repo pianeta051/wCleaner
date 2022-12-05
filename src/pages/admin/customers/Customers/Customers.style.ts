@@ -2,7 +2,7 @@ import { styled, Grid, Typography, List } from "@mui/material";
 import { Link } from "react-router-dom";
 import styledComponents from "styled-components";
 
-export const New = styledComponents.div`
+export const IconButton = styledComponents.div`
   float: right;
   margin-top: 20px;
   margin-right: 20px;

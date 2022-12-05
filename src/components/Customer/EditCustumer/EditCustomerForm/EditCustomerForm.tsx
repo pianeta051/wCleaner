@@ -98,6 +98,7 @@ export const EditCustomerForm: FC<EditCustomerFormProps> = ({
                 label="address"
                 type="text"
                 fullWidth
+                value={formValues.address}
                 onChange={addressChangeHandler}
               />
             </Grid>
@@ -107,6 +108,7 @@ export const EditCustomerForm: FC<EditCustomerFormProps> = ({
                 label="postcode"
                 type="text"
                 fullWidth
+                value={formValues.postcode}
                 onChange={postcodeChangeHandler}
               />
             </Grid>
@@ -116,6 +118,7 @@ export const EditCustomerForm: FC<EditCustomerFormProps> = ({
                 label="Main Telephone"
                 type="text"
                 fullWidth
+                value={formValues.mainTelephone}
                 onChange={mainTelephoneChangeHandler}
               />
             </Grid>
@@ -125,6 +128,7 @@ export const EditCustomerForm: FC<EditCustomerFormProps> = ({
                 label="secondTelephone"
                 type="text"
                 fullWidth
+                value={formValues.secondTelephone}
                 onChange={secondTelephoneChangeHandler}
               />
             </Grid>
@@ -134,6 +138,7 @@ export const EditCustomerForm: FC<EditCustomerFormProps> = ({
                 label="email"
                 type="email"
                 fullWidth
+                value={formValues.email}
                 onChange={emailChangeHandler}
               />
             </Grid>

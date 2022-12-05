@@ -90,6 +90,7 @@ export const NewCustomerForm: FC<NewCustomerFormProps> = ({
           <Grid container>
             <Grid item xs={12}>
               <Field
+                name="name"
                 id="name"
                 label="name"
                 type="text"
@@ -97,51 +98,62 @@ export const NewCustomerForm: FC<NewCustomerFormProps> = ({
                 required
                 fullWidth
                 onChange={nameChangeHandler}
+                value={formValues.name}
               />
             </Grid>
             <Grid item xs={12}>
               <Field
+                name="address"
                 id="address"
                 label="address"
                 type="text"
                 fullWidth
                 onChange={addressChangeHandler}
+                value={formValues.address}
               />
             </Grid>
             <Grid item xs={12}>
               <Field
+                name="postcode"
                 id="postcode"
                 label="postcode"
                 type="text"
                 fullWidth
                 onChange={postcodeChangeHandler}
+                value={formValues.postcode}
               />
             </Grid>
             <Grid item xs={12}>
               <Field
+                name="mainTelephone"
                 id="mainTelephone"
                 label="Main Telephone"
                 type="text"
                 fullWidth
                 onChange={mainTelephoneChangeHandler}
+                value={formValues.mainTelephone}
               />
             </Grid>
             <Grid item xs={12}>
               <Field
+                name="secondTelephone"
                 id="secondTelephone"
                 label="secondTelephone"
                 type="text"
                 fullWidth
                 onChange={secondTelephoneChangeHandler}
+                value={formValues.secondTelephone}
               />
             </Grid>
             <Grid item xs={12}>
               <Field
+                name="email"
                 id="email"
                 label="email"
                 type="email"
                 fullWidth
                 onChange={emailChangeHandler}
+                value={formValues.email}
               />
             </Grid>
 

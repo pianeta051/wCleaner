@@ -30,7 +30,9 @@
     "eject": "react-scripts eject",
     "lint": "eslint ./src/**/*.{ts,tsx} --fix",
     "format": "prettier --write .",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "eslintConfig": {
     "extends": [
@@ -55,6 +57,7 @@
     "@types/styled-components": "^5.1.26",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
+    "cypress": "^11.1.0",
     "eslint": "^8.17.0",
     "eslint-plugin-react": "^7.30.0",
     "husky": "^8.0.1",
