@@ -11,14 +11,13 @@ import {
   TableHead,
 } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./Customers.style";
-import { addCustomer, getCustomers } from "../../../../services/customers";
-import { NewCustomerModal } from "../../../../components/Customer/CreateCustumer/NewCustomerModal/NewCustomerModal";
+import { getCustomers } from "../../../../services/customers";
 import { Customer } from "../../../../types/types";
 import { Link } from "react-router-dom";
 import CreateIcon from "@mui/icons-material/Create";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
-import { EditCustomerModal } from "../../../../components/Customer/EditCustumer/EditCustomerModal/EditCustomerModal";
-
+import { EditCustomerModal } from "../../../../components/Customer/EditCustomer/EditCustomerModal/EditCustomerModal";
+import { NewCustomerModal } from "../../../../components/Customer/CreateCustomer/NewCustomerModal/NewCustomerModal";
 const initialCustomers = getCustomers();
 
 export const Customers: FC = () => {
@@ -26,6 +25,10 @@ export const Customers: FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [customers, setCustomers] = useState(initialCustomers);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+
+  const addCustomer = (customer: Customer) => {
+    setCustomers((customers) => [...customers, customer]);
+  };
 
   const closeHandler = () => {
     setModalOpen(false);
@@ -84,7 +87,7 @@ export const Customers: FC = () => {
                 <TableCell align="right">Address</TableCell>
                 <TableCell align="right">Postcode</TableCell>
                 <TableCell align="right">Phone</TableCell>
-                <TableCell align="right">Additinal phone</TableCell>
+                <TableCell align="right">Additional phone</TableCell>
                 <TableCell align="right">Email</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>

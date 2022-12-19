@@ -1,13 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { NewCustomerForm } from "./NewCustomerForm";
+import { CustomerForm } from "./CustomerForm";
 import userEvent from "@testing-library/user-event";
 
-describe("NewCustomerForm", () => {
+describe("CustomerForm", () => {
   it("calls onCancel when clicking on the cancel button", async () => {
     const user = userEvent.setup();
     const onSubmit = jest.fn();
     const onCancel = jest.fn();
-    render(<NewCustomerForm onSubmit={onSubmit} onCancel={onCancel} />);
+    render(<CustomerForm onSubmit={onSubmit} onCancel={onCancel} />);
     const cancelButton = screen.getByText("Cancel", {
       selector: "button",
     });
@@ -22,8 +22,8 @@ describe("NewCustomerForm", () => {
     const user = userEvent.setup();
     const onSubmit = jest.fn();
     const onCancel = jest.fn();
-    render(<NewCustomerForm onSubmit={onSubmit} onCancel={onCancel} />);
-    const submitButton = screen.getByText("Submit", {
+    render(<CustomerForm onSubmit={onSubmit} onCancel={onCancel} />);
+    const submitButton = screen.getByText("Save", {
       selector: "button",
     });
     user.click(submitButton);
@@ -47,9 +47,9 @@ describe("NewCustomerForm", () => {
     const onSubmit = jest.fn();
     const onCancel = jest.fn();
     jest.setTimeout(60000);
-    render(<NewCustomerForm onSubmit={onSubmit} onCancel={onCancel} />);
+    render(<CustomerForm onSubmit={onSubmit} onCancel={onCancel} />);
 
-    const submitButton = screen.getByText("Submit", {
+    const submitButton = screen.getByText("Save", {
       selector: "button",
     });
     await user.type(screen.getByLabelText(/name/i), "Maria Beltran");
@@ -72,4 +72,8 @@ describe("NewCustomerForm", () => {
       })
     );
   }, 60_000);
+
+  it.todo("displays an empty form, when no initial values are provided");
+
+  it.todo("displays the initial values when provided");
 });

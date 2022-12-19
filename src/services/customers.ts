@@ -1,3 +1,4 @@
+import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
 import { Customer } from "../types/types";
 
 const customers: Customer[] = [
@@ -33,15 +34,45 @@ const customers: Customer[] = [
   },
 ];
 
-export const addCustomer = (customer: Customer) =>
-  customers.push({ ...customer, id: customers.length + 1 });
+const sleep = async (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-export const editCustomer = (editedCustomer: Customer) => {
-  customers.findIndex((customer) => {
-    if (customer.url === editedCustomer.url) {
-      customer = editedCustomer;
-    }
-  });
+const generateUrl = (email: string): string => {
+  return email.split("@")[0];
+};
+
+export const addCustomer = async (formValues: CustomerFormValues) => {
+  await sleep(2000);
+  const customer: Customer = {
+    ...formValues,
+    id: customers.length + 1,
+    url: generateUrl(formValues.email),
+  };
+  if (
+    customers.find((existingCustomer) => existingCustomer.url === customer.url)
+  ) {
+    throw "The URL cannot be duplicated";
+  }
+  customers.push(customer);
+  return customer;
+};
+
+export const editCustomer = async (
+  formValues: CustomerFormValues,
+  id: number
+) => {
+  await sleep(2000);
+  const customerIndex = customers.findIndex((customer) => customer.id === id);
+  if (customerIndex === -1) {
+    throw "The customer does not exist";
+  }
+  const newCustomer = {
+    ...formValues,
+    id: customers[customerIndex].id,
+    url: generateUrl(formValues.email),
+  };
+  customers[customerIndex] = newCustomer;
+  return newCustomer;
 };
 
 export const getCustomers = () => customers;

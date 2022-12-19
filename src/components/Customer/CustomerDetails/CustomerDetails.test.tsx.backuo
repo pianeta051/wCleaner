@@ -46,6 +46,7 @@ describe("CustomerDetails", () => {
       secondTelephone: "+36544",
       email: "amalia@fake.com",
       url: "amalia",
+      id: 1,
     };
     jest.mocked(getCustomer).mockReturnValue(customer);
     render(
@@ -75,6 +76,7 @@ describe("CustomerDetails", () => {
       secondTelephone: "+36544",
       email: "amalia@fake.com",
       url: "amalia",
+      id: 1,
     };
     jest.mocked(getCustomer).mockReturnValue(customer);
     render(
