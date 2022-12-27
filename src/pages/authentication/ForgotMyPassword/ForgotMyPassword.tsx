@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { Grid, Button } from "@mui/material";
+import { Grid, Button, Alert, Typography } from "@mui/material";
 import { Field } from "./ForgotMyPassword.style";
 import { Layout } from "../Layout/Layout";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,6 +20,8 @@ export const ForgotMyPassword: FC = () => {
   const [formData, setFormData] = useState(FORM_VALUES_DEFAULTS);
   const [loading, setLoading] = useState(false);
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
+  const [success, setSuccess] = useState(false);
+
   const navigate = useNavigate();
   const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
@@ -28,7 +30,7 @@ export const ForgotMyPassword: FC = () => {
     resetPassword(formData.email)
       .then(() => {
         setLoading(false);
-        navigate("/reset-password");
+        setSuccess(true);
       })
       .catch((error) => {
         setLoading(false);
@@ -51,49 +53,58 @@ export const ForgotMyPassword: FC = () => {
       title="Reset Password"
       subtitle="Enter your email address below and we will send you a link to reset your password"
     >
-      <form onSubmit={submitHandler}>
-        <Grid container>
-          <Grid item xs={12}>
-            <Field
-              id="email"
-              label="Email address"
-              type="email"
-              name="email"
-              autoFocus
-              required
-              fullWidth
-              onChange={changeHandler}
-              value={formData.email}
-            />
-          </Grid>
+      {" "}
+      {success ? (
+        <Alert severity="success">
+          <Typography variant="h5">We&apos;ve sent you an email</Typography>
+          <Typography>Check your inbox to reset your password</Typography>
+          <Link to="/log-in">Go to login</Link>
+        </Alert>
+      ) : (
+        <form onSubmit={submitHandler}>
+          <Grid container>
+            <Grid item xs={12}>
+              <Field
+                id="email"
+                label="Email address"
+                type="email"
+                name="email"
+                autoFocus
+                required
+                fullWidth
+                onChange={changeHandler}
+                value={formData.email}
+              />
+            </Grid>
 
-          <Grid item xs={12}>
-            <LoadingButton
-              type="submit"
-              fullWidth
-              variant="contained"
-              color="primary"
-              loading={loading}
-            >
-              Reset
-            </LoadingButton>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Link to="/log-in">
-              <Button
-                disableFocusRipple
-                disableRipple
-                style={{ textTransform: "none" }}
-                variant="text"
+            <Grid item xs={12}>
+              <LoadingButton
+                type="submit"
+                fullWidth
+                variant="contained"
                 color="primary"
+                loading={loading}
               >
-                Log In
-              </Button>
-            </Link>
+                Reset
+              </LoadingButton>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Link to="/log-in">
+                <Button
+                  disableFocusRipple
+                  disableRipple
+                  style={{ textTransform: "none" }}
+                  variant="text"
+                  color="primary"
+                >
+                  Log In
+                </Button>
+              </Link>
+            </Grid>
           </Grid>
-        </Grid>
-      </form>
+        </form>
+      )}
       {errorCode && <ErrorMessage code={errorCode} />}
     </Layout>
   );
