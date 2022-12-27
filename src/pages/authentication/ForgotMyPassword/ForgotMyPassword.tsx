@@ -3,22 +3,43 @@ import { Grid, Button } from "@mui/material";
 import { Field } from "./ForgotMyPassword.style";
 import { Layout } from "../Layout/Layout";
 import { Link, useNavigate } from "react-router-dom";
+import { ErrorCode, isErrorCode } from "../../../services/error";
+import { resetPassword } from "../../../services/authentication";
+import { LoadingButton } from "@mui/lab";
+import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
 
 type ForgotMyPasswordFormData = {
   email: string;
 };
 
-const FORM_VALUES_DEFAULS: ForgotMyPasswordFormData = {
+const FORM_VALUES_DEFAULTS: ForgotMyPasswordFormData = {
   email: "",
 };
 
 export const ForgotMyPassword: FC = () => {
-  const [formData, setFormData] = useState(FORM_VALUES_DEFAULS);
+  const [formData, setFormData] = useState(FORM_VALUES_DEFAULTS);
+  const [loading, setLoading] = useState(false);
+  const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
   const navigate = useNavigate();
   const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
-    navigate("/log-in");
+    setErrorCode(null);
+    setLoading(true);
+    resetPassword(formData.email)
+      .then(() => {
+        setLoading(false);
+        navigate("/reset-password");
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (isErrorCode(error)) {
+          setErrorCode(error);
+        } else {
+          setErrorCode("INTERNAL_ERROR");
+        }
+      });
   };
+
   const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     setFormData((formData) => ({
       ...formData,
@@ -47,15 +68,15 @@ export const ForgotMyPassword: FC = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <Button
+            <LoadingButton
+              type="submit"
+              fullWidth
               variant="contained"
               color="primary"
-              style={{ textTransform: "none" }}
-              fullWidth
-              type="submit"
+              loading={loading}
             >
-              Reset Password
-            </Button>
+              Reset
+            </LoadingButton>
           </Grid>
 
           <Grid item xs={12}>
@@ -73,6 +94,7 @@ export const ForgotMyPassword: FC = () => {
           </Grid>
         </Grid>
       </form>
+      {errorCode && <ErrorMessage code={errorCode} />}
     </Layout>
   );
 };
