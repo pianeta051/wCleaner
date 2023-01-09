@@ -7,6 +7,10 @@ import { NotFound } from "../../pages/NotFound/NotFound";
 import { AdminLayout } from "../AdminLayout/AdminLayout";
 import { CustomerDetails } from "../Customer/CustomerDetails/CustomerDetails";
 import { Customers } from "../../pages/admin/customers/Customers/Customers";
+import { SetPassword } from "../../pages/authentication/SetPassword/SetPassword";
+import { UsersPage } from "../../pages/admin/users/Users/Users";
+import { ProfilePage } from "../../pages/admin/users/Profile/Profile";
+import { CreateUserPage } from "../../pages/admin/users/CreateUser/CreateUser";
 
 export const AppRoutes: FC = () => {
   return (
@@ -16,11 +20,18 @@ export const AppRoutes: FC = () => {
         <Route path="log-in" element={<Login />} />
         <Route path="forgot-password" element={<ForgotMyPassword />} />
         <Route path="reset-password" element={<ResetPassword />} />
+        <Route path="set-password" element={<SetPassword />} />
+
         <Route path="admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="customers" />} />
           <Route path="customers">
             <Route index element={<Customers />} />
             <Route path=":url" element={<CustomerDetails />} />
+          </Route>
+          <Route path="users">
+            <Route index element={<UsersPage />} />
+            <Route path="create" element={<CreateUserPage />} />
+            <Route path="me" element={<ProfilePage />} />
           </Route>
         </Route>
 

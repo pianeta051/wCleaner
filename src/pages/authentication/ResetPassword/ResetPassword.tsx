@@ -1,3 +1,4 @@
+import { LoadingButton } from "@mui/lab";
 import { FC, useState } from "react";
 import { Grid, Button } from "@mui/material";
 import {
@@ -7,22 +8,44 @@ import {
   Wrapper,
   Background,
 } from "./ResetPassword.style";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ErrorCode, isErrorCode } from "../../../services/error";
+import { resetPassword } from "../../../services/authentication";
+import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
 
 type ResetPasswordFormData = {
   new_password: string;
   repeat_password: string;
 };
 
-const FORM_VALUES_DEFAULS: ResetPasswordFormData = {
+const FORM_VALUES_DEFAULTS: ResetPasswordFormData = {
   new_password: "",
   repeat_password: "",
 };
 
 export const ResetPassword: FC = () => {
-  const [formData, setFormData] = useState(FORM_VALUES_DEFAULS);
+  const [formData, setFormData] = useState(FORM_VALUES_DEFAULTS);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ErrorCode | null>(null);
+  const navigate = useNavigate();
+
   const submitHandler: React.FormEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
+    setLoading(true);
+    setError(null);
+    resetPassword("user1@fake.email")
+      .then(() => {
+        setLoading(false);
+        navigate("/log-in");
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (isErrorCode(error.message)) {
+          setError(error.message);
+        } else {
+          setError("INTERNAL_ERROR");
+        }
+      });
   };
   const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     setFormData((formData) => ({
@@ -62,14 +85,15 @@ export const ResetPassword: FC = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <Button
+                <LoadingButton
+                  type="submit"
+                  fullWidth
                   variant="contained"
                   color="primary"
-                  style={{ textTransform: "none" }}
-                  fullWidth
+                  loading={loading}
                 >
-                  Save
-                </Button>
+                  Reset Password
+                </LoadingButton>
               </Grid>
 
               <Grid item xs={12}>
@@ -81,12 +105,13 @@ export const ResetPassword: FC = () => {
                     variant="text"
                     color="primary"
                   >
-                    Login
+                    Log In
                   </Button>
                 </Link>
               </Grid>
             </Grid>
           </FormPaper>
+          {error && <ErrorMessage code={error} />}
         </Grid>
       </Wrapper>
     </Background>

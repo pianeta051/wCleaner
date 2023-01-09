@@ -42,12 +42,17 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
-  if (code === "EMAIL_NOT_REGISTERED") {
+  if (code === "DUPLICATED_USER") {
     return (
       <Alert severity="error">
-        <Typography>
-          The email is not registered. Please contact the system administrator
-        </Typography>
+        <Typography>User already exists!</Typography>
+      </Alert>
+    );
+  }
+  if (code === "INVALID_PASSWORD") {
+    return (
+      <Alert severity="error">
+        <Typography>Invalid Password</Typography>
       </Alert>
     );
   }

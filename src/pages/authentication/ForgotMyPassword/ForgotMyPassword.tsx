@@ -2,7 +2,7 @@ import { FC, useState } from "react";
 import { Grid, Button, Alert, Typography } from "@mui/material";
 import { Field } from "./ForgotMyPassword.style";
 import { Layout } from "../Layout/Layout";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ErrorCode, isErrorCode } from "../../../services/error";
 import { resetPassword } from "../../../services/authentication";
 import { LoadingButton } from "@mui/lab";
@@ -22,7 +22,6 @@ export const ForgotMyPassword: FC = () => {
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const navigate = useNavigate();
   const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
     setErrorCode(null);
@@ -53,7 +52,6 @@ export const ForgotMyPassword: FC = () => {
       title="Reset Password"
       subtitle="Enter your email address below and we will send you a link to reset your password"
     >
-      {" "}
       {success ? (
         <Alert severity="success">
           <Typography variant="h5">We&apos;ve sent you an email</Typography>
