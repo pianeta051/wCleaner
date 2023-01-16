@@ -21,7 +21,7 @@ export const CreateUserPage: FC = () => {
     createUser(formValues.email, formValues.password)
       .then(() => {
         setLoading(false);
-        navigate("/users");
+        navigate("/admin/users/");
       })
       .catch((error) => {
         console.error(error);

@@ -56,6 +56,12 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
-
+  if (code === "CUSTOMER_ALREADY_EXISTS") {
+    return (
+      <Alert severity="error">
+        <Typography>Already customer registered with this email.</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

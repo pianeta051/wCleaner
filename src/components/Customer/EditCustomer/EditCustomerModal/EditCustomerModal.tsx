@@ -6,7 +6,7 @@ import {
   Background,
   Wrapper,
   Title,
-} from "./EditCustomerModal.style";
+} from "../../CustomerForm/CustomerForm.style";
 import { Grid } from "@mui/material";
 import {
   CustomerForm,
@@ -55,12 +55,12 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
       aria-describedby="Editing customer"
     >
       <ModalBox>
+        <Wrapper container>
+          <Grid item xs={12}>
+            <Title variant="h4">Edit Customer</Title>
+          </Grid>
+        </Wrapper>
         <Background>
-          <Wrapper container>
-            <Grid item xs={12}>
-              <Title variant="h4">Edit Customer</Title>
-            </Grid>
-          </Wrapper>
           <CustomerForm
             onCancel={onClose}
             onSubmit={submitHandler}

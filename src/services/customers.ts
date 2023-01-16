@@ -42,17 +42,24 @@ const generateUrl = (email: string): string => {
 };
 
 export const addCustomer = async (formValues: CustomerFormValues) => {
-  await sleep(2000);
-  const customer: Customer = {
-    ...formValues,
-    id: customers.length + 1,
-    url: generateUrl(formValues.email),
-  };
-  if (
-    customers.find((existingCustomer) => existingCustomer.url === customer.url)
-  ) {
-    throw "The URL cannot be duplicated";
+  await sleep(1000);
+  const existingCustomer = customers.find(
+    (customer) => customer.email === formValues.email
+  );
+  if (existingCustomer) {
+    throw "CUSTOMER_ALREADY_EXISTS";
   }
+
+  const customer: Customer = {
+    id: customers.length + 1,
+    name: formValues.name,
+    address: formValues.email,
+    postcode: formValues.postcode,
+    mainTelephone: formValues.mainTelephone,
+    secondTelephone: formValues.secondTelephone,
+    email: formValues.email,
+    url: formValues.email.split("@")[0],
+  };
   customers.push(customer);
   return customer;
 };
@@ -75,7 +82,10 @@ export const editCustomer = async (
   return newCustomer;
 };
 
-export const getCustomers = () => customers;
+export const getCustomers = async () => {
+  await sleep(1000);
+  return [...customers];
+};
 
 export const getCustomer = (url?: string) => {
   const customer = customers.find((customer) => {
@@ -88,4 +98,15 @@ export const getCustomer = (url?: string) => {
     return null;
   }
   return customer;
+};
+
+const findByEmail = (email: string) =>
+  customers.find((customer) => customer.email === email);
+
+export const customerExists = async (email: string) => {
+  await sleep(1000);
+  const customer = findByEmail(email);
+  if (customer) {
+    throw "CUSTOMER_ALREADY_EXISTS";
+  }
 };

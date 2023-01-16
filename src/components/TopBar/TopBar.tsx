@@ -6,8 +6,6 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import Switch from "@mui/material/Switch";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
 import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
@@ -19,12 +17,8 @@ const pages = [
   { label: "users", url: "/admin/users" },
 ];
 export const TopBar: FC = () => {
-  const [auth, setAuth] = useState(true);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setAuth(event.target.checked);
-  };
   const openUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -52,19 +46,8 @@ export const TopBar: FC = () => {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <FormGroup>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={auth}
-              onChange={handleChange}
-              aria-label="login switch"
-            />
-          }
-          label={auth ? "Logout" : "Login"}
-        />
-      </FormGroup>
-      <AppBar position="static">
+      <FormGroup></FormGroup>
+      <AppBar position="fixed">
         <Toolbar>
           <IconButton
             size="large"
@@ -85,7 +68,7 @@ export const TopBar: FC = () => {
               </MenuButton>
             ))}
           </Box>
-          {auth && (
+          {
             <div>
               <IconButton
                 size="large"
@@ -116,9 +99,10 @@ export const TopBar: FC = () => {
                 <MenuItem onClick={logOut}>Log out</MenuItem>
               </Menu>
             </div>
-          )}
+          }
         </Toolbar>
       </AppBar>
+      <Toolbar />
     </Box>
   );
 };

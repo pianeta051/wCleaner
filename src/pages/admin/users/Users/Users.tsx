@@ -11,7 +11,7 @@ export const UsersPage: FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const navigate = useNavigate();
 
-  const toCreateUser = () => navigate("/users/create");
+  const toCreateUser = () => navigate("/admin/users/create");
 
   useEffect(() => {
     if (loading) {

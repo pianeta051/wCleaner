@@ -1,8 +1,8 @@
 import { FC, useState } from "react";
 import { Button, Grid } from "@mui/material";
 import { Field } from "./CustomerForm.style";
-import { Alert } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
+import { Form } from "../../Form/Form";
 
 export type CustomerFormValues = {
   name: string;
@@ -34,27 +34,23 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   onSubmit,
   onCancel,
   initialValues = INITIAL_VALUES,
-  errorMessage = "",
   loading = false,
 }) => {
-  const [formValues, setFormValues] =
-    useState<CustomerFormValues>(initialValues);
-
+  const [formValues, setFormValues] = useState(initialValues);
   const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     setFormValues((formValues) => ({
       ...formValues,
       [event.target.name]: event.target.value,
     }));
   };
-
-  const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
-    onSubmit(formValues);
+  const submitHandler = () => {
+    if (onSubmit && formValues.email) {
+      onSubmit(formValues);
+    }
   };
 
   return (
-    <form onSubmit={submitHandler}>
-      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+    <Form onSubmit={submitHandler}>
       <Grid container>
         <Grid item xs={12}>
           <Field
@@ -150,6 +146,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           </Button>
         </Grid>
       </Grid>
-    </form>
+    </Form>
   );
 };

@@ -4,6 +4,7 @@ import { styled } from "@mui/system";
 export const Bar = styled(Toolbar)(() => ({
   display: "flex",
   justifyContent: "space-between",
+  position: "fixed",
 }));
 
 export const Logo = styled(Typography)(({ theme }) => ({

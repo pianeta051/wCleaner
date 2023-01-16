@@ -8,8 +8,10 @@ export const Background = styled(Paper)(() => ({
 }));
 
 export const Wrapper = styled(Grid)(() => ({
-  width: "80%",
-  height: "80%",
+  width: "100%",
+  height: "100%",
+  paddingTop: "10px",
+  paddingBottom: "10px",
 }));
 
 export const Title = styled(Typography)(() => ({
@@ -22,5 +24,5 @@ export const ModalBox = styled(Box)({
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  borderRadius: "20px",
+  borderRadius: "10px",
 });

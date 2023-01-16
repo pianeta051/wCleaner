@@ -6,6 +6,7 @@ export const ERROR_CODES = [
   "QUERY_TOO_LONG",
   "DUPLICATED_USER",
   "INVALID_PASSWORD",
+  "CUSTOMER_ALREADY_EXISTS",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>

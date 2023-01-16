@@ -52,6 +52,18 @@ export const currentUser = async () => {
 const findByEmail = (email: string) =>
   users.find((user) => user.email === email);
 
+export const forgotPassword = async (email: string) => {
+  await sleep(1000);
+
+  const user = users.find(
+    (user) => user.email.toLowerCase() === email.toLowerCase()
+  );
+  if (!user) {
+    throw "USER_NOT_EXISTS";
+  }
+  return user;
+};
+
 export const logIn = async (email: string, password: string) => {
   await sleep(1000);
   const user = findByEmail(email);
@@ -63,7 +75,7 @@ export const logIn = async (email: string, password: string) => {
     throw "INCORRECT_PASSWORD";
   }
 };
-export const resetPassword = async (email: string) => {
+export const resetPassword = async (email: string, newPassword: string) => {
   await sleep(1000);
 
   const user = users.find(
@@ -72,6 +84,7 @@ export const resetPassword = async (email: string) => {
   if (!user) {
     throw "USER_NOT_EXISTS";
   }
+  user.password = newPassword;
   return user;
 };
 

@@ -4,7 +4,7 @@ import { Field } from "./ForgotMyPassword.style";
 import { Layout } from "../Layout/Layout";
 import { Link } from "react-router-dom";
 import { ErrorCode, isErrorCode } from "../../../services/error";
-import { resetPassword } from "../../../services/authentication";
+import { forgotPassword } from "../../../services/authentication";
 import { LoadingButton } from "@mui/lab";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
 
@@ -26,7 +26,7 @@ export const ForgotMyPassword: FC = () => {
     event.preventDefault();
     setErrorCode(null);
     setLoading(true);
-    resetPassword(formData.email)
+    forgotPassword(formData.email)
       .then(() => {
         setLoading(false);
         setSuccess(true);

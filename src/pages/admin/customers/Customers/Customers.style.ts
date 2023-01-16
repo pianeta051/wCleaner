@@ -17,7 +17,7 @@ export const Wrapper = styled(Grid)(() => ({
   padding: "10px",
   justifyContent: "center",
   textAlign: "center",
-  width: "60%",
+  width: "100%",
 }));
 
 export const ListCustomers = styled(List)(() => ({
