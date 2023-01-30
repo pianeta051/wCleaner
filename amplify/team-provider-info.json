@@ -1,0 +1,26 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wcleaner-dev-153252-authRole",
+      "UnauthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-dev-153252-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-dev-153252-authRole",
+      "Region": "eu-west-2",
+      "DeploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+      "UnauthRoleName": "amplify-wcleaner-dev-153252-unauthRole",
+      "StackName": "amplify-wcleaner-dev-153252",
+      "StackId": "arn:aws:cloudformation:eu-west-2:295621520330:stack/amplify-wcleaner-dev-153252/5d0e45c0-a0b3-11ed-b595-0a649fe12144",
+      "AmplifyAppId": "d2r3wluo8x2tk9"
+    },
+    "categories": {
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d2r3wluo8x2tk9",
+          "type": "cicd"
+        }
+      },
+      "auth": {
+        "wcleaner": {}
+      }
+    }
+  }
+}

@@ -7,7 +7,6 @@ import {
 } from "../../CustomerForm/CustomerForm";
 import { addCustomer } from "../../../../services/customers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
-import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
 import {
   ModalBox,
   Background,
@@ -67,9 +66,9 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
             onSubmit={submitHandler}
             onCancel={onClose}
             loading={loading}
+            errorMessage={error}
           />
         </Background>
-        {error && <ErrorMessage code={error} />}
       </ModalBox>
     </Modal>
   );

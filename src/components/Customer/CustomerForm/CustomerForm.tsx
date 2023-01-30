@@ -3,6 +3,8 @@ import { Button, Grid } from "@mui/material";
 import { Field } from "./CustomerForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../../Form/Form";
+import { ErrorCode } from "../../../services/error";
+import { ErrorMessage } from "../../ErrorMessage/ErrorMessage";
 
 export type CustomerFormValues = {
   name: string;
@@ -24,10 +26,11 @@ const INITIAL_VALUES: CustomerFormValues = {
 
 type CustomerFormProps = {
   onSubmit: (customer: CustomerFormValues) => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   initialValues?: CustomerFormValues;
-  errorMessage?: string;
+  errorMessage: ErrorCode | null;
   loading?: boolean;
+  layout?: "vertical" | "horizontal";
 };
 
 export const CustomerForm: FC<CustomerFormProps> = ({
@@ -35,6 +38,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   onCancel,
   initialValues = INITIAL_VALUES,
   loading = false,
+  layout = "vertical",
+  errorMessage,
 }) => {
   const [formValues, setFormValues] = useState(initialValues);
   const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
@@ -49,10 +54,12 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     }
   };
 
+  const columns = layout === "vertical" ? 12 : 4;
+
   return (
     <Form onSubmit={submitHandler}>
-      <Grid container>
-        <Grid item xs={12}>
+      <Grid container columnSpacing={5}>
+        <Grid item xs={12} md={columns}>
           <Field
             name="name"
             id="name"
@@ -65,7 +72,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             value={formValues.name}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} md={columns}>
           <Field
             name="address"
             id="address"
@@ -76,7 +83,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             value={formValues.address}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} md={columns}>
           <Field
             name="postcode"
             id="postcode"
@@ -87,7 +94,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             value={formValues.postcode}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} md={columns}>
           <Field
             name="mainTelephone"
             id="mainTelephone"
@@ -98,7 +105,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             value={formValues.mainTelephone}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} md={columns}>
           <Field
             name="secondTelephone"
             id="secondTelephone"
@@ -109,7 +116,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             value={formValues.secondTelephone}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} md={columns}>
           <Field
             name="email"
             id="email"
@@ -133,19 +140,22 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             Save
           </LoadingButton>
         </Grid>
-        <Grid item xs={12}>
-          <Button
-            disableFocusRipple
-            disableRipple
-            style={{ textTransform: "none" }}
-            variant="text"
-            color="primary"
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-        </Grid>
+        {onCancel && (
+          <Grid item xs={12}>
+            <Button
+              disableFocusRipple
+              disableRipple
+              style={{ textTransform: "none" }}
+              variant="text"
+              color="primary"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+          </Grid>
+        )}
       </Grid>
+      {errorMessage && <ErrorMessage code={errorMessage} />}
     </Form>
   );
 };

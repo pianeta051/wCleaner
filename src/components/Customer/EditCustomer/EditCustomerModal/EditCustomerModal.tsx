@@ -13,6 +13,7 @@ import {
   CustomerFormValues,
 } from "../../CustomerForm/CustomerForm";
 import { editCustomer } from "../../../../services/customers";
+import { ErrorCode, isErrorCode } from "../../../../services/error";
 
 type EditCustomerModalProps = {
   open: boolean;
@@ -27,10 +28,10 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
   customer,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [error, setError] = useState<ErrorCode | null>(null);
 
   const submitHandler = (formValues: CustomerFormValues) => {
-    setErrorMessage("");
+    setError(null);
     setLoading(true);
     editCustomer(formValues, customer.id)
       .then((customer) => {
@@ -39,10 +40,10 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
       })
       .catch((error) => {
         setLoading(false);
-        if (typeof error === "string") {
-          setErrorMessage(error);
+        if (isErrorCode(error)) {
+          setError(error);
         } else {
-          setErrorMessage("Internal error");
+          setError("INTERNAL_ERROR");
         }
       });
   };
@@ -65,7 +66,7 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
             onCancel={onClose}
             onSubmit={submitHandler}
             initialValues={customer}
-            errorMessage={errorMessage}
+            errorMessage={error}
             loading={loading}
           />
         </Background>

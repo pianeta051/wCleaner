@@ -33,5 +33,6 @@ export const Title = styled(Typography)(() => ({
 export const Wrapper = styled(Grid)(() => ({
   margin: "auto",
   padding: "10px",
-  width: "60%",
+  width: "100%",
+  alignContent: "center",
 }));

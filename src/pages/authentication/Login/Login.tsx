@@ -29,9 +29,13 @@ export const Login: FC = () => {
     setErrorCode(null);
     setLoading(true);
     logIn(formData.email, formData.password)
-      .then(() => {
+      .then((user) => {
         setLoading(false);
-        navigate("/admin/customers");
+        if (user.challengeName === "NEW_PASSWORD_REQUIRED") {
+          navigate("/set-password");
+        } else {
+          navigate("/admin/customers");
+        }
       })
       .catch((error) => {
         setLoading(false);

@@ -87,7 +87,8 @@ export const getCustomers = async () => {
   return [...customers];
 };
 
-export const getCustomer = (url?: string) => {
+export const getCustomer = async (url: string) => {
+  await sleep(1000);
   const customer = customers.find((customer) => {
     if (url && customer.url === url) {
       return true;
@@ -109,4 +110,20 @@ export const customerExists = async (email: string) => {
   if (customer) {
     throw "CUSTOMER_ALREADY_EXISTS";
   }
+};
+
+export const updateCustomerName = async (email: string, newName: string) => {
+  await sleep(1000);
+  const customerIndex = customers.findIndex(
+    (customer) => email === customer.email
+  );
+  if (customerIndex === -1) {
+    throw "USER_NOT_EXISTS";
+  }
+  const newCustomer = {
+    ...customers[customerIndex],
+    name: newName,
+  };
+  customers[customerIndex] = newCustomer;
+  return newCustomer;
 };
