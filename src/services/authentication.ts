@@ -90,13 +90,13 @@ export const logIn = async (
   } catch (error) {
     if (hasCode(error)) {
       if (error?.code === "UserNotFoundException") {
-        throw new Error("USER_NOT_EXISTS");
+        throw "USER_NOT_EXISTS";
       }
       if (error.code === "NotAuthorizedException") {
-        throw new Error("INCORRECT_PASSWORD");
+        throw "INCORRECT_PASSWORD";
       }
     }
-    throw new Error("INTERNAL_ERROR");
+    throw "INTERNAL_ERROR";
   }
 };
 
@@ -121,19 +121,21 @@ export const resetPassword = async (email: string, newPassword: string) => {
   return user;
 };
 
-export const setPassword = async (newPassword: string) => {
-  await sleep(1000);
+export const setPassword = async (
+  user: CognitoUser,
+  newPassword: string
+): Promise<CognitoUser> => {
   try {
     const loggedInUser = await Auth.completeNewPassword(user, newPassword);
     return loggedInUser;
   } catch (error) {
     if (hasCode(error)) {
       if (error?.code === "InvalidPasswordException") {
-        throw new Error("INVALID_PASSWORD");
+        throw "INVALID_PASSWORD";
       }
     }
     console.log("error signing in", error);
-    throw new Error("INTERNAL_ERROR");
+    throw "INTERNAL_ERROR";
   }
 };
 

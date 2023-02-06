@@ -4,9 +4,10 @@ import { Field } from "./Login.style";
 import { Layout } from "../Layout/Layout";
 import { Link, useNavigate } from "react-router-dom";
 import { ErrorCode, isErrorCode } from "../../../services/error";
-import { logIn } from "../../../services/authentication";
+import { logIn as serviceLogin } from "../../../services/authentication";
 import { LoadingButton } from "@mui/lab";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
+import { useAuth } from "../../../context/AuthContext";
 
 export type LogInFormData = {
   email: string;
@@ -22,18 +23,23 @@ export const Login: FC = () => {
   const [formData, setFormData] = useState(FORM_VALUES_DEFAULTS);
   const [loading, setLoading] = useState(false);
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
+  const { setUser, logIn } = useAuth();
   const navigate = useNavigate();
 
   const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
     setErrorCode(null);
     setLoading(true);
-    logIn(formData.email, formData.password)
+    serviceLogin(formData.email, formData.password)
       .then((user) => {
         setLoading(false);
         if (user.challengeName === "NEW_PASSWORD_REQUIRED") {
+          if (setUser) {
+            setUser(user);
+          }
           navigate("/set-password");
-        } else {
+        } else if (logIn) {
+          logIn(user);
           navigate("/admin/customers");
         }
       })

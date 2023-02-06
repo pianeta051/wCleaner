@@ -54,6 +54,7 @@ export const ProfilePassword: FC<ProfilePasswordProps> = ({
           value={formValues.newPassword}
           onChange={(password) => changeHandler(password, "newPassword")}
           label="New password"
+          showRestrictions={true}
         />
         <LoadingButton loading={loading} variant="outlined" type="submit">
           Change password

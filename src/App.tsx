@@ -3,16 +3,15 @@ import { BrowserRouter } from "react-router-dom";
 import { FC } from "react";
 import { theme } from "./theme";
 import { AppRoutes } from "./components/AppRoutes/AppRoutes";
-
-// type LoginProps = {
-//   elements: LoginForm[];
-// };
+import { AuthProvider } from "./components/AuthProvider/AuthProvider";
 
 export const App: FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <BrowserRouter>
-        <AppRoutes />
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   );

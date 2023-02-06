@@ -11,6 +11,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
 import { useNavigate } from "react-router-dom";
 import { MenuButton } from "./TopBar.style";
+import { useAuth } from "../../context/AuthContext";
 
 const pages = [
   { label: "customers", url: "/admin/customers" },
@@ -18,6 +19,7 @@ const pages = [
 ];
 export const TopBar: FC = () => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+  const { logOut } = useAuth();
   const navigate = useNavigate();
   const openUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
@@ -28,7 +30,10 @@ export const TopBar: FC = () => {
   };
   const toProfile = () => navigate("/admin/users/me");
 
-  const logOut = () => {
+  const logOutHandler = async () => {
+    if (logOut) {
+      await logOut();
+    }
     closeUserMenu();
     navigate("/");
   };
@@ -96,7 +101,7 @@ export const TopBar: FC = () => {
                 onClose={closeUserMenu}
               >
                 <MenuItem onClick={toProfile}>Profile</MenuItem>
-                <MenuItem onClick={logOut}>Log out</MenuItem>
+                <MenuItem onClick={logOutHandler}>Log out</MenuItem>
               </Menu>
             </div>
           }
