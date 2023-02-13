@@ -104,7 +104,7 @@ export const logOut = async () => {
   try {
     await Auth.signOut();
   } catch (e) {
-    throw new Error("INTERNAL_ERROR");
+    throw "INTERNAL_ERROR";
   }
 };
 
