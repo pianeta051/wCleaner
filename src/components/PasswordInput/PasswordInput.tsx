@@ -59,6 +59,7 @@ export const PasswordInput: FC<PasswordInputProps> = ({
   return (
     <>
       <TextField
+        fullWidth
         label={label}
         name={name}
         variant="outlined"

@@ -9,7 +9,8 @@
       "UnauthRoleName": "amplify-wcleaner-dev-153252-unauthRole",
       "StackName": "amplify-wcleaner-dev-153252",
       "StackId": "arn:aws:cloudformation:eu-west-2:295621520330:stack/amplify-wcleaner-dev-153252/5d0e45c0-a0b3-11ed-b595-0a649fe12144",
-      "AmplifyAppId": "d2r3wluo8x2tk9"
+      "AmplifyAppId": "d2r3wluo8x2tk9",
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json"
     },
     "categories": {
       "hosting": {
@@ -20,6 +21,12 @@
       },
       "auth": {
         "wcleaner": {}
+      },
+      "function": {
+        "wcleanerCustomMessage": {
+          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+          "s3Key": "amplify-builds/wcleanerCustomMessage-38666e5976576b33306b-build.zip"
+        }
       }
     }
   }

@@ -8,20 +8,19 @@ import {
   Wrapper,
   Background,
 } from "./ResetPassword.style";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ErrorCode, isErrorCode } from "../../../services/error";
 import { resetPassword } from "../../../services/authentication";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
 import { Form } from "../../../components/Form/Form";
+import { PasswordInput } from "../../../components/PasswordInput/PasswordInput";
 
 type ResetPasswordFormData = {
   newPassword: string;
-  repeatPassword: string;
 };
 
 const FORM_VALUES_DEFAULTS: ResetPasswordFormData = {
   newPassword: "",
-  repeatPassword: "",
 };
 
 export const ResetPassword: FC = () => {
@@ -29,30 +28,35 @@ export const ResetPassword: FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get("email");
+  const code = searchParams.get("code");
 
   const submitHandler = () => {
-    setLoading(true);
-    setError(null);
-    resetPassword("user1@fake.email", formData.newPassword)
-      .then(() => {
-        setLoading(false);
-        navigate("/log-in");
-      })
-      .catch((error) => {
-        setLoading(false);
-        if (isErrorCode(error)) {
-          setError(error);
-        } else {
-          setError("INTERNAL_ERROR");
-        }
-      });
+    if (email && code) {
+      setLoading(true);
+      setError(null);
+      resetPassword(email, code, formData.newPassword)
+        .then(() => {
+          setLoading(false);
+          navigate("/log-in");
+        })
+        .catch((error) => {
+          setLoading(false);
+          if (isErrorCode(error)) {
+            setError(error);
+          } else {
+            setError("INTERNAL_ERROR");
+          }
+        });
+    }
   };
-  const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    setFormData((formData) => ({
-      ...formData,
-      [event.target.name]: event.target.value,
-    }));
+  const changeHandler = (password: string) => {
+    setFormData({
+      newPassword: password,
+    });
   };
+
   return (
     <Background container>
       <Wrapper container>
@@ -64,27 +68,12 @@ export const ResetPassword: FC = () => {
             <FormPaper>
               <Grid container>
                 <Grid item xs={12}>
-                  <Field
-                    id="username"
+                  <PasswordInput
                     label="New Password"
-                    type="password"
-                    required
-                    fullWidth
                     onChange={changeHandler}
                     value={formData.newPassword}
                     name="newPassword"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Field
-                    id="username"
-                    label="Repeat Password"
-                    type="password"
-                    required
-                    fullWidth
-                    onChange={changeHandler}
-                    value={formData.repeatPassword}
-                    name="repeatPassword"
+                    showRestrictions={true}
                   />
                 </Grid>
                 <Grid item xs={12}>

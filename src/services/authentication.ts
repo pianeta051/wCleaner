@@ -65,15 +65,16 @@ const findByEmail = (email: string) =>
   users.find((user) => user.email === email);
 
 export const forgotPassword = async (email: string) => {
-  await sleep(1000);
-
-  const user = users.find(
-    (user) => user.email.toLowerCase() === email.toLowerCase()
-  );
-  if (!user) {
+  try {
+    await Auth.forgotPassword(email);
+  } catch (error) {
+    if (hasCode(error)) {
+      if (error.code === "UserNotFoundException") {
+        throw "USER_NOT_EXISTS";
+      }
+    }
     throw "USER_NOT_EXISTS";
   }
-  return user;
 };
 
 const hasCode = (value: unknown): value is { code: string } =>
@@ -108,17 +109,27 @@ export const logOut = async () => {
   }
 };
 
-export const resetPassword = async (email: string, newPassword: string) => {
-  await sleep(1000);
-
-  const user = users.find(
-    (user) => user.email.toLowerCase() === email.toLowerCase()
-  );
-  if (!user) {
-    throw "USER_NOT_EXISTS";
+export const resetPassword = async (
+  email: string,
+  code: string,
+  newPassword: string
+) => {
+  try {
+    await Auth.forgotPasswordSubmit(email, code, newPassword);
+  } catch (e) {
+    throw "INTERNAL_ERROR";
   }
-  user.password = newPassword;
-  return user;
+
+  // await sleep(1000);
+
+  // const user = users.find(
+  //   (user) => user.email.toLowerCase() === email.toLowerCase()
+  // );
+  // if (!user) {
+  //   throw "USER_NOT_EXISTS";
+  // }
+  // user.password = newPassword;
+  // return user;
 };
 
 export const setPassword = async (

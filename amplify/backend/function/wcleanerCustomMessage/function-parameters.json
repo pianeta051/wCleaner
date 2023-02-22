@@ -1,0 +1,18 @@
+{
+  "trigger": true,
+  "modules": [
+    "custom"
+  ],
+  "parentResource": "wcleaner",
+  "functionName": "wcleanerCustomMessage",
+  "resourceName": "wcleanerCustomMessage",
+  "parentStack": "auth",
+  "triggerEnvs": [],
+  "triggerDir": "/snapshot/repo/build/node_modules/@aws-amplify/amplify-category-auth/provider-utils/awscloudformation/triggers/CustomMessage",
+  "triggerTemplate": "CustomMessage.json.ejs",
+  "triggerEventPath": "CustomMessage.event.json",
+  "roleName": "wcleanerCustomMessage",
+  "skipEdit": true,
+  "enableCors": false,
+  "permissions": {}
+}
