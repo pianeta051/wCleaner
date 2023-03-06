@@ -1,11 +1,9 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { FC, useEffect, useState } from "react";
+import { Alert, Box, Typography } from "@mui/material";
+import { FC, useState } from "react";
 import { ProfileName } from "../../../../components/ProfileName/ProfileName";
 import {
-  currentUser,
   updateName,
   updatePassword,
-  User,
 } from "../../../../services/authentication";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
@@ -14,39 +12,26 @@ import {
   ProfilePasswordFormValues,
 } from "../../../../components/ProfilePassword/ProfilePassword";
 import { Line } from "./Profile.style";
+import { useAuth } from "../../../../context/AuthContext";
+import Snackbar from "@mui/material/Snackbar";
 
 export const ProfilePage: FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, setUser } = useAuth();
   const [changingName, setChangingName] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
-
-  useEffect(() => {
-    if (loading) {
-      currentUser()
-        .then((user) => {
-          setUser(user);
-          setLoading(false);
-        })
-        .catch((error) => {
-          setLoading(false);
-          if (isErrorCode(error)) {
-            setError(error);
-          } else {
-            setError("INTERNAL_ERROR");
-          }
-        });
-    }
-  });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const changeNameHandler = (newName: string) => {
     if (user) {
       setChangingName(true);
-      updateName(user?.email, newName)
-        .then((newUser) => {
+      updateName(user, newName)
+        .then((user) => {
           setChangingName(false);
-          setUser(newUser);
+          if (setUser) {
+            setUser(user);
+          }
+          setSnackbarOpen(true);
         })
         .catch((error) => {
           setChangingName(false);
@@ -65,12 +50,13 @@ export const ProfilePage: FC = () => {
   }: ProfilePasswordFormValues) => {
     if (user) {
       setChangingPassword(true);
-      updatePassword(user.email, oldPassword, newPassword)
+      updatePassword(user, oldPassword, newPassword)
         .then(() => {
           setChangingPassword(false);
+          setSnackbarOpen(true);
         })
         .catch((error) => {
-          setChangingName(false);
+          setChangingPassword(false);
           if (isErrorCode(error)) {
             setError(error);
           } else {
@@ -79,31 +65,39 @@ export const ProfilePage: FC = () => {
         });
     }
   };
+
+  const closeHandler = () => {
+    setSnackbarOpen(false);
+  };
+
+  const name: string = user?.attributes?.name || "";
   return (
     <>
       <Typography variant="h3" gutterBottom>
         My Profile
       </Typography>
-      {loading ? (
-        <CircularProgress />
-      ) : error ? (
-        <ErrorMessage code={error} />
-      ) : user ? (
-        <Box>
-          <ProfileName
-            name={user?.name}
-            onChange={changeNameHandler}
-            loading={changingName}
-          />
-          <Line flexItem />
-          <ProfilePassword
-            onChange={changePasswordHandler}
-            loading={changingPassword}
-          />
-        </Box>
-      ) : (
-        <ErrorMessage code="USER_NOT_EXISTS" />
-      )}
+      {error && <ErrorMessage code={error} />}
+      <Box>
+        <ProfileName
+          name={name}
+          onChange={changeNameHandler}
+          loading={changingName}
+        />
+        <Line flexItem />
+        <ProfilePassword
+          onChange={changePasswordHandler}
+          loading={changingPassword}
+        />
+      </Box>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={closeHandler}
+      >
+        <Alert onClose={closeHandler} severity="success" sx={{ width: "100%" }}>
+          Successfully updated
+        </Alert>
+      </Snackbar>
     </>
   );
 };

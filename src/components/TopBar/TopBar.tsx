@@ -5,13 +5,14 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
-import AccountCircle from "@mui/icons-material/AccountCircle";
 import FormGroup from "@mui/material/FormGroup";
 import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
 import { useNavigate } from "react-router-dom";
 import { MenuButton } from "./TopBar.style";
 import { useAuth } from "../../context/AuthContext";
+import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
+import { Tooltip } from "@mui/material";
 
 const pages = [
   { label: "customers", url: "/admin/customers" },
@@ -28,6 +29,7 @@ export const TopBar: FC = () => {
   const closeUserMenu = () => {
     setAnchorElUser(null);
   };
+
   const toProfile = () => navigate("/admin/users/me");
 
   const logOutHandler = async () => {
@@ -75,16 +77,11 @@ export const TopBar: FC = () => {
           </Box>
           {
             <div>
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={openUserMenu}
-                color="inherit"
-              >
-                <AccountCircle />
-              </IconButton>
+              <Tooltip title="Open settings">
+                <IconButton onClick={openUserMenu} sx={{ p: 0 }}>
+                  <ProfileIcon />
+                </IconButton>
+              </Tooltip>
               <Menu
                 id="menu-appbar"
                 anchorEl={anchorElUser}

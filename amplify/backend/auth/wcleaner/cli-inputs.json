@@ -54,7 +54,9 @@
       ]
     },
     "hostedUI": false,
-    "userPoolGroupList": [],
+    "userPoolGroupList": [
+      "Admin"
+    ],
     "serviceName": "Cognito",
     "usernameCaseSensitive": false,
     "useEnabledMfas": true,
@@ -87,6 +89,7 @@
       "Ref": "AWS::StackId"
     },
     "permissions": [],
-    "authTriggerConnections": "[\n  {\n    \"triggerType\": \"CustomMessage\",\n    \"lambdaFunctionName\": \"wcleanerCustomMessage\"\n  }\n]"
+    "authTriggerConnections": "[\n  {\n    \"triggerType\": \"CustomMessage\",\n    \"lambdaFunctionName\": \"wcleanerCustomMessage\"\n  }\n]",
+    "adminQueryGroup": "Admin"
   }
 }

@@ -8,6 +8,11 @@ export type User = {
   name?: string;
   mustChangePassword: boolean;
 };
+export type CognitoUserWithAttributes = CognitoUser & {
+  attributes?: {
+    [key: string]: string;
+  };
+};
 
 const users: User[] = [
   {
@@ -52,39 +57,47 @@ export const currentUser = async () => {
   return users[0];
 };
 
-export const getAuthenticatedUser = async (): Promise<CognitoUser | null> => {
-  try {
-    const user = await Auth.currentAuthenticatedUser();
-    return user;
-  } catch (error) {
-    return null;
-  }
-};
+export const getAuthenticatedUser =
+  async (): Promise<CognitoUserWithAttributes | null> => {
+    try {
+      const user = await Auth.currentAuthenticatedUser();
+      return user;
+    } catch (error) {
+      return null;
+    }
+  };
 
 const findByEmail = (email: string) =>
   users.find((user) => user.email === email);
 
 export const forgotPassword = async (email: string) => {
   try {
-    await Auth.forgotPassword(email);
+    await Auth.forgotPassword(email, {
+      redirectTo: process.env.REACT_APP_HOST || "",
+    });
   } catch (error) {
     if (hasCode(error)) {
       if (error.code === "UserNotFoundException") {
         throw "USER_NOT_EXISTS";
       }
     }
-    throw "USER_NOT_EXISTS";
+    throw "INTERNAL_ERROR";
   }
 };
 
-const hasCode = (value: unknown): value is { code: string } =>
+const hasCode = (
+  value: unknown
+): value is {
+  message: string;
+  code: string;
+} =>
   typeof value === "object" &&
   (value as Record<string, unknown>).code !== undefined;
 
 export const logIn = async (
   email: string,
   password: string
-): Promise<CognitoUser> => {
+): Promise<CognitoUserWithAttributes> => {
   try {
     const user = await Auth.signIn(email, password);
     return user;
@@ -94,6 +107,9 @@ export const logIn = async (
         throw "USER_NOT_EXISTS";
       }
       if (error.code === "NotAuthorizedException") {
+        if (error.message === "Password attempts exceeded") {
+          throw "TOO_MANY_TRIES";
+        }
         throw "INCORRECT_PASSWORD";
       }
     }
@@ -116,26 +132,30 @@ export const resetPassword = async (
 ) => {
   try {
     await Auth.forgotPasswordSubmit(email, code, newPassword);
-  } catch (e) {
+  } catch (error) {
+    if (hasCode(error)) {
+      if (error?.code === "UserNotFoundException") {
+        throw "USER_NOT_EXISTS";
+      }
+      if (error?.code === "InvalidPasswordException") {
+        throw "INVALID_PASSWORD";
+      }
+      if (error?.code === "CodeMismatchException") {
+        throw "INVALID_RESET_PASSWORD_LINK";
+      }
+      if (error?.code === "LimitExceededException") {
+        throw "TOO_MANY_TRIES";
+      }
+    }
+
     throw "INTERNAL_ERROR";
   }
-
-  // await sleep(1000);
-
-  // const user = users.find(
-  //   (user) => user.email.toLowerCase() === email.toLowerCase()
-  // );
-  // if (!user) {
-  //   throw "USER_NOT_EXISTS";
-  // }
-  // user.password = newPassword;
-  // return user;
 };
 
 export const setPassword = async (
-  user: CognitoUser,
+  user: CognitoUserWithAttributes,
   newPassword: string
-): Promise<CognitoUser> => {
+) => {
   try {
     const loggedInUser = await Auth.completeNewPassword(user, newPassword);
     return loggedInUser;
@@ -159,36 +179,42 @@ export const getUsers = async () => {
   return [...users];
 };
 
-export const updateName = async (email: string, newName: string) => {
-  await sleep(1000);
-  const userIndex = users.findIndex((user) => email === user.email);
-  if (userIndex === -1) {
-    throw "USER_NOT_EXISTS";
+export const updateName = async (
+  user: CognitoUserWithAttributes,
+  newName: string
+): Promise<CognitoUserWithAttributes> => {
+  try {
+    await Auth.updateUserAttributes(user, { name: newName });
+    const newUser: CognitoUserWithAttributes = user;
+    newUser.attributes = {
+      ...user.attributes,
+      name: newName,
+    };
+    return newUser;
+  } catch (error) {
+    throw "INTERNAL_ERROR";
   }
-  const newUser = {
-    ...users[userIndex],
-    name: newName,
-  };
-  users[userIndex] = newUser;
-  return newUser;
 };
 
 export const updatePassword = async (
-  email: string,
+  user: CognitoUserWithAttributes,
   oldPassword: string,
   newPassword: string
 ) => {
-  await sleep(1000);
-  const userIndex = users.findIndex((user) => email === user.email);
-  if (userIndex === -1) {
-    throw "USER_NOT_EXISTS";
+  try {
+    await Auth.changePassword(user, oldPassword, newPassword);
+  } catch (error) {
+    if (hasCode(error)) {
+      if (error.code === "NotAuthorizedException") {
+        throw "INCORRECT_PASSWORD";
+      }
+      if (error.code === "InvalidPasswordException") {
+        throw "INVALID_PASSWORD";
+      }
+      if (error.code === "LimitExceededException") {
+        throw "TOO_MANY_TRIES";
+      }
+    }
+    throw "INTERNAL_ERROR";
   }
-  if (oldPassword !== users[userIndex].password) {
-    throw "INCORRECT_PASSWORD";
-  }
-  const newUser = {
-    ...users[userIndex],
-    password: newPassword,
-  };
-  return newUser;
 };

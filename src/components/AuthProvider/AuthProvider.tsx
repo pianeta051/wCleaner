@@ -1,8 +1,8 @@
 import { FC, ReactNode, useEffect, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { CognitoUser } from "amazon-cognito-identity-js";
 import {
   getAuthenticatedUser,
+  CognitoUserWithAttributes,
   logOut as serviceLogOut,
 } from "../../services/authentication";
 import { CircularProgress } from "@mui/material";
@@ -12,7 +12,7 @@ type AuthProviderProps = {
 };
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<CognitoUser | null>(null);
+  const [user, setUser] = useState<CognitoUserWithAttributes | null>(null);
   const [authStatus, setAuthStatus] = useState<
     "checking" | "authenticated" | "unauthenticated"
   >("checking");
@@ -28,7 +28,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     });
   }, []);
 
-  const logIn = (user: CognitoUser) => {
+  const logIn = (user: CognitoUserWithAttributes) => {
     setUser(user);
     setAuthStatus("authenticated");
   };
@@ -43,9 +43,33 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
       setAuthStatus("unauthenticated");
     }
   };
+  const isInGroup = (group: string): boolean => {
+    if (!user) {
+      return false;
+    }
+    const session = user.getSignInUserSession();
+    if (!session) {
+      return false;
+    }
+    const accessToken = session.getAccessToken();
+    if (!accessToken) {
+      return false;
+    }
+    const payload = accessToken.decodePayload();
+    if (!payload) {
+      return false;
+    }
+    const groups = payload["cognito:groups"];
+    if (!groups || !Array.isArray(groups) || !groups.length) {
+      return false;
+    }
+    return groups.includes(group);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, authStatus, logIn, logOut }}>
+    <AuthContext.Provider
+      value={{ user, setUser, authStatus, logOut, logIn, isInGroup }}
+    >
       {authStatus === "checking" ? <CircularProgress /> : children}
     </AuthContext.Provider>
   );

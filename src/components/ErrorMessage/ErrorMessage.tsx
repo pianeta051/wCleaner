@@ -63,5 +63,31 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "INVALID_RESET_PASSWORD_LINK") {
+    return (
+      <Alert severity="error">
+        <Typography>This Reset password link in invalid.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "TOO_MANY_TRIES") {
+    return (
+      <Alert severity="error">
+        <Typography>
+          You tried this too many times. Please try again later.
+        </Typography>
+      </Alert>
+    );
+  }
+  if (code === "UNAUTHORIZED") {
+    return (
+      <Alert severity="error">
+        <Typography>
+          Access denied. You are not authorized on this page
+        </Typography>
+      </Alert>
+    );
+  }
+
   return <Alert severity="error">Internal error</Alert>;
 };
