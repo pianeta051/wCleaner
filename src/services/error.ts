@@ -10,6 +10,7 @@ export const ERROR_CODES = [
   "INVALID_RESET_PASSWORD_LINK",
   "TOO_MANY_TRIES",
   "UNAUTHORIZED",
+  "EXPIRED_LINK",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>

@@ -26,6 +26,7 @@ const {
   listGroups,
   listGroupsForUser,
   listUsersInGroup,
+  createUser,
   signUserOut,
 } = require("./cognitoActions");
 
@@ -110,6 +111,21 @@ app.all("*", checkGroup);
 //   }
 // });
 
+app.post("/createUser", async (req, res, next) => {
+  if (!req.body.email || !req.body.password) {
+    const err = new Error("email and password are required");
+    err.statusCode = 400;
+    return next(err);
+  }
+
+  try {
+    const response = await createUser(req.body.email, req.body.password);
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // app.post('/confirmUserSignUp', async (req, res, next) => {
 //   if (!req.body.username) {
 //     const err = new Error('username is required');
@@ -165,7 +181,7 @@ app.all("*", checkGroup);
 //   try {
 //     const response = await getUser(req.query.username);
 //     res.status(200).json(response);
-//   } catch (err) {
+//   } catch (err ) {
 //     next(err);
 //   }
 // });

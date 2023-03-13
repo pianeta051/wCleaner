@@ -49,6 +49,7 @@ export const CreateUserForm: FC<CreateUserFormProps> = ({
       <PasswordInput
         value={formValues.password}
         onChange={(password) => changeHandler(password, "password")}
+        showRestrictions
       />
       <LoadingButton loading={loading} variant="outlined" type="submit">
         Create

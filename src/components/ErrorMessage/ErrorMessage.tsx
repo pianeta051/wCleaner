@@ -88,6 +88,13 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "EXPIRED_LINK") {
+    return (
+      <Alert severity="error">
+        <Typography>Your reset link has expired. Please try again</Typography>
+      </Alert>
+    );
+  }
 
   return <Alert severity="error">Internal error</Alert>;
 };

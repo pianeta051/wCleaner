@@ -5,12 +5,7 @@
       "lambdaFunction": "AdminQueries0c37162b",
       "permissions": {
         "setting": "private",
-        "auth": [
-          "create",
-          "read",
-          "update",
-          "delete"
-        ]
+        "auth": ["create", "read", "update", "delete"]
       }
     }
   }
