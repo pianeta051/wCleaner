@@ -13,6 +13,7 @@ import { CreateUserPage } from "../pages/admin/users/CreateUser/CreateUser";
 import { CustomerDetails } from "../pages/admin/customers/CustomerDetails/CustomerDetails";
 import { UnAuthenticatedRoute } from "./UnAuthenticateRoute";
 import { AuthenticatedRoute } from "./AuthenticatedRoute";
+import { AdminRoute } from "./AdminRoute";
 
 export const AppRoutes: FC = () => {
   return (
@@ -44,10 +45,17 @@ export const AppRoutes: FC = () => {
           <Route index element={<Customers />} />
           <Route path=":url" element={<CustomerDetails />} />
         </Route>
-        <Route path="users">
+        <Route path="profile" element={<ProfilePage />} />
+        <Route
+          path="users"
+          element={
+            <AdminRoute>
+              <Outlet />
+            </AdminRoute>
+          }
+        >
           <Route index element={<UsersPage />} />
           <Route path="create" element={<CreateUserPage />} />
-          <Route path="me" element={<ProfilePage />} />
         </Route>
       </Route>
 

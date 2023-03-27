@@ -14,6 +14,10 @@ export type User = {
   name?: string;
 };
 
+type GroupResponse = {
+  GroupName: string;
+};
+
 export type CognitoUserWithAttributes = CognitoUser & {
   attributes?: {
     [key: string]: string;
@@ -65,6 +69,32 @@ export const getAuthenticatedUser =
       return null;
     }
   };
+
+export const getUserGroups = async (id: string): Promise<string[]> => {
+  try {
+    const response = await AdminQueries.get("/listGroupsForUser", {
+      username: id,
+    });
+    if (
+      !response.Groups ||
+      !Array.isArray(response.Groups) ||
+      !response.Groups.length
+    ) {
+      return [];
+    }
+    const groups: string[] = response.Groups.map(
+      (group: unknown): string | null => {
+        if (!isGroupResponse(group)) {
+          return null;
+        }
+        return group.GroupName;
+      }
+    ).filter((group: string | null) => group !== null);
+    return groups;
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
 
 const findAttributeValue = (user: UserResponse, attribute: string) =>
   user.Attributes.find((att) => att.Name === attribute)?.Value;
@@ -152,6 +182,9 @@ const isAttribute = (value: unknown): value is UserAttribute =>
   "Value" in value &&
   !!(value as UserAttribute)["Name"] &&
   !!(value as UserAttribute)["Value"];
+
+const isGroupResponse = (value: unknown): value is GroupResponse =>
+  typeof value === "object" && value !== null && "GroupName" in value;
 
 const isUserResponse = (value: unknown): value is UserResponse =>
   typeof value === "object" &&

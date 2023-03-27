@@ -1,6 +1,6 @@
 import { API, Auth } from "aws-amplify";
 
-const PATHS = ["/listUsers", "/createUser"] as const;
+const PATHS = ["/listUsers", "/createUser", "/listGroupsForUser"] as const;
 
 export const get = async (
   path: typeof PATHS[number],

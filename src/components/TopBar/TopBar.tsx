@@ -14,23 +14,29 @@ import { useAuth } from "../../context/AuthContext";
 import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
 import { Tooltip } from "@mui/material";
 
-const pages = [
-  { label: "customers", url: "/admin/customers" },
-  { label: "users", url: "/admin/users" },
-];
+type Page = {
+  label: string;
+  url: string;
+  exclusiveFor?: string;
+};
+
 export const TopBar: FC = () => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const { logOut } = useAuth();
   const navigate = useNavigate();
+  const { isInGroup } = useAuth();
   const openUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
-
+  const pages: Page[] = [
+    { label: "customers", url: "/admin/customers" },
+    { label: "users", url: "/admin/users", exclusiveFor: "Admin" },
+  ];
   const closeUserMenu = () => {
     setAnchorElUser(null);
   };
 
-  const toProfile = () => navigate("/admin/users/me");
+  const toProfile = () => navigate("/admin/profile");
 
   const logOutHandler = async () => {
     if (logOut) {
@@ -51,6 +57,17 @@ export const TopBar: FC = () => {
     }
   };
 
+  const menuItems = pages.map((page) => {
+    if (page.exclusiveFor && !isInGroup(page.exclusiveFor)) {
+      return null;
+    }
+    return (
+      <MenuButton key={page.url} onClick={menuClickHandler}>
+        {page.label}
+      </MenuButton>
+    );
+  });
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <FormGroup></FormGroup>
@@ -69,39 +86,33 @@ export const TopBar: FC = () => {
             Window Cleaner
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-            {pages.map((page) => (
-              <MenuButton key={page.url} onClick={menuClickHandler}>
-                {page.label}
-              </MenuButton>
-            ))}
+            {menuItems}
           </Box>
-          {
-            <div>
-              <Tooltip title="Open settings">
-                <IconButton onClick={openUserMenu} sx={{ p: 0 }}>
-                  <ProfileIcon />
-                </IconButton>
-              </Tooltip>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorElUser}
-                anchorOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                open={Boolean(anchorElUser)}
-                onClose={closeUserMenu}
-              >
-                <MenuItem onClick={toProfile}>Profile</MenuItem>
-                <MenuItem onClick={logOutHandler}>Log out</MenuItem>
-              </Menu>
-            </div>
-          }
+          <div>
+            <Tooltip title="Open settings">
+              <IconButton onClick={openUserMenu} sx={{ p: 0 }}>
+                <ProfileIcon />
+              </IconButton>
+            </Tooltip>
+            <Menu
+              id="menu-appbar"
+              anchorEl={anchorElUser}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+              open={Boolean(anchorElUser)}
+              onClose={closeUserMenu}
+            >
+              <MenuItem onClick={toProfile}>Profile</MenuItem>
+              <MenuItem onClick={logOutHandler}>Log out</MenuItem>
+            </Menu>
+          </div>
         </Toolbar>
       </AppBar>
       <Toolbar />

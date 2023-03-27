@@ -10,5 +10,5 @@ export const UnAuthenticatedRoute: FC<UnAuthenticatedRouteProps> = ({
   children,
 }) => {
   const { authStatus } = useAuth();
-  return authStatus === "unauthenticated" ? children : <Navigate to="/users" />;
+  return authStatus === "unauthenticated" ? children : <Navigate to="/admin" />;
 };
