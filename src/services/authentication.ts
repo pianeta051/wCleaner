@@ -220,10 +220,32 @@ export const logIn = async (
   }
 };
 
+export const makeUserAdmin = async (id: string) => {
+  try {
+    await AdminQueries.post("/addUserToGroup", {
+      username: id,
+      groupname: "Admin",
+    });
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
+
 export const logOut = async () => {
   try {
     await Auth.signOut();
   } catch (e) {
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const removeUserAdmin = async (id: string) => {
+  try {
+    await AdminQueries.post("/removeUserFromGroup", {
+      username: id,
+      groupname: "Admin",
+    });
+  } catch (error) {
     throw "INTERNAL_ERROR";
   }
 };

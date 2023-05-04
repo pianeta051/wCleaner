@@ -1,12 +1,14 @@
 import { Typography } from "@mui/material";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { User } from "../../services/authentication";
+
 import { UserGroups } from "../UserGroups/UserGroups";
 import { Wrapper } from "./UserDetails.style";
 
 type UserDetailsProps = {
   user: User;
 };
+
 export const UserDetails: FC<UserDetailsProps> = ({ user }) => {
   return (
     <>

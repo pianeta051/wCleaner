@@ -34,16 +34,6 @@ export const SetPassword: FC<SetPasswordProps> = ({
   const { user, logIn } = useAuth();
   const navigate = useNavigate();
 
-  // const onChangePassword = (password: any[] | SetStateAction<string>) => {
-  //   setValidPassword(password);
-
-  //   setPasswordValidity({
-  //     minChar: password.length >= 8 ? true : false,
-  //     number: isNumberRegx.test(password) ? true : false,
-  //     specialChar: specialCharacterRegx.test(password) ? true : false,
-  //   });
-  // };
-
   const [formData, setFormData] = useState(initialValues);
   const submitHandler = () => {
     if (user) {
@@ -97,19 +87,6 @@ export const SetPassword: FC<SetPasswordProps> = ({
                     name="password"
                     showRestrictions={true}
                   />
-
-                  {/* <Field
-                    label="Password"
-                    type="password"
-                    name="password"
-                    required
-                    fullWidth
-                    // onChange={changeHandler}
-                    // value={formData.password}
-                    value={formData.password}
-                    onFocus={() => setPasswordFocused(true)}
-                    onChange={changeHandler}
-                  /> */}
                 </Grid>
 
                 <Grid item xs={12}>

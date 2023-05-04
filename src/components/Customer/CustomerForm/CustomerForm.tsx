@@ -98,7 +98,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           <Field
             name="mainTelephone"
             id="mainTelephone"
-            label="Main Telephone"
+            label="main telephone"
             type="text"
             fullWidth
             onChange={changeHandler}
@@ -109,7 +109,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           <Field
             name="secondTelephone"
             id="secondTelephone"
-            label="secondTelephone"
+            label="second telephone"
             type="text"
             fullWidth
             onChange={changeHandler}
@@ -123,6 +123,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             label="email"
             type="email"
             fullWidth
+            required
             onChange={changeHandler}
             value={formValues.email}
           />

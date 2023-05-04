@@ -81,35 +81,41 @@ const checkGroup = function (req, res, next) {
 
 app.all("*", checkGroup);
 
-// app.post('/addUserToGroup', async (req, res, next) => {
-//   if (!req.body.username || !req.body.groupname) {
-//     const err = new Error('username and groupname are required');
-//     err.statusCode = 400;
-//     return next(err);
-//   }
+app.post("/addUserToGroup", async (req, res, next) => {
+  if (!req.body.username || !req.body.groupname) {
+    const err = new Error("username and groupname are required");
+    err.statusCode = 400;
+    return next(err);
+  }
 
-//   try {
-//     const response = await addUserToGroup(req.body.username, req.body.groupname);
-//     res.status(200).json(response);
-//   } catch (err) {
-//     next(err);
-//   }
-// });
+  try {
+    const response = await addUserToGroup(
+      req.body.username,
+      req.body.groupname
+    );
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+});
 
-// app.post('/removeUserFromGroup', async (req, res, next) => {
-//   if (!req.body.username || !req.body.groupname) {
-//     const err = new Error('username and groupname are required');
-//     err.statusCode = 400;
-//     return next(err);
-//   }
+app.post("/removeUserFromGroup", async (req, res, next) => {
+  if (!req.body.username || !req.body.groupname) {
+    const err = new Error("username and groupname are required");
+    err.statusCode = 400;
+    return next(err);
+  }
 
-//   try {
-//     const response = await removeUserFromGroup(req.body.username, req.body.groupname);
-//     res.status(200).json(response);
-//   } catch (err) {
-//     next(err);
-//   }
-// });
+  try {
+    const response = await removeUserFromGroup(
+      req.body.username,
+      req.body.groupname
+    );
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+});
 
 app.post("/createUser", async (req, res, next) => {
   if (!req.body.email || !req.body.password) {

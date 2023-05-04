@@ -30,7 +30,7 @@
         },
         "AdminQueries0c37162b": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/AdminQueries0c37162b-597944626f3832476f7a-build.zip"
+          "s3Key": "amplify-builds/AdminQueries0c37162b-38672f395a334f764832-build.zip"
         }
       },
       "api": {

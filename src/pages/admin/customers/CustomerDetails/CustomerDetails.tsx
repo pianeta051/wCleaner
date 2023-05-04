@@ -35,7 +35,8 @@ export const CustomerDetails: FC = () => {
   }, [loadingCustomer, setCustomer, setLoadingCustomer]);
 
   if (!url) {
-    return <InternalError data-testid="internal-error-message" />;
+    // return <InternalError data-testid="internal-error-message" />;
+    return <NotFound />;
   }
 
   const submitHandler = (formValues: CustomerFormValues) => {

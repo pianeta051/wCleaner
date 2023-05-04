@@ -53,7 +53,7 @@ export const addCustomer = async (formValues: CustomerFormValues) => {
   const customer: Customer = {
     id: customers.length + 1,
     name: formValues.name,
-    address: formValues.email,
+    address: formValues.address,
     postcode: formValues.postcode,
     mainTelephone: formValues.mainTelephone,
     secondTelephone: formValues.secondTelephone,
