@@ -8,7 +8,6 @@ import {
 import { getCustomer, editCustomer } from "../../../../services/customers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { Customer } from "../../../../types/types";
-import { InternalError } from "../../../InternalError/InternalError";
 import { NotFound } from "../../../NotFound/NotFound";
 import { Title, Wrapper } from "./CustomerDetails.style";
 

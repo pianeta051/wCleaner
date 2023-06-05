@@ -1,6 +1,6 @@
 import { LoadingButton } from "@mui/lab";
 import { Typography } from "@mui/material";
-import { FC, useState } from "react";
+import { FC } from "react";
 import { Form } from "../Form/Form";
 import { PasswordInput } from "../PasswordInput/PasswordInput";
 import { isNumberRegx, upperCaseRegx } from "../PasswordInput/PasswordInput";
@@ -27,7 +27,7 @@ const validationSchema = yup.object<ProfilePasswordFormValues>({
 });
 
 type ProfilePasswordProps = {
-  onChange?: (formValues: ProfilePasswordFormValues) => void;
+  onChange: (formValues: ProfilePasswordFormValues) => void;
   loading?: boolean;
 };
 
@@ -35,37 +35,27 @@ export const ProfilePassword: FC<ProfilePasswordProps> = ({
   onChange,
   loading = false,
 }) => {
-  const [formValues, setFormValues] = useState(INITIAL_VALUES);
-
-  const submitHandler = () => {
-    if (onChange) {
-      onChange(formValues);
-    }
-  };
-
-  const changeHandler = (
-    value: string,
-    key: keyof ProfilePasswordFormValues
-  ) => {
-    setFormValues((formValues) => ({
-      ...formValues,
-      [key]: value,
-    }));
-  };
+  const formik = useFormik({
+    initialValues: INITIAL_VALUES,
+    validationSchema,
+    onSubmit: onChange,
+  });
 
   return (
     <>
       <Typography variant="h4">Change password</Typography>
-      <Form onSubmit={submitHandler}>
+      <Form onSubmit={formik.handleSubmit}>
         <PasswordInput
-          value={formValues.oldPassword}
-          onChange={(event) => changeHandler(event.target.value, "oldPassword")}
+          value={formik.values.oldPassword}
+          onChange={formik.handleChange}
           label="Current password"
+          name="oldPassword"
         />
         <PasswordInput
-          value={formValues.newPassword}
-          onChange={(event) => changeHandler(event.target.value, "newPassword")}
+          value={formik.values.newPassword}
+          onChange={formik.handleChange}
           label="New password"
+          name="newPassword"
           showRestrictions={true}
         />
         <LoadingButton loading={loading} variant="outlined" type="submit">

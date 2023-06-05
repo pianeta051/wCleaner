@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { FC, useState } from "react";
+import { FC } from "react";
 import { User } from "../../services/authentication";
 
 import { UserGroups } from "../UserGroups/UserGroups";

@@ -1,5 +1,20 @@
+import { API } from "aws-amplify";
 import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
 import { Customer } from "../types/types";
+
+const PATHS = ["/customers"] as const;
+
+export const get = async (
+  path: typeof PATHS[number],
+  queryParams: { [param: string]: string } = {}
+) => {
+  return API.get("wCleanerApi", path, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    queryStringParameters: queryParams,
+  });
+};
 
 const customers: Customer[] = [
   {
@@ -82,9 +97,9 @@ export const editCustomer = async (
   return newCustomer;
 };
 
-export const getCustomers = async () => {
-  await sleep(1000);
-  return [...customers];
+export const getCustomers = async (): Promise<Customer[]> => {
+  const response = await get("/customers");
+  return response.customers;
 };
 
 export const getCustomer = async (url: string) => {
