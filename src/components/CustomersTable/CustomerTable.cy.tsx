@@ -1,3 +1,4 @@
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Customer } from "../../types/types";
 import { CustomersTable } from "./CustomersTable";
 
@@ -17,12 +18,21 @@ describe("CustomerTable", () => {
       },
     ];
     cy.mount(
-      <CustomersTable
-        onEdit={cy.spy().as("editHandler")}
-        customers={customers}
-      />
+      <MemoryRouter initialEntries={["/customersTable"]}>
+        <Routes>
+          <Route
+            path="/customersTable"
+            element={
+              <CustomersTable
+                onEdit={cy.spy().as("editHandler")}
+                customers={customers}
+              />
+            }
+          />
+        </Routes>
+      </MemoryRouter>
     );
-    cy.findByText("Edit").click();
+    cy.findByLabelText("edit customer").click();
     cy.get("@editHandler").should("have.been.called");
   });
 
@@ -34,6 +44,6 @@ describe("CustomerTable", () => {
         customers={customers}
       />
     );
-    cy.contains(".selector", "Edit").should("not.exist");
+    cy.findByRole("table").should("exist");
   });
 });

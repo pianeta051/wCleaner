@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import { CognitoUserWithAttributes } from "../services/authentication";
 
-type AuthContextData = {
+export type AuthContextData = {
   user: CognitoUserWithAttributes | null;
   setUser?: (user: CognitoUserWithAttributes) => void;
   authStatus: "checking" | "authenticated" | "unauthenticated";

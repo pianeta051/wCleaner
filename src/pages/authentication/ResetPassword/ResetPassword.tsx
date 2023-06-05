@@ -74,7 +74,9 @@ export const ResetPassword: FC = () => {
                       <Grid item xs={12}>
                         <PasswordInput
                           label="New Password"
-                          onChange={changeHandler}
+                          onChange={(event) =>
+                            changeHandler(event.target.value)
+                          }
                           value={formData.newPassword}
                           name="newPassword"
                           showRestrictions={true}

@@ -8,9 +8,10 @@ import {
   TableRow,
   TableBody,
   TableHead,
+  IconButton,
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import { IconButton } from "./CustomersTable.style";
+import { ButtonWrapper } from "./CustomersTable.style";
 import CreateIcon from "@mui/icons-material/Create";
 import { Customer } from "../../types/types";
 
@@ -55,11 +56,14 @@ export const CustomersTable: FC<CustomersTableProps> = ({
                 <TableCell align="right">{customer.secondTelephone}</TableCell>
                 <TableCell align="right">{customer.email}</TableCell>
                 <TableCell align="right">
-                  <IconButton>
-                    <Button id="edit-button" onClick={() => onEdit(customer)}>
+                  <ButtonWrapper>
+                    <IconButton
+                      onClick={() => onEdit(customer)}
+                      aria-label="edit customer"
+                    >
                       <CreateIcon />
-                    </Button>
-                  </IconButton>
+                    </IconButton>
+                  </ButtonWrapper>
                 </TableCell>
               </TableRow>
             ))}

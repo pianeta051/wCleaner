@@ -62,4 +62,24 @@ describe("ResetPassword", () => {
     cy.findByLabelText("New Password").type("Maaaaaaa2?{enter}");
     cy.contains("Internal error");
   });
+
+  it("shows an error message when the user does not exist", () => {
+    cy.stub(Auth, "forgotPasswordSubmit").rejects({
+      code: "UserNotFoundException",
+    });
+
+    cy.mount(
+      <MemoryRouter initialEntries={["/reset-password?email=a@p.co&code=1234"]}>
+        <Routes>
+          <Route path="/reset-password" element={<ResetPassword />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    cy.findByLabelText("New Password").type("Maaaaaaa2?{enter}");
+    cy.contains("The email is not registered");
+  });
+  // it("shows an error message when the user pasword is invalid", () => {});
+  // it("shows an error message when the user password link is invalid", () => {});
+  // it("shows an error message when the user try inserter a password too many times ", () => {});
+  // it("shows an error message when the the link expired", () => {});
 });

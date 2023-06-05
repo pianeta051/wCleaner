@@ -36,6 +36,3 @@ describe("CustomerDetails", () => {
     cy.contains("404 Page Not Found");
   });
 });
-
-// 3. Escribe un test de peticiones asíncronas, considerando tanto happy path como posibles errores,
-// para alguno de los componentes que se comunican con el back end.

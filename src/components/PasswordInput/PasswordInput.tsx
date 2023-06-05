@@ -5,16 +5,17 @@ import PasswordStrengthIndicator, {
   PasswordValidity,
 } from "../PasswordStrengthIndicator/PasswordStrengthIndicator";
 
-const isNumberRegx = /\d/;
-const specialCharacterRegx = /[ !@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/;
-const upperCaseRegx = /[A-Z]/;
-const lowerCaseRegx = /[a-z]/;
+export const isNumberRegx = /\d/;
+export const specialCharacterRegx = /[ !@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/;
+export const upperCaseRegx = /[A-Z]/;
+export const lowerCaseRegx = /[a-z]/;
 
 type PasswordInputProps = {
-  onChange?: (password: string) => void;
+  onChange?: React.ChangeEventHandler<HTMLTextAreaElement | HTMLInputElement>;
   value?: string;
   label?: string;
   name?: string;
+  errorMessage?: string;
   showRestrictions?: boolean;
 };
 
@@ -23,6 +24,7 @@ export const PasswordInput: FC<PasswordInputProps> = ({
   value,
   label = "Password",
   name = "password",
+  errorMessage,
   showRestrictions = false,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +42,7 @@ export const PasswordInput: FC<PasswordInputProps> = ({
     HTMLTextAreaElement | HTMLInputElement
   > = (event) => {
     if (onChange) {
-      onChange(event.target.value);
+      onChange(event);
     }
 
     setPasswordValidity({
@@ -69,6 +71,8 @@ export const PasswordInput: FC<PasswordInputProps> = ({
         onChange={changeHandler}
         onFocus={focusHandler}
         onBlur={blurHandler}
+        error={!!errorMessage}
+        helperText={errorMessage}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">

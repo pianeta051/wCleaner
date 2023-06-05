@@ -4,25 +4,25 @@ import { FC } from "react";
 
 type EmailInputProps = {
   value?: string;
-  onChange?: (email: string) => void;
+  onChange?: React.ChangeEventHandler<HTMLTextAreaElement | HTMLInputElement>;
+  errorMessage?: string;
 };
 
-export const EmailInput: FC<EmailInputProps> = ({ value, onChange }) => {
-  const changeHandler: React.ChangeEventHandler<
-    HTMLTextAreaElement | HTMLInputElement
-  > = (event) => {
-    if (onChange) {
-      onChange(event.target.value);
-    }
-  };
+export const EmailInput: FC<EmailInputProps> = ({
+  value,
+  onChange,
+  errorMessage,
+}) => {
   return (
     <TextField
       label="Email"
       name="email"
       variant="outlined"
-      value={value}
       margin="normal"
-      onChange={changeHandler}
+      onChange={onChange}
+      error={!!errorMessage}
+      helperText={errorMessage}
+      value={value}
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">

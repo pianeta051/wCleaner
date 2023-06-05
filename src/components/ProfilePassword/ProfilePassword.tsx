@@ -3,6 +3,9 @@ import { Typography } from "@mui/material";
 import { FC, useState } from "react";
 import { Form } from "../Form/Form";
 import { PasswordInput } from "../PasswordInput/PasswordInput";
+import { isNumberRegx, upperCaseRegx } from "../PasswordInput/PasswordInput";
+import * as yup from "yup";
+import { useFormik } from "formik";
 
 export type ProfilePasswordFormValues = {
   oldPassword: string;
@@ -13,6 +16,15 @@ const INITIAL_VALUES: ProfilePasswordFormValues = {
   oldPassword: "",
   newPassword: "",
 };
+
+const validationSchema = yup.object<ProfilePasswordFormValues>({
+  oldPassword: yup.string().required("Current password is required"),
+  newPassword: yup
+    .string()
+    .min(8, "Minimum password length is 8 characters")
+    .matches(isNumberRegx, "Required at least one number")
+    .matches(upperCaseRegx, "Required at least Uppercase"),
+});
 
 type ProfilePasswordProps = {
   onChange?: (formValues: ProfilePasswordFormValues) => void;
@@ -47,12 +59,12 @@ export const ProfilePassword: FC<ProfilePasswordProps> = ({
       <Form onSubmit={submitHandler}>
         <PasswordInput
           value={formValues.oldPassword}
-          onChange={(password) => changeHandler(password, "oldPassword")}
+          onChange={(event) => changeHandler(event.target.value, "oldPassword")}
           label="Current password"
         />
         <PasswordInput
           value={formValues.newPassword}
-          onChange={(password) => changeHandler(password, "newPassword")}
+          onChange={(event) => changeHandler(event.target.value, "newPassword")}
           label="New password"
           showRestrictions={true}
         />

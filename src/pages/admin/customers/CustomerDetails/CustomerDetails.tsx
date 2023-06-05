@@ -35,7 +35,6 @@ export const CustomerDetails: FC = () => {
   }, [loadingCustomer, setCustomer, setLoadingCustomer]);
 
   if (!url) {
-    // return <InternalError data-testid="internal-error-message" />;
     return <NotFound />;
   }
 

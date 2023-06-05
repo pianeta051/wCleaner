@@ -44,11 +44,11 @@ export const CreateUserForm: FC<CreateUserFormProps> = ({
     <Form onSubmit={submitHandler}>
       <EmailInput
         value={formValues.email}
-        onChange={(email) => changeHandler(email, "email")}
+        onChange={(event) => changeHandler(event.target.value, "email")}
       />
       <PasswordInput
         value={formValues.password}
-        onChange={(password) => changeHandler(password, "password")}
+        onChange={(event) => changeHandler(event.target.value, "password")}
         showRestrictions
       />
       <LoadingButton loading={loading} variant="outlined" type="submit">

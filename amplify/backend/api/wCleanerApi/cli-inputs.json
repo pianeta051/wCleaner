@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "paths": {
+    "/customers": {
+      "name": "/customers",
+      "lambdaFunction": "wCleanerApi",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
+        "groups": {
+          "Admin": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        }
+      }
+    }
+  }
+}

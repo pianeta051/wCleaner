@@ -17,6 +17,7 @@ describe("ForgotMyPassword", () => {
     cy.contains("We've sent you an email");
     cy.contains("Check your inbox to reset your password");
   });
+
   it("render an error message when the operation is not successful", () => {
     cy.stub(Auth, "forgotPassword").rejects();
     cy.mount(

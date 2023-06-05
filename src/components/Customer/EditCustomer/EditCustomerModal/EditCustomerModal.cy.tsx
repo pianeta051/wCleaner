@@ -106,7 +106,7 @@ describe("EditCustomerModal", () => {
         }}
       />
     );
-    // cy.findByText("Pepe");
+
     cy.findByDisplayValue("Pepe");
     cy.findByDisplayValue("84 Alcala");
     cy.findByDisplayValue("28017");

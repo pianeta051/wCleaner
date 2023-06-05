@@ -1,29 +1,25 @@
 import { FC, useState } from "react";
-import { Grid, Button, Alert, Typography } from "@mui/material";
-import { Field } from "./ForgotMyPassword.style";
+import { Alert, Button, Typography } from "@mui/material";
+
 import { Layout } from "../Layout/Layout";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ErrorCode, isErrorCode } from "../../../services/error";
 import { forgotPassword } from "../../../services/authentication";
-import { LoadingButton } from "@mui/lab";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
+import { ForgotPasswordForm } from "../../../components/ForgotPasswordForm/ForgotPasswordForm";
 
 type ForgotMyPasswordFormData = {
   email: string;
 };
 
-const FORM_VALUES_DEFAULTS: ForgotMyPasswordFormData = {
-  email: "",
-};
-
 export const ForgotMyPassword: FC = () => {
-  const [formData, setFormData] = useState(FORM_VALUES_DEFAULTS);
   const [loading, setLoading] = useState(false);
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
+  const toLogIn = () => navigate("/log-in");
 
-  const submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
-    event.preventDefault();
+  const submitHandler = (formData: ForgotMyPasswordFormData) => {
     setErrorCode(null);
     setLoading(true);
     forgotPassword(formData.email)
@@ -41,12 +37,6 @@ export const ForgotMyPassword: FC = () => {
       });
   };
 
-  const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    setFormData((formData) => ({
-      ...formData,
-      [event.target.name]: event.target.value,
-    }));
-  };
   return (
     <Layout
       title="Reset Password"
@@ -59,50 +49,9 @@ export const ForgotMyPassword: FC = () => {
           <Link to="/log-in">Go to login</Link>
         </Alert>
       ) : (
-        <form onSubmit={submitHandler}>
-          <Grid container>
-            <Grid item xs={12}>
-              <Field
-                id="email"
-                label="Email address"
-                type="email"
-                name="email"
-                autoFocus
-                required
-                fullWidth
-                onChange={changeHandler}
-                value={formData.email}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <LoadingButton
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-                loading={loading}
-              >
-                Reset
-              </LoadingButton>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Link to="/log-in">
-                <Button
-                  disableFocusRipple
-                  disableRipple
-                  style={{ textTransform: "none" }}
-                  variant="text"
-                  color="primary"
-                >
-                  Log In
-                </Button>
-              </Link>
-            </Grid>
-          </Grid>
-        </form>
+        <ForgotPasswordForm loading={loading} onSubmit={submitHandler} />
       )}
+      <Button onClick={toLogIn}>Log In</Button>
       {errorCode && <ErrorMessage code={errorCode} />}
     </Layout>
   );

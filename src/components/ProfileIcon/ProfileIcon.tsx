@@ -10,6 +10,9 @@ export const ProfileIcon: FC = () => {
       return null;
     }
     if (!user?.attributes?.name) {
+      if (!user?.attributes.email) {
+        return null;
+      }
       return user?.attributes.email[0];
     }
     return user?.attributes.name[0];

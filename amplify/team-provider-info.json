@@ -10,31 +10,37 @@
       "StackName": "amplify-wcleaner-dev-153252",
       "StackId": "arn:aws:cloudformation:eu-west-2:295621520330:stack/amplify-wcleaner-dev-153252/5d0e45c0-a0b3-11ed-b595-0a649fe12144",
       "AmplifyAppId": "d2r3wluo8x2tk9",
-      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json"
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json"
     },
     "categories": {
+      "auth": {
+        "wcleaner": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "AdminQueries0c37162b": {
+          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+          "s3Key": "amplify-builds/AdminQueries0c37162b-38672f395a334f764832-build.zip"
+        },
+        "wcleanerCustomMessage": {
+          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+          "s3Key": "amplify-builds/wcleanerCustomMessage-62637a486459416d462f-build.zip"
+        },
+        "wCleanerApi": {
+          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+          "s3Key": "amplify-builds/wCleanerApi-2f36676878376b5a5331-build.zip"
+        }
+      },
       "hosting": {
         "amplifyhosting": {
           "appId": "d2r3wluo8x2tk9",
           "type": "cicd"
         }
       },
-      "auth": {
-        "wcleaner": {},
-        "userPoolGroups": {}
-      },
-      "function": {
-        "wcleanerCustomMessage": {
-          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/wcleanerCustomMessage-62637a486459416d462f-build.zip"
-        },
-        "AdminQueries0c37162b": {
-          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/AdminQueries0c37162b-38672f395a334f764832-build.zip"
-        }
-      },
       "api": {
-        "AdminQueries": {}
+        "AdminQueries": {},
+        "wCleanerApi": {}
       }
     }
   }

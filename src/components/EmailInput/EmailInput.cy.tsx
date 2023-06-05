@@ -13,6 +13,7 @@ describe("EmailInput", () => {
     );
     cy.findByLabelText("Email").should("have.value", "pepe");
   });
+
   it("display value when it is not defined ", () => {
     cy.mount(<EmailInput onChange={cy.spy().as("changeHandler")} />);
     cy.findByLabelText("Email").should("have.value", "");

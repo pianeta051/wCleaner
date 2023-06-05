@@ -4,9 +4,12 @@ describe("ProfilePassword", () => {
   it("calls onChange when clicking on save button", () => {
     cy.mount(<ProfilePassword onChange={cy.spy().as("changeHandler")} />);
     cy.findByLabelText("Current password").type("password");
-    cy.findByLabelText("New password").type("password");
+    cy.findByLabelText("New password").type("newPassword");
     cy.get("button[type=submit]").as("submitBtn").click();
-    cy.get("@changeHandler").should("have.been.called");
+    cy.get("@changeHandler").should("have.been.calledWith", {
+      oldPassword: "password",
+      newPassword: "newPassword",
+    });
   });
 
   it("calls onChange when pressing enter", () => {
@@ -16,4 +19,6 @@ describe("ProfilePassword", () => {
 
     cy.get("@changeHandler").should("have.been.called");
   });
+
+  // Completar con tests para loading
 });

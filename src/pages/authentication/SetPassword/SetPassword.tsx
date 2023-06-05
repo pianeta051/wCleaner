@@ -81,7 +81,7 @@ export const SetPassword: FC<SetPasswordProps> = ({
               <Grid container>
                 <Grid item xs={12}>
                   <PasswordInput
-                    onChange={changeHandler}
+                    onChange={(event) => changeHandler(event.target.value)}
                     value={formData.password}
                     label="Password"
                     name="password"
