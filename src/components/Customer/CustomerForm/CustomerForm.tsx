@@ -1,10 +1,10 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import { Button, Grid } from "@mui/material";
 import { Field } from "./CustomerForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../../Form/Form";
-import { ErrorCode } from "../../../services/error";
-import { ErrorMessage } from "../../ErrorMessage/ErrorMessage";
+import { useFormik } from "formik";
+import * as yup from "yup";
 
 export type CustomerFormValues = {
   name: string;
@@ -23,12 +23,16 @@ const INITIAL_VALUES: CustomerFormValues = {
   secondTelephone: "",
   email: "",
 };
+const validationSchema = yup.object<CustomerFormValues>({
+  email: yup.string().email().required(),
+  name: yup.string().required(),
+});
 
 type CustomerFormProps = {
   onSubmit: (customer: CustomerFormValues) => void;
   onCancel?: () => void;
+  onDelete?: () => void;
   initialValues?: CustomerFormValues;
-  errorMessage: ErrorCode | null;
   loading?: boolean;
   layout?: "vertical" | "horizontal";
 };
@@ -36,28 +40,20 @@ type CustomerFormProps = {
 export const CustomerForm: FC<CustomerFormProps> = ({
   onSubmit,
   onCancel,
+  onDelete,
   initialValues = INITIAL_VALUES,
   loading = false,
   layout = "vertical",
-  errorMessage,
 }) => {
-  const [formValues, setFormValues] = useState(initialValues);
-  const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    setFormValues((formValues) => ({
-      ...formValues,
-      [event.target.name]: event.target.value,
-    }));
-  };
-  const submitHandler = () => {
-    if (onSubmit && formValues.email) {
-      onSubmit(formValues);
-    }
-  };
-
+  const formik = useFormik<CustomerFormValues>({
+    initialValues: initialValues,
+    onSubmit,
+    validationSchema,
+  });
   const columns = layout === "vertical" ? 12 : 4;
 
   return (
-    <Form onSubmit={submitHandler}>
+    <Form onSubmit={formik.handleSubmit}>
       <Grid container columnSpacing={5}>
         <Grid item xs={12} md={columns}>
           <Field
@@ -67,9 +63,10 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             type="text"
             autoFocus
             required
-            fullWidth
-            onChange={changeHandler}
-            value={formValues.name}
+            onChange={formik.handleChange}
+            value={formik.values.name}
+            error={!!(formik.touched.name && formik.errors.name)}
+            helperText={formik.touched.name ? formik.errors.name : undefined}
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -79,8 +76,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             label="address"
             type="text"
             fullWidth
-            onChange={changeHandler}
-            value={formValues.address}
+            onChange={formik.handleChange}
+            value={formik.values.address}
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -90,8 +87,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             label="postcode"
             type="text"
             fullWidth
-            onChange={changeHandler}
-            value={formValues.postcode}
+            onChange={formik.handleChange}
+            value={formik.values.postcode}
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -101,8 +98,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             label="main telephone"
             type="text"
             fullWidth
-            onChange={changeHandler}
-            value={formValues.mainTelephone}
+            onChange={formik.handleChange}
+            value={formik.values.mainTelephone}
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -112,8 +109,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             label="second telephone"
             type="text"
             fullWidth
-            onChange={changeHandler}
-            value={formValues.secondTelephone}
+            onChange={formik.handleChange}
+            value={formik.values.secondTelephone}
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -124,25 +121,25 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             type="email"
             fullWidth
             required
-            onChange={changeHandler}
-            value={formValues.email}
+            onChange={formik.handleChange}
+            value={formik.values.email}
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid item xs={12} textAlign="center">
           <LoadingButton
             variant="contained"
             color="primary"
             style={{ textTransform: "none" }}
-            fullWidth
             type="submit"
+            sx={{ width: "75%" }}
             loading={loading}
           >
             Save
           </LoadingButton>
         </Grid>
         {onCancel && (
-          <Grid item xs={12}>
+          <Grid item xs={12} textAlign="center">
             <Button
               disableFocusRipple
               disableRipple
@@ -153,10 +150,19 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             >
               Cancel
             </Button>
+            <Button
+              disableFocusRipple
+              disableRipple
+              style={{ textTransform: "none" }}
+              variant="text"
+              color="warning"
+              onClick={onDelete}
+            >
+              Delete
+            </Button>
           </Grid>
         )}
       </Grid>
-      {errorMessage && <ErrorMessage code={errorMessage} />}
     </Form>
   );
 };

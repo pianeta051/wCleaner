@@ -2,6 +2,7 @@ import { Alert, Button, Typography } from "@mui/material";
 import { FC } from "react";
 import { ErrorCode } from "../../services/error";
 import { Link } from "react-router-dom";
+import { NotFound } from "../../pages/NotFound/NotFound";
 
 type ErrorMessageProps = {
   code: ErrorCode;
@@ -94,6 +95,27 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
         <Typography>Your reset link has expired. Please try again</Typography>
       </Alert>
     );
+  }
+  if (code === "EMAIL_ALREADY_EXISTS") {
+    return (
+      <Alert severity="error">
+        <Typography>
+          There is an existing customer with this email. Please try with other
+          email.
+        </Typography>
+      </Alert>
+    );
+  }
+  if (code === "EMAIL_CANNOT_BE_EMPTY") {
+    return (
+      <Alert severity="error">
+        <Typography>Email field cannot be empty.</Typography>
+      </Alert>
+    );
+  }
+
+  if (code === "NOT_FOUND") {
+    return <NotFound />;
   }
 
   return <Alert severity="error">Internal error</Alert>;

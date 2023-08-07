@@ -14,7 +14,7 @@ describe("CustomerTable", () => {
         mainTelephone: "+12345",
         secondTelephone: "+54321",
         email: "carlos@fake.com",
-        url: "carlos",
+        slug: "carlos",
       },
     ];
     cy.mount(

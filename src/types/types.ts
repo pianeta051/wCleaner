@@ -6,5 +6,5 @@ export type Customer = {
   secondTelephone: string;
   email: string;
   id: number;
-  url: string;
+  slug: string;
 };

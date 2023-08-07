@@ -1,6 +1,6 @@
 import { FC } from "react";
 import {
-  Paper,
+  Grid,
   Table,
   TableCell,
   TableContainer,
@@ -19,12 +19,13 @@ type CustomersTableProps = {
   onEdit: (customer: Customer) => void;
 };
 
+// const editClickHandler = () => navigate(`/customers/${customer.id}/edit`);
 export const CustomersTable: FC<CustomersTableProps> = ({
   customers,
   onEdit,
 }) => {
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Grid}>
       <Table aria-label="simple table">
         <TableHead>
           <TableRow>
@@ -41,13 +42,13 @@ export const CustomersTable: FC<CustomersTableProps> = ({
           {customers &&
             customers.map((customer) => (
               <TableRow
-                key={customer.url}
+                key={customer.id}
                 sx={{
                   "&:last-child td, &:last-child th": { border: 0 },
                 }}
               >
                 <TableCell component="th" scope="row">
-                  <Link to={customer.url}>{customer.name}</Link>
+                  <Link to={customer.slug}>{customer.name}</Link>
                 </TableCell>
                 <TableCell align="right">{customer.address}</TableCell>
                 <TableCell align="right">{customer.postcode}</TableCell>

@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from "react";
 
-import { Button, Paper, CircularProgress, Alert } from "@mui/material";
+import { Button, Paper, CircularProgress } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./Customers.style";
 import { getCustomers } from "../../../../services/customers";
 import { Customer } from "../../../../types/types";
@@ -8,6 +8,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { EditCustomerModal } from "../../../../components/Customer/EditCustomer/EditCustomerModal/EditCustomerModal";
 import { NewCustomerModal } from "../../../../components/Customer/CreateCustomer/NewCustomerModal/NewCustomerModal";
 import { CustomersTable } from "../../../../components/CustomersTable/CustomersTable";
+import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
 
 export const Customers: FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -60,24 +61,26 @@ export const Customers: FC = () => {
 
   return (
     <Wrapper>
-      <IconButton>
-        <Button startIcon={<AddIcon />} onClick={openHandler}>
-          New customer
-        </Button>
-      </IconButton>
-      <Title>Customers</Title>
-
       <Paper elevation={13}>
         {loading ? (
           <CircularProgress />
         ) : (
           <>
             {customers.length === 0 ? (
-              <div className="text-center">
-                <Alert severity="warning">No customers found</Alert>
-              </div>
+              <EmptyCustomers onCreateNew={openHandler} />
             ) : (
-              <CustomersTable customers={customers} onEdit={openEditHandler} />
+              <>
+                <IconButton>
+                  <Button startIcon={<AddIcon />} onClick={openHandler}>
+                    New customer
+                  </Button>
+                </IconButton>
+                <Title>Customers</Title>
+                <CustomersTable
+                  customers={customers}
+                  onEdit={openEditHandler}
+                />
+              </>
             )}
           </>
         )}

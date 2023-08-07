@@ -2,12 +2,7 @@ import { CustomerForm, CustomerFormValues } from "./CustomerForm";
 
 describe("CustomerForm", () => {
   it("calls onSubmit when clicking a send button", () => {
-    cy.mount(
-      <CustomerForm
-        onSubmit={cy.spy().as("submitHandler")}
-        errorMessage={null}
-      />
-    );
+    cy.mount(<CustomerForm onSubmit={cy.spy().as("submitHandler")} />);
     cy.findByLabelText("name *").type("carlos");
     cy.findByLabelText("email *").type("carlos@email.com");
     cy.findByText("Save").click();
@@ -22,12 +17,7 @@ describe("CustomerForm", () => {
   });
 
   it("calls onSubmit when pressing intro in a text input", () => {
-    cy.mount(
-      <CustomerForm
-        onSubmit={cy.spy().as("submitHandler")}
-        errorMessage={null}
-      />
-    );
+    cy.mount(<CustomerForm onSubmit={cy.spy().as("submitHandler")} />);
     cy.findByLabelText("name *").type("carlos");
     cy.findByLabelText("email *").type("carlos@email.com{enter}");
 
@@ -46,7 +36,6 @@ describe("CustomerForm", () => {
       <CustomerForm
         onSubmit={cy.spy().as("submitHandler")}
         onCancel={cy.spy().as("cancelHandler")}
-        errorMessage={null}
       />
     );
     cy.findByText("Cancel").click();
@@ -58,7 +47,6 @@ describe("CustomerForm", () => {
       <CustomerForm
         onSubmit={cy.spy().as("submitHandler")}
         onCancel={cy.spy().as("closeHandler")}
-        errorMessage={null}
         initialValues={{
           name: "carlos",
           address: "",
@@ -78,7 +66,6 @@ describe("CustomerForm", () => {
       <CustomerForm
         onSubmit={cy.spy().as("submitHandler")}
         onCancel={cy.spy().as("closeHandler")}
-        errorMessage={null}
         initialValues={{
           name: "",
           address: "",
@@ -102,7 +89,6 @@ describe("CustomerForm", () => {
       <CustomerForm
         onSubmit={cy.spy().as("submitHandler")}
         onCancel={cy.spy().as("closeHandler")}
-        errorMessage={null}
         initialValues={{
           name: "carlos",
           address: "",
@@ -116,56 +102,22 @@ describe("CustomerForm", () => {
     cy.findByRole("alert").should("not.exist");
   });
 
-  it("renders an error message when errorMessage is not null", () => {
-    cy.mount(
-      <CustomerForm
-        onSubmit={cy.spy().as("submitHandler")}
-        onCancel={cy.spy().as("closeHandler")}
-        errorMessage={"USER_NOT_EXISTS"}
-        initialValues={{
-          name: "carlos",
-          address: "",
-          postcode: "",
-          mainTelephone: "",
-          secondTelephone: "",
-          email: "",
-        }}
-      />
-    );
-    cy.findByRole("alert").contains(
-      "The email is not registered. Please contact the system administrator"
-    );
-  });
-
   it("displays a spinner when loading is true", () => {
     cy.mount(
-      <CustomerForm
-        loading={true}
-        onSubmit={cy.spy().as("submitHandler")}
-        errorMessage={null}
-      />
+      <CustomerForm loading={true} onSubmit={cy.spy().as("submitHandler")} />
     );
     cy.findByRole("progressbar");
   });
 
   it("displays a save button when loading is false", () => {
     cy.mount(
-      <CustomerForm
-        loading={false}
-        onSubmit={cy.spy().as("submitHandler")}
-        errorMessage={null}
-      />
+      <CustomerForm loading={false} onSubmit={cy.spy().as("submitHandler")} />
     );
     cy.contains("Save");
   });
 
   it("displays a save button when loading is undefined", () => {
-    cy.mount(
-      <CustomerForm
-        onSubmit={cy.spy().as("submitHandler")}
-        errorMessage={null}
-      />
-    );
+    cy.mount(<CustomerForm onSubmit={cy.spy().as("submitHandler")} />);
     cy.contains("Save");
   });
 });

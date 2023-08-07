@@ -1,0 +1,32 @@
+{
+  "resourceName": "wCleaner",
+  "tableName": "customers",
+  "partitionKey": {
+    "fieldName": "id",
+    "fieldType": "string"
+  },
+  "gsi": [
+    {
+      "name": "filter_by_slug",
+      "partitionKey": {
+        "fieldName": "slug",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "filter_by_email",
+      "partitionKey": {
+        "fieldName": "email",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "search_by_email",
+      "partitionKey": {
+        "fieldName": "email",
+        "fieldType": "string"
+      }
+    }
+  ],
+  "triggerFunctions": []
+}

@@ -10,38 +10,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const awsServerlessExpressMiddleware = require("aws-serverless-express/middleware");
 
-const customers = [
-  {
-    id: 1,
-    name: "Carlos",
-    address: "123 Fake St",
-    postcode: "2005",
-    mainTelephone: "+12345",
-    secondTelephone: "+54321",
-    email: "carlos@fake.com",
-    url: "carlos",
-  },
-  {
-    id: 2,
-    name: "John Smith",
-    address: "46 Fauna St",
-    postcode: "LU65DF",
-    mainTelephone: "+48455",
-    secondTelephone: "+54545",
-    email: "john@fake.com",
-    url: "john",
-  },
-  {
-    id: 3,
-    name: "Amalia Rosso",
-    address: "87 Tilling St",
-    postcode: "MD35PF",
-    mainTelephone: "+997555",
-    secondTelephone: "+36544",
-    email: "amalia@fake.com",
-    url: "amalia",
-  },
-];
+//
+const {
+  addCustomer,
+  getCustomers,
+  getCustomerBySlug,
+  deleteCustomer,
+  editCustomer,
+} = require("./db");
 
 // declare a new express app
 const app = express();
@@ -55,30 +31,79 @@ app.use(function (req, res, next) {
   next();
 });
 
+const mapCustomer = (customerFromDb) => ({
+  id: customerFromDb.id.S,
+  name: customerFromDb.name.S,
+  address: customerFromDb.address.S,
+  postcode: customerFromDb.postcode.S,
+  mainTelephone: customerFromDb.mainTelephone.S,
+  secondTelephone: customerFromDb.secondTelephone.S,
+  email: customerFromDb.email.S,
+  slug: customerFromDb.slug.S,
+});
+
 // Get all customers
-app.get("/customers", function (req, res) {
+app.get("/customers", async function (_, res) {
+  const customers = (await getCustomers()).map(mapCustomer);
+  console.log(customers);
   res.json({ customers });
 });
 
 // Get a single customer
-app.get("/customers/*", function (req, res) {
-  // Add your code here
-  res.json({ success: "get call succeed!", url: req.url });
+app.get("/customers/*", async function (req, res) {
+  const slug = req.params[0];
+  const customerFromDb = await getCustomerBySlug(slug);
+  if (!customerFromDb) {
+    res.status(404).json({ message: "This customer does not exist" });
+    return;
+  }
+  const customer = mapCustomer(customerFromDb);
+  res.json({ customer });
 });
 
-app.post("/customers", function (req, res) {
-  // Add your code here
-  res.json({ success: "post call succeed!", url: req.url, body: req.body });
+// Add a customer
+app.post("/customers", async function (req, res) {
+  try {
+    const createdCustomer = await addCustomer(req.body);
+    res.json({ customer: createdCustomer });
+  } catch (error) {
+    if (error === "EMAIL_ALREADY_EXISTS") {
+      res.status(409).json({
+        error: "Email Already Exists",
+      });
+    } else if (error === "EMAIL_CANNOT_BE_EMPTY") {
+      res.status(400).json({
+        error: "Email cannot be empty",
+      });
+    } else {
+      throw error;
+    }
+  }
 });
 
-app.put("/customers/*", function (req, res) {
-  // Add your code here
-  res.json({ success: "put call succeed!", url: req.url, body: req.body });
+//Update a customer
+
+app.put("/customers/*", async function (req, res) {
+  try {
+    const id = req.params[0];
+    const editedCustomer = await editCustomer(id, req.body);
+    res.json({ customer: editedCustomer });
+  } catch (error) {
+    if (error.message === "EMAIL_ALREADY_REGISTERED") {
+      res.status(409).json({
+        error: "Email Already Exists",
+      });
+    } else {
+      throw error;
+    }
+  }
 });
 
-app.delete("/customers/*", function (req, res) {
-  // Add your code here
-  res.json({ success: "delete call succeed!", url: req.url });
+// Delete a Customer
+app.delete("/customers/*", async function (req, res) {
+  const id = req.params[0];
+  await deleteCustomer(id);
+  res.json({ message: "Customer deleted" });
 });
 
 app.listen(3000, function () {

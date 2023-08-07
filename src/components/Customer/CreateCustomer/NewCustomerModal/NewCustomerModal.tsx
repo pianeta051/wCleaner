@@ -14,6 +14,7 @@ import {
   Title,
 } from "../../CustomerForm/CustomerForm.style";
 import { Grid } from "@mui/material";
+import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
 
 type NewCustomerModalProps = {
   open: boolean;
@@ -38,7 +39,6 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
         onClose();
       })
       .catch((error) => {
-        console.error(error);
         setLoading(false);
         if (isErrorCode(error)) {
           setError(error);
@@ -61,14 +61,15 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
             <Title variant="h4">New Customer</Title>
           </Grid>
         </Wrapper>
+
         <Background>
           <CustomerForm
             onSubmit={submitHandler}
             onCancel={onClose}
             loading={loading}
-            errorMessage={error}
           />
         </Background>
+        {error && <ErrorMessage code={error} />}
       </ModalBox>
     </Modal>
   );

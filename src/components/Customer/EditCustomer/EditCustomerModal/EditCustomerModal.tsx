@@ -1,5 +1,5 @@
 import { Modal } from "@mui/material";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Customer } from "../../../../types/types";
 import {
   ModalBox,
@@ -12,42 +12,84 @@ import {
   CustomerForm,
   CustomerFormValues,
 } from "../../CustomerForm/CustomerForm";
-import { editCustomer } from "../../../../services/customers";
+import {
+  deleteCustomer,
+  editCustomer,
+  getCustomer,
+} from "../../../../services/customers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
+import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
+import { useNavigate, useParams } from "react-router-dom";
 
 type EditCustomerModalProps = {
   open: boolean;
   onClose: () => void;
   onEdit: (customer: Customer) => void;
+  onDelete?: () => void;
   customer: Customer;
 };
+type EditCustomerParams = {
+  id: string;
+};
+
 export const EditCustomerModal: FC<EditCustomerModalProps> = ({
   open,
   onClose,
-  onEdit,
   customer,
+  onDelete,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
+  const { id } = useParams<EditCustomerParams>();
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    if (loading && id) {
+      getCustomer(id)
+        .then(() => {
+          setLoading(false);
+        })
+        .catch((error) => {
+          if (isErrorCode(error.message)) {
+            setError(error.message);
+          } else {
+            setError("INTERNAL_ERROR");
+          }
+          setLoading(false);
+        });
+    }
+  }, []);
   const submitHandler = (formValues: CustomerFormValues) => {
     setError(null);
     setLoading(true);
-    editCustomer(formValues, customer.id)
-      .then((customer) => {
-        setLoading(false);
-        onEdit(customer);
+    editCustomer("" + customer.id, formValues)
+      .then(() => {
+        navigate(`/`);
       })
       .catch((error) => {
-        setLoading(false);
-        if (isErrorCode(error)) {
-          setError(error);
+        if (isErrorCode(error.message)) {
+          setError(error.message);
         } else {
           setError("INTERNAL_ERROR");
         }
       });
   };
-
+  const deleteHandler = () => {
+    setLoading(true);
+    deleteCustomer("" + customer.id)
+      .then(() => {
+        setLoading(false);
+        onDelete;
+        navigate(`/`);
+      })
+      .catch((error) => {
+        if (isErrorCode(error.message)) {
+          setError(error.message);
+        } else {
+          setError("INTERNAL_ERROR");
+        }
+      });
+  };
   return (
     <Modal
       open={open}
@@ -62,11 +104,12 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
           </Grid>
         </Wrapper>
         <Background>
+          {error && <ErrorMessage code={error} />}
           <CustomerForm
             onCancel={onClose}
             onSubmit={submitHandler}
+            onDelete={deleteHandler}
             initialValues={customer}
-            errorMessage={error}
             loading={loading}
           />
         </Background>

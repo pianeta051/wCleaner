@@ -10,9 +10,10 @@ import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { Customer } from "../../../../types/types";
 import { NotFound } from "../../../NotFound/NotFound";
 import { Title, Wrapper } from "./CustomerDetails.style";
+import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 
 type CustomerParams = {
-  url: string;
+  id: string;
 };
 
 export const CustomerDetails: FC = () => {
@@ -21,19 +22,27 @@ export const CustomerDetails: FC = () => {
   const [loadingForm, setLoadingForm] = useState(false);
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-
-  const { url } = useParams<CustomerParams>();
+  const { id } = useParams<CustomerParams>();
 
   useEffect(() => {
-    if (loadingCustomer && url) {
-      getCustomer(url).then((customer) => {
-        setLoadingCustomer(false);
-        setCustomer(customer);
-      });
+    if (loadingCustomer && id) {
+      getCustomer(id)
+        .then((customer) => {
+          setLoadingCustomer(false);
+          setCustomer(customer);
+        })
+        .catch((error) => {
+          setLoadingCustomer(false);
+          if (isErrorCode(error)) {
+            setErrorCode(error);
+          } else {
+            setErrorCode("INTERNAL_ERROR");
+          }
+        });
     }
   }, [loadingCustomer, setCustomer, setLoadingCustomer]);
 
-  if (!url) {
+  if (!id) {
     return <NotFound />;
   }
 
@@ -41,20 +50,20 @@ export const CustomerDetails: FC = () => {
     if (customer) {
       setErrorCode(null);
       setLoadingForm(true);
-      editCustomer(formValues, customer.id)
-        .then((customer) => {
-          setLoadingForm(false);
-          setCustomer(customer);
-          setSnackbarOpen(true);
-        })
-        .catch((error) => {
-          setLoadingForm(false);
-          if (isErrorCode(error)) {
-            setErrorCode(error);
-          } else {
-            setErrorCode("INTERNAL_ERROR");
-          }
-        });
+      // editCustomer(customer.id, formValues)
+      //   .then((customer) => {
+      //     setLoadingForm(false);
+      //     setCustomer(customer);
+      //     setSnackbarOpen(true);
+      //   })
+      //   .catch((error) => {
+      //     setLoadingForm(false);
+      //     if (isErrorCode(error)) {
+      //       setErrorCode(error);
+      //     } else {
+      //       setErrorCode("INTERNAL_ERROR");
+      //     }
+      //   });
     }
   };
 
@@ -71,12 +80,13 @@ export const CustomerDetails: FC = () => {
       <Grid container spacing={0} direction="column" alignItems="center">
         {loadingCustomer ? (
           <CircularProgress />
+        ) : errorCode ? (
+          <ErrorMessage code={errorCode} />
         ) : customer ? (
           <CustomerForm
             onSubmit={submitHandler}
             initialValues={customer}
             loading={loadingForm}
-            errorMessage={errorCode}
             layout="horizontal"
           />
         ) : (

@@ -1,144 +1,136 @@
 import { API } from "aws-amplify";
 import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
 import { Customer } from "../types/types";
+import { isErrorResponse } from "./error";
 
-const PATHS = ["/customers"] as const;
-
-export const get = async (
-  path: typeof PATHS[number],
+const get = async (
+  path: string,
   queryParams: { [param: string]: string } = {}
 ) => {
   return API.get("wCleanerApi", path, {
-    headers: {
-      "Content-Type": "application/json",
-    },
     queryStringParameters: queryParams,
   });
 };
 
-const customers: Customer[] = [
-  {
-    id: 1,
-    name: "Carlos",
-    address: "123 Fake St",
-    postcode: "2005",
-    mainTelephone: "+12345",
-    secondTelephone: "+54321",
-    email: "carlos@fake.com",
-    url: "carlos",
-  },
-  {
-    id: 2,
-    name: "John Smith",
-    address: "46 Fauna St",
-    postcode: "LU65DF",
-    mainTelephone: "+48455",
-    secondTelephone: "+54545",
-    email: "john@fake.com",
-    url: "john",
-  },
-  {
-    id: 3,
-    name: "Amalia Rosso",
-    address: "87 Tilling St",
-    postcode: "MD35PF",
-    mainTelephone: "+997555",
-    secondTelephone: "+36544",
-    email: "amalia@fake.com",
-    url: "amalia",
-  },
-];
-
-const sleep = async (milliseconds: number) =>
-  new Promise((resolve) => setTimeout(resolve, milliseconds));
-
-const generateUrl = (email: string): string => {
-  return email.split("@")[0];
+const post = async (path: string, body: { [param: string]: string } = {}) => {
+  return API.post("wCleanerApi", path, {
+    body,
+  });
 };
 
-export const addCustomer = async (formValues: CustomerFormValues) => {
-  await sleep(1000);
-  const existingCustomer = customers.find(
-    (customer) => customer.email === formValues.email
-  );
-  if (existingCustomer) {
-    throw "CUSTOMER_ALREADY_EXISTS";
-  }
+const remove = async (path: string) => {
+  return API.del("wCleanerApi", path, {});
+};
 
-  const customer: Customer = {
-    id: customers.length + 1,
-    name: formValues.name,
-    address: formValues.address,
-    postcode: formValues.postcode,
-    mainTelephone: formValues.mainTelephone,
-    secondTelephone: formValues.secondTelephone,
-    email: formValues.email,
-    url: formValues.email.split("@")[0],
-  };
-  customers.push(customer);
-  return customer;
+const put = async (path: string, body: { [param: string]: string } = {}) => {
+  return API.put("wCleanerApi", path, {
+    body,
+  });
+};
+
+const isCustomer = (value: unknown): value is Customer => {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof (value as Customer)["id"] === "string" &&
+    "name" in value &&
+    typeof (value as Customer)["name"] === "string" &&
+    "email" in value &&
+    typeof (value as Customer)["email"] === "string" &&
+    "slug" in value &&
+    typeof (value as Customer)["slug"] === "string"
+  );
+};
+
+export const addCustomer = async (
+  formValues: CustomerFormValues
+): Promise<Customer> => {
+  try {
+    const response = await post("/customers", formValues);
+    if (!isCustomer(response.customer)) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.customer;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      if (error.response.status === 409) {
+        throw "EMAIL_ALREADY_EXISTS";
+      }
+      if (error.response.status === 400) {
+        throw "EMAIL_CANNOT_BE_EMPTY";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const deleteCustomer = async (id: string): Promise<void> => {
+  await remove("/customers/" + id);
 };
 
 export const editCustomer = async (
-  formValues: CustomerFormValues,
-  id: number
-) => {
-  await sleep(2000);
-  const customerIndex = customers.findIndex((customer) => customer.id === id);
-  if (customerIndex === -1) {
-    throw "The customer does not exist";
+  id: string,
+  formValues: CustomerFormValues
+): Promise<Customer> => {
+  try {
+    const response = await put("/customers/" + id, formValues);
+    if (!isCustomer(response.customer)) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.customer;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      if (error.response.status === 409) {
+        throw "EMAIL_ALREADY_EXISTS";
+      }
+      if (error.response.status === 400) {
+        throw "EMAIL_CANNOT_BE_EMPTY";
+      }
+      if (error.response.status === 404) {
+        throw "CUSTOMER_NOT_EXISTS";
+      }
+    }
+    throw "INTERNAL_ERROR";
   }
-  const newCustomer = {
-    ...formValues,
-    id: customers[customerIndex].id,
-    url: generateUrl(formValues.email),
-  };
-  customers[customerIndex] = newCustomer;
-  return newCustomer;
 };
 
-export const getCustomers = async (): Promise<Customer[]> => {
+export const getCustomers = async () => {
   const response = await get("/customers");
+  if (!("customers" in response) || !Array.isArray(response.customers)) {
+    throw "INTERNAL_ERROR";
+  }
+  for (const customer of response.customers) {
+    if (!isCustomer(customer)) {
+      throw "INTERNAL_ERROR";
+    }
+  }
   return response.customers;
 };
 
-export const getCustomer = async (url: string) => {
-  await sleep(1000);
-  const customer = customers.find((customer) => {
-    if (url && customer.url === url) {
-      return true;
+export const getCustomer = async (id: string): Promise<Customer> => {
+  try {
+    const response = await get(`/customers/${id}`);
+    if (!("customer" in response) && typeof response.customer !== "object") {
+      throw "INTERNAL_ERROR";
     }
-    return false;
-  });
-  if (customer === undefined) {
-    return null;
-  }
-  return customer;
-};
+    if (!isCustomer(response.customer)) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.customer;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      if (error.response.status === 404) {
+        throw "NOT_FOUND";
+      }
+    }
 
-const findByEmail = (email: string) =>
-  customers.find((customer) => customer.email === email);
-
-export const customerExists = async (email: string) => {
-  await sleep(1000);
-  const customer = findByEmail(email);
-  if (customer) {
-    throw "CUSTOMER_ALREADY_EXISTS";
+    throw "INTERNAL_ERROR";
   }
 };
 
-export const updateCustomerName = async (email: string, newName: string) => {
-  await sleep(1000);
-  const customerIndex = customers.findIndex(
-    (customer) => email === customer.email
-  );
-  if (customerIndex === -1) {
-    throw "USER_NOT_EXISTS";
-  }
-  const newCustomer = {
-    ...customers[customerIndex],
-    name: newName,
-  };
-  customers[customerIndex] = newCustomer;
-  return newCustomer;
+export const findByEmail = async (email: string): Promise<boolean> => {
+  const customers: Promise<Customer[]> = getCustomers();
+  return !!(await customers).find((customer) => customer.email === email);
 };

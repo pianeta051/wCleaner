@@ -7,6 +7,7 @@ describe("EditCustomerModal", () => {
         onClose={cy.spy().as("closeHandler")}
         open={true}
         onEdit={cy.spy().as("editHandler")}
+        onDelete={cy.spy().as("deleteHandler")}
         customer={{
           name: "Pepe",
           address: "",
@@ -15,7 +16,7 @@ describe("EditCustomerModal", () => {
           secondTelephone: "",
           email: "",
           id: 0,
-          url: "",
+          slug: "",
         }}
       />
     );
@@ -29,6 +30,7 @@ describe("EditCustomerModal", () => {
         onClose={cy.spy().as("closeHandler")}
         open={true}
         onEdit={cy.spy().as("editHandler")}
+        onDelete={cy.spy().as("deleteHandler")}
         customer={{
           name: "Pepe",
           address: "",
@@ -37,7 +39,7 @@ describe("EditCustomerModal", () => {
           secondTelephone: "",
           email: "",
           id: 0,
-          url: "",
+          slug: "",
         }}
       />
     );
@@ -52,6 +54,7 @@ describe("EditCustomerModal", () => {
         onClose={cy.spy().as("closeHandler")}
         open={true}
         onEdit={cy.spy().as("editHandler")}
+        onDelete={cy.spy().as("deleteHandler")}
         customer={{
           name: "Pepe",
           address: "",
@@ -60,7 +63,7 @@ describe("EditCustomerModal", () => {
           secondTelephone: "",
           email: "",
           id: 0,
-          url: "",
+          slug: "",
         }}
       />
     );
@@ -73,6 +76,7 @@ describe("EditCustomerModal", () => {
         onClose={cy.spy().as("closeHandler")}
         open={false}
         onEdit={cy.spy().as("editHandler")}
+        onDelete={cy.spy().as("deleteHandler")}
         customer={{
           name: "Pepe",
           address: "",
@@ -81,7 +85,7 @@ describe("EditCustomerModal", () => {
           secondTelephone: "",
           email: "",
           id: 0,
-          url: "",
+          slug: "",
         }}
       />
     );
@@ -94,6 +98,7 @@ describe("EditCustomerModal", () => {
         onClose={cy.spy().as("closeHandler")}
         open={true}
         onEdit={cy.spy().as("editHandler")}
+        onDelete={cy.spy().as("deleteHandler")}
         customer={{
           name: "Pepe",
           address: "84 Alcala",
@@ -102,7 +107,7 @@ describe("EditCustomerModal", () => {
           secondTelephone: "",
           email: "pepe@email.com",
           id: 0,
-          url: "",
+          slug: "pepe",
         }}
       />
     );

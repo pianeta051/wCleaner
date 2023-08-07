@@ -210,5 +210,11 @@
         }
       ]
     }
+  },
+  "storage": {
+    "wCleaner": {
+      "providerPlugin": "awscloudformation",
+      "service": "DynamoDB"
+    }
   }
 }

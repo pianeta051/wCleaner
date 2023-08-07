@@ -14,6 +14,7 @@ import { CustomerDetails } from "../pages/admin/customers/CustomerDetails/Custom
 import { UnAuthenticatedRoute } from "./UnAuthenticateRoute";
 import { AuthenticatedRoute } from "./AuthenticatedRoute";
 import { AdminRoute } from "./AdminRoute";
+import { EditCustomerModal } from "../components/Customer/EditCustomer/EditCustomerModal/EditCustomerModal";
 
 export const AppRoutes: FC = () => {
   return (
@@ -43,8 +44,10 @@ export const AppRoutes: FC = () => {
         <Route index element={<Navigate to="customers" />} />
         <Route path="customers">
           <Route index element={<Customers />} />
-          <Route path=":url" element={<CustomerDetails />} />
+          <Route path=":id" element={<CustomerDetails />} />
+          {/* <Route path="edit" element={<EditCustomerPage />} /> */}
         </Route>
+
         <Route path="profile" element={<ProfilePage />} />
         <Route
           path="users"

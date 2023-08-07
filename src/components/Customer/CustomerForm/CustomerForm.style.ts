@@ -1,7 +1,6 @@
 import { styled, Box, Grid, Paper, Typography, TextField } from "@mui/material";
 
 export const Background = styled(Paper)(() => ({
-  backgroundColor: "#F0F2F5",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -29,4 +28,6 @@ export const ModalBox = styled(Box)({
 
 export const Field = styled(TextField)(() => ({
   marginBottom: "10px",
+  width: "93%",
+  marginLeft: "20px",
 }));

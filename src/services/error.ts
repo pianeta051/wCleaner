@@ -11,7 +11,28 @@ export const ERROR_CODES = [
   "TOO_MANY_TRIES",
   "UNAUTHORIZED",
   "EXPIRED_LINK",
+  "NOT_FOUND",
+  "EMAIL_ALREADY_EXISTS",
+  "EMAIL_CANNOT_BE_EMPTY",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>
   typeof parameter === "string" && ERROR_CODES.includes(parameter as ErrorCode);
+
+type ErrorResponse = {
+  response: {
+    status: number;
+  };
+};
+
+export const isErrorResponse = (value: unknown): value is ErrorResponse => {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "response" in value &&
+    typeof (value as ErrorResponse)["response"] === "object" &&
+    (value as ErrorResponse)["response"] != null &&
+    "status" in (value as ErrorResponse)["response"] &&
+    typeof (value as ErrorResponse)["response"]["status"] === "number"
+  );
+};
