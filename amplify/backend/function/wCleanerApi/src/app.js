@@ -44,7 +44,8 @@ const mapCustomer = (customerFromDb) => ({
 
 // Get all customers
 app.get("/customers", async function (_, res) {
-  const customers = (await getCustomers()).map(mapCustomer);
+  const customersFromDB = await getCustomers();
+  const customers = customersFromDB.map(mapCustomer);
   console.log(customers);
   res.json({ customers });
 });
@@ -89,9 +90,13 @@ app.put("/customers/*", async function (req, res) {
     const editedCustomer = await editCustomer(id, req.body);
     res.json({ customer: editedCustomer });
   } catch (error) {
-    if (error.message === "EMAIL_ALREADY_REGISTERED") {
+    if (error === "EMAIL_ALREADY_REGISTERED") {
       res.status(409).json({
         error: "Email Already Exists",
+      });
+    } else if (error === "NOT_EXISTING_CUSTOMER") {
+      res.status(404).json({
+        error: "Not existing customer",
       });
     } else {
       throw error;

@@ -59,6 +59,15 @@ export const Customers: FC = () => {
     setEditModalOpen(false);
   };
 
+  const deleteHandler = () => {
+    if (editingCustomer) {
+      setCustomers((customers) =>
+        customers.filter((customer) => customer.id !== editingCustomer.id)
+      );
+      closeEditHandler();
+    }
+  };
+
   return (
     <Wrapper>
       <Paper elevation={13}>
@@ -96,6 +105,7 @@ export const Customers: FC = () => {
           onClose={closeEditHandler}
           onEdit={editHandler}
           customer={editingCustomer}
+          onDelete={deleteHandler}
         />
       )}
     </Wrapper>

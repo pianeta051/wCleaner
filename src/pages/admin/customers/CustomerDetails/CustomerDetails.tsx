@@ -50,20 +50,20 @@ export const CustomerDetails: FC = () => {
     if (customer) {
       setErrorCode(null);
       setLoadingForm(true);
-      // editCustomer(customer.id, formValues)
-      //   .then((customer) => {
-      //     setLoadingForm(false);
-      //     setCustomer(customer);
-      //     setSnackbarOpen(true);
-      //   })
-      //   .catch((error) => {
-      //     setLoadingForm(false);
-      //     if (isErrorCode(error)) {
-      //       setErrorCode(error);
-      //     } else {
-      //       setErrorCode("INTERNAL_ERROR");
-      //     }
-      //   });
+      editCustomer(customer.id, formValues)
+        .then((customer) => {
+          setLoadingForm(false);
+          setCustomer(customer);
+          setSnackbarOpen(true);
+        })
+        .catch((error) => {
+          setLoadingForm(false);
+          if (isErrorCode(error)) {
+            setErrorCode(error);
+          } else {
+            setErrorCode("INTERNAL_ERROR");
+          }
+        });
     }
   };
 

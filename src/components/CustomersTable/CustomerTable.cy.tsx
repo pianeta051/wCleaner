@@ -7,7 +7,7 @@ describe("CustomerTable", () => {
   it("calls onEdit when clicking a Edit button", () => {
     const customers: Customer[] = [
       {
-        id: 1,
+        id: "abcd",
         name: "Carlos",
         address: "123 Fake St",
         postcode: "2005",

@@ -19,13 +19,13 @@ import {
 } from "../../../../services/customers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 type EditCustomerModalProps = {
   open: boolean;
   onClose: () => void;
   onEdit: (customer: Customer) => void;
-  onDelete?: () => void;
+  onDelete: () => void;
   customer: Customer;
 };
 type EditCustomerParams = {
@@ -37,11 +37,11 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
   onClose,
   customer,
   onDelete,
+  onEdit,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
   const { id } = useParams<EditCustomerParams>();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (loading && id) {
@@ -59,12 +59,13 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
         });
     }
   }, []);
+
   const submitHandler = (formValues: CustomerFormValues) => {
     setError(null);
     setLoading(true);
-    editCustomer("" + customer.id, formValues)
-      .then(() => {
-        navigate(`/`);
+    editCustomer(customer.id, formValues)
+      .then((customer) => {
+        onEdit(customer);
       })
       .catch((error) => {
         if (isErrorCode(error.message)) {
@@ -74,13 +75,13 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
         }
       });
   };
+
   const deleteHandler = () => {
     setLoading(true);
-    deleteCustomer("" + customer.id)
+    deleteCustomer(customer.id)
       .then(() => {
         setLoading(false);
-        onDelete;
-        navigate(`/`);
+        onDelete();
       })
       .catch((error) => {
         if (isErrorCode(error.message)) {

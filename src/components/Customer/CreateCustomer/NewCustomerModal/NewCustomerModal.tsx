@@ -36,7 +36,6 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
       .then((customer) => {
         setLoading(false);
         onSubmit(customer);
-        onClose();
       })
       .catch((error) => {
         setLoading(false);

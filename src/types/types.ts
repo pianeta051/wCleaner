@@ -5,6 +5,6 @@ export type Customer = {
   mainTelephone: string;
   secondTelephone: string;
   email: string;
-  id: number;
+  id: string;
   slug: string;
 };

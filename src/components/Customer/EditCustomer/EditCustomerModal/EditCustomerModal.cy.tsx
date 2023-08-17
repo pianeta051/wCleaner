@@ -15,7 +15,7 @@ describe("EditCustomerModal", () => {
           mainTelephone: "",
           secondTelephone: "",
           email: "",
-          id: 0,
+          id: "abc",
           slug: "",
         }}
       />
@@ -38,7 +38,7 @@ describe("EditCustomerModal", () => {
           mainTelephone: "",
           secondTelephone: "",
           email: "",
-          id: 0,
+          id: "abc",
           slug: "",
         }}
       />
@@ -62,7 +62,7 @@ describe("EditCustomerModal", () => {
           mainTelephone: "",
           secondTelephone: "",
           email: "",
-          id: 0,
+          id: "abc",
           slug: "",
         }}
       />
@@ -84,7 +84,7 @@ describe("EditCustomerModal", () => {
           mainTelephone: "",
           secondTelephone: "",
           email: "",
-          id: 0,
+          id: "abc",
           slug: "",
         }}
       />
@@ -106,7 +106,7 @@ describe("EditCustomerModal", () => {
           mainTelephone: "66254",
           secondTelephone: "",
           email: "pepe@email.com",
-          id: 0,
+          id: "abc",
           slug: "pepe",
         }}
       />

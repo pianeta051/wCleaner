@@ -113,7 +113,13 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
-
+  if (code === "CUSTOMER_NOT_EXISTS") {
+    return (
+      <Alert severity="error">
+        <Typography>This Customer does not exists</Typography>
+      </Alert>
+    );
+  }
   if (code === "NOT_FOUND") {
     return <NotFound />;
   }

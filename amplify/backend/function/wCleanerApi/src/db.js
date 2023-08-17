@@ -50,7 +50,6 @@ const addCustomer = async (customer) => {
     },
   };
   const data = await ddb.putItem(params).promise();
-  console.log("Customer created", data);
   return {
     ...customer,
     id,
@@ -59,8 +58,13 @@ const addCustomer = async (customer) => {
 };
 
 const editCustomer = async (id, editedCustomer) => {
+  const customer = await getCustomer(id);
+
+  if (customer === undefined) {
+    throw "NOT_EXISTING_CUSTOMER";
+  }
+
   const emailExisting = await queryCustomersByEmail(editedCustomer.email);
-  console.log(JSON.stringify(emailExisting, null, 2));
 
   if (
     emailExisting.length > 0 &&
