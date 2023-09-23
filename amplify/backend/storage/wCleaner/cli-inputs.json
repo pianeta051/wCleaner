@@ -7,16 +7,9 @@
   },
   "gsi": [
     {
-      "name": "filter_by_slug",
+      "name": "search_by_slug",
       "partitionKey": {
         "fieldName": "slug",
-        "fieldType": "string"
-      }
-    },
-    {
-      "name": "filter_by_email",
-      "partitionKey": {
-        "fieldName": "email",
         "fieldType": "string"
       }
     },
@@ -24,6 +17,31 @@
       "name": "search_by_email",
       "partitionKey": {
         "fieldName": "email",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "search_by_name",
+      "partitionKey": {
+        "fieldName": "name",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "search_by_address",
+      "partitionKey": {
+        "fieldName": "address",
+        "fieldType": "string"
+      },
+      "sortKey": {
+        "fieldName": "id",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "search_by_postcode",
+      "partitionKey": {
+        "fieldName": "postcode",
         "fieldType": "string"
       }
     }

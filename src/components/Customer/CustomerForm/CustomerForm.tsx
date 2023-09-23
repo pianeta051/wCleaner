@@ -26,6 +26,10 @@ const INITIAL_VALUES: CustomerFormValues = {
 const validationSchema = yup.object<CustomerFormValues>({
   email: yup.string().email().required(),
   name: yup.string().required(),
+  address: yup.string().required(),
+  postcode: yup.string().required(),
+  mainTelephone: yup.string(),
+  secondTelephone: yup.string(),
 });
 
 type CustomerFormProps = {
@@ -76,6 +80,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             label="address"
             type="text"
             fullWidth
+            required
             onChange={formik.handleChange}
             value={formik.values.address}
           />
@@ -87,6 +92,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             label="postcode"
             type="text"
             fullWidth
+            required
             onChange={formik.handleChange}
             value={formik.values.postcode}
           />

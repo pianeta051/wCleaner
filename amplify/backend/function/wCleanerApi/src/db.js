@@ -128,26 +128,42 @@ const getCustomer = async (id) => {
   return customer.Item;
 };
 
-const getCustomers = async () => {
-  const params = {
+const getCustomers = async (exclusiveStartKey, limit, name) => {
+  let params = {
     TableName: "customers-dev",
+    Limit: limit,
+    ExclusiveStartKey: exclusiveStartKey,
   };
 
-  const scanResults = [];
-  let items;
-  do {
-    items = await ddb.scan(params).promise();
-    items.Items.forEach((item) => scanResults.push(item));
-    params.ExclusiveStartKey = items.LastEvaluatedKey;
-  } while (typeof items.LastEvaluatedKey !== "undefined");
-
-  return scanResults;
+  if (name?.length) {
+    const searchParams = {
+      ExpressionAttributeNames: {
+        "#N": "name",
+      },
+      FilterExpression: "#N = :name",
+      ExpressionAttributeValues: {
+        ":name": { S: name },
+      },
+    };
+    params = {
+      ...params,
+      ...searchParams,
+    };
+  }
+  const result = await ddb.scan(params).promise();
+  const items = result.Items;
+  const lastEvaluatedKey = result.LastEvaluatedKey;
+  const nextItem = await getNextCustomer(lastEvaluatedKey);
+  return {
+    items,
+    lastEvaluatedKey: nextItem ? lastEvaluatedKey : null,
+  };
 };
 
 const getCustomerBySlug = async (slug) => {
   const params = {
     TableName: "customers-dev",
-    IndexName: "filter_by_slug",
+    IndexName: "search_by_slug",
     KeyConditionExpression: "slug = :slug",
     ExpressionAttributeValues: {
       ":slug": { S: slug },
@@ -161,6 +177,19 @@ const getCustomerBySlug = async (slug) => {
   return customer;
 };
 
+const getNextCustomer = async (lastEvaluatedKey) => {
+  const params = {
+    TableName: "customers-dev",
+    Limit: 1,
+    ExclusiveStartKey: lastEvaluatedKey,
+  };
+  const result = await ddb.scan(params).promise();
+  if (result.Items.length) {
+    const item = result.Items[0];
+    return item;
+  }
+  return null;
+};
 const queryCustomersByEmail = async (email) => {
   const params = {
     ExpressionAttributeValues: {

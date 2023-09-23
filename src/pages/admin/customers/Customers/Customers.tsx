@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from "react";
 
-import { Button, Paper, CircularProgress } from "@mui/material";
+import { Button, Paper, CircularProgress, Pagination } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./Customers.style";
 import { getCustomers } from "../../../../services/customers";
 import { Customer } from "../../../../types/types";
@@ -9,6 +9,8 @@ import { EditCustomerModal } from "../../../../components/Customer/EditCustomer/
 import { NewCustomerModal } from "../../../../components/Customer/CreateCustomer/NewCustomerModal/NewCustomerModal";
 import { CustomersTable } from "../../../../components/CustomersTable/CustomersTable";
 import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
+import { ErrorCode, isErrorCode } from "../../../../services/error";
+import { LoadingButton } from "@mui/lab";
 
 export const Customers: FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -16,13 +18,25 @@ export const Customers: FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [error, setError] = useState<ErrorCode | null>(null);
+  const [nextToken, setNextToken] = useState<string | undefined>();
+  const [loadingMore, setLoadingMore] = useState(false);
   useEffect(() => {
     if (loading) {
-      getCustomers().then((customers) => {
-        setLoading(false);
-        setCustomers(customers);
-      });
+      getCustomers()
+        .then(({ customers, nextToken }) => {
+          setLoading(false);
+          setCustomers(customers);
+          setNextToken(nextToken);
+        })
+        .catch((error) => {
+          setLoading(false);
+          if (isErrorCode(error)) {
+            setError(error);
+          } else {
+            setError("INTERNAL_ERROR");
+          }
+        });
     }
   }, [loading, setCustomers, setLoading]);
 
@@ -37,6 +51,21 @@ export const Customers: FC = () => {
     setEditingCustomer(null);
   };
 
+  const loadMoreHandler = () => {
+    if (nextToken) {
+      setLoadingMore(true);
+      getCustomers(nextToken)
+        .then(({ customers, nextToken }) => {
+          setLoadingMore(false);
+          setCustomers((prevCustomers) => [...prevCustomers, ...customers]);
+          setNextToken(nextToken);
+        })
+        .catch(() => {
+          setLoadingMore(false);
+          setNextToken(undefined);
+        });
+    }
+  };
   const openEditHandler = (customer: Customer) => {
     setEditingCustomer(customer);
     setEditModalOpen(true);
@@ -107,6 +136,15 @@ export const Customers: FC = () => {
           customer={editingCustomer}
           onDelete={deleteHandler}
         />
+      )}
+      {nextToken && (
+        <LoadingButton
+          variant="text"
+          onClick={loadMoreHandler}
+          loading={loadingMore}
+        >
+          Load more
+        </LoadingButton>
       )}
     </Wrapper>
   );

@@ -5,7 +5,7 @@ import { isErrorResponse } from "./error";
 
 const get = async (
   path: string,
-  queryParams: { [param: string]: string } = {}
+  queryParams: { [param: string]: string | undefined | number } = {}
 ) => {
   return API.get("wCleanerApi", path, {
     queryStringParameters: queryParams,
@@ -96,8 +96,16 @@ export const editCustomer = async (
   }
 };
 
-export const getCustomers = async () => {
-  const response = await get("/customers");
+export const getCustomers = async (
+  nextToken?: string
+): Promise<{
+  customers: Customer[];
+  nextToken?: string;
+}> => {
+  const response = await get("/customers", {
+    nextToken,
+    limit: 5,
+  });
   if (!("customers" in response) || !Array.isArray(response.customers)) {
     throw "INTERNAL_ERROR";
   }
@@ -106,7 +114,9 @@ export const getCustomers = async () => {
       throw "INTERNAL_ERROR";
     }
   }
-  return response.customers;
+  const customers = response.customers as Customer[];
+  const responseToken = response.nextToken as string | undefined;
+  return { customers, nextToken: responseToken };
 };
 
 export const getCustomer = async (id: string): Promise<Customer> => {
@@ -130,7 +140,7 @@ export const getCustomer = async (id: string): Promise<Customer> => {
   }
 };
 
-export const findByEmail = async (email: string): Promise<boolean> => {
-  const customers: Promise<Customer[]> = getCustomers();
-  return !!(await customers).find((customer) => customer.email === email);
-};
+// export const findByEmail = async (email: string): Promise<boolean> => {
+//   const customers: Promise<Customer[]> = getCustomers();
+//   return !!(await customers).find((customer) => customer.email === email);
+// };
