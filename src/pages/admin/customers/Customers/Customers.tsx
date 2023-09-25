@@ -11,6 +11,7 @@ import { CustomersTable } from "../../../../components/CustomersTable/CustomersT
 import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { LoadingButton } from "@mui/lab";
+import { SearchBar } from "../../../../components/SearchBar/SearchBar";
 
 export const Customers: FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,6 +22,8 @@ export const Customers: FC = () => {
   const [error, setError] = useState<ErrorCode | null>(null);
   const [nextToken, setNextToken] = useState<string | undefined>();
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   useEffect(() => {
     if (loading) {
       getCustomers()
@@ -54,7 +57,7 @@ export const Customers: FC = () => {
   const loadMoreHandler = () => {
     if (nextToken) {
       setLoadingMore(true);
-      getCustomers(nextToken)
+      getCustomers(nextToken, searchTerm)
         .then(({ customers, nextToken }) => {
           setLoadingMore(false);
           setCustomers((prevCustomers) => [...prevCustomers, ...customers]);
@@ -97,10 +100,26 @@ export const Customers: FC = () => {
     }
   };
 
+  const searchHandler = (searchTerm: string) => {
+    setSearching(true);
+    setSearchTerm(searchTerm);
+    getCustomers(undefined, searchTerm)
+      .then(({ customers, nextToken }) => {
+        setSearching(false);
+        setCustomers(customers);
+        setNextToken(nextToken);
+      })
+      .catch(() => {
+        setSearching(false);
+        setCustomers([]);
+        setNextToken(undefined);
+      });
+  };
+
   return (
     <Wrapper>
       <Paper elevation={13}>
-        {loading ? (
+        {loading || searching ? (
           <CircularProgress />
         ) : (
           <>
@@ -114,6 +133,7 @@ export const Customers: FC = () => {
                   </Button>
                 </IconButton>
                 <Title>Customers</Title>
+                <SearchBar onSearch={searchHandler} initialValue={searchTerm} />
                 <CustomersTable
                   customers={customers}
                   onEdit={openEditHandler}

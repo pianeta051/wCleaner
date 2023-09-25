@@ -44,12 +44,6 @@ const mapCustomer = (customerFromDb) => ({
 });
 
 // Get all customers
-// app.get("/customers", async function (_, res) {
-//   const customersFromDB = await getCustomers();
-//   const customers = customersFromDB.map(mapCustomer);
-//   console.log(customers);
-//   res.json({ customers });
-// });
 
 app.get("/customers", async function (req, res) {
   const nextToken = req.query?.nextToken;

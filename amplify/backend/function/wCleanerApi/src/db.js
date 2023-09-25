@@ -29,6 +29,9 @@ const addCustomer = async (customer) => {
       name: {
         S: customer.name,
       },
+      name_lowercase: {
+        S: customer.name?.toLowerCase(),
+      },
       address: {
         S: customer.address,
       },
@@ -43,6 +46,9 @@ const addCustomer = async (customer) => {
       },
       email: {
         S: customer.email,
+      },
+      email_lowercase: {
+        S: customer.email?.toLowerCase(),
       },
       slug: {
         S: slug,
@@ -78,15 +84,20 @@ const editCustomer = async (id, editedCustomer) => {
     TableName: "customers-dev",
     ExpressionAttributeNames: {
       "#N": "name",
+      "#NL": "name_lowercase",
       "#A": "address",
       "#P": "postcode",
       "#MP": "mainTelephone",
       "#SP": "secondTelephone",
       "#E": "email",
+      "#EL": "email_lowercase",
     },
     ExpressionAttributeValues: {
       ":name": {
         S: editedCustomer.name,
+      },
+      ":name_lowercase": {
+        S: editedCustomer.name?.toLowerCase(),
       },
       ":address": {
         S: editedCustomer.address,
@@ -102,6 +113,9 @@ const editCustomer = async (id, editedCustomer) => {
       },
       ":email": {
         S: editedCustomer.email,
+      },
+      ":email_lowercase": {
+        S: editedCustomer.email?.toLowerCase(),
       },
     },
     UpdateExpression:
@@ -128,21 +142,23 @@ const getCustomer = async (id) => {
   return customer.Item;
 };
 
-const getCustomers = async (exclusiveStartKey, limit, name) => {
+const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
   let params = {
     TableName: "customers-dev",
     Limit: limit,
     ExclusiveStartKey: exclusiveStartKey,
   };
 
-  if (name?.length) {
+  if (searchInput?.length) {
     const searchParams = {
       ExpressionAttributeNames: {
-        "#N": "name",
+        "#NL": "name_lowercase",
+        "#EL": "email_lowercase",
       },
-      FilterExpression: "#N = :name",
+      FilterExpression: "contains(#NL, :name) OR contains(#EL, :email)  ",
       ExpressionAttributeValues: {
-        ":name": { S: name },
+        ":name": { S: searchInput.toLowerCase() },
+        ":email": { S: searchInput.toLowerCase() },
       },
     };
     params = {
@@ -150,13 +166,24 @@ const getCustomers = async (exclusiveStartKey, limit, name) => {
       ...searchParams,
     };
   }
-  const result = await ddb.scan(params).promise();
+  let result = await ddb.scan(params).promise();
   const items = result.Items;
-  const lastEvaluatedKey = result.LastEvaluatedKey;
-  const nextItem = await getNextCustomer(lastEvaluatedKey);
+
+  while (result.LastEvaluatedKey && items.length < limit) {
+    const exclusiveStartKey = result.LastEvaluatedKey;
+    params = {
+      ...params,
+      ExclusiveStartKey: exclusiveStartKey,
+      Limit: limit - items.length,
+    };
+    result = await ddb.scan(params).promise();
+    items.push(...result.Items);
+  }
+
+  const nextItem = await getNextCustomer(result.LastEvaluatedKey);
   return {
     items,
-    lastEvaluatedKey: nextItem ? lastEvaluatedKey : null,
+    lastEvaluatedKey: nextItem ? result.LastEvaluatedKey : null,
   };
 };
 
@@ -180,7 +207,7 @@ const getCustomerBySlug = async (slug) => {
 const getNextCustomer = async (lastEvaluatedKey) => {
   const params = {
     TableName: "customers-dev",
-    Limit: 1,
+    Limit: 5,
     ExclusiveStartKey: lastEvaluatedKey,
   };
   const result = await ddb.scan(params).promise();

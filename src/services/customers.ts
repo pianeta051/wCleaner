@@ -97,15 +97,16 @@ export const editCustomer = async (
 };
 
 export const getCustomers = async (
-  nextToken?: string
+  nextToken?: string,
+  searchInput?: string
 ): Promise<{
   customers: Customer[];
   nextToken?: string;
 }> => {
-  const response = await get("/customers", {
-    nextToken,
-    limit: 5,
-  });
+  const response = await get("/customers", { nextToken, search: searchInput });
+
+  const customers = response.customers as Customer[];
+  const responseToken = response.nextToken as string | undefined;
   if (!("customers" in response) || !Array.isArray(response.customers)) {
     throw "INTERNAL_ERROR";
   }
@@ -114,8 +115,7 @@ export const getCustomers = async (
       throw "INTERNAL_ERROR";
     }
   }
-  const customers = response.customers as Customer[];
-  const responseToken = response.nextToken as string | undefined;
+
   return { customers, nextToken: responseToken };
 };
 
