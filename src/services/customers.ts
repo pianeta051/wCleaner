@@ -98,8 +98,7 @@ export const editCustomer = async (
 
 export const getCustomers = async (
   nextToken?: string,
-  searchInput?: string,
-  customerType?: string
+  searchInput?: string
 ): Promise<{
   customers: Customer[];
   nextToken?: string;
@@ -107,7 +106,6 @@ export const getCustomers = async (
   const response = await get("/customers", {
     nextToken,
     search: searchInput,
-    customerType,
   });
 
   const customers = response.customers as Customer[];

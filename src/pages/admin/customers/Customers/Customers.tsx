@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from "react";
 
-import { Button, Paper, CircularProgress } from "@mui/material";
+import { Button, Paper, CircularProgress, Stack } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./Customers.style";
 import { Customer } from "../../../../types/types";
 import AddIcon from "@mui/icons-material/Add";
@@ -25,6 +25,7 @@ export const Customers: FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [searching, setSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchButtonTerm, setSearchButtonTerm] = useState("");
   const { getCustomers } = useCustomers();
   useEffect(() => {
     if (loading) {
@@ -138,6 +139,7 @@ export const Customers: FC = () => {
                 </IconButton>
                 <Title>Customers</Title>
                 <SearchBar onSearch={searchHandler} initialValue={searchTerm} />
+
                 <CustomersTable
                   customers={customers}
                   onEdit={openEditHandler}

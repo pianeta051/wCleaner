@@ -61,11 +61,7 @@ export const CustomersProvider: FC<CustomersProviderProps> = ({ children }) => {
     ) {
       return getCustomersStore[args].response;
     }
-    const response = await getCustomersFromService(
-      nextToken,
-      searchInput,
-      customerType
-    );
+    const response = await getCustomersFromService(nextToken, searchInput);
     setGetCustomersStore((getCustomersStore) => ({
       ...getCustomersStore,
       [args]: {
