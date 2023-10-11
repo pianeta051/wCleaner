@@ -5,7 +5,6 @@ import {
   CustomerForm,
   CustomerFormValues,
 } from "../../CustomerForm/CustomerForm";
-import { addCustomer } from "../../../../services/customers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import {
   ModalBox,
@@ -15,6 +14,7 @@ import {
 } from "../../CustomerForm/CustomerForm.style";
 import { Grid } from "@mui/material";
 import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
+import { useCustomers } from "../../../../context/CustomersContext";
 
 type NewCustomerModalProps = {
   open: boolean;
@@ -28,7 +28,7 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
-
+  const { addCustomer } = useCustomers();
   const submitHandler = (formValues: CustomerFormValues) => {
     setLoading(true);
     setError(null);

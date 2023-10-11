@@ -119,7 +119,7 @@ const editCustomer = async (id, editedCustomer) => {
       },
     },
     UpdateExpression:
-      "SET #N = :name, #A = :address, #P = :postcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email",
+      "SET #N = :name, #A = :address, #P = :postcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase",
     Key: {
       id: { S: id },
     },
@@ -154,11 +154,16 @@ const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
       ExpressionAttributeNames: {
         "#NL": "name_lowercase",
         "#EL": "email_lowercase",
+        "#A": "address",
+        "#P": "postcode",
       },
-      FilterExpression: "contains(#NL, :name) OR contains(#EL, :email)  ",
+      FilterExpression:
+        "contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode)   ",
       ExpressionAttributeValues: {
         ":name": { S: searchInput.toLowerCase() },
         ":email": { S: searchInput.toLowerCase() },
+        ":address": { S: searchInput.toLowerCase() },
+        ":postcode": { S: searchInput.toLowerCase() },
       },
     };
     params = {

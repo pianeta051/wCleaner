@@ -12,14 +12,11 @@ import {
   CustomerForm,
   CustomerFormValues,
 } from "../../CustomerForm/CustomerForm";
-import {
-  deleteCustomer,
-  editCustomer,
-  getCustomer,
-} from "../../../../services/customers";
+import { deleteCustomer } from "../../../../services/customers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
 import { useParams } from "react-router-dom";
+import { useCustomers } from "../../../../context/CustomersContext";
 
 type EditCustomerModalProps = {
   open: boolean;
@@ -42,7 +39,7 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
   const { id } = useParams<EditCustomerParams>();
-
+  const { getCustomer, editCustomer } = useCustomers();
   useEffect(() => {
     if (loading && id) {
       getCustomer(id)

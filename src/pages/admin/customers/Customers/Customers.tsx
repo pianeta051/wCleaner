@@ -1,8 +1,7 @@
 import { FC, useEffect, useState } from "react";
 
-import { Button, Paper, CircularProgress, Pagination } from "@mui/material";
+import { Button, Paper, CircularProgress } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./Customers.style";
-import { getCustomers } from "../../../../services/customers";
 import { Customer } from "../../../../types/types";
 import AddIcon from "@mui/icons-material/Add";
 import { EditCustomerModal } from "../../../../components/Customer/EditCustomer/EditCustomerModal/EditCustomerModal";
@@ -12,6 +11,8 @@ import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCusto
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { LoadingButton } from "@mui/lab";
 import { SearchBar } from "../../../../components/SearchBar/SearchBar";
+import { useCustomers } from "../../../../context/CustomersContext";
+import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 
 export const Customers: FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -24,6 +25,7 @@ export const Customers: FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [searching, setSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const { getCustomers } = useCustomers();
   useEffect(() => {
     if (loading) {
       getCustomers()
@@ -121,6 +123,8 @@ export const Customers: FC = () => {
       <Paper elevation={13}>
         {loading || searching ? (
           <CircularProgress />
+        ) : error ? (
+          <ErrorMessage code={error} />
         ) : (
           <>
             {customers.length === 0 ? (
