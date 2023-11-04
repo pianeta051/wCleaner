@@ -48,13 +48,12 @@ export const CustomersProvider: FC<CustomersProviderProps> = ({ children }) => {
 
   const getCustomers = async (
     nextToken?: string,
-    searchInput?: string,
-    customerType?: string
+    searchInput?: string
   ): Promise<{
     customers: Customer[];
     nextToken?: string;
   }> => {
-    const args = JSON.stringify({ nextToken, searchInput, customerType });
+    const args = JSON.stringify({ nextToken, searchInput });
     if (
       getCustomersStore[args] &&
       !isExpired(getCustomersStore[args].expiresAt)

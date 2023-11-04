@@ -1,29 +1,36 @@
 import { NewCustomerModal } from "./NewCustomerModal";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@mui/material";
+import { CustomersProvider } from "../../../../components/CustomersProvider/CustomersProvider";
+import { theme } from "../../../../theme";
+import { API } from "aws-amplify";
+import { customerFactory } from "../../../../factories/customers";
+import { CustomerFormValues } from "../../CustomerForm/CustomerForm";
+
+const mountComponent = () => {
+  cy.mount(
+    <ThemeProvider theme={theme}>
+      <CustomersProvider>
+        <MemoryRouter initialEntries={["/customers"]}>
+          <Routes>
+            <Route
+              path="customers"
+              element={
+                <NewCustomerModal
+                  onSubmit={cy.spy().as("submitHandler")}
+                  open={true}
+                  onClose={cy.spy().as("closeHandler")}
+                />
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </CustomersProvider>
+    </ThemeProvider>
+  );
+};
 
 describe("NewCustomerModal", () => {
-  it("calls onSubmit when submitting the form", () => {
-    cy.mount(
-      <NewCustomerModal
-        onSubmit={cy.spy().as("submitHandler")}
-        open={true}
-        onClose={cy.spy().as("closeHandler")}
-      />
-    );
-    cy.findByLabelText("name *").type("carlos");
-    cy.findByLabelText("email *").type("some@email.com");
-    cy.findByText("Save").click();
-    cy.get("@submitHandler").should("have.been.calledWith", {
-      name: "carlos",
-      address: "",
-      postcode: "",
-      mainTelephone: "",
-      secondTelephone: "",
-      email: "some@email.com",
-      id: 4,
-      url: "some",
-    });
-  });
-
   it("shows the form when open is true", () => {
     cy.mount(
       <NewCustomerModal
@@ -47,6 +54,18 @@ describe("NewCustomerModal", () => {
     cy.contains("button", "Save").should("not.exist");
   });
 
+  it("calls onClose when there's a click outside the form", () => {
+    cy.mount(
+      <NewCustomerModal
+        onSubmit={cy.spy().as("submitHandler")}
+        open={true}
+        onClose={cy.spy().as("closeHandler")}
+      />
+    );
+    cy.get("body").click(0, 0);
+    cy.get("@closeHandler").should("have.been.called");
+  });
+
   it("calls onClose when the cancel button is clicked", () => {
     cy.mount(
       <NewCustomerModal
@@ -59,15 +78,36 @@ describe("NewCustomerModal", () => {
     cy.get("@closeHandler").should("have.been.called");
   });
 
-  it("calls onClose when there's a click outside the form", () => {
-    cy.mount(
-      <NewCustomerModal
-        onSubmit={cy.spy().as("submitHandler")}
-        open={true}
-        onClose={cy.spy().as("closeHandler")}
-      />
-    );
-    cy.get("body").click(0, 0);
-    cy.get("@closeHandler").should("have.been.called");
+  it("calls onSubmit when submitting the form and the API response is successful", () => {
+    const customer = customerFactory.build();
+    const formValues: CustomerFormValues = {
+      ...customer,
+    };
+    cy.stub(API, "post").resolves({
+      customer,
+    });
+    mountComponent();
+    cy.findByLabelText("name *").type(formValues.name);
+    cy.findByLabelText("address *").type(formValues.address);
+    cy.findByLabelText("postcode *").type(formValues.postcode);
+    cy.findByLabelText("email *").type(formValues.email);
+    cy.findByText("Save").click();
+    cy.get("@submitHandler").should("have.been.calledWith", formValues);
+  });
+
+  it("renders an error message when submitting the form and the API returns an error", () => {
+    const customer = customerFactory.build();
+    const formValues: CustomerFormValues = {
+      ...customer,
+    };
+    cy.stub(API, "post").rejects();
+    mountComponent();
+    cy.findByLabelText("name *").type(formValues.name);
+    cy.findByLabelText("address *").type(formValues.address);
+    cy.findByLabelText("postcode *").type(formValues.postcode);
+    cy.findByLabelText("email *").type(formValues.email);
+    cy.findByText("Save").click();
+    cy.get("@submitHandler").should("not.have.been.called");
+    cy.contains("Internal error");
   });
 });

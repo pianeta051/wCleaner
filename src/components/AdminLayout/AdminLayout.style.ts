@@ -1,4 +1,4 @@
-import { Grid, Paper } from "@mui/material";
+import { Grid } from "@mui/material";
 import { styled } from "@mui/system";
 
 export const Wrapper = styled(Grid)(({ theme }) => ({

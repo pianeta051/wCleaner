@@ -5,12 +5,12 @@ import {
   CustomerForm,
   CustomerFormValues,
 } from "../../../../components/Customer/CustomerForm/CustomerForm";
-import { getCustomer, editCustomer } from "../../../../services/customers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { Customer } from "../../../../types/types";
 import { NotFound } from "../../../NotFound/NotFound";
 import { Title, Wrapper } from "./CustomerDetails.style";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
+import { useCustomers } from "../../../../context/CustomersContext";
 
 type CustomerParams = {
   id: string;
@@ -23,6 +23,7 @@ export const CustomerDetails: FC = () => {
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const { id } = useParams<CustomerParams>();
+  const { getCustomer, editCustomer } = useCustomers();
 
   useEffect(() => {
     if (loadingCustomer && id) {

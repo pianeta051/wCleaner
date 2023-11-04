@@ -29,6 +29,7 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
   const { addCustomer } = useCustomers();
+
   const submitHandler = (formValues: CustomerFormValues) => {
     setLoading(true);
     setError(null);

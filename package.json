@@ -24,7 +24,7 @@
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
     "styled-components": "^5.3.5",
-    "typescript": "^4.7.3",
+    "typescript": "^5.2.2",
     "web-vitals": "^2.1.4",
     "yup": "^1.2.0"
   },
@@ -38,7 +38,8 @@
     "format": "prettier --write .",
     "prepare": "husky install",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run",
+    "cypress:run:component": "cypress run --component"
   },
   "eslintConfig": {
     "extends": [
@@ -59,16 +60,18 @@
     ]
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.2.0",
     "@testing-library/cypress": "^9.0.0",
     "@types/jest": "^29.1.1",
     "@types/styled-components": "^5.1.26",
     "@types/testing-library__cypress": "^5.0.9",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
-    "cypress": "^12.11.0",
+    "cypress": "^13.3.3",
     "cypress-get-by-label": "^2.5.0",
     "eslint": "^8.17.0",
     "eslint-plugin-react": "^7.30.0",
+    "fishery": "^2.2.2",
     "husky": "^8.0.1",
     "prettier": "2.6.2",
     "ts-jest": "^29.0.3"

@@ -1,4 +1,12 @@
-import { Modal } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Modal,
+} from "@mui/material";
 import { FC, useEffect, useState } from "react";
 import { Customer } from "../../../../types/types";
 import {
@@ -12,7 +20,6 @@ import {
   CustomerForm,
   CustomerFormValues,
 } from "../../CustomerForm/CustomerForm";
-import { deleteCustomer } from "../../../../services/customers";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
 import { useParams } from "react-router-dom";
@@ -39,7 +46,16 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
   const { id } = useParams<EditCustomerParams>();
-  const { getCustomer, editCustomer } = useCustomers();
+  const { getCustomer, editCustomer, deleteCustomer } = useCustomers();
+  const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpenDeleteAlert(true);
+  };
+
+  const handleClose = () => {
+    setOpenDeleteAlert(false);
+  };
   useEffect(() => {
     if (loading && id) {
       getCustomer(id)
@@ -106,11 +122,30 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
           <CustomerForm
             onCancel={onClose}
             onSubmit={submitHandler}
-            onDelete={deleteHandler}
             initialValues={customer}
             loading={loading}
+            onDelete={handleClickOpen}
           />
         </Background>
+        <Dialog
+          open={openDeleteAlert}
+          onClose={handleClose}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{"Are you sure?"}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              After deleting this item you wont be able to undo this action.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={deleteHandler} autoFocus>
+              Agree
+            </Button>
+          </DialogActions>
+        </Dialog>
       </ModalBox>
     </Modal>
   );

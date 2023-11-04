@@ -1,15 +1,17 @@
-import { CustomerForm, CustomerFormValues } from "./CustomerForm";
+import { CustomerForm } from "./CustomerForm";
 
 describe("CustomerForm", () => {
   it("calls onSubmit when clicking a send button", () => {
     cy.mount(<CustomerForm onSubmit={cy.spy().as("submitHandler")} />);
     cy.findByLabelText("name *").type("carlos");
+    cy.findByLabelText("address *").type("92 high streer");
+    cy.findByLabelText("postcode *").type("Lug5fr");
     cy.findByLabelText("email *").type("carlos@email.com");
     cy.findByText("Save").click();
     cy.get("@submitHandler").should("have.been.calledWith", {
       name: "carlos",
-      address: "",
-      postcode: "",
+      address: "92 high streer",
+      postcode: "Lug5fr",
       mainTelephone: "",
       secondTelephone: "",
       email: "carlos@email.com",
@@ -19,12 +21,14 @@ describe("CustomerForm", () => {
   it("calls onSubmit when pressing intro in a text input", () => {
     cy.mount(<CustomerForm onSubmit={cy.spy().as("submitHandler")} />);
     cy.findByLabelText("name *").type("carlos");
+    cy.findByLabelText("address *").type("92 high streer");
+    cy.findByLabelText("postcode *").type("Lug5fr");
     cy.findByLabelText("email *").type("carlos@email.com{enter}");
 
     cy.get("@submitHandler").should("have.been.calledWith", {
       name: "carlos",
-      address: "",
-      postcode: "",
+      address: "92 high streer",
+      postcode: "Lug5fr",
       mainTelephone: "",
       secondTelephone: "",
       email: "carlos@email.com",
@@ -77,8 +81,8 @@ describe("CustomerForm", () => {
       />
     );
     cy.findByLabelText("name *").should("have.value", "");
-    cy.findByLabelText("address").should("have.value", "");
-    cy.findByLabelText("postcode").should("have.value", "");
+    cy.findByLabelText("address *").should("have.value", "");
+    cy.findByLabelText("postcode *").should("have.value", "");
     cy.findByLabelText("main telephone").should("have.value", "");
     cy.findByLabelText("second telephone").should("have.value", "");
     cy.findByLabelText("email *").should("have.value", "");

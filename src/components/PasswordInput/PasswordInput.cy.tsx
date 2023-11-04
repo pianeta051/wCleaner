@@ -3,8 +3,11 @@ import { PasswordInput } from "./PasswordInput";
 describe("PasswordInput", () => {
   it("calls onChange when change a textfield", () => {
     cy.mount(<PasswordInput onChange={cy.spy().as("changeHandler")} />);
-    cy.findByLabelText("Password").type("pass");
-    cy.get("@changeHandler").should("have.been.calledWith", "pass");
+    cy.findByLabelText("Password *").type("pass");
+    cy.get("@changeHandler")
+      .its("firstCall.args.0")
+      .its("target")
+      .should("have.value", "pass");
   });
 
   it("display value in textfield when value is defined", () => {
@@ -14,7 +17,7 @@ describe("PasswordInput", () => {
         onChange={cy.spy().as("changeHandler")}
       />
     );
-    cy.findByLabelText("Password").should("have.value", "password");
+    cy.findByLabelText("Password *").should("have.value", "password");
   });
 
   // Hacer para la semana que viene
@@ -26,24 +29,24 @@ describe("PasswordInput", () => {
 
   it("shows the label 'Password' when label is undefined", () => {
     cy.mount(<PasswordInput />);
-    cy.findByLabelText("Password").should("exist");
+    cy.findByLabelText("Password *").should("exist");
   });
 
   it("show text with restriction when showRestrictions is true", () => {
     cy.mount(<PasswordInput showRestrictions />);
-    cy.findByLabelText("Password").type("p");
+    cy.findByLabelText("Password *").type("p");
     cy.contains("Password must contain");
   });
 
   it("do not show text with restriction when showRestrictions is false", () => {
     cy.mount(<PasswordInput showRestrictions={false} />);
-    cy.findByLabelText("Password").type("p");
+    cy.findByLabelText("Password *").type("p");
     cy.findByText("Password must contain").should("not.exist");
   });
 
   it("do not show text with restriction when showRestrictions is undefined", () => {
     cy.mount(<PasswordInput />);
-    cy.findByLabelText("Password").type("p");
+    cy.findByLabelText("Password *").type("p");
     cy.findByText("Password must contain").should("not.exist");
   });
 });

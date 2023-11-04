@@ -22,7 +22,7 @@ type PasswordInputProps = {
 export const PasswordInput: FC<PasswordInputProps> = ({
   onChange,
   value,
-  label = "Password",
+  label = "Password *",
   name = "password",
   errorMessage,
   showRestrictions = false,

@@ -15,7 +15,7 @@ export const EmailInput: FC<EmailInputProps> = ({
 }) => {
   return (
     <TextField
-      label="Email"
+      label="Email *"
       name="email"
       variant="outlined"
       margin="normal"

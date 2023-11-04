@@ -28,7 +28,11 @@ describe("AdminRoute", () => {
           <Routes>
             <Route
               path="/admin"
-              element={<AdminRoute children={<div>Admin access</div>} />}
+              element={
+                <AdminRoute>
+                  <div>Admin access</div>
+                </AdminRoute>
+              }
             />
           </Routes>
         </MemoryRouter>
@@ -60,7 +64,11 @@ describe("AdminRoute", () => {
           <Routes>
             <Route
               path="/admin"
-              element={<AdminRoute children={<div>Admin access</div>} />}
+              element={
+                <AdminRoute>
+                  <div>Admin access</div>
+                </AdminRoute>
+              }
             />
           </Routes>
         </MemoryRouter>

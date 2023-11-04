@@ -17,5 +17,7 @@ export default defineConfig({
     },
     videosFolder: "cypress/videos/component",
     screenshotsFolder: "cypress/screenshots/component",
+    viewportHeight: 1000,
+    viewportWidth: 1000,
   },
 });

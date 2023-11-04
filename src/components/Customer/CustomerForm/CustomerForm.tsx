@@ -5,6 +5,7 @@ import { LoadingButton } from "@mui/lab";
 import { Form } from "../../Form/Form";
 import { useFormik } from "formik";
 import * as yup from "yup";
+import { DeleteButton } from "../../DeleteButton/DeleteButton";
 
 export type CustomerFormValues = {
   name: string;
@@ -36,6 +37,7 @@ type CustomerFormProps = {
   onSubmit: (customer: CustomerFormValues) => void;
   onCancel?: () => void;
   onDelete?: () => void;
+
   initialValues?: CustomerFormValues;
   loading?: boolean;
   layout?: "vertical" | "horizontal";
@@ -143,31 +145,27 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           >
             Save
           </LoadingButton>
-        </Grid>
-        {onCancel && (
-          <Grid item xs={12} textAlign="center">
-            <Button
-              disableFocusRipple
-              disableRipple
-              style={{ textTransform: "none" }}
-              variant="text"
-              color="primary"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-            <Button
-              disableFocusRipple
-              disableRipple
-              style={{ textTransform: "none" }}
-              variant="text"
-              color="warning"
-              onClick={onDelete}
-            >
-              Delete
-            </Button>
+          <Grid container spacing={2} item xs={12} mt={2} mb={2}>
+            <Grid item xs={6} textAlign="right">
+              <Button
+                disableFocusRipple
+                disableRipple
+                style={{ textTransform: "none" }}
+                variant="outlined"
+                color="primary"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            </Grid>
+
+            {onDelete && (
+              <Grid item xs={6} textAlign="left">
+                <DeleteButton onDelete={onDelete} />
+              </Grid>
+            )}
           </Grid>
-        )}
+        </Grid>
       </Grid>
     </Form>
   );

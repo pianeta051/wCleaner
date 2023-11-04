@@ -14,7 +14,6 @@ import { CustomerDetails } from "../pages/admin/customers/CustomerDetails/Custom
 import { UnAuthenticatedRoute } from "./UnAuthenticateRoute";
 import { AuthenticatedRoute } from "./AuthenticatedRoute";
 import { AdminRoute } from "./AdminRoute";
-import { EditCustomerModal } from "../components/Customer/EditCustomer/EditCustomerModal/EditCustomerModal";
 
 export const AppRoutes: FC = () => {
   return (

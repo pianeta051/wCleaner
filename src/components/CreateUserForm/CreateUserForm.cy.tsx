@@ -3,8 +3,8 @@ import { CreateUserForm } from "./CreateUserForm";
 describe("CreateUserForm", () => {
   it("calls onSubmit when clicking a Create button", () => {
     cy.mount(<CreateUserForm onSubmit={cy.spy().as("submitHandler")} />);
-    cy.findByLabelText("Email").type("carlos@h.com");
-    cy.findByLabelText("Password").type("password");
+    cy.findByLabelText("Email *").type("carlos@h.com");
+    cy.findByLabelText("Password *").type("password");
     cy.findByText("Create").click();
     cy.get("@submitHandler").should("have.been.calledWith", {
       email: "carlos@h.com",
@@ -14,8 +14,8 @@ describe("CreateUserForm", () => {
 
   it("calls onSubmit when pressing intro in a text input", () => {
     cy.mount(<CreateUserForm onSubmit={cy.spy().as("submitHandler")} />);
-    cy.findByLabelText("Email").type("carlos@h.com");
-    cy.findByLabelText("Password").type("password{enter}");
+    cy.findByLabelText("Email *").type("carlos@h.com");
+    cy.findByLabelText("Password *").type("password{enter}");
     cy.get("@submitHandler").should("have.been.calledWith", {
       email: "carlos@h.com",
       password: "password",
@@ -43,13 +43,13 @@ describe("CreateUserForm", () => {
         initialValues={{ email: "carlos@h.com", password: "password" }}
       />
     );
-    cy.findByLabelText("Email").should("have.value", "carlos@h.com");
-    cy.findByLabelText("Password").should("have.value", "password");
+    cy.findByLabelText("Email *").should("have.value", "carlos@h.com");
+    cy.findByLabelText("Password *").should("have.value", "password");
   });
 
   it("displays an empty form when the initial values are undefined", () => {
     cy.mount(<CreateUserForm initialValues={undefined} />);
-    cy.findByLabelText("Email").should("have.value", "");
-    cy.findByLabelText("Password").should("have.value", "");
+    cy.findByLabelText("Email *").should("have.value", "");
+    cy.findByLabelText("Password *").should("have.value", "");
   });
 });
