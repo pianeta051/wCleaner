@@ -48,10 +48,16 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
       });
   };
 
+  const closeHandler = () => {
+    setLoading(false);
+    setError(null);
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={closeHandler}
       aria-labelledby="New Customer"
       aria-describedby="Create a new customer"
     >

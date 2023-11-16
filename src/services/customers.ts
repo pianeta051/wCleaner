@@ -58,7 +58,12 @@ export const addCustomer = async (
         throw "EMAIL_ALREADY_EXISTS";
       }
       if (error.response.status === 400) {
-        throw "EMAIL_CANNOT_BE_EMPTY";
+        if (error.response.data?.error === "Email cannot be empty") {
+          throw "EMAIL_CANNOT_BE_EMPTY";
+        }
+        if (error.response.data?.error === "Name cannot be empty") {
+          throw "NAME_CANNOT_BE_EMPTY";
+        }
       }
     }
 

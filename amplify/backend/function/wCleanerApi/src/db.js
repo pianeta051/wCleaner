@@ -11,6 +11,9 @@ const addCustomer = async (customer) => {
   if (!customer.email?.length) {
     throw "EMAIL_CANNOT_BE_EMPTY";
   }
+  if (!customer.name?.length) {
+    throw "NAME_CANNOT_BE_EMPTY";
+  }
 
   const emailExisting = await queryCustomersByEmail(customer.email);
   if (emailExisting.length > 0) {

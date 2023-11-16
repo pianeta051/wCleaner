@@ -92,4 +92,10 @@ describe("CustomersPage", () => {
       cy.contains(customer.name);
     }
   });
+
+  it("adds a customer to the list after creating it", () => {});
+
+  it("updates the customer address in the list after successfully changing it", () => {});
+
+  it("removes a customer from the list after deleting it", () => {});
 });

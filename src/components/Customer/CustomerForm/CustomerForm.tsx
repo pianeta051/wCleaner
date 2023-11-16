@@ -146,18 +146,20 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             Save
           </LoadingButton>
           <Grid container spacing={2} item xs={12} mt={2} mb={2}>
-            <Grid item xs={6} textAlign="right">
-              <Button
-                disableFocusRipple
-                disableRipple
-                style={{ textTransform: "none" }}
-                variant="outlined"
-                color="primary"
-                onClick={onCancel}
-              >
-                Cancel
-              </Button>
-            </Grid>
+            {onCancel && (
+              <Grid item xs={6} textAlign="right">
+                <Button
+                  disableFocusRipple
+                  disableRipple
+                  style={{ textTransform: "none" }}
+                  variant="outlined"
+                  color="primary"
+                  onClick={onCancel}
+                >
+                  Cancel
+                </Button>
+              </Grid>
+            )}
 
             {onDelete && (
               <Grid item xs={6} textAlign="left">

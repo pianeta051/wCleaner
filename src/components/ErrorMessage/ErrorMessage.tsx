@@ -120,9 +120,17 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+
   if (code === "NOT_FOUND") {
     return <NotFound />;
   }
 
+  if (code === "NAME_CANNOT_BE_EMPTY") {
+    return (
+      <Alert severity="error">
+        <Typography>Name field cannot be empty</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

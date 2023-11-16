@@ -17,7 +17,7 @@
     "@types/node": "^16.11.38",
     "@types/react": "^18.0.12",
     "@types/react-dom": "^18.0.5",
-    "aws-amplify": "^5.3.11",
+    "aws-amplify": "^5.3.12",
     "formik": "^2.4.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
@@ -70,6 +70,7 @@
     "cypress": "^13.3.3",
     "cypress-get-by-label": "^2.5.0",
     "eslint": "^8.17.0",
+    "eslint-config-react": "^1.1.7",
     "eslint-plugin-react": "^7.30.0",
     "fishery": "^2.2.2",
     "husky": "^8.0.1",
@@ -80,5 +81,9 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     }
+  },
+  "exports": {
+    "import": "./dist-es/index.mjs",
+    "require": "./dist-cjs/index.js"
   }
 }

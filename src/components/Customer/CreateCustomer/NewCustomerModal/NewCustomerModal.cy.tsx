@@ -78,6 +78,8 @@ describe("NewCustomerModal", () => {
     cy.get("@closeHandler").should("have.been.called");
   });
 
+  // API TESTING
+
   it("calls onSubmit when submitting the form and the API response is successful", () => {
     const customer = customerFactory.build();
     const formValues: CustomerFormValues = {
@@ -92,7 +94,7 @@ describe("NewCustomerModal", () => {
     cy.findByLabelText("postcode *").type(formValues.postcode);
     cy.findByLabelText("email *").type(formValues.email);
     cy.findByText("Save").click();
-    cy.get("@submitHandler").should("have.been.calledWith", formValues);
+    cy.get("@submitHandler").should("have.been.calledWith", customer);
   });
 
   it("renders an error message when submitting the form and the API returns an error", () => {
@@ -109,5 +111,27 @@ describe("NewCustomerModal", () => {
     cy.findByText("Save").click();
     cy.get("@submitHandler").should("not.have.been.called");
     cy.contains("Internal error");
+  });
+
+  it("renders an error message when there is already a user with that email", () => {
+    const customer = customerFactory.build();
+    const formValues: CustomerFormValues = {
+      ...customer,
+    };
+    cy.stub(API, "post").rejects({
+      response: {
+        status: 409,
+      },
+    });
+    mountComponent();
+    cy.findByLabelText("name *").type(formValues.name);
+    cy.findByLabelText("address *").type(formValues.address);
+    cy.findByLabelText("postcode *").type(formValues.postcode);
+    cy.findByLabelText("email *").type(formValues.email);
+    cy.findByText("Save").click();
+    cy.get("@submitHandler").should("not.have.been.called");
+    cy.contains(
+      "There is an existing customer with this email. Please try with other email"
+    );
   });
 });

@@ -86,6 +86,10 @@ app.post("/customers", async function (req, res) {
       res.status(400).json({
         error: "Email cannot be empty",
       });
+    } else if (error === "NAME_CANNOT_BE_EMPTY") {
+      res.status(400).json({
+        error: "Name cannot be empty",
+      });
     } else {
       throw error;
     }

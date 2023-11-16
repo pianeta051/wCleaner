@@ -14,7 +14,9 @@ export const ERROR_CODES = [
   "NOT_FOUND",
   "EMAIL_ALREADY_EXISTS",
   "EMAIL_CANNOT_BE_EMPTY",
+  "NAME_CANNOT_BE_EMPTY",
   "CUSTOMER_NOT_EXISTS",
+  "REQUIRED_FIELDS",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>
@@ -23,6 +25,9 @@ export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>
 type ErrorResponse = {
   response: {
     status: number;
+    data?: {
+      error?: string;
+    };
   };
 };
 
