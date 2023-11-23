@@ -118,6 +118,23 @@ describe("NewCustomerModal", () => {
     const formValues: CustomerFormValues = {
       ...customer,
     };
+    <Route
+      path="customers"
+      element={
+        <NewCustomerModal
+          onSubmit={cy.spy().as("submitHandler")}
+          open={true}
+          onClose={cy.spy().as("closeHandler")}
+        />
+      }
+    />;
+    cy.mount(
+      <NewCustomerModal
+        onSubmit={cy.spy().as("submitHandler")}
+        open={true}
+        onClose={cy.spy().as("closeHandler")}
+      />
+    );
     cy.stub(API, "post").rejects({
       response: {
         status: 409,
