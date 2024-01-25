@@ -3,8 +3,6 @@ import { FC, ReactNode, useState } from "react";
 import { CustomersContext } from "../../context/CustomersContext";
 import {
   getCustomers as getCustomersFromService,
-  getCustomer as getCustomerFromService,
-  editCustomer as editCustomerFromService,
   addCustomer as createCustomerFromService,
   deleteCustomer as deleteCustomerFromService,
 } from "../../services/customers";
@@ -42,10 +40,6 @@ export const CustomersProvider: FC<CustomersProviderProps> = ({ children }) => {
     >
   >({});
 
-  const [getCustomerStore, setGetCustomerStore] = useState<
-    Record<string, { response: Customer | null; expiresAt: Date }>
-  >({});
-
   const getCustomers = async (
     nextToken?: string,
     searchInput?: string
@@ -71,31 +65,6 @@ export const CustomersProvider: FC<CustomersProviderProps> = ({ children }) => {
     return response;
   };
 
-  const getCustomer = async (id: string): Promise<Customer | null> => {
-    const args = JSON.stringify({ id });
-    if (
-      getCustomerStore[args] &&
-      !isExpired(getCustomerStore[args].expiresAt)
-    ) {
-      return getCustomerStore[args].response;
-    }
-    const response = await getCustomerFromService(id);
-    setGetCustomerStore((getCustomerStore) => ({
-      ...getCustomerStore,
-      [args]: { response, expiresAt: expirationDate(MINUTES_TO_EXPIRE) },
-    }));
-    return response;
-  };
-
-  const editCustomer = async (
-    id: string,
-    formValues: CustomerFormValues
-  ): Promise<Customer> => {
-    setGetCustomerStore({});
-    setGetCustomersStore({});
-    return editCustomerFromService(id, formValues);
-  };
-
   const addCustomer = async (
     formValues: CustomerFormValues
   ): Promise<Customer> => {
@@ -112,8 +81,6 @@ export const CustomersProvider: FC<CustomersProviderProps> = ({ children }) => {
     <CustomersContext.Provider
       value={{
         getCustomers,
-        getCustomer,
-        editCustomer,
         addCustomer,
         deleteCustomer,
       }}

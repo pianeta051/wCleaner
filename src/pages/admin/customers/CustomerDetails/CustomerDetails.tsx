@@ -1,70 +1,45 @@
 import { Alert, CircularProgress, Grid, Snackbar } from "@mui/material";
-import { FC, useState, useEffect } from "react";
+import { FC, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   CustomerForm,
   CustomerFormValues,
 } from "../../../../components/Customer/CustomerForm/CustomerForm";
-import { ErrorCode, isErrorCode } from "../../../../services/error";
-import { Customer } from "../../../../types/types";
+
 import { NotFound } from "../../../NotFound/NotFound";
 import { Title, Wrapper } from "./CustomerDetails.style";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
-import { useCustomers } from "../../../../context/CustomersContext";
+import { useCustomer } from "../../../../hooks/useCustomer";
+import { useEditCustomer } from "../../../../hooks/useEditCustomer";
 
 type CustomerParams = {
-  id: string;
+  slug: string;
 };
 
 export const CustomerDetails: FC = () => {
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [loadingCustomer, setLoadingCustomer] = useState(true);
-  const [loadingForm, setLoadingForm] = useState(false);
-  const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const { id } = useParams<CustomerParams>();
-  const { getCustomer, editCustomer } = useCustomers();
+  const { slug } = useParams<CustomerParams>();
 
-  useEffect(() => {
-    if (loadingCustomer && id) {
-      getCustomer(id)
-        .then((customer) => {
-          setLoadingCustomer(false);
-          setCustomer(customer);
-        })
-        .catch((error) => {
-          setLoadingCustomer(false);
-          if (isErrorCode(error)) {
-            setErrorCode(error);
-          } else {
-            setErrorCode("INTERNAL_ERROR");
-          }
-        });
-    }
-  }, [loadingCustomer, setCustomer, setLoadingCustomer]);
+  const {
+    customer,
+    loading: initialLoading,
+    error: initialError,
+  } = useCustomer(slug);
+  const {
+    editCustomer,
+    loading: editing,
+    error: editError,
+  } = useEditCustomer(customer?.id, customer?.slug);
 
-  if (!id) {
+  if (!slug) {
     return <NotFound />;
   }
 
   const submitHandler = (formValues: CustomerFormValues) => {
     if (customer) {
-      setErrorCode(null);
-      setLoadingForm(true);
-      editCustomer(customer.id, formValues)
-        .then((customer) => {
-          setLoadingForm(false);
-          setCustomer(customer);
-          setSnackbarOpen(true);
-        })
-        .catch((error) => {
-          setLoadingForm(false);
-          if (isErrorCode(error)) {
-            setErrorCode(error);
-          } else {
-            setErrorCode("INTERNAL_ERROR");
-          }
-        });
+      editCustomer(formValues).then(() => {
+        setSnackbarOpen(true);
+      });
     }
   };
 
@@ -79,17 +54,20 @@ export const CustomerDetails: FC = () => {
       </Title>
 
       <Grid container spacing={0} direction="column" alignItems="center">
-        {loadingCustomer ? (
+        {initialLoading ? (
           <CircularProgress />
-        ) : errorCode ? (
-          <ErrorMessage code={errorCode} />
+        ) : initialError ? (
+          <ErrorMessage code={initialError} />
         ) : customer ? (
-          <CustomerForm
-            onSubmit={submitHandler}
-            initialValues={customer}
-            loading={loadingForm}
-            layout="horizontal"
-          />
+          <>
+            {editError && <ErrorMessage code={editError} />}
+            <CustomerForm
+              onSubmit={submitHandler}
+              initialValues={customer}
+              loading={editing}
+              layout="horizontal"
+            />
+          </>
         ) : (
           <NotFound data-testid="not-found-message" />
         )}

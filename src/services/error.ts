@@ -42,3 +42,11 @@ export const isErrorResponse = (value: unknown): value is ErrorResponse => {
     typeof (value as ErrorResponse)["response"]["status"] === "number"
   );
 };
+
+export const extractErrorCode = (error: Error | undefined) => {
+  let errorCode: ErrorCode | null = null;
+  if (error) {
+    errorCode = isErrorCode(error.message) ? error.message : "INTERNAL_ERROR";
+  }
+  return errorCode;
+};

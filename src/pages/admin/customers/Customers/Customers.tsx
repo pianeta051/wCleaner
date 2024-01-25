@@ -73,6 +73,7 @@ export const Customers: FC = () => {
         });
     }
   };
+
   const openEditHandler = (customer: Customer) => {
     setEditingCustomer(customer);
     setEditModalOpen(true);

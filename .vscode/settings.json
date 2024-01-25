@@ -12,9 +12,7 @@
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   },
-  "cSpell.words": [
-    "adminqueries"
-  ]
+  "cSpell.words": ["adminqueries"]
 }

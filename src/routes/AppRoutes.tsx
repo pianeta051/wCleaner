@@ -43,7 +43,7 @@ export const AppRoutes: FC = () => {
         <Route index element={<Navigate to="customers" />} />
         <Route path="customers">
           <Route index element={<Customers />} />
-          <Route path=":id" element={<CustomerDetails />} />
+          <Route path=":slug" element={<CustomerDetails />} />
           {/* <Route path="edit" element={<EditCustomerPage />} /> */}
         </Route>
 

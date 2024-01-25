@@ -7,7 +7,7 @@ import {
   DialogTitle,
   Modal,
 } from "@mui/material";
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import { Customer } from "../../../../types/types";
 import {
   ModalBox,
@@ -20,10 +20,9 @@ import {
   CustomerForm,
   CustomerFormValues,
 } from "../../CustomerForm/CustomerForm";
-import { ErrorCode, isErrorCode } from "../../../../services/error";
 import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
-import { useParams } from "react-router-dom";
 import { useCustomers } from "../../../../context/CustomersContext";
+import { useEditCustomer } from "../../../../hooks/useEditCustomer";
 
 type EditCustomerModalProps = {
   open: boolean;
@@ -32,22 +31,21 @@ type EditCustomerModalProps = {
   onDelete: () => void;
   customer: Customer;
 };
-type EditCustomerParams = {
-  id: string;
-};
 
 export const EditCustomerModal: FC<EditCustomerModalProps> = ({
   open,
   onClose,
-  customer,
   onDelete,
   onEdit,
+  customer,
 }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<ErrorCode | null>(null);
-  const { id } = useParams<EditCustomerParams>();
-  const { getCustomer, editCustomer, deleteCustomer } = useCustomers();
+  const { deleteCustomer } = useCustomers();
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
+  const {
+    editCustomer,
+    loading: editing,
+    error,
+  } = useEditCustomer(customer.id, customer.slug);
 
   const handleClickOpen = () => {
     setOpenDeleteAlert(true);
@@ -56,58 +54,22 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
   const handleClose = () => {
     setOpenDeleteAlert(false);
   };
-  useEffect(() => {
-    if (loading && id) {
-      getCustomer(id)
-        .then(() => {
-          setLoading(false);
-        })
-        .catch((error) => {
-          if (isErrorCode(error.message)) {
-            setError(error.message);
-          } else {
-            setError("INTERNAL_ERROR");
-          }
-          setLoading(false);
-        });
-    }
-  }, []);
 
   const submitHandler = (formValues: CustomerFormValues) => {
-    setError(null);
-    setLoading(true);
-    editCustomer(customer.id, formValues)
-      .then((customer) => {
-        onEdit(customer);
-      })
-      .catch((error) => {
-        if (isErrorCode(error.message)) {
-          setError(error.message);
-        } else {
-          setError("INTERNAL_ERROR");
-        }
-      });
+    editCustomer(formValues).then((customer) => {
+      onEdit(customer);
+    });
   };
 
   const deleteHandler = () => {
-    setLoading(true);
-    deleteCustomer(customer.id)
-      .then(() => {
-        setLoading(false);
+    if (customer) {
+      deleteCustomer(customer.id).then(() => {
         onDelete();
-      })
-      .catch((error) => {
-        if (isErrorCode(error.message)) {
-          setError(error.message);
-        } else {
-          setError("INTERNAL_ERROR");
-        }
       });
+    }
   };
 
   const closeHandler = () => {
-    setLoading(false);
-    setError(null);
     onClose();
   };
 
@@ -130,7 +92,7 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
             onCancel={onClose}
             onSubmit={submitHandler}
             initialValues={customer}
-            loading={loading}
+            loading={editing}
             onDelete={handleClickOpen}
           />
         </Background>
