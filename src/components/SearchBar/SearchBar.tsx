@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { FC, useState } from "react";
 import { Form } from "../Form/Form";
+
 import SearchIcon from "@mui/icons-material/Search";
 
 type SearchBarProps = {
@@ -35,15 +36,17 @@ export const SearchBar: FC<SearchBarProps> = ({
         margin="normal"
         sx={{
           p: 5,
-          minWidth: 100,
+          minWidth: 70,
         }}
       >
-        <InputLabel htmlFor="outlined-adornment-password">Search</InputLabel>
         <OutlinedInput
           id="outlined-adornment-password"
           type="text"
           endAdornment={
-            <InputAdornment position="end">
+            <InputAdornment position="start">
+              <InputLabel htmlFor="outlined-adornment-password">
+                Search
+              </InputLabel>
               <IconButton aria-label="search" type="submit" edge="end">
                 <SearchIcon />
               </IconButton>

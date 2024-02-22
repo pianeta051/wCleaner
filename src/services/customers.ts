@@ -148,6 +148,27 @@ export const getCustomer = async (slug: string): Promise<Customer> => {
   }
 };
 
+export const getCustomerById = async (id: string): Promise<Customer> => {
+  try {
+    const response = await get(`/customers/${id}`);
+    if (!("customer" in response) && typeof response.customer !== "object") {
+      throw "INTERNAL_ERROR";
+    }
+    if (!isCustomer(response.customer)) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.customer;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      if (error.response.status === 404) {
+        throw "NOT_FOUND";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+
 // export const findByEmail = async (email: string): Promise<boolean> => {
 //   const customers: Promise<Customer[]> = getCustomers();
 //   return !!(await customers).find((customer) => customer.email === email);

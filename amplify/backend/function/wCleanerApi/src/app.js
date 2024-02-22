@@ -15,6 +15,7 @@ const {
   addCustomer,
   getCustomers,
   getCustomerBySlug,
+  getCustomerById,
   deleteCustomer,
   editCustomer,
 } = require("./db");
@@ -64,6 +65,18 @@ app.get("/customers", async function (req, res) {
 app.get("/customers/*", async function (req, res) {
   const slug = req.params[0];
   const customerFromDb = await getCustomerBySlug(slug);
+  if (!customerFromDb) {
+    res.status(404).json({ message: "This customer does not exist" });
+    return;
+  }
+  const customer = mapCustomer(customerFromDb);
+  res.json({ customer });
+});
+
+// Get a single customer by id
+app.get("/customers/*", async function (req, res) {
+  const id = req.params[0];
+  const customerFromDb = await getCustomerById(id);
   if (!customerFromDb) {
     res.status(404).json({ message: "This customer does not exist" });
     return;

@@ -3,12 +3,10 @@ import { FC, ReactNode, useState } from "react";
 import { CustomersContext } from "../../context/CustomersContext";
 import {
   getCustomers as getCustomersFromService,
-  addCustomer as createCustomerFromService,
   deleteCustomer as deleteCustomerFromService,
 } from "../../services/customers";
 
 import { Customer } from "../../types/types";
-import { CustomerFormValues } from "../Customer/CustomerForm/CustomerForm";
 
 type CustomersProviderProps = {
   children?: ReactNode;
@@ -65,13 +63,6 @@ export const CustomersProvider: FC<CustomersProviderProps> = ({ children }) => {
     return response;
   };
 
-  const addCustomer = async (
-    formValues: CustomerFormValues
-  ): Promise<Customer> => {
-    setGetCustomersStore({});
-    return createCustomerFromService(formValues);
-  };
-
   const deleteCustomer = async (id: string): Promise<void> => {
     setGetCustomersStore({});
     return deleteCustomerFromService(id);
@@ -81,7 +72,6 @@ export const CustomersProvider: FC<CustomersProviderProps> = ({ children }) => {
     <CustomersContext.Provider
       value={{
         getCustomers,
-        addCustomer,
         deleteCustomer,
       }}
     >

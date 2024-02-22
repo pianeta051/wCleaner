@@ -7,23 +7,16 @@ import {
   TableRow,
   TableBody,
   TableHead,
-  IconButton,
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import { ButtonWrapper } from "./CustomersTable.style";
-import CreateIcon from "@mui/icons-material/Create";
 import { Customer } from "../../types/types";
+import { DeleteCustomerButton } from "../DeleteCustomerButton/DeleteCustomerButton";
 
 type CustomersTableProps = {
   customers: Customer[];
-  onEdit: (customer: Customer) => void;
 };
 
-// const editClickHandler = () => navigate(`/customers/${customer.id}/edit`);
-export const CustomersTable: FC<CustomersTableProps> = ({
-  customers,
-  onEdit,
-}) => {
+export const CustomersTable: FC<CustomersTableProps> = ({ customers }) => {
   return (
     <TableContainer component={Grid}>
       <Table aria-label="simple table">
@@ -56,14 +49,7 @@ export const CustomersTable: FC<CustomersTableProps> = ({
                 <TableCell align="right">{customer.secondTelephone}</TableCell>
                 <TableCell align="right">{customer.email}</TableCell>
                 <TableCell align="right">
-                  <ButtonWrapper>
-                    <IconButton
-                      onClick={() => onEdit(customer)}
-                      aria-label="edit customer"
-                    >
-                      <CreateIcon />
-                    </IconButton>
-                  </ButtonWrapper>
+                  <DeleteCustomerButton customerId={customer.id} />
                 </TableCell>
               </TableRow>
             ))}

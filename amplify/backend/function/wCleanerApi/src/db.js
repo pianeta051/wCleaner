@@ -211,6 +211,22 @@ const getCustomerBySlug = async (slug) => {
   const customer = result.Items[0];
   return customer;
 };
+const getCustomerById = async (id) => {
+  const params = {
+    TableName: "customers-dev",
+    IndexName: "search_by_id",
+    KeyConditionExpression: "id = :id",
+    ExpressionAttributeValues: {
+      ":id": { S: id },
+    },
+  };
+  const result = await ddb.query(params).promise();
+  if (!result.Items?.length) {
+    return null;
+  }
+  const customer = result.Items[0];
+  return customer;
+};
 
 const getNextCustomer = async (lastEvaluatedKey) => {
   const params = {
@@ -252,6 +268,7 @@ module.exports = {
   addCustomer,
   editCustomer,
   getCustomerBySlug,
+  getCustomerById,
   getCustomers,
   getCustomer,
   queryCustomersByEmail,

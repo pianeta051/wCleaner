@@ -1,10 +1,9 @@
 import { FC, useEffect, useState } from "react";
 
-import { Button, Paper, CircularProgress } from "@mui/material";
+import { Button, CircularProgress } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./Customers.style";
 import { Customer } from "../../../../types/types";
 import AddIcon from "@mui/icons-material/Add";
-import { EditCustomerModal } from "../../../../components/Customer/EditCustomer/EditCustomerModal/EditCustomerModal";
 import { NewCustomerModal } from "../../../../components/Customer/CreateCustomer/NewCustomerModal/NewCustomerModal";
 import { CustomersTable } from "../../../../components/CustomersTable/CustomersTable";
 import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
@@ -13,12 +12,9 @@ import { LoadingButton } from "@mui/lab";
 import { SearchBar } from "../../../../components/SearchBar/SearchBar";
 import { useCustomers } from "../../../../context/CustomersContext";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
-
 export const Customers: FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ErrorCode | null>(null);
   const [nextToken, setNextToken] = useState<string | undefined>();
@@ -53,10 +49,6 @@ export const Customers: FC = () => {
   const openHandler = () => {
     setModalOpen(true);
   };
-  const closeEditHandler = () => {
-    setEditModalOpen(false);
-    setEditingCustomer(null);
-  };
 
   const loadMoreHandler = () => {
     if (nextToken) {
@@ -71,37 +63,6 @@ export const Customers: FC = () => {
           setLoadingMore(false);
           setNextToken(undefined);
         });
-    }
-  };
-
-  const openEditHandler = (customer: Customer) => {
-    setEditingCustomer(customer);
-    setEditModalOpen(true);
-  };
-
-  const addHandler = (customer: Customer) => {
-    setCustomers((customers) => [...customers, customer]);
-    setModalOpen(false);
-  };
-
-  const editHandler = (editedCustomer: Customer) => {
-    setCustomers((customers) =>
-      customers.map((customer) => {
-        if (customer.id === editedCustomer.id) {
-          return editedCustomer;
-        }
-        return customer;
-      })
-    );
-    setEditModalOpen(false);
-  };
-
-  const deleteHandler = () => {
-    if (editingCustomer) {
-      setCustomers((customers) =>
-        customers.filter((customer) => customer.id !== editingCustomer.id)
-      );
-      closeEditHandler();
     }
   };
 
@@ -123,48 +84,36 @@ export const Customers: FC = () => {
 
   return (
     <Wrapper>
-      <Paper elevation={13}>
-        {loading || searching ? (
-          <CircularProgress />
-        ) : error ? (
-          <ErrorMessage code={error} />
-        ) : (
-          <>
-            {customers.length === 0 ? (
-              <EmptyCustomers onCreateNew={openHandler} />
-            ) : (
-              <>
-                <IconButton>
-                  <Button startIcon={<AddIcon />} onClick={openHandler}>
-                    New customer
-                  </Button>
-                </IconButton>
-                <Title>Customers</Title>
-                <SearchBar onSearch={searchHandler} initialValue={searchTerm} />
+      {loading || searching ? (
+        <CircularProgress />
+      ) : error ? (
+        <ErrorMessage code={error} />
+      ) : (
+        <>
+          {customers.length === 0 ? (
+            <EmptyCustomers onCreateNew={openHandler} />
+          ) : (
+            <>
+              <IconButton>
+                <Button startIcon={<AddIcon />} onClick={openHandler}>
+                  New customer
+                </Button>
+              </IconButton>
+              <Title>Customers</Title>
+              <SearchBar onSearch={searchHandler} initialValue={searchTerm} />
 
-                <CustomersTable
-                  customers={customers}
-                  onEdit={openEditHandler}
-                />
-              </>
-            )}
-          </>
-        )}
-      </Paper>
+              <CustomersTable customers={customers} />
+            </>
+          )}
+        </>
+      )}
+
       <NewCustomerModal
         open={modalOpen}
         onClose={closeHandler}
-        onSubmit={addHandler}
+        onSubmit={closeHandler}
       />
-      {editingCustomer && (
-        <EditCustomerModal
-          open={editModalOpen}
-          onClose={closeEditHandler}
-          onEdit={editHandler}
-          customer={editingCustomer}
-          onDelete={deleteHandler}
-        />
-      )}
+
       {nextToken && (
         <LoadingButton
           variant="text"

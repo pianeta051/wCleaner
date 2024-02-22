@@ -22,12 +22,7 @@ describe("CustomerTable", () => {
         <Routes>
           <Route
             path="/customersTable"
-            element={
-              <CustomersTable
-                onEdit={cy.spy().as("editHandler")}
-                customers={customers}
-              />
-            }
+            element={<CustomersTable customers={customers} />}
           />
         </Routes>
       </MemoryRouter>
@@ -38,12 +33,7 @@ describe("CustomerTable", () => {
 
   it("displays an empty table when the customers list is empty", () => {
     const customers: Customer[] = [];
-    cy.mount(
-      <CustomersTable
-        onEdit={cy.spy().as("editHandler")}
-        customers={customers}
-      />
-    );
+    cy.mount(<CustomersTable customers={customers} />);
     cy.findByRole("table").should("exist");
   });
 });
