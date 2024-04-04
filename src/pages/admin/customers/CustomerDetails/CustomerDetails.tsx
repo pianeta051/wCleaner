@@ -37,9 +37,13 @@ export const CustomerDetails: FC = () => {
 
   const submitHandler = (formValues: CustomerFormValues) => {
     if (customer) {
-      editCustomer(formValues).then(() => {
-        setSnackbarOpen(true);
-      });
+      editCustomer(formValues)
+        .then(() => {
+          setSnackbarOpen(true);
+        })
+        .catch(() => {
+          // Do nothing, the hook manages the error
+        });
     }
   };
 

@@ -1,0 +1,29 @@
+{
+  "resourceName": "customers",
+  "tableName": "customers",
+  "partitionKey": {
+    "fieldName": "PK",
+    "fieldType": "string"
+  },
+  "sortKey": {
+    "fieldName": "SK",
+    "fieldType": "string"
+  },
+  "gsi": [
+    {
+      "name": "customer_email",
+      "partitionKey": {
+        "fieldName": "email",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "search_by_slug",
+      "partitionKey": {
+        "fieldName": "slug",
+        "fieldType": "string"
+      }
+    }
+  ],
+  "triggerFunctions": []
+}

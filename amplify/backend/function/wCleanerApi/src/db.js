@@ -3,6 +3,8 @@ AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 
+const TABLE_NAME = "customers-dev";
+
 const generateSlug = (email) => {
   return email.split("@")[0];
 };
@@ -24,10 +26,13 @@ const addCustomer = async (customer) => {
   const slug = generateSlug(customer.email);
 
   const params = {
-    TableName: "customers-dev",
+    TableName: TABLE_NAME,
     Item: {
-      id: {
-        S: id,
+      PK: {
+        S: `customer_${id}`,
+      },
+      SK: {
+        S: "profile",
       },
       name: {
         S: customer.name,
@@ -56,6 +61,12 @@ const addCustomer = async (customer) => {
       slug: {
         S: slug,
       },
+      // PK: {
+      //   S: `customer_${id}`,
+      // },
+      // SK: {
+      //   S: "profile",
+      // },
     },
   };
   const data = await ddb.putItem(params).promise();
@@ -73,18 +84,17 @@ const editCustomer = async (id, editedCustomer) => {
     throw "NOT_EXISTING_CUSTOMER";
   }
 
-  const emailExisting = await queryCustomersByEmail(editedCustomer.email);
+  // const emailExisting = await queryCustomersByEmail(editedCustomer.email);
 
-  if (
-    emailExisting.length > 0 &&
-    !emailExisting.find((item) => item.id.S === id)
-  ) {
-    console.log("Customer already exist");
+  // if (
+  //   emailExisting.length > 0 &&
+  //   !emailExisting.find((item) => item.PK.S === `customer_${id}`)
+  // ) {
+  //   throw "EMAIL_ALREADY_REGISTERED";
+  // }
 
-    throw "EMAIL_ALREADY_REGISTERED";
-  }
   const params = {
-    TableName: "customers-dev",
+    TableName: TABLE_NAME,
     ExpressionAttributeNames: {
       "#N": "name",
       "#NL": "name_lowercase",
@@ -94,6 +104,7 @@ const editCustomer = async (id, editedCustomer) => {
       "#SP": "secondTelephone",
       "#E": "email",
       "#EL": "email_lowercase",
+      "#SL": "slug",
     },
     ExpressionAttributeValues: {
       ":name": {
@@ -120,11 +131,15 @@ const editCustomer = async (id, editedCustomer) => {
       ":email_lowercase": {
         S: editedCustomer.email?.toLowerCase(),
       },
+      ":slug": {
+        S: editedCustomer.slug,
+      },
     },
     UpdateExpression:
-      "SET #N = :name, #A = :address, #P = :postcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase",
+      "SET #N = :name, #A = :address, #P = :postcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug",
     Key: {
-      id: { S: id },
+      PK: { S: `customer_${id}` },
+      SK: { S: "profile" },
     },
   };
   await ddb.updateItem(params).promise();
@@ -136,9 +151,10 @@ const editCustomer = async (id, editedCustomer) => {
 
 const getCustomer = async (id) => {
   const params = {
-    TableName: "customers-dev",
+    TableName: TABLE_NAME,
     Key: {
-      id: { S: id },
+      PK: { S: `customer_${id}` },
+      SK: { S: "profile" },
     },
   };
   const customer = await ddb.getItem(params).promise();
@@ -147,7 +163,7 @@ const getCustomer = async (id) => {
 
 const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
   let params = {
-    TableName: "customers-dev",
+    TableName: TABLE_NAME,
     Limit: limit,
     ExclusiveStartKey: exclusiveStartKey,
   };
@@ -197,7 +213,7 @@ const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
 
 const getCustomerBySlug = async (slug) => {
   const params = {
-    TableName: "customers-dev",
+    TableName: TABLE_NAME,
     IndexName: "search_by_slug",
     KeyConditionExpression: "slug = :slug",
     ExpressionAttributeValues: {
@@ -211,26 +227,22 @@ const getCustomerBySlug = async (slug) => {
   const customer = result.Items[0];
   return customer;
 };
+
 const getCustomerById = async (id) => {
   const params = {
-    TableName: "customers-dev",
-    IndexName: "search_by_id",
-    KeyConditionExpression: "id = :id",
-    ExpressionAttributeValues: {
-      ":id": { S: id },
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${id}` },
+      SK: { S: "profile" },
     },
   };
-  const result = await ddb.query(params).promise();
-  if (!result.Items?.length) {
-    return null;
-  }
-  const customer = result.Items[0];
-  return customer;
+  const customer = await ddb.getItem(params).promise();
+  return customer.Item;
 };
 
 const getNextCustomer = async (lastEvaluatedKey) => {
   const params = {
-    TableName: "customers-dev",
+    TableName: TABLE_NAME,
     Limit: 5,
     ExclusiveStartKey: lastEvaluatedKey,
   };
@@ -247,8 +259,8 @@ const queryCustomersByEmail = async (email) => {
       ":email": { S: email },
     },
     KeyConditionExpression: "email = :email",
-    TableName: "customers-dev",
-    IndexName: "search_by_email",
+    TableName: TABLE_NAME,
+    IndexName: "customer_email",
   };
   const result = await ddb.query(params).promise();
   return result.Items;
@@ -256,9 +268,9 @@ const queryCustomersByEmail = async (email) => {
 
 const deleteCustomer = async (id) => {
   const params = {
-    TableName: "customers-dev",
+    TableName: TABLE_NAME,
     Key: {
-      id: { S: id },
+      PK: { S: `customer_${id}` },
     },
   };
   await ddb.deleteItem(params).promise();

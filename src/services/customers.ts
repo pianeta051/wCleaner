@@ -108,6 +108,7 @@ export const getCustomers = async (
   customers: Customer[];
   nextToken?: string;
 }> => {
+  console.log({ nextToken, searchInput });
   const response = await get("/customers", {
     nextToken,
     search: searchInput,

@@ -34,7 +34,7 @@ app.use(function (req, res, next) {
 });
 
 const mapCustomer = (customerFromDb) => ({
-  id: customerFromDb.id.S,
+  id: customerFromDb.PK.S.replace("customer_", ""),
   name: customerFromDb.name.S,
   address: customerFromDb.address.S,
   postcode: customerFromDb.postcode.S,
@@ -62,8 +62,9 @@ app.get("/customers", async function (req, res) {
 });
 
 // Get a single customer
-app.get("/customers/*", async function (req, res) {
-  const slug = req.params[0];
+app.get("/customers/:slug", async function (req, res) {
+  const slug = req.params.slug;
+  console.log(`Slug: ${slug}`);
   const customerFromDb = await getCustomerBySlug(slug);
   if (!customerFromDb) {
     res.status(404).json({ message: "This customer does not exist" });
@@ -74,7 +75,7 @@ app.get("/customers/*", async function (req, res) {
 });
 
 // Get a single customer by id
-app.get("/customers/*", async function (req, res) {
+app.get("/customer-by-id/*", async function (req, res) {
   const id = req.params[0];
   const customerFromDb = await getCustomerById(id);
   if (!customerFromDb) {
