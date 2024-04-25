@@ -13,7 +13,7 @@ import {
 } from "../../CustomerForm/CustomerForm.style";
 import { Grid } from "@mui/material";
 import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
-import { useAddCustomer } from "../../../../hooks/useAddCustomer";
+import { useAddCustomer } from "../../../../hooks/Customers/useAddCustomer";
 
 type NewCustomerModalProps = {
   open: boolean;
@@ -28,9 +28,13 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
   const { addCustomer, error, loading } = useAddCustomer();
 
   const submitHandler = (formValues: CustomerFormValues) => {
-    addCustomer(formValues).then((customer) => {
-      onSubmit(customer);
-    });
+    addCustomer(formValues)
+      .then((customer) => {
+        onSubmit(customer);
+      })
+      .catch(() => {
+        // Do nothing, the hook manages the error
+      });
   };
 
   const closeHandler = () => {

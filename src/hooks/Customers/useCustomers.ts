@@ -1,7 +1,7 @@
 import useSWRInfinite from "swr/infinite";
-import { getCustomers } from "../services/customers";
-import { extractErrorCode } from "../services/error";
-import { Customer } from "../types/types";
+import { getCustomers } from "../../services/customers";
+import { extractErrorCode } from "../../services/error";
+import { Customer } from "../../types/types";
 
 type KeyFunctionType = (
   index: number,
@@ -32,7 +32,6 @@ export const useCustomers = (searchInput?: string) => {
   >(
     keyFunctionGenerator(searchInput),
     async ([_operation, nextToken, searchInput]) => {
-      console.log([_operation, nextToken, searchInput]);
       return getCustomers(nextToken, searchInput);
     }
   );

@@ -44,7 +44,6 @@ export const AppRoutes: FC = () => {
         <Route path="customers">
           <Route index element={<Customers />} />
           <Route path=":slug" element={<CustomerDetails />} />
-          {/* <Route path="edit" element={<EditCustomerPage />} /> */}
         </Route>
 
         <Route path="profile" element={<ProfilePage />} />

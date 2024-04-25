@@ -13,14 +13,20 @@ const awsServerlessExpressMiddleware = require("aws-serverless-express/middlewar
 //
 const {
   addCustomer,
+  addCustomerJob,
   getCustomers,
   getCustomerBySlug,
   getCustomerById,
+  getCustomerJobs,
   deleteCustomer,
+  deleteJobFromCustomer,
   editCustomer,
 } = require("./db");
 
+const { mapCustomer, mapCustomerJobs } = require("./mappers");
+
 const { generateToken, parseToken } = require("./token");
+
 // declare a new express app
 const app = express();
 app.use(bodyParser.json());
@@ -33,18 +39,7 @@ app.use(function (req, res, next) {
   next();
 });
 
-const mapCustomer = (customerFromDb) => ({
-  id: customerFromDb.PK.S.replace("customer_", ""),
-  name: customerFromDb.name.S,
-  address: customerFromDb.address.S,
-  postcode: customerFromDb.postcode.S,
-  mainTelephone: customerFromDb.mainTelephone.S,
-  secondTelephone: customerFromDb.secondTelephone.S,
-  email: customerFromDb.email.S,
-  slug: customerFromDb.slug.S,
-});
-
-// Get all customers
+// Get all customer
 
 app.get("/customers", async function (req, res) {
   const nextToken = req.query?.nextToken;
@@ -56,6 +51,7 @@ app.get("/customers", async function (req, res) {
     limit,
     search
   );
+
   const customers = items.map(mapCustomer);
   const responseToken = generateToken(lastEvaluatedKey);
   res.json({ customers, nextToken: responseToken });
@@ -133,10 +129,77 @@ app.put("/customers/*", async function (req, res) {
 });
 
 // Delete a Customer
-app.delete("/customers/*", async function (req, res) {
-  const id = req.params[0];
+app.delete("/customers/:id", async function (req, res) {
+  const id = req.params.id;
   await deleteCustomer(id);
   res.json({ message: "Customer deleted" });
+});
+
+//JOBS
+
+// Get all JOBS
+
+app.get("/jobs", function (req, res) {
+  const jobs = items.map(mapCustomerJobs);
+  console.log(jobs);
+  res.json({ jobs });
+});
+
+// Get a single customer's Job
+app.get("/customers/:id/jobs", async function (req, res) {
+  const id = req.params.id;
+  const nextToken = req.query?.nextToken;
+  const exclusiveStartKey = parseToken(nextToken);
+  const { items, lastEvaluatedKey } = await getCustomerJobs(
+    id,
+    exclusiveStartKey
+  );
+  const jobs = items.map(mapCustomerJobs);
+  const responseToken = generateToken(lastEvaluatedKey);
+  try {
+    res.json({ jobs, nextToken: responseToken });
+  } catch (e) {
+    if (e.message === "Customer not found") {
+      res.status(404).json({ error: e.message });
+      return;
+    }
+    throw e;
+  }
+});
+
+//Create a Job
+app.post("/customers/:id/job", async function (req, res) {
+  try {
+    const customerId = req.params.id;
+    const job = req.body;
+    const createdJob = await addCustomerJob(customerId, job);
+    res.json({ job: { ...createdJob, customerId } });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({
+        error: "Customer not registered!",
+      });
+    } else {
+      throw error;
+    }
+  }
+});
+
+app.delete("/customers/:id/job/:jobId", async function (req, res) {
+  try {
+    const customerId = req.params.id;
+    const jobId = req.params.jobId;
+    await deleteJobFromCustomer(customerId, jobId);
+    res.json({ message: "Job Deleted" });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({
+        error: "Customer not registered!",
+      });
+    } else {
+      throw error;
+    }
+  }
 });
 
 app.listen(3000, function () {

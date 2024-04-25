@@ -6,9 +6,40 @@
       "lambdaFunction": "wCleanerApi",
       "permissions": {
         "setting": "private",
-        "auth": ["create", "read", "update", "delete"],
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
         "groups": {
-          "Admin": ["create", "read", "update", "delete"]
+          "Admin": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        }
+      }
+    },
+    "/jobs": {
+      "name": "/jobs",
+      "lambdaFunction": "wCleanerApi",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
+        "groups": {
+          "Admin": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
         }
       }
     }

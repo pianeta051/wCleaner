@@ -22,7 +22,7 @@ import {
 } from "../../CustomerForm/CustomerForm";
 import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
 import { useCustomers } from "../../../../context/CustomersContext";
-import { useEditCustomer } from "../../../../hooks/useEditCustomer";
+import { useEditCustomer } from "../../../../hooks/Customers/useEditCustomer";
 
 type EditCustomerModalProps = {
   open: boolean;
@@ -56,9 +56,13 @@ export const EditCustomerModal: FC<EditCustomerModalProps> = ({
   };
 
   const submitHandler = (formValues: CustomerFormValues) => {
-    editCustomer(formValues).then((customer) => {
-      onEdit(customer);
-    });
+    editCustomer(formValues)
+      .then((customer) => {
+        onEdit(customer);
+      })
+      .catch(() => {
+        // Do nothing, the hook manages the error
+      });
   };
 
   const deleteHandler = () => {

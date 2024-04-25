@@ -1,8 +1,8 @@
 import useSWRMutation from "swr/mutation";
-import { editCustomer } from "../services/customers";
-import { Customer } from "../types/types";
-import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
-import { extractErrorCode } from "../services/error";
+import { editCustomer } from "../../services/customers";
+import { Customer } from "../../types/types";
+import { CustomerFormValues } from "../../components/Customer/CustomerForm/CustomerForm";
+import { extractErrorCode } from "../../services/error";
 
 export const useEditCustomer = (
   id: string | undefined,

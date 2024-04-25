@@ -1,6 +1,6 @@
 {
-  "resourceName": "customers",
-  "tableName": "customers",
+  "resourceName": "wcleaner",
+  "tableName": "wcleaner",
   "partitionKey": {
     "fieldName": "PK",
     "fieldType": "string"
@@ -18,7 +18,7 @@
       }
     },
     {
-      "name": "search_by_slug",
+      "name": "customer_slug",
       "partitionKey": {
         "fieldName": "slug",
         "fieldType": "string"

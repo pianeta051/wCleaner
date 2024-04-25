@@ -1,8 +1,10 @@
-import { deleteCustomer } from "../services/customers";
-import { Customer } from "../types/types";
+import { deleteCustomer } from "../../services/customers";
+import { Customer } from "../../types/types";
 import useSWRMutation from "swr/mutation";
-import { extractErrorCode } from "../services/error";
+import { extractErrorCode } from "../../services/error";
 import { useSWRConfig } from "swr";
+import { keyFunctionGenerator } from "./useCustomers";
+import { unstable_serialize } from "swr/infinite";
 
 export const useDeleteCustomer = (id: string | undefined) => {
   const { mutate } = useSWRConfig();
@@ -16,21 +18,18 @@ export const useDeleteCustomer = (id: string | undefined) => {
     id ? ["customer", id] : null,
     async ([_operation, id]) => {
       await deleteCustomer(id);
+      // Mutar la cache de coleccion de customers
       await mutate<
-        readonly [
-          string,
-          string | undefined,
-          string | undefined,
-          string[] | undefined
-        ],
+        readonly [string, string | undefined, string | undefined],
         {
           customers: Customer[];
           nextToken?: string;
-        }
+        } | null
       >(
-        (key) => Array.isArray(key) && key.length > 0 && key[0] === "customers",
-        undefined,
-        { populateCache: true, revalidate: false }
+        unstable_serialize(keyFunctionGenerator("")), // claves de cache a modificar
+        () => undefined, // valor que le queremos dar
+        // opciones
+        { revalidate: true, populateCache: false }
       );
     },
     {

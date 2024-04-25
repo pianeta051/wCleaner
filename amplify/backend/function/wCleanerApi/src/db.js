@@ -3,7 +3,7 @@ AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 
-const TABLE_NAME = "customers-dev";
+const TABLE_NAME = "wcleaner-dev";
 
 const generateSlug = (email) => {
   return email.split("@")[0];
@@ -61,12 +61,6 @@ const addCustomer = async (customer) => {
       slug: {
         S: slug,
       },
-      // PK: {
-      //   S: `customer_${id}`,
-      // },
-      // SK: {
-      //   S: "profile",
-      // },
     },
   };
   const data = await ddb.putItem(params).promise();
@@ -166,6 +160,15 @@ const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
     TableName: TABLE_NAME,
     Limit: limit,
     ExclusiveStartKey: exclusiveStartKey,
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: "customer_" },
+      ":sk": { S: "profile" },
+    },
   };
 
   if (searchInput?.length) {
@@ -175,14 +178,17 @@ const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
         "#EL": "email_lowercase",
         "#A": "address",
         "#P": "postcode",
+        ...params.ExpressionAttributeNames,
       },
       FilterExpression:
-        "contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode)   ",
+        params.FilterExpression +
+        " AND (contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))",
       ExpressionAttributeValues: {
         ":name": { S: searchInput.toLowerCase() },
         ":email": { S: searchInput.toLowerCase() },
         ":address": { S: searchInput.toLowerCase() },
         ":postcode": { S: searchInput.toLowerCase() },
+        ...params.ExpressionAttributeValues,
       },
     };
     params = {
@@ -214,7 +220,7 @@ const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
 const getCustomerBySlug = async (slug) => {
   const params = {
     TableName: TABLE_NAME,
-    IndexName: "search_by_slug",
+    IndexName: "customer_slug",
     KeyConditionExpression: "slug = :slug",
     ExpressionAttributeValues: {
       ":slug": { S: slug },
@@ -271,18 +277,103 @@ const deleteCustomer = async (id) => {
     TableName: TABLE_NAME,
     Key: {
       PK: { S: `customer_${id}` },
+      SK: { S: "profile" },
     },
   };
   await ddb.deleteItem(params).promise();
 };
 
+/// JOBS
+
+//ADD JOB TO CUSTOMER
+
+const addCustomerJob = async (customerId, job) => {
+  if (!(await getCustomer(customerId))) {
+    throw "Customer not found";
+  }
+  const jobId = uuid.v1();
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+      date: { S: job.date },
+      time: { S: job.time },
+      price: { S: job.price.toString() },
+    },
+  };
+  await ddb.putItem(params).promise();
+  return { ...job, id: jobId };
+};
+
+// GET JOBS
+const getCustomerJobs = async (customerId, exclusiveStartKey) => {
+  const PAGE_SIZE = 5;
+  const params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":sk": { S: "job_" },
+    },
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+    },
+    KeyConditionExpression: "#PK = :pk AND begins_with(#SK, :sk)",
+    Limit: PAGE_SIZE,
+    ExclusiveStartKey: exclusiveStartKey,
+  };
+  const result = await ddb.query(params).promise();
+  const nextItem = await getNextValue(result.LastEvaluatedKey, {
+    filterExpression: params.KeyConditionExpression,
+    expressionAttributeNames: params.ExpressionAttributeNames,
+    expressionAttributeValues: params.ExpressionAttributeValues,
+  });
+  return {
+    items: result.Items,
+    lastEvaluatedKey: nextItem ? result.LastEvaluatedKey : null,
+  };
+};
+
+//DELETE JOB
+const deleteJobFromCustomer = async (customerId, jobId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+  };
+  await ddb.deleteItem(params).promise();
+};
+
+const getNextValue = async (lastEvaluatedKey, filter) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Limit: 1,
+    ExclusiveStartKey: lastEvaluatedKey,
+    FilterExpression: filter.filterExpression,
+    ExpressionAttributeNames: filter.expressionAttributeNames,
+    ExpressionAttributeValues: filter.expressionAttributeValues,
+  };
+  const result = await ddb.scan(params).promise();
+  if (result.Items.length) {
+    const item = result.Items[0];
+    return item;
+  }
+  return null;
+};
+
 module.exports = {
   addCustomer,
+  addCustomerJob,
   editCustomer,
   getCustomerBySlug,
   getCustomerById,
   getCustomers,
   getCustomer,
+  getCustomerJobs,
   queryCustomersByEmail,
   deleteCustomer,
+  deleteJobFromCustomer,
 };

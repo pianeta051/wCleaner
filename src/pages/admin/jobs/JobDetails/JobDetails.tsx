@@ -1,44 +1,44 @@
 import { Alert, CircularProgress, Grid, Snackbar } from "@mui/material";
 import { FC, useState } from "react";
 import { useParams } from "react-router-dom";
+
 import {
-  CustomerForm,
-  CustomerFormValues,
-} from "../../../../components/Customer/CustomerForm/CustomerForm";
+  JobForm,
+  JobFormValues,
+} from "../../../../components/Jobs/JobForm/JobForm";
 
 import { NotFound } from "../../../NotFound/NotFound";
-import { Title, Wrapper } from "./CustomerDetails.style";
+import { Title, Wrapper } from "./JobDetails.style";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
-import { useCustomer } from "../../../../hooks/Customers/useCustomer";
-import { useEditCustomer } from "../../../../hooks/Customers/useEditCustomer";
-import { CustomerJobs } from "../../../../components/CustomerJobs/CustomerJobs";
+import { useJob } from "../../../../hooks/Jobs/useJob";
+import { useEditJob } from "../../../../hooks/Jobs/useEditJob";
+import { Customer } from "../../../../types/types";
+import dayjs from "dayjs";
 
-type CustomerParams = {
-  slug: string;
+type JobParams = {
+  id: string;
 };
-
-export const CustomerDetails: FC = () => {
+type JodDetailsProps = {
+  customer: Customer;
+};
+export const JobDetails: FC<JodDetailsProps> = ({ customer }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const { slug } = useParams<CustomerParams>();
+  const { id } = useParams<JobParams>();
 
+  const { job, loading: initialLoading, error: initialError } = useJob(id);
   const {
-    customer,
-    loading: initialLoading,
-    error: initialError,
-  } = useCustomer(slug);
-  const {
-    editCustomer,
+    editCustomerJob,
     loading: editing,
     error: editError,
-  } = useEditCustomer(customer?.id, customer?.slug);
+  } = useEditJob(job?.id, job?.id);
 
-  if (!slug) {
+  if (!id) {
     return <NotFound />;
   }
 
-  const submitHandler = (formValues: CustomerFormValues) => {
-    if (customer) {
-      editCustomer(formValues)
+  const submitHandler = (formValues: JobFormValues) => {
+    if (job) {
+      editCustomerJob(formValues)
         .then(() => {
           setSnackbarOpen(true);
         })
@@ -55,7 +55,7 @@ export const CustomerDetails: FC = () => {
   return (
     <Wrapper>
       <Title variant="h3" align="center">
-        Customer details
+        Job details
       </Title>
 
       <Grid container spacing={0} direction="column" alignItems="center">
@@ -63,17 +63,15 @@ export const CustomerDetails: FC = () => {
           <CircularProgress />
         ) : initialError ? (
           <ErrorMessage code={initialError} />
-        ) : customer ? (
+        ) : job ? (
           <>
             {editError && <ErrorMessage code={editError} />}
-            <CustomerForm
+            <JobForm
               onSubmit={submitHandler}
-              initialValues={customer}
+              initialValues={{ ...job, date: dayjs(job.date) }}
               loading={editing}
               layout="horizontal"
             />
-
-            <CustomerJobs customer={customer} />
           </>
         ) : (
           <NotFound data-testid="not-found-message" />
@@ -88,7 +86,7 @@ export const CustomerDetails: FC = () => {
             severity="success"
             sx={{ width: "100%" }}
           >
-            Customer updated!
+            Job updated!
           </Alert>
         </Snackbar>
       </Grid>

@@ -140,7 +140,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             color="primary"
             style={{ textTransform: "none" }}
             type="submit"
-            sx={{ width: "75%" }}
+            // sx={{ width: "75%" }}
             loading={loading}
           >
             Save

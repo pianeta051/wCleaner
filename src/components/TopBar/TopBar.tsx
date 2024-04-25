@@ -31,6 +31,7 @@ export const TopBar: FC = () => {
   const pages: Page[] = [
     { label: "customers", url: "/admin/customers" },
     { label: "users", url: "/admin/users", exclusiveFor: "Admin" },
+    { label: "jobs  ", url: "/admin/jobs" },
   ];
   const closeUserMenu = () => {
     setAnchorElUser(null);

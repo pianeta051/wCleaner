@@ -18,11 +18,15 @@ export const UsersPage: FC = () => {
 
   useEffect(() => {
     if (loading) {
-      getUsers().then((users) => {
-        setSelectedUserId(users[0].id);
-        setLoading(false);
-        setUsers(users);
-      });
+      getUsers()
+        .then((users) => {
+          setSelectedUserId(users[0].id);
+          setLoading(false);
+          setUsers(users);
+        })
+        .catch(() => {
+          // Do nothing, the hook manages the error
+        });
     }
   }, [loading, setUsers, setLoading]);
 

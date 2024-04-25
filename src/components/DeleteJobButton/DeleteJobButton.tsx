@@ -8,27 +8,27 @@ import {
 } from "@mui/material";
 import { FC, useState } from "react";
 
-import { ButtonWrapper } from "../DeleteCustomerButton/DeleteCustomerButton.style";
+import { ButtonWrapper } from "../DeleteJobButton/DeleteJobButton.style";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import { useDeleteCustomer } from "../../hooks/Customers/useDeleteCustomer";
 import { LoadingButton } from "@mui/lab";
 import { useNavigate } from "react-router-dom";
+import { useDeleteJob } from "../../hooks/Jobs/useDeleteJob";
 
-type DeleteCustomerButtonProps = {
+type DeleteJobButtonProps = {
+  jobId: string;
   customerId: string;
 };
 
-export const DeleteCustomerButton: FC<DeleteCustomerButtonProps> = ({
+export const DeleteJobButton: FC<DeleteJobButtonProps> = ({
+  jobId,
   customerId,
 }) => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
-  const { deleteCustomer, loading, error } = useDeleteCustomer(customerId);
-  const navigate = useNavigate();
+  const { deleteCustomerJob, loading, error } = useDeleteJob(customerId);
   const deleteHandler = () => {
-    deleteCustomer()
+    deleteCustomerJob(jobId)
       .then(() => {
         setOpenDeleteAlert(false);
-        navigate("/admin/customers");
       })
       .catch(() => {
         // Do nothing, the hook manages the error
@@ -58,7 +58,7 @@ export const DeleteCustomerButton: FC<DeleteCustomerButtonProps> = ({
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             {error
-              ? "The customer could not be deleted"
+              ? "The Job could not be deleted"
               : "After deleting this item you wont be able to undo this action."}
           </DialogContentText>
         </DialogContent>

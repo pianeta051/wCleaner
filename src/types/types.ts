@@ -8,3 +8,11 @@ export type Customer = {
   id: string;
   slug: string;
 };
+
+export type Job = {
+  customerId: string;
+  id: string;
+  date: string;
+  time: string;
+  price: number;
+};

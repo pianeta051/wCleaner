@@ -1,8 +1,8 @@
 import useSWRMutation from "swr/mutation";
-import { Customer } from "../types/types";
-import { addCustomer } from "../services/customers";
-import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
-import { extractErrorCode } from "../services/error";
+import { Customer } from "../../types/types";
+import { addCustomer } from "../../services/customers";
+import { CustomerFormValues } from "../../components/Customer/CustomerForm/CustomerForm";
+import { extractErrorCode } from "../../services/error";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { keyFunctionGenerator } from "./useCustomers";

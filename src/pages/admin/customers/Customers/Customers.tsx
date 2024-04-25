@@ -12,7 +12,7 @@ import { LoadingButton } from "@mui/lab";
 import { SearchBar } from "../../../../components/SearchBar/SearchBar";
 
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
-import { useCustomers } from "../../../../hooks/useCustomers";
+import { useCustomers } from "../../../../hooks/Customers/useCustomers";
 
 export const Customers: FC = () => {
   const [modalOpen, setModalOpen] = useState(false);

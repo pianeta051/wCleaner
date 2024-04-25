@@ -49,7 +49,7 @@ export type AmplifyDependentResourcesAttributes = {
     }
   },
   "storage": {
-    "customers": {
+    "wcleaner": {
       "Arn": "string",
       "Name": "string",
       "PartitionKeyName": "string",
