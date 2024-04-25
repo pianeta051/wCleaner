@@ -11,7 +11,6 @@ import { FC, useState } from "react";
 import { ButtonWrapper } from "../DeleteJobButton/DeleteJobButton.style";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { LoadingButton } from "@mui/lab";
-import { useNavigate } from "react-router-dom";
 import { useDeleteJob } from "../../hooks/Jobs/useDeleteJob";
 
 type DeleteJobButtonProps = {
