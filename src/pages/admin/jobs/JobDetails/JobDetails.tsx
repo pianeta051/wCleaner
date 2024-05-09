@@ -2,18 +2,16 @@ import { Alert, CircularProgress, Grid, Snackbar } from "@mui/material";
 import { FC, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import {
-  JobForm,
-  JobFormValues,
-} from "../../../../components/Jobs/JobForm/JobForm";
+import { JobForm, JobFormValues } from "../../../../components/JobForm/JobForm";
 
 import { NotFound } from "../../../NotFound/NotFound";
 import { Title, Wrapper } from "./JobDetails.style";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 import { useJob } from "../../../../hooks/Jobs/useJob";
-import { useEditJob } from "../../../../hooks/Jobs/useEditJob";
+
 import { Customer } from "../../../../types/types";
 import dayjs from "dayjs";
+import { useCustomerEditJob } from "../../../../hooks/Jobs/useEditJob";
 
 type JobParams = {
   id: string;
@@ -30,7 +28,7 @@ export const JobDetails: FC<JodDetailsProps> = ({ customer }) => {
     editCustomerJob,
     loading: editing,
     error: editError,
-  } = useEditJob(job?.id, job?.id);
+  } = useCustomerEditJob(job?.id, job?.id);
 
   if (!id) {
     return <NotFound />;
@@ -68,7 +66,7 @@ export const JobDetails: FC<JodDetailsProps> = ({ customer }) => {
             {editError && <ErrorMessage code={editError} />}
             <JobForm
               onSubmit={submitHandler}
-              initialValues={{ ...job, date: dayjs(job.date) }}
+              defaultValues={{ ...job, date: dayjs(job.date) }}
               loading={editing}
               layout="horizontal"
             />

@@ -289,7 +289,7 @@ const deleteCustomer = async (id) => {
 
 const addCustomerJob = async (customerId, job) => {
   if (!(await getCustomer(customerId))) {
-    throw "Customer not found";
+    throw "CUSTOMER_NOT_FOUND";
   }
   const jobId = uuid.v1();
   const params = {
@@ -335,6 +335,43 @@ const getCustomerJobs = async (customerId, exclusiveStartKey) => {
   };
 };
 
+//EDIT JOB
+
+const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
+  const params = {
+    ExpressionAttributeNames: {
+      "#D": "date",
+      "#T": "time",
+      "#P": "price",
+    },
+    ExpressionAttributeValues: {
+      ":date": {
+        S: updateJob.date,
+      },
+      ":time": {
+        S: updatedJob.time,
+      },
+      ":price": {
+        S: updatedJob.price,
+      },
+    },
+    Key: {
+      PK: {
+        S: `customer_${customerId}`,
+      },
+      SK: {
+        S: `job_${jobId}`,
+      },
+    },
+    TableName: TABLE_NAME,
+    UpdateExpression: "SET #D = :date, #T = :time, #P = :price",
+  };
+  await ddb.updateItem(params).promise();
+  return {
+    id,
+    ...updatedJob,
+  };
+};
 //DELETE JOB
 const deleteJobFromCustomer = async (customerId, jobId) => {
   const params = {
@@ -375,5 +412,6 @@ module.exports = {
   getCustomerJobs,
   queryCustomersByEmail,
   deleteCustomer,
+  editJobFromCustomer,
   deleteJobFromCustomer,
 };

@@ -1,3 +1,4 @@
+import { Dayjs } from "dayjs";
 export type Customer = {
   name: string;
   address: string;

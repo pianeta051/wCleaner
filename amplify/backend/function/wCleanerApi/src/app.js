@@ -19,6 +19,7 @@ const {
   getCustomerById,
   getCustomerJobs,
   deleteCustomer,
+  editJobFromCustomer,
   deleteJobFromCustomer,
   editCustomer,
 } = require("./db");
@@ -108,9 +109,9 @@ app.post("/customers", async function (req, res) {
 
 //Update a customer
 
-app.put("/customers/*", async function (req, res) {
+app.put("/customers/:customerId", async function (req, res) {
   try {
-    const id = req.params[0];
+    const id = req.params.id;
     const editedCustomer = await editCustomer(id, req.body);
     res.json({ customer: editedCustomer });
   } catch (error) {
@@ -129,7 +130,7 @@ app.put("/customers/*", async function (req, res) {
 });
 
 // Delete a Customer
-app.delete("/customers/:id", async function (req, res) {
+app.delete("/customers/:customerId", async function (req, res) {
   const id = req.params.id;
   await deleteCustomer(id);
   res.json({ message: "Customer deleted" });
@@ -146,8 +147,8 @@ app.get("/jobs", function (req, res) {
 });
 
 // Get a single customer's Job
-app.get("/customers/:id/jobs", async function (req, res) {
-  const id = req.params.id;
+app.get("/customers/:customerId/jobs", async function (req, res) {
+  const id = req.params.customerId;
   const nextToken = req.query?.nextToken;
   const exclusiveStartKey = parseToken(nextToken);
   const { items, lastEvaluatedKey } = await getCustomerJobs(
@@ -168,9 +169,9 @@ app.get("/customers/:id/jobs", async function (req, res) {
 });
 
 //Create a Job
-app.post("/customers/:id/job", async function (req, res) {
+app.post("/customers/:customerId/job", async function (req, res) {
   try {
-    const customerId = req.params.id;
+    const customerId = req.params.customerId;
     const job = req.body;
     const createdJob = await addCustomerJob(customerId, job);
     res.json({ job: { ...createdJob, customerId } });
@@ -185,7 +186,15 @@ app.post("/customers/:id/job", async function (req, res) {
   }
 });
 
-app.delete("/customers/:id/job/:jobId", async function (req, res) {
+app.put("/customers/:customerId/job/:jobId", async function (req, res) {
+  const customerId = req.params.id;
+  const jobId = req.params.job_id;
+  const updatedJob = req.body;
+  const newJob = await editJobFromCustomer(customerId, jobId, updatedJob);
+  res.json({ job: newJob });
+});
+
+app.delete("/customers/:customerId/job/:jobId", async function (req, res) {
   try {
     const customerId = req.params.id;
     const jobId = req.params.jobId;

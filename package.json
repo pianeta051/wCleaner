@@ -41,7 +41,8 @@
     "prepare": "husky install",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "cypress:run:component": "cypress run --component"
+    "cypress:run:component": "cypress run --component",
+    "unimported": "npx unimported"
   },
   "eslintConfig": {
     "extends": [

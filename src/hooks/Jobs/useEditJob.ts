@@ -1,26 +1,43 @@
+import { unstable_serialize, useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
-import { editCustomerJob } from "../../services/jobs";
+import { JobFormValues } from "../../components/JobForm/JobForm";
 import { Job } from "../../types/types";
-
+import { keyFunctionGenerator } from "./useCustomerJobs";
+import { editCustomerJob } from "../../services/jobs";
 import { extractErrorCode } from "../../services/error";
-import { JobFormValues } from "../../components/Jobs/JobForm/JobForm";
 
-export const useEditJob = (
-  customerId: string | undefined,
-  jobId: string | undefined
-) => {
+export const useCustomerEditJob = (customerId?: string, jobId?: string) => {
+  const { mutate } = useSWRConfig();
   const { trigger, isMutating, error } = useSWRMutation<
     Job,
     Error,
-    readonly [string, string] | null,
-    JobFormValues
+    readonly [string, string, string] | null,
+    JobFormValues,
+    Job[]
   >(
-    jobId && customerId ? ["job", jobId] : null,
-    async ([_operation, _operation2], { arg: formValues }) =>
-      editCustomerJob(customerId as string, jobId as string, formValues),
+    customerId && jobId ? ["edit-customer-job", customerId, jobId] : null,
+    async ([_operation, customerId, jobId], { arg: formValues }) => {
+      const address = editCustomerJob(customerId, jobId, formValues);
+      await mutate<
+        readonly [string, string, string | undefined],
+        {
+          items: Job[];
+          nextToken?: string;
+        } | null
+      >(
+        // Temporary solution: https://github.com/vercel/swr/issues/1156
+        unstable_serialize(keyFunctionGenerator(customerId)),
+        () => undefined,
+        {
+          revalidate: true,
+          populateCache: false,
+        }
+      );
+      return address;
+    },
     {
       revalidate: false,
-      populateCache: true,
+      populateCache: false,
     }
   );
 

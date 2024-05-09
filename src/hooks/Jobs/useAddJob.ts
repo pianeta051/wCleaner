@@ -5,7 +5,7 @@ import { extractErrorCode } from "../../services/error";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { addJob } from "../../services/jobs";
-import { JobFormValues } from "../../components/Jobs/JobForm/JobForm";
+import { JobFormValues } from "../../components/JobForm/JobForm";
 import { keyFunctionGenerator } from "./useCustomerJobs";
 
 export const useAddJob = (customerId: string) => {
@@ -36,12 +36,10 @@ export const useAddJob = (customerId: string) => {
           jobs: Job[];
           nextToken?: string;
         } | null
-      >(
-        unstable_serialize(keyFunctionGenerator(customerId)),
-        () => undefined,
-
-        { revalidate: true, populateCache: false }
-      );
+      >(unstable_serialize(keyFunctionGenerator(customerId)), () => undefined, {
+        revalidate: true,
+        populateCache: false,
+      });
       return job;
     },
     {

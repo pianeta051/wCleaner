@@ -2,7 +2,7 @@ import { API } from "aws-amplify";
 
 import { Job } from "../types/types";
 import { isErrorResponse } from "./error";
-import { JobFormValues } from "../components/Jobs/JobForm/JobForm";
+import { JobFormValues } from "../components/JobForm/JobForm";
 const get = async (
   path: string,
   queryParams: { [param: string]: string | undefined | number } = {}
@@ -73,14 +73,6 @@ export const addJob = async (
     }
     throw "INTERNAL_ERROR";
   }
-  //   console.log(response);
-  //   if (!isJob(response.job)) {
-  //     throw "INTERNAL_ERROR";
-  //   }
-  //   return response.job;
-  // } catch (error) {
-  //   throw "INTERNAL_ERROR";
-  // }
 };
 
 export const deleteCustomerJob = async (
@@ -104,14 +96,15 @@ export const editCustomerJob = async (
       ...formValues,
       date: formValues.date.toISOString(),
     });
-    if (!isJob(response.job)) {
+    if (!isJob(response.secondaryAddress)) {
       throw "INTERNAL_ERROR";
     }
-    return response.job;
+    return response.secondaryAddress;
   } catch (error) {
     if (isErrorResponse(error)) {
-      if (error.response.status === 404) {
-        throw "JOB_NOT_EXISTS";
+      const status = error.response.status;
+      if (status === 404) {
+        throw "CUSTOMER_NOT_FOUND";
       }
     }
     throw "INTERNAL_ERROR";

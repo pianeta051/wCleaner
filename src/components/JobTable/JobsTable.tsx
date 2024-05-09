@@ -7,16 +7,23 @@ import {
   TableRow,
   TableBody,
   TableHead,
+  Button,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
 import { Customer, Job } from "../../types/types";
 import { DeleteJobButton } from "../DeleteJobButton/DeleteJobButton";
 
 type JobsTableProps = {
   jobs: Job[];
   customer: Customer;
+  onEditClick: (jobId: string) => void;
 };
 
-export const JobsTable: FC<JobsTableProps> = ({ jobs, customer }) => {
+export const JobsTable: FC<JobsTableProps> = ({
+  jobs,
+  customer,
+  onEditClick,
+}) => {
   return (
     <TableContainer component={Grid}>
       <Table aria-label="simple table">
@@ -42,6 +49,14 @@ export const JobsTable: FC<JobsTableProps> = ({ jobs, customer }) => {
                 <TableCell align="right">{job.price}</TableCell>
                 <TableCell align="right">
                   <DeleteJobButton jobId={job.id} customerId={customer.id} />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    onClick={() => onEditClick(job.id)}
+                  >
+                    <EditIcon />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

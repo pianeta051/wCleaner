@@ -1,11 +1,11 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import { Button, Grid } from "@mui/material";
 import { DateField, Field } from "./JobForm.style";
 import { LoadingButton } from "@mui/lab";
-import { Form } from "../../Form/Form";
+import { Form } from "../Form/Form";
 import { useFormik } from "formik";
 import * as yup from "yup";
-import { DeleteButton } from "../../DeleteButton/DeleteButton";
+import { DeleteButton } from "../DeleteButton/DeleteButton";
 import dayjs, { Dayjs } from "dayjs";
 import {
   DateValidationError,
@@ -24,17 +24,16 @@ const INITIAL_VALUES: JobFormValues = {
   price: 0,
 };
 const validationSchema = yup.object<JobFormValues>({
-  date: yup.date().min(new Date()),
+  date: yup.date(),
   time: yup.string(),
   price: yup.number().required().positive(),
 });
 
 type JobFormProps = {
-  onSubmit: (Job: JobFormValues) => void;
+  onSubmit: (job: JobFormValues) => void;
   onCancel?: () => void;
   onDelete?: () => void;
-
-  initialValues?: JobFormValues;
+  defaultValues?: JobFormValues;
   loading?: boolean;
   layout?: "vertical" | "horizontal";
 };
@@ -43,17 +42,17 @@ export const JobForm: FC<JobFormProps> = ({
   onSubmit,
   onCancel,
   onDelete,
-  initialValues = INITIAL_VALUES,
+  defaultValues,
   loading = false,
   layout = "vertical",
 }) => {
+  const defaultValuesForm = !defaultValues ? INITIAL_VALUES : defaultValues;
   const formik = useFormik<JobFormValues>({
-    initialValues: initialValues,
+    initialValues: defaultValuesForm,
     onSubmit,
     validationSchema,
   });
   const columns = layout === "vertical" ? 12 : 4;
-  const [date, setDate] = useState(new Date());
 
   const dateChangeHandler: (
     value: dayjs.Dayjs | null,
@@ -84,6 +83,8 @@ export const JobForm: FC<JobFormProps> = ({
             fullWidth
             onChange={formik.handleChange}
             value={formik.values.time}
+            error={!!(formik.touched.time && formik.errors.time)}
+            helperText={formik.touched.time ? formik.errors.time : undefined}
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -95,6 +96,8 @@ export const JobForm: FC<JobFormProps> = ({
             fullWidth
             onChange={formik.handleChange}
             value={formik.values.price}
+            error={!!(formik.touched.price && formik.errors.price)}
+            helperText={formik.touched.price ? formik.errors.price : undefined}
           />
         </Grid>
 
