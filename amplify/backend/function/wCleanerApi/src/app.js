@@ -187,7 +187,7 @@ app.post("/customers/:customerId/job", async function (req, res) {
 });
 
 app.put("/customers/:customerId/job/:jobId", async function (req, res) {
-  const customerId = req.params.id;
+  const customerId = req.params.customerId;
   const jobId = req.params.job_id;
   const updatedJob = req.body;
   const newJob = await editJobFromCustomer(customerId, jobId, updatedJob);
@@ -196,7 +196,7 @@ app.put("/customers/:customerId/job/:jobId", async function (req, res) {
 
 app.delete("/customers/:customerId/job/:jobId", async function (req, res) {
   try {
-    const customerId = req.params.id;
+    const customerId = req.params.customerId;
     const jobId = req.params.jobId;
     await deleteJobFromCustomer(customerId, jobId);
     res.json({ message: "Job Deleted" });
