@@ -84,7 +84,14 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
           onSubmit={() => openHandler}
           initialValues={
             editingJob
-              ? { ...editingJob, date: dayjs(editingJob?.date) }
+              ? {
+                  ...editingJob,
+                  date: dayjs(editingJob.date),
+                  startTime: dayjs(
+                    `${editingJob.date} ${editingJob.startTime}`
+                  ),
+                  endTime: dayjs(`${editingJob.date} ${editingJob?.endTime}`),
+                }
               : undefined
           }
           jobId={editingJobId ?? undefined}

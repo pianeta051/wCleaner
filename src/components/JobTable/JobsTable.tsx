@@ -12,6 +12,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import { Customer, Job } from "../../types/types";
 import { DeleteJobButton } from "../DeleteJobButton/DeleteJobButton";
+import dayjs from "dayjs";
 
 type JobsTableProps = {
   jobs: Job[];
@@ -30,7 +31,8 @@ export const JobsTable: FC<JobsTableProps> = ({
         <TableHead>
           <TableRow>
             <TableCell align="right">Date</TableCell>
-            <TableCell align="right">Time</TableCell>
+            <TableCell align="right">Start Time</TableCell>
+            <TableCell align="right">End Time</TableCell>
             <TableCell align="right">Price</TableCell>
             <TableCell align="right">Actions</TableCell>
           </TableRow>
@@ -44,8 +46,11 @@ export const JobsTable: FC<JobsTableProps> = ({
                   "&:last-child td, &:last-child th": { border: 0 },
                 }}
               >
-                <TableCell align="right">{job.date}</TableCell>
-                <TableCell align="right">{job.time}</TableCell>
+                <TableCell align="right">
+                  {dayjs(job.date).format("ddd MMM D, YYYY")}
+                </TableCell>
+                <TableCell align="right">{job.startTime}</TableCell>
+                <TableCell align="right">{job.endTime}</TableCell>
                 <TableCell align="right">{job.price}</TableCell>
                 <TableCell align="right">
                   <DeleteJobButton jobId={job.id} customerId={customer.id} />

@@ -5,7 +5,6 @@ import { LoadingButton } from "@mui/lab";
 import { Form } from "../../Form/Form";
 import { useFormik } from "formik";
 import * as yup from "yup";
-import { DeleteButton } from "../../DeleteButton/DeleteButton";
 
 export type CustomerFormValues = {
   name: string;
@@ -46,7 +45,6 @@ type CustomerFormProps = {
 export const CustomerForm: FC<CustomerFormProps> = ({
   onSubmit,
   onCancel,
-  onDelete,
   initialValues = INITIAL_VALUES,
   loading = false,
   layout = "vertical",
@@ -133,40 +131,50 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             value={formik.values.email}
           />
         </Grid>
-
-        <Grid item xs={12} textAlign="center">
-          <LoadingButton
-            variant="contained"
-            color="primary"
-            style={{ textTransform: "none" }}
-            type="submit"
-            // sx={{ width: "75%" }}
-            loading={loading}
-          >
-            Save
-          </LoadingButton>
-          <Grid container spacing={2} item xs={12} mt={2} mb={2}>
-            {onCancel && (
-              <Grid item xs={6} textAlign="right">
-                <Button
-                  disableFocusRipple
-                  disableRipple
-                  style={{ textTransform: "none" }}
-                  variant="outlined"
-                  color="primary"
-                  onClick={onCancel}
-                >
-                  Cancel
-                </Button>
-              </Grid>
-            )}
-
-            {onDelete && (
-              <Grid item xs={6} textAlign="left">
-                <DeleteButton onDelete={onDelete} />
-              </Grid>
-            )}
+        {!onCancel ? (
+          <Grid item xs={12} textAlign="center" mb={2} mt={2}>
+            <LoadingButton
+              variant="contained"
+              color="primary"
+              style={{ textTransform: "none" }}
+              type="submit"
+              sx={{ width: "20%" }}
+              loading={loading}
+            >
+              Save
+            </LoadingButton>
           </Grid>
+        ) : (
+          <Grid item xs={6} textAlign="right">
+            <LoadingButton
+              variant="contained"
+              color="primary"
+              style={{ textTransform: "none" }}
+              type="submit"
+              sx={{ width: "50%" }}
+              loading={loading}
+            >
+              Save
+            </LoadingButton>
+          </Grid>
+        )}
+
+        <Grid container spacing={2} item xs={6} mb={2}>
+          {onCancel && (
+            <Grid item xs={6} textAlign="left">
+              <Button
+                disableFocusRipple
+                disableRipple
+                style={{ textTransform: "none" }}
+                variant="outlined"
+                color="primary"
+                sx={{ width: "100%" }}
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            </Grid>
+          )}
         </Grid>
       </Grid>
     </Form>

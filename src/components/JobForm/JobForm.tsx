@@ -1,31 +1,35 @@
 import { FC } from "react";
 import { Button, Grid } from "@mui/material";
-import { DateField, Field } from "./JobForm.style";
+import { DateField, Field, TimeField } from "./JobForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../Form/Form";
 import { useFormik } from "formik";
 import * as yup from "yup";
-import { DeleteButton } from "../DeleteButton/DeleteButton";
 import dayjs, { Dayjs } from "dayjs";
 import {
   DateValidationError,
   PickerChangeHandlerContext,
+  TimeValidationError,
 } from "@mui/x-date-pickers";
+import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 
 export type JobFormValues = {
   date: Dayjs;
-  time: string;
+  startTime: Dayjs;
+  endTime: Dayjs;
   price: number;
 };
 
 const INITIAL_VALUES: JobFormValues = {
   date: dayjs(),
-  time: "",
+  startTime: dayjs(),
+  endTime: dayjs().add(1, "hour"),
   price: 0,
 };
 const validationSchema = yup.object<JobFormValues>({
   date: yup.date(),
-  time: yup.string(),
+  startTime: yup.string(),
+  endTime: yup.string(),
   price: yup.number().required().positive(),
 });
 
@@ -41,7 +45,6 @@ type JobFormProps = {
 export const JobForm: FC<JobFormProps> = ({
   onSubmit,
   onCancel,
-  onDelete,
   defaultValues,
   loading = false,
   layout = "vertical",
@@ -60,6 +63,19 @@ export const JobForm: FC<JobFormProps> = ({
   ) => void = (value) => {
     formik.handleChange({ target: { value, name: "date" } });
   };
+  const startTimeChangeHandler: (
+    value: dayjs.Dayjs | null,
+    context: PickerChangeHandlerContext<TimeValidationError>
+  ) => void = (value) => {
+    formik.handleChange({ target: { value, name: "startTime" } });
+  };
+
+  const endTimeChangeHandler: (
+    value: dayjs.Dayjs | null,
+    context: PickerChangeHandlerContext<TimeValidationError>
+  ) => void = (value) => {
+    formik.handleChange({ target: { value, name: "endTime" } });
+  };
 
   return (
     <Form onSubmit={formik.handleSubmit}>
@@ -70,23 +86,42 @@ export const JobForm: FC<JobFormProps> = ({
             onChange={dateChangeHandler}
             value={formik.values.date}
             autoFocus
-            label="date"
+            label="Date"
             minDate={dayjs()}
           />
         </Grid>
-        <Grid item xs={12} md={columns}>
-          <Field
-            name="time"
-            id="time"
-            label="time"
-            type="text"
-            fullWidth
-            onChange={formik.handleChange}
-            value={formik.values.time}
-            error={!!(formik.touched.time && formik.errors.time)}
-            helperText={formik.touched.time ? formik.errors.time : undefined}
+        <Grid item xs={6} md={columns}>
+          <TimeField
+            label="Start Time"
+            name="startTime"
+            onChange={startTimeChangeHandler}
+            value={formik.values.startTime}
+            autoFocus
+            sx={{ marginY: "10px" }}
+            views={["hours", "minutes"]}
+            ampm={false}
+            viewRenderers={{
+              hours: renderTimeViewClock,
+              minutes: renderTimeViewClock,
+            }}
+          />
+          <TimeField
+            label="End Time"
+            name="endTime"
+            onChange={endTimeChangeHandler}
+            value={formik.values.endTime}
+            autoFocus
+            sx={{ marginY: "10px" }}
+            views={["hours", "minutes"]}
+            ampm={false}
+            viewRenderers={{
+              hours: renderTimeViewClock,
+              minutes: renderTimeViewClock,
+            }}
+            minTime={formik.values.startTime}
           />
         </Grid>
+
         <Grid item xs={12} md={columns}>
           <Field
             name="price"
@@ -95,45 +130,39 @@ export const JobForm: FC<JobFormProps> = ({
             type="number"
             fullWidth
             onChange={formik.handleChange}
+            sx={{ marginY: "10px" }}
             value={formik.values.price}
             error={!!(formik.touched.price && formik.errors.price)}
             helperText={formik.touched.price ? formik.errors.price : undefined}
           />
         </Grid>
 
-        <Grid item xs={12} textAlign="center">
+        <Grid item xs={6} textAlign="right">
           <LoadingButton
             variant="contained"
             color="primary"
             style={{ textTransform: "none" }}
             type="submit"
-            sx={{ width: "75%" }}
+            sx={{ width: "50%" }}
             loading={loading}
           >
             Save
           </LoadingButton>
-          <Grid container spacing={2} item xs={12} mt={2} mb={2}>
-            {onCancel && (
-              <Grid item xs={6} textAlign="right">
-                <Button
-                  disableFocusRipple
-                  disableRipple
-                  style={{ textTransform: "none" }}
-                  variant="outlined"
-                  color="primary"
-                  onClick={onCancel}
-                >
-                  Cancel
-                </Button>
-              </Grid>
-            )}
-
-            {onDelete && (
-              <Grid item xs={6} textAlign="left">
-                <DeleteButton onDelete={onDelete} />
-              </Grid>
-            )}
-          </Grid>
+        </Grid>
+        <Grid item xs={6} textAlign="left" mb={2}>
+          {onCancel && (
+            <Button
+              disableFocusRipple
+              disableRipple
+              style={{ textTransform: "none" }}
+              variant="outlined"
+              color="primary"
+              sx={{ width: "50%" }}
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+          )}
         </Grid>
       </Grid>
     </Form>

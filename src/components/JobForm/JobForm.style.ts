@@ -1,5 +1,6 @@
 import { styled, Box, Grid, Paper, Typography, TextField } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 
 export const Background = styled(Paper)(() => ({
   display: "flex",
@@ -29,12 +30,17 @@ export const ModalBox = styled(Box)({
 
 export const Field = styled(TextField)(() => ({
   marginBottom: "10px",
-  width: "93%",
+  width: "94%",
   marginLeft: "20px",
 }));
 
 export const DateField = styled(DatePicker)(() => ({
   marginBottom: "10px",
-  width: "93%",
+  width: "94%",
+  marginLeft: "20px",
+}));
+export const TimeField = styled(TimePicker)(() => ({
+  marginBottom: "10px",
+  width: "46%",
   marginLeft: "20px",
 }));

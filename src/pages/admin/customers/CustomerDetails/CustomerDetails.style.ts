@@ -36,3 +36,14 @@ export const Wrapper = styled(Grid)(() => ({
   width: "100%",
   alignContent: "center",
 }));
+export const DividerLine = styled(Grid)(() => ({
+  p: 0,
+  width: "100%",
+  maxWidth: 360,
+  borderRadius: 1,
+  border: "1px solid",
+  borderColor: "divider",
+  backgroundColor: "background.paper",
+  marginBottom: "10px",
+  marginTop: "10px",
+}));

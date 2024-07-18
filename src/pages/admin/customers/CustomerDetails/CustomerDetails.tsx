@@ -7,7 +7,7 @@ import {
 } from "../../../../components/Customer/CustomerForm/CustomerForm";
 
 import { NotFound } from "../../../NotFound/NotFound";
-import { Title, Wrapper } from "./CustomerDetails.style";
+import { DividerLine, Title, Wrapper } from "./CustomerDetails.style";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 import { useCustomer } from "../../../../hooks/Customers/useCustomer";
 import { useEditCustomer } from "../../../../hooks/Customers/useEditCustomer";
@@ -72,7 +72,7 @@ export const CustomerDetails: FC = () => {
               loading={editing}
               layout="horizontal"
             />
-
+            <DividerLine />
             <CustomerJobs customer={customer} />
           </>
         ) : (

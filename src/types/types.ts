@@ -1,4 +1,3 @@
-import { Dayjs } from "dayjs";
 export type Customer = {
   name: string;
   address: string;
@@ -14,6 +13,7 @@ export type Job = {
   customerId: string;
   id: string;
   date: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   price: number;
 };

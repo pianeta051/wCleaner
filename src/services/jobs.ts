@@ -40,14 +40,14 @@ const isJob = (value: unknown): value is Job => {
     value !== null &&
     "date" in value &&
     typeof (value as Job)["date"] === "string" &&
-    "time" in value &&
-    typeof (value as Job)["time"] === "string" &&
+    "startTime" in value &&
+    typeof (value as Job)["startTime"] === "string" &&
+    "endTime" in value &&
+    typeof (value as Job)["endTime"] === "string" &&
     "price" in value &&
     typeof (value as Job)["price"] === "number" &&
     "id" in value &&
-    typeof (value as Job)["id"] === "string" &&
-    "customerId" in value &&
-    typeof (value as Job)["customerId"] === "string"
+    typeof (value as Job)["id"] === "string"
   );
 };
 
@@ -58,7 +58,9 @@ export const addJob = async (
   try {
     const response = await post(`/customers/${customerId}/job`, {
       ...formValues,
-      date: formValues.date.toISOString(),
+      date: formValues.date.format("YYYY-MM-DD"),
+      startTime: formValues.startTime.format("HH:mm"),
+      endTime: formValues.endTime.format("HH:mm"),
     });
     if (!isJob(response.job)) {
       throw "INTERNAL_ERROR";
@@ -94,12 +96,15 @@ export const editCustomerJob = async (
   try {
     const response = await put(`/customers/${customerId}/job/${jobId}`, {
       ...formValues,
-      date: formValues.date.toISOString(),
+      price: +formValues.price,
+      date: formValues.date.format("YYYY-MM-DD"),
+      startTime: formValues.startTime.format("HH:mm"),
+      endTime: formValues.endTime.format("HH:mm"),
     });
-    if (!isJob(response.secondaryAddress)) {
+    if (!isJob(response.job)) {
       throw "INTERNAL_ERROR";
     }
-    return response.secondaryAddress;
+    return response.job;
   } catch (error) {
     if (isErrorResponse(error)) {
       const status = error.response.status;

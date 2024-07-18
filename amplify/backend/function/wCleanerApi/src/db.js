@@ -297,9 +297,13 @@ const addCustomerJob = async (customerId, job) => {
     Item: {
       PK: { S: `customer_${customerId}` },
       SK: { S: `job_${jobId}` },
-      date: { S: job.date },
-      time: { S: job.time },
-      price: { S: job.price.toString() },
+      start: {
+        N: job.start.toString(),
+      },
+      end: {
+        N: job.end.toString(),
+      },
+      price: { N: job.price.toString() },
     },
   };
   await ddb.putItem(params).promise();
@@ -340,19 +344,19 @@ const getCustomerJobs = async (customerId, exclusiveStartKey) => {
 const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
   const params = {
     ExpressionAttributeNames: {
-      "#D": "date",
-      "#T": "time",
+      "#ST": "start",
+      "#ET": "end",
       "#P": "price",
     },
     ExpressionAttributeValues: {
-      ":date": {
-        S: updateJob.date,
+      ":start": {
+        N: updatedJob.start.toString(),
       },
-      ":time": {
-        S: updatedJob.time,
+      ":end": {
+        N: updatedJob.end.toString(),
       },
       ":price": {
-        S: updatedJob.price,
+        N: updatedJob.price.toString(),
       },
     },
     Key: {
@@ -364,14 +368,12 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       },
     },
     TableName: TABLE_NAME,
-    UpdateExpression: "SET #D = :date, #T = :time, #P = :price",
+    UpdateExpression: "SET #ST = :start, #ET = :end, #P = :price",
   };
   await ddb.updateItem(params).promise();
-  return {
-    id,
-    ...updatedJob,
-  };
+  return updatedJob;
 };
+
 //DELETE JOB
 const deleteJobFromCustomer = async (customerId, jobId) => {
   const params = {

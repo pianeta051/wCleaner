@@ -73,7 +73,7 @@ export const JobModal: FC<JobModalProps> = ({
       <ModalBox>
         <Wrapper container>
           <Grid item xs={12}>
-            <Title variant="h4">New Job</Title>
+            <Title variant="h4">{jobId ? "Edit Job" : "New Job"}</Title>
           </Grid>
         </Wrapper>
 

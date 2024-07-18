@@ -1,3 +1,5 @@
+const dayjs = require("dayjs");
+
 const mapCustomer = (customerFromDb) => ({
   id: customerFromDb.PK.S.replace("customer_", ""),
   name: customerFromDb.name.S,
@@ -11,12 +13,20 @@ const mapCustomer = (customerFromDb) => ({
 
 const mapCustomerJobs = (customerJob) => ({
   id: customerJob.SK.S.replace("job_", ""),
-  date: customerJob.date.S,
-  time: customerJob.time.S,
-  price: customerJob.price.S,
+  date: dayjs(+customerJob.start.N).format("YYYY-MM-DD"),
+  startTime: dayjs(+customerJob.start.N).format("HH:mm"),
+  endTime: dayjs(+customerJob.end.N).format("HH:mm"),
+  price: customerJob.price.N,
+});
+
+const mapJobFromRequestBody = (job) => ({
+  ...job,
+  start: +new Date(`${job.date} ${job.startTime}`),
+  end: +new Date(`${job.date} ${job.endTime}`),
 });
 
 module.exports = {
   mapCustomer,
   mapCustomerJobs,
+  mapJobFromRequestBody,
 };

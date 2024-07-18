@@ -1,23 +1,26 @@
-import { unstable_serialize, useSWRConfig } from "swr";
+import { useSWRConfig } from "swr";
+import { unstable_serialize } from "swr/infinite";
 import useSWRMutation from "swr/mutation";
 import { JobFormValues } from "../../components/JobForm/JobForm";
 import { Job } from "../../types/types";
-import { keyFunctionGenerator } from "./useCustomerJobs";
 import { editCustomerJob } from "../../services/jobs";
 import { extractErrorCode } from "../../services/error";
+import { keyFunctionGenerator } from "./useCustomerJobs";
 
-export const useCustomerEditJob = (customerId?: string, jobId?: string) => {
+export const useCustomerEditJob = (
+  customerId: string | undefined,
+  jobId?: string | undefined
+) => {
   const { mutate } = useSWRConfig();
   const { trigger, isMutating, error } = useSWRMutation<
     Job,
     Error,
     readonly [string, string, string] | null,
-    JobFormValues,
-    Job[]
+    JobFormValues
   >(
     customerId && jobId ? ["edit-customer-job", customerId, jobId] : null,
     async ([_operation, customerId, jobId], { arg: formValues }) => {
-      const address = editCustomerJob(customerId, jobId, formValues);
+      const job = await editCustomerJob(customerId, jobId, formValues);
       await mutate<
         readonly [string, string, string | undefined],
         {
@@ -33,7 +36,7 @@ export const useCustomerEditJob = (customerId?: string, jobId?: string) => {
           populateCache: false,
         }
       );
-      return address;
+      return job;
     },
     {
       revalidate: false,

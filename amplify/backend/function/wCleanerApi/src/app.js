@@ -24,7 +24,11 @@ const {
   editCustomer,
 } = require("./db");
 
-const { mapCustomer, mapCustomerJobs } = require("./mappers");
+const {
+  mapCustomer,
+  mapCustomerJobs,
+  mapJobFromRequestBody,
+} = require("./mappers");
 
 const { generateToken, parseToken } = require("./token");
 
@@ -109,7 +113,7 @@ app.post("/customers", async function (req, res) {
 
 //Update a customer
 
-app.put("/customers/:customerId", async function (req, res) {
+app.put("/customers/:id", async function (req, res) {
   try {
     const id = req.params.id;
     const editedCustomer = await editCustomer(id, req.body);
@@ -130,7 +134,7 @@ app.put("/customers/:customerId", async function (req, res) {
 });
 
 // Delete a Customer
-app.delete("/customers/:customerId", async function (req, res) {
+app.delete("/customers/:id", async function (req, res) {
   const id = req.params.id;
   await deleteCustomer(id);
   res.json({ message: "Customer deleted" });
@@ -141,6 +145,7 @@ app.delete("/customers/:customerId", async function (req, res) {
 // Get all JOBS
 
 app.get("/jobs", function (req, res) {
+  // TODO review this method
   const jobs = items.map(mapCustomerJobs);
   console.log(jobs);
   res.json({ jobs });
@@ -172,7 +177,7 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
 app.post("/customers/:customerId/job", async function (req, res) {
   try {
     const customerId = req.params.customerId;
-    const job = req.body;
+    const job = mapJobFromRequestBody(req.body);
     const createdJob = await addCustomerJob(customerId, job);
     res.json({ job: { ...createdJob, customerId } });
   } catch (error) {
@@ -187,11 +192,25 @@ app.post("/customers/:customerId/job", async function (req, res) {
 });
 
 app.put("/customers/:customerId/job/:jobId", async function (req, res) {
-  const customerId = req.params.customerId;
-  const jobId = req.params.job_id;
-  const updatedJob = req.body;
-  const newJob = await editJobFromCustomer(customerId, jobId, updatedJob);
-  res.json({ job: newJob });
+  try {
+    const customerId = req.params.customerId;
+    const jobId = req.params.jobId;
+    const updatedJob = req.body;
+    const jobUpdated = await editJobFromCustomer(
+      customerId,
+      jobId,
+      mapJobFromRequestBody(updatedJob)
+    );
+    res.json({ job: jobUpdated });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({
+        error: "Customer not registered!",
+      });
+    } else {
+      throw error;
+    }
+  }
 });
 
 app.delete("/customers/:customerId/job/:jobId", async function (req, res) {
