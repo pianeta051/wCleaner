@@ -40,7 +40,7 @@ export const DateField = styled(DatePicker)(() => ({
   marginLeft: "20px",
 }));
 export const TimeField = styled(TimePicker)(() => ({
-  marginBottom: "10px",
+  marginBottom: "100px",
   width: "46%",
   marginLeft: "20px",
 }));

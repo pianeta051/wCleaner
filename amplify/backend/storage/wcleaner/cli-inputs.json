@@ -23,6 +23,17 @@
         "fieldName": "slug",
         "fieldType": "string"
       }
+    },
+    {
+      "name": "job_start_time",
+      "partitionKey": {
+        "fieldName": "job_start_time_pk",
+        "fieldType": "number"
+      },
+      "sortKey": {
+        "fieldName": "start",
+        "fieldType": "number"
+      }
     }
   ],
   "triggerFunctions": []

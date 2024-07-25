@@ -304,6 +304,9 @@ const addCustomerJob = async (customerId, job) => {
         N: job.end.toString(),
       },
       price: { N: job.price.toString() },
+      job_start_time_pk: {
+        N: "1",
+      },
     },
   };
   await ddb.putItem(params).promise();
@@ -318,12 +321,16 @@ const getCustomerJobs = async (customerId, exclusiveStartKey) => {
     ExpressionAttributeValues: {
       ":pk": { S: `customer_${customerId}` },
       ":sk": { S: "job_" },
+      ":aggregator": { N: "1" },
     },
     ExpressionAttributeNames: {
       "#PK": "PK",
       "#SK": "SK",
+      "#JSTPK": "job_start_time_pk",
     },
-    KeyConditionExpression: "#PK = :pk AND begins_with(#SK, :sk)",
+    IndexName: "job_start_time",
+    KeyConditionExpression: "#JSTPK = :aggregator",
+    FilterExpression: "#PK = :pk AND begins_with(#SK, :sk)",
     Limit: PAGE_SIZE,
     ExclusiveStartKey: exclusiveStartKey,
   };
