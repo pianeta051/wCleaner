@@ -318,31 +318,31 @@ const getCustomerJobs = async (customerId, exclusiveStartKey) => {
   const PAGE_SIZE = 5;
   const params = {
     TableName: TABLE_NAME,
-    ExpressionAttributeValues: {
-      ":pk": { S: `customer_${customerId}` },
-      ":sk": { S: "job_" },
-      ":aggregator": { N: "1" },
-    },
     ExpressionAttributeNames: {
       "#PK": "PK",
       "#SK": "SK",
       "#JSTPK": "job_start_time_pk",
     },
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":sk": { S: "job_" },
+      ":aggregator": { N: "1" },
+    },
+    Limit: PAGE_SIZE,
     IndexName: "job_start_time",
     KeyConditionExpression: "#JSTPK = :aggregator",
     FilterExpression: "#PK = :pk AND begins_with(#SK, :sk)",
-    Limit: PAGE_SIZE,
     ExclusiveStartKey: exclusiveStartKey,
   };
   const result = await ddb.query(params).promise();
-  const nextItem = await getNextValue(result.LastEvaluatedKey, {
-    filterExpression: params.KeyConditionExpression,
-    expressionAttributeNames: params.ExpressionAttributeNames,
-    expressionAttributeValues: params.ExpressionAttributeValues,
-  });
+  const nextItemResult = await ddb
+    .query({ ...params, ExclusiveStartKey: result.LastEvaluatedKey, Limit: 1 })
+    .promise();
   return {
     items: result.Items,
-    lastEvaluatedKey: nextItem ? result.LastEvaluatedKey : null,
+    lastEvaluatedKey: nextItemResult.Items.length
+      ? result.LastEvaluatedKey
+      : null,
   };
 };
 
