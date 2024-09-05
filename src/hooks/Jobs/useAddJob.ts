@@ -30,16 +30,16 @@ export const useAddJob = (customerId: string) => {
       );
 
       // modificar cache de la coleccion
-      await mutate<
-        readonly [string, string | undefined, string | undefined],
-        {
-          jobs: Job[];
-          nextToken?: string;
-        } | null
-      >(unstable_serialize(keyFunctionGenerator(customerId)), () => undefined, {
-        revalidate: true,
-        populateCache: false,
-      });
+      // await mutate<
+      //   readonly [string, string | undefined, string | undefined],
+      //   {
+      //     jobs: Job[];
+      //     nextToken?: string;
+      //   } | null
+      // >(unstable_serialize(keyFunctionGenerator(customerId)), () => undefined, {
+      //   revalidate: true,
+      //   populateCache: false,
+      // });
       return job;
     },
     {

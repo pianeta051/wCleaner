@@ -1,5 +1,5 @@
-import { Modal } from "@mui/material";
-import { FC } from "react";
+import { Alert, Modal } from "@mui/material";
+import { FC, useState } from "react";
 
 import { Customer, Job } from "../../types/types";
 import { Grid } from "@mui/material";
@@ -27,6 +27,7 @@ export const JobModal: FC<JobModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const [alertMessage, setAlertMessage] = useState("");
   const {
     addJob,
     loading: creating,
@@ -45,6 +46,7 @@ export const JobModal: FC<JobModalProps> = ({
         .catch(() => {
           // Do nothing, error is handled by the hook
         });
+      setAlertMessage("Job Edited");
     } else {
       addJob(formValues)
         .then((job) => {
@@ -54,6 +56,7 @@ export const JobModal: FC<JobModalProps> = ({
         .catch(() => {
           // Do nothing, the hook manages the error
         });
+      setAlertMessage("Job Added");
     }
   };
   const error = creationError ?? editionError;
@@ -85,6 +88,9 @@ export const JobModal: FC<JobModalProps> = ({
             defaultValues={initialValues}
           />
         </Background>
+        {alertMessage.length != 0 && (
+          <Alert severity="success">{alertMessage}</Alert>
+        )}
         {error && <ErrorMessage code={error} />}
       </ModalBox>
     </Modal>

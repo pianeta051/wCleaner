@@ -7,6 +7,13 @@ export const IconButton = styledComponents.div`
   margin-top: 20px;
   margin-right: 20px;
 `;
+export const MenuFilterJob = styled(Grid)(() => ({
+  margin: "auto",
+  padding: "10px",
+  justifyContent: "center",
+  textAlign: "center",
+  width: "100%",
+}));
 
 export const Title = styled(Typography)(() => ({
   fontWeight: "bold",

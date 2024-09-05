@@ -1,6 +1,6 @@
 import { API } from "aws-amplify";
 
-import { Job } from "../types/types";
+import { Job, JobFilters } from "../types/types";
 import { isErrorResponse } from "./error";
 import { JobFormValues } from "../components/JobForm/JobForm";
 const get = async (
@@ -118,19 +118,23 @@ export const editCustomerJob = async (
 
 export const getCustomerJobs = async (
   customerId: string,
-  nextToken?: string
+  nextToken?: string,
+  filters?: JobFilters,
+  order: "asc" | "desc" = "asc"
 ): Promise<{ items: Job[]; nextToken?: string }> => {
   try {
     const response = await get(`/customers/${customerId}/jobs`, {
+      ...filters,
       nextToken,
+      order,
     });
+
     if (
       !response.jobs ||
-      !Array.isArray(response.jobs)
-      // ||     response.jobs.some((element: unknown) => !isJob(element))
-      //   ||
-      //   (response.nextToken !== undefined &&
-      //     typeof response.nextToken !== "string")
+      !Array.isArray(response.jobs) ||
+      response.jobs.some((element: unknown) => !isJob(element)) ||
+      (response.nextToken !== undefined &&
+        typeof response.nextToken !== "string")
     ) {
       throw "INTERNAL_ERROR";
     }

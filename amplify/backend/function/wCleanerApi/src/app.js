@@ -155,10 +155,12 @@ app.get("/jobs", function (req, res) {
 app.get("/customers/:customerId/jobs", async function (req, res) {
   const id = req.params.customerId;
   const nextToken = req.query?.nextToken;
+  const order = req.query?.order;
   const exclusiveStartKey = parseToken(nextToken);
   const { items, lastEvaluatedKey } = await getCustomerJobs(
     id,
-    exclusiveStartKey
+    exclusiveStartKey,
+    order
   );
   const jobs = items.map(mapCustomerJobs);
   const responseToken = generateToken(lastEvaluatedKey);

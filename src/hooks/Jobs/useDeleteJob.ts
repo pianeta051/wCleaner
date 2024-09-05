@@ -16,16 +16,16 @@ export const useDeleteJob = (customerId: string) => {
     ["delete-customer-job", customerId],
     async (_operation, { arg: jobId }) => {
       await deleteCustomerJob(customerId, jobId);
-      await mutate<
-        readonly [string, string, string | undefined],
-        {
-          items: Job[];
-          nextToken?: string;
-        } | null
-      >(unstable_serialize(keyFunctionGenerator(customerId)), () => undefined, {
-        revalidate: true,
-        populateCache: false,
-      });
+      // await mutate<
+      //   readonly [string, string, string | undefined],
+      //   {
+      //     items: Job[];
+      //     nextToken?: string;
+      //   } | null
+      // >(unstable_serialize(keyFunctionGenerator(customerId)), () => undefined, {
+      //   revalidate: true,
+      //   populateCache: false,
+      // });
     },
     {
       revalidate: false,

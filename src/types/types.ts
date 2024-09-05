@@ -17,3 +17,8 @@ export type Job = {
   endTime: string;
   price: number;
 };
+
+export type JobFilters = {
+  start?: string;
+  end?: string;
+};

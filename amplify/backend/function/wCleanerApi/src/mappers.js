@@ -16,7 +16,7 @@ const mapCustomerJobs = (customerJob) => ({
   date: dayjs(+customerJob.start.N).format("YYYY-MM-DD"),
   startTime: dayjs(+customerJob.start.N).format("HH:mm"),
   endTime: dayjs(+customerJob.end.N).format("HH:mm"),
-  price: customerJob.price.N,
+  price: +customerJob.price.N,
 });
 
 const mapJobFromRequestBody = (job) => ({

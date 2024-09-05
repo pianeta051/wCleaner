@@ -314,7 +314,7 @@ const addCustomerJob = async (customerId, job) => {
 };
 
 // GET JOBS
-const getCustomerJobs = async (customerId, exclusiveStartKey) => {
+const getCustomerJobs = async (customerId, exclusiveStartKey, order) => {
   const PAGE_SIZE = 5;
   const params = {
     TableName: TABLE_NAME,
@@ -333,6 +333,7 @@ const getCustomerJobs = async (customerId, exclusiveStartKey) => {
     KeyConditionExpression: "#JSTPK = :aggregator",
     FilterExpression: "#PK = :pk AND begins_with(#SK, :sk)",
     ExclusiveStartKey: exclusiveStartKey,
+    ScanIndexForward: order === "asc",
   };
   const result = await ddb.query(params).promise();
   const nextItemResult = await ddb

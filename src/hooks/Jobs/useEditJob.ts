@@ -21,21 +21,21 @@ export const useCustomerEditJob = (
     customerId && jobId ? ["edit-customer-job", customerId, jobId] : null,
     async ([_operation, customerId, jobId], { arg: formValues }) => {
       const job = await editCustomerJob(customerId, jobId, formValues);
-      await mutate<
-        readonly [string, string, string | undefined],
-        {
-          items: Job[];
-          nextToken?: string;
-        } | null
-      >(
-        // Temporary solution: https://github.com/vercel/swr/issues/1156
-        unstable_serialize(keyFunctionGenerator(customerId)),
-        () => undefined,
-        {
-          revalidate: true,
-          populateCache: false,
-        }
-      );
+      // // await mutate<
+      // //   readonly [string, string, string | undefined],
+      // //   {
+      // //     items: Job[];
+      // //     nextToken?: string;
+      // //   } | null
+      // // >(
+      // //   // Temporary solution: https://github.com/vercel/swr/issues/1156
+      // //   unstable_serialize(keyFunctionGenerator(customerId)),
+      // //   () => undefined,
+      // //   {
+      // //     revalidate: true,
+      // //     populateCache: false,
+      // //   }
+      // );
       return job;
     },
     {

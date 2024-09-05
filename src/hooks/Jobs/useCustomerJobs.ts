@@ -1,7 +1,7 @@
 import { extractErrorCode } from "../../services/error";
 import useSWRInfinite from "swr/infinite";
 import { getCustomerJobs } from "../../services/jobs";
-import { Job } from "../../types/types";
+import { Job, JobFilters } from "../../types/types";
 
 type KeyFunction = (
   index: number,
@@ -9,13 +9,22 @@ type KeyFunction = (
     items: Job[];
     nextToken?: string;
   } | null
-) => readonly [string, string, string | undefined];
+) => readonly [string, string, JobFilters, "desc" | "asc", string | undefined];
 
-export const keyFunctionGenerator: (customerId: string) => KeyFunction =
-  (customerId: string) => (_index, previousRequest) =>
-    ["customer-jobs", customerId, previousRequest?.nextToken];
+export const keyFunctionGenerator: (
+  customerId: string,
+  filters: JobFilters,
+  order?: "desc" | "asc"
+) => KeyFunction =
+  (customerId: string, filters: JobFilters, order: "desc" | "asc" = "asc") =>
+  (_index, previousRequest) =>
+    ["customer-jobs", customerId, filters, order, previousRequest?.nextToken];
 
-export const useCustomerJobs = (customerId: string) => {
+export const useCustomerJobs = (
+  customerId: string,
+  filters: JobFilters,
+  order: "desc" | "asc" = "asc"
+) => {
   const {
     data,
     error,
@@ -30,9 +39,9 @@ export const useCustomerJobs = (customerId: string) => {
     Error,
     KeyFunction
   >(
-    keyFunctionGenerator(customerId),
-    async ([_operation, customerId, nextToken]) =>
-      getCustomerJobs(customerId, nextToken)
+    keyFunctionGenerator(customerId, filters, order),
+    async ([_operation, customerId, filters, order, nextToken]) =>
+      getCustomerJobs(customerId, nextToken, filters, order)
   );
 
   const customerJobs: Job[] =
