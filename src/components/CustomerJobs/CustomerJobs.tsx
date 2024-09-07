@@ -12,6 +12,7 @@ import { LoadingButton } from "@mui/lab";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
+import isoWeek from "dayjs/plugin/isoWeek";
 
 type CustomerJobsProps = {
   customer: Customer;
@@ -21,11 +22,14 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const today = dayjs().format("YYYY-MM-DD");
-  const [currentDate, setCurrentDate] = useState(today);
+  dayjs.extend(isoWeek);
+  const [currentMonday, setCurrentMonday] = useState(
+    dayjs().isoWeekday(1).format("YYYY-MM-DD")
+  );
   const { customerJobs, error, loading, moreToLoad, loadMore, loadingMore } =
     useCustomerJobs(customer.id, {
-      start: `${currentDate} 00:00`,
-      end: `${currentDate} 23:59`,
+      start: `${currentMonday} 00:00`,
+      end: `${dayjs(currentMonday).add(6, "day").format("YYYY-MM-DD")} 23:59`,
     });
 
   const closeHandler = () => {
@@ -44,18 +48,19 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     setModalOpen(true);
   };
   const nextWeekHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
-    setCurrentDate(dayjs(currentDate).add(1, "week").format("YYYY-MM-DD"));
+    setCurrentMonday(dayjs(currentMonday).add(7, "day").format("YYYY-MM-DD"));
   };
   const currentWeekHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
-    const startDayWeeek = dayjs(currentDate)
-      .startOf("week")
-      .format("dddd, MMM D, YYYY");
-    setCurrentDate(startDayWeeek);
+    const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
+
+    setCurrentMonday(lastMonday);
   };
   const previousDateHandler: React.MouseEventHandler<
     HTMLButtonElement
   > = () => {
-    setCurrentDate(dayjs(currentDate).subtract(1, "week").format("YYYY-MM-DD"));
+    setCurrentMonday(
+      dayjs(currentMonday).subtract(1, "week").format("YYYY-MM-DD")
+    );
   };
 
   if (loading) {
@@ -74,44 +79,43 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const editingJob = editingJobId
     ? customerJobs.find((job) => job.id === editingJobId)
     : undefined;
-  const title = dayjs(currentDate).format("dddd, MMM D, YYYY");
+  const title = dayjs(currentMonday).format("dddd, MMM D, YYYY");
   return (
     <Wrapper>
       <>
+        <Stack
+          spacing={2}
+          direction="row"
+          mt={2}
+          sx={{ mb: "20px" }}
+          justifyContent="center"
+        >
+          <Button
+            variant="outlined"
+            onClick={previousDateHandler}
+            startIcon={<ArrowBackIosIcon />}
+          >
+            Previous Week
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={currentWeekHandler}
+            startIcon={<ArrowBackIosIcon />}
+          >
+            Current Week
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={nextWeekHandler}
+            startIcon={<ArrowBackIosIcon />}
+          >
+            Next Week
+          </Button>
+        </Stack>
         {customerJobs.length === 0 ? (
           <EmptyJobs onCreateNew={() => openHandler()} />
         ) : (
           <>
-            <Stack
-              spacing={2}
-              direction="row"
-              mt={2}
-              sx={{ mb: "20px" }}
-              justifyContent="center"
-            >
-              <Button
-                variant="outlined"
-                onClick={previousDateHandler}
-                startIcon={<ArrowBackIosIcon />}
-              >
-                Previous Week
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={nextWeekHandler}
-                startIcon={<ArrowBackIosIcon />}
-              >
-                Current Week
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={currentWeekHandler}
-                startIcon={<ArrowBackIosIcon />}
-              >
-                Next Week
-              </Button>
-            </Stack>
-
             <IconButton>
               <Button startIcon={<AddIcon />} onClick={() => openHandler()}>
                 New Job

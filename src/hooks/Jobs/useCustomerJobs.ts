@@ -41,7 +41,7 @@ export const useCustomerJobs = (
   >(
     keyFunctionGenerator(customerId, filters, order),
     async ([_operation, customerId, filters, order, nextToken]) =>
-      getCustomerJobs(customerId, nextToken, filters, order)
+      getCustomerJobs(customerId, filters, nextToken, order)
   );
 
   const customerJobs: Job[] =

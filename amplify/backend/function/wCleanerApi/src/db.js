@@ -4,7 +4,7 @@ const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 
 const TABLE_NAME = "wcleaner-dev";
-
+const PAGE_SIZE = 5;
 const generateSlug = (email) => {
   return email.split("@")[0];
 };
@@ -314,8 +314,17 @@ const addCustomerJob = async (customerId, job) => {
 };
 
 // GET JOBS
-const getCustomerJobs = async (customerId, exclusiveStartKey, order) => {
-  const PAGE_SIZE = 5;
+const getCustomerJobs = async (
+  customerId,
+  filters,
+  exclusiveStartKey,
+  order
+) => {
+  console.log(`Customer Id : ${customerId}`);
+  console.log(JSON.stringify(`Filter : ${filters}`, 2, null));
+  console.log(`Exclusive Start Key : ${exclusiveStartKey}`);
+  console.log(`Order : ${order}`);
+  const { start, end } = filters;
   const params = {
     TableName: TABLE_NAME,
     ExpressionAttributeNames: {
@@ -335,6 +344,49 @@ const getCustomerJobs = async (customerId, exclusiveStartKey, order) => {
     ExclusiveStartKey: exclusiveStartKey,
     ScanIndexForward: order === "asc",
   };
+
+  // if (customerId) {
+  //   const jobIds = await getJobIDs(customerId);
+  //   if (jobIds.length === 0) {
+  //     return {
+  //       items: [],
+  //     };
+  //   }
+  //   for (let i = 0; i < jobIds.length; i++) {
+  //     const id = jobIds[i];
+  //     params.ExpressionAttributeValues[`:jobId${i}`] = { S: `job_${id}` };
+  //   }
+  //   params.FilterExpression = `#PK IN (${jobIds
+  //     .map((_id, index) => `:jobId${index}`)
+  //     .join(", ")})`;
+  // } else {
+  //   params.ExpressionAttributeValues[":pk"] = { S: "job_" };
+  //   params.FilterExpression = "begins_with(#PK, :pk)";
+  // }
+
+  if (start && end) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":start"] = {
+      N: start.toString(),
+    };
+    params.ExpressionAttributeValues[":end"] = {
+      N: end.toString(),
+    };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S BETWEEN :start AND :end`;
+  } else if (start) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":start"] = {
+      N: start.toString(),
+    };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S >= :start`;
+  } else if (end) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":end"] = {
+      N: end.toString(),
+    };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S <= :end`;
+  }
+
   const result = await ddb.query(params).promise();
   const nextItemResult = await ddb
     .query({ ...params, ExclusiveStartKey: result.LastEvaluatedKey, Limit: 1 })
@@ -409,6 +461,38 @@ const getNextValue = async (lastEvaluatedKey, filter) => {
     return item;
   }
   return null;
+};
+const getAllRows = async (params) => {
+  let result = await ddb.scan(params).promise();
+  const items = result.Items;
+  console.log(`Items : ${items}`);
+  while (result.LastEvaluatedKey) {
+    const exclusiveStartKey = result.LastEvaluatedKey;
+    params = {
+      ...params,
+      ExclusiveStartKey: exclusiveStartKey,
+    };
+    result = await ddb.scan(params).promise();
+    items.push(...result.Items);
+  }
+  return items;
+};
+const getJobIDs = async (customerId) => {
+  const params = {
+    FilterExpression: "#CI = :ci",
+    ExpressionAttributeNames: {
+      "#CI": "customer_id",
+    },
+    ExpressionAttributeValues: {
+      ":ci": { S: customerId },
+    },
+    TableName: TABLE_NAME,
+    Limit: PAGE_SIZE,
+  };
+  const items = await getAllRows(params);
+
+  const jobIds = items.map((item) => item.PK.S.split("_")[1]);
+  return jobIds;
 };
 
 module.exports = {

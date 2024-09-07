@@ -118,8 +118,8 @@ export const editCustomerJob = async (
 
 export const getCustomerJobs = async (
   customerId: string,
-  nextToken?: string,
   filters?: JobFilters,
+  nextToken?: string,
   order: "asc" | "desc" = "asc"
 ): Promise<{ items: Job[]; nextToken?: string }> => {
   try {

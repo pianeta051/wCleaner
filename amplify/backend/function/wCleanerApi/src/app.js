@@ -28,6 +28,7 @@ const {
   mapCustomer,
   mapCustomerJobs,
   mapJobFromRequestBody,
+  mapJobTemporalFilters,
 } = require("./mappers");
 
 const { generateToken, parseToken } = require("./token");
@@ -155,10 +156,15 @@ app.get("/jobs", function (req, res) {
 app.get("/customers/:customerId/jobs", async function (req, res) {
   const id = req.params.customerId;
   const nextToken = req.query?.nextToken;
+  const startParameter = req.query?.start;
+  const endParameter = req.query?.end;
+  const { start, end } = mapJobTemporalFilters(startParameter, endParameter);
+
   const order = req.query?.order;
   const exclusiveStartKey = parseToken(nextToken);
   const { items, lastEvaluatedKey } = await getCustomerJobs(
     id,
+    { start, end },
     exclusiveStartKey,
     order
   );
