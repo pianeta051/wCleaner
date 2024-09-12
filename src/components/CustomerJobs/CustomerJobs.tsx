@@ -10,6 +10,7 @@ import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { useCustomerJobs } from "../../hooks/Jobs/useCustomerJobs";
 import { LoadingButton } from "@mui/lab";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -21,15 +22,16 @@ type CustomerJobsProps = {
 export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
-  const today = dayjs().format("YYYY-MM-DD");
+
   dayjs.extend(isoWeek);
   const [currentMonday, setCurrentMonday] = useState(
     dayjs().isoWeekday(1).format("YYYY-MM-DD")
   );
+  const currentSunday = dayjs(currentMonday).add(6, "day").format("YYYY-MM-DD");
   const { customerJobs, error, loading, moreToLoad, loadMore, loadingMore } =
     useCustomerJobs(customer.id, {
       start: `${currentMonday} 00:00`,
-      end: `${dayjs(currentMonday).add(6, "day").format("YYYY-MM-DD")} 23:59`,
+      end: `${currentSunday} 23:59`,
     });
 
   const closeHandler = () => {
@@ -47,14 +49,16 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     }
     setModalOpen(true);
   };
+
   const nextWeekHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
     setCurrentMonday(dayjs(currentMonday).add(7, "day").format("YYYY-MM-DD"));
   };
+
   const currentWeekHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
     const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
-
     setCurrentMonday(lastMonday);
   };
+
   const previousDateHandler: React.MouseEventHandler<
     HTMLButtonElement
   > = () => {
@@ -63,10 +67,14 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     );
   };
 
+  const title = `${dayjs(currentMonday).format("MMM D")} - ${dayjs(
+    currentSunday
+  ).format("MMM D")}`;
+
   if (loading) {
     return (
       <>
-        {/* <Title>Jobs</Title> */}
+        <Title>{title}</Title>
         <CircularProgress />
       </>
     );
@@ -79,7 +87,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const editingJob = editingJobId
     ? customerJobs.find((job) => job.id === editingJobId)
     : undefined;
-  const title = dayjs(currentMonday).format("dddd, MMM D, YYYY");
+
   return (
     <Wrapper>
       <>
@@ -97,17 +105,13 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
           >
             Previous Week
           </Button>
-          <Button
-            variant="outlined"
-            onClick={currentWeekHandler}
-            startIcon={<ArrowBackIosIcon />}
-          >
+          <Button variant="outlined" onClick={currentWeekHandler}>
             Current Week
           </Button>
           <Button
             variant="outlined"
             onClick={nextWeekHandler}
-            startIcon={<ArrowBackIosIcon />}
+            endIcon={<ArrowForwardIosIcon />}
           >
             Next Week
           </Button>
@@ -121,7 +125,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
                 New Job
               </Button>
             </IconButton>
-            <Title>Jobs</Title>
+            <Title>{title}</Title>
 
             <JobsTable
               jobs={customerJobs}

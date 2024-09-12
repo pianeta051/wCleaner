@@ -320,10 +320,6 @@ const getCustomerJobs = async (
   exclusiveStartKey,
   order
 ) => {
-  console.log(`Customer Id : ${customerId}`);
-  console.log(JSON.stringify(`Filter : ${filters}`, 2, null));
-  console.log(`Exclusive Start Key : ${exclusiveStartKey}`);
-  console.log(`Order : ${order}`);
   const { start, end } = filters;
   const params = {
     TableName: TABLE_NAME,
@@ -344,25 +340,6 @@ const getCustomerJobs = async (
     ExclusiveStartKey: exclusiveStartKey,
     ScanIndexForward: order === "asc",
   };
-
-  // if (customerId) {
-  //   const jobIds = await getJobIDs(customerId);
-  //   if (jobIds.length === 0) {
-  //     return {
-  //       items: [],
-  //     };
-  //   }
-  //   for (let i = 0; i < jobIds.length; i++) {
-  //     const id = jobIds[i];
-  //     params.ExpressionAttributeValues[`:jobId${i}`] = { S: `job_${id}` };
-  //   }
-  //   params.FilterExpression = `#PK IN (${jobIds
-  //     .map((_id, index) => `:jobId${index}`)
-  //     .join(", ")})`;
-  // } else {
-  //   params.ExpressionAttributeValues[":pk"] = { S: "job_" };
-  //   params.FilterExpression = "begins_with(#PK, :pk)";
-  // }
 
   if (start && end) {
     params.ExpressionAttributeNames["#S"] = "start";
