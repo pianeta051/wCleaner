@@ -78,15 +78,6 @@ const editCustomer = async (id, editedCustomer) => {
     throw "NOT_EXISTING_CUSTOMER";
   }
 
-  // const emailExisting = await queryCustomersByEmail(editedCustomer.email);
-
-  // if (
-  //   emailExisting.length > 0 &&
-  //   !emailExisting.find((item) => item.PK.S === `customer_${id}`)
-  // ) {
-  //   throw "EMAIL_ALREADY_REGISTERED";
-  // }
-
   const params = {
     TableName: TABLE_NAME,
     ExpressionAttributeNames: {
@@ -313,7 +304,106 @@ const addCustomerJob = async (customerId, job) => {
   return { ...job, id: jobId };
 };
 
-// GET JOBS
+//GET JOBS
+const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
+  const { start, end } = filters;
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "job_start_time",
+    ScanIndexForward: order !== "desc",
+    ExpressionAttributeNames: {
+      "#SK": "SK",
+      "#JSTPK": "job_start_time_pk",
+    },
+    ExpressionAttributeValues: {
+      ":sk": { S: "job_" },
+      ":aggregator": { N: "1" },
+    },
+
+    FilterExpression: "begins_with(#SK, :sk)",
+    KeyConditionExpression: "#JSTPK = :aggregator",
+  };
+
+  if (paginate) {
+    params.ExclusiveStartKey = exclusiveStartKey;
+    params.Limit = PAGE_SIZE;
+  }
+
+  if (start && end) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":start"] = {
+      N: start.toString(),
+    };
+    params.ExpressionAttributeValues[":end"] = {
+      N: end.toString(),
+    };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S BETWEEN :start AND :end`;
+  } else if (start) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":start"] = {
+      N: start.toString(),
+    };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S >= :start`;
+  } else if (end) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":end"] = {
+      N: end.toString(),
+    };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S <= :end`;
+  }
+
+  let result = await ddb.query(params).promise();
+  const items = result.Items;
+  let lastEvaluatedKey;
+
+  if (paginate) {
+    // Extract enough items to fill a page
+    while (result.LastEvaluatedKey && items.length < PAGE_SIZE) {
+      result = await ddb
+        .query({
+          ...params,
+          ExclusiveStartKey: result.LastEvaluatedKey,
+          Limit: PAGE_SIZE - items.length,
+        })
+        .promise();
+      items.push(...result.Items);
+    }
+    const nextItem = await ddb
+      .query({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: 1,
+      })
+      .promise();
+    if (nextItem.Items.length > 0) {
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+  } else {
+    // Extract all items
+    while (result.LastEvaluatedKey && result.Items.length > 0) {
+      result = await ddb
+        .query({
+          ...params,
+          ExclusiveStartKey: result.LastEvaluatedKey,
+        })
+        .promise();
+      items.push(...result.Items);
+    }
+  }
+
+  for (let i = 0; i < items.length; i++) {
+    const job = items[i];
+    const customer = await getCustomerById(job.PK.S.replace("customer_", ""));
+    items[i].customer = customer;
+  }
+
+  return {
+    items,
+    lastEvaluatedKey,
+  };
+};
+
+// GET CUSTOMER JOBS
 const getCustomerJobs = async (
   customerId,
   filters,
@@ -481,6 +571,7 @@ module.exports = {
   getCustomers,
   getCustomer,
   getCustomerJobs,
+  getJobs,
   queryCustomersByEmail,
   deleteCustomer,
   editJobFromCustomer,

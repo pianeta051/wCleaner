@@ -18,6 +18,7 @@ const {
   getCustomerBySlug,
   getCustomerById,
   getCustomerJobs,
+  getJobs,
   deleteCustomer,
   editJobFromCustomer,
   deleteJobFromCustomer,
@@ -27,6 +28,7 @@ const {
 const {
   mapCustomer,
   mapCustomerJobs,
+  mapJob,
   mapJobFromRequestBody,
   mapJobTemporalFilters,
 } = require("./mappers");
@@ -66,7 +68,6 @@ app.get("/customers", async function (req, res) {
 // Get a single customer
 app.get("/customers/:slug", async function (req, res) {
   const slug = req.params.slug;
-  console.log(`Slug: ${slug}`);
   const customerFromDb = await getCustomerBySlug(slug);
   if (!customerFromDb) {
     res.status(404).json({ message: "This customer does not exist" });
@@ -77,9 +78,10 @@ app.get("/customers/:slug", async function (req, res) {
 });
 
 // Get a single customer by id
-app.get("/customer-by-id/*", async function (req, res) {
-  const id = req.params[0];
+app.get("/customer-by-id/:id", async function (req, res) {
+  const id = req.params.id;
   const customerFromDb = await getCustomerById(id);
+
   if (!customerFromDb) {
     res.status(404).json({ message: "This customer does not exist" });
     return;
@@ -145,11 +147,25 @@ app.delete("/customers/:id", async function (req, res) {
 
 // Get all JOBS
 
-app.get("/jobs", function (req, res) {
-  // TODO review this method
-  const jobs = items.map(mapCustomerJobs);
-  console.log(jobs);
-  res.json({ jobs });
+app.get("/jobs", async function (req, res) {
+  const nextToken = req.query?.nextToken;
+  const startParameter = req.query?.start;
+  const endParameter = req.query?.end;
+  const paginate = req.query?.paginate !== "false";
+  const { start, end } = mapJobTemporalFilters(startParameter, endParameter);
+  const order = req.query?.order;
+  const exclusiveStartKey = parseToken(nextToken);
+  const { items, lastEvaluatedKey } = await getJobs(
+    {
+      start,
+      end,
+    },
+    order,
+    exclusiveStartKey,
+    paginate
+  );
+  const responseToken = generateToken(lastEvaluatedKey);
+  res.json({ jobs: items.map(mapJob), nextToken: responseToken });
 });
 
 // Get a single customer's Job
@@ -180,6 +196,8 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
     throw e;
   }
 });
+
+//
 
 //Create a Job
 app.post("/customers/:customerId/job", async function (req, res) {

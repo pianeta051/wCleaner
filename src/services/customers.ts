@@ -151,7 +151,8 @@ export const getCustomer = async (slug: string): Promise<Customer> => {
 
 export const getCustomerById = async (id: string): Promise<Customer> => {
   try {
-    const response = await get(`/customers/${id}`);
+    const response = await get(`/customer-by-id/${id}`);
+
     if (!("customer" in response) && typeof response.customer !== "object") {
       throw "INTERNAL_ERROR";
     }

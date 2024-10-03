@@ -1,0 +1,16 @@
+@import "react-big-calendar/lib/css/react-big-calendar.css";
+/* @import "react-big-calendar/lib/sass/styles"; */
+body,
+html {
+  margin: 0;
+  padding: 0;
+}
+
+.filtering .rbc-time-view,
+.filtering .rbc-month-view {
+  opacity: 0.5;
+}
+
+.rbc-month-view {
+  overflow: auto;
+}

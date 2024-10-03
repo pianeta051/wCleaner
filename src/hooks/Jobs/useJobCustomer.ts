@@ -3,7 +3,7 @@ import { Job } from "../../types/types";
 import { getJob } from "../../services/jobs";
 import { extractErrorCode } from "../../services/error";
 
-export const useJob = (id: string | undefined) => {
+export const useJobCustomer = (id: string | undefined) => {
   const { data, isLoading, error } = useSWR<
     Job | null,
     Error,

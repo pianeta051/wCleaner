@@ -1,6 +1,6 @@
 import { API } from "aws-amplify";
 
-import { Job, JobFilters } from "../types/types";
+import { Job, JobFilters, JobsPaginationArguments } from "../types/types";
 import { isErrorResponse } from "./error";
 import { JobFormValues } from "../components/JobForm/JobForm";
 const get = async (
@@ -171,5 +171,26 @@ export const getJob = async (id: string): Promise<Job> => {
     }
 
     throw "INTERNAL_ERROR";
+  }
+};
+
+export const getJobs = async (
+  filters: JobFilters,
+  order: "asc" | "desc" = "asc",
+  { nextToken, paginate }: JobsPaginationArguments = { paginate: true }
+): Promise<{ jobs: Job[]; nextToken?: string }> => {
+  try {
+    const response = await get("/jobs", {
+      ...filters,
+      nextToken,
+      order,
+      paginate: paginate === false ? "false" : "true",
+    });
+    if (!Array.isArray(response.jobs) || !response.jobs.every(isJob)) {
+      throw new Error("INTERNAL_ERROR");
+    }
+    return { jobs: response.jobs, nextToken: response.nextToken };
+  } catch (error) {
+    throw new Error("INTERNAL_ERROR");
   }
 };

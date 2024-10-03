@@ -6,9 +6,19 @@
       "lambdaFunction": "wCleanerApi",
       "permissions": {
         "setting": "private",
-        "auth": ["create", "read", "update", "delete"],
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
         "groups": {
-          "Admin": ["create", "read", "update", "delete"]
+          "Admin": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
         }
       }
     },
@@ -17,9 +27,40 @@
       "lambdaFunction": "wCleanerApi",
       "permissions": {
         "setting": "private",
-        "auth": ["create", "read", "update", "delete"],
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
         "groups": {
-          "Admin": ["create", "read", "update", "delete"]
+          "Admin": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        }
+      }
+    },
+    "/customer-by-id": {
+      "name": "/customer-by-id",
+      "lambdaFunction": "wCleanerApi",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
+        "groups": {
+          "Admin": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
         }
       }
     }

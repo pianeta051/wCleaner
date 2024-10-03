@@ -16,9 +16,15 @@ export type Job = {
   startTime: string;
   endTime: string;
   price: number;
+  customer?: Customer;
 };
 
 export type JobFilters = {
   start?: string;
   end?: string;
+};
+
+export type JobsPaginationArguments = {
+  nextToken?: string;
+  paginate?: boolean;
 };

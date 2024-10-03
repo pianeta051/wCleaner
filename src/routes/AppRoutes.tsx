@@ -14,6 +14,10 @@ import { CustomerDetails } from "../pages/admin/customers/CustomerDetails/Custom
 import { UnAuthenticatedRoute } from "./UnAuthenticateRoute";
 import { AuthenticatedRoute } from "./AuthenticatedRoute";
 import { AdminRoute } from "./AdminRoute";
+import { DashboardLayout } from "../components/DashboardLayout/DashboardLayout";
+import { JobsPage } from "../pages/admin/Jobs/Jobs";
+
+import { JobDetailsPage } from "../pages/admin/JobDetails/JobDetails";
 
 export const AppRoutes: FC = () => {
   return (
@@ -57,6 +61,21 @@ export const AppRoutes: FC = () => {
         >
           <Route index element={<UsersPage />} />
           <Route path="create" element={<CreateUserPage />} />
+        </Route>
+
+        <Route
+          path="jobs"
+          element={
+            <AuthenticatedRoute>
+              <DashboardLayout />
+            </AuthenticatedRoute>
+          }
+        >
+          <Route index element={<JobsPage />} />
+
+          <Route path=":jobId">
+            <Route index element={<JobDetailsPage />} />
+          </Route>
         </Route>
       </Route>
 

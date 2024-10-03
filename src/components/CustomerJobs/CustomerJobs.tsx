@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { Button, CircularProgress, Stack } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./CustomerJobs.style";
 
@@ -14,18 +14,25 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
+import { useSearchParams } from "react-router-dom";
 
 type CustomerJobsProps = {
   customer: Customer;
 };
 
 export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
+  const [searchParams] = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  const date = searchParams.get("date");
+  const jobId = searchParams.get("jobId");
 
   dayjs.extend(isoWeek);
+
   const [currentMonday, setCurrentMonday] = useState(
-    dayjs().isoWeekday(1).format("YYYY-MM-DD")
+    dayjs(date ?? undefined)
+      .isoWeekday(1)
+      .format("YYYY-MM-DD")
   );
   const currentSunday = dayjs(currentMonday).add(6, "day").format("YYYY-MM-DD");
   const { customerJobs, error, loading, moreToLoad, loadMore, loadingMore } =
@@ -116,6 +123,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
             Next Week
           </Button>
         </Stack>
+        <Title>{title}</Title>
         {customerJobs.length === 0 ? (
           <EmptyJobs onCreateNew={() => openHandler()} />
         ) : (
@@ -125,10 +133,10 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
                 New Job
               </Button>
             </IconButton>
-            <Title>{title}</Title>
 
             <JobsTable
               jobs={customerJobs}
+              jobIdSelected={jobId}
               customer={customer}
               onEditClick={openHandler}
             />

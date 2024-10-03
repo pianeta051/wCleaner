@@ -17,6 +17,7 @@ export const ERROR_CODES = [
   "NAME_CANNOT_BE_EMPTY",
   "CUSTOMER_NOT_EXISTS",
   "REQUIRED_FIELDS",
+  "JOB_NOT_EXISTS",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>

@@ -19,6 +19,19 @@ const mapCustomerJobs = (customerJob) => ({
   price: +customerJob.price.N,
 });
 
+const mapJob = (jobFromDb) => {
+  const start = dayjs(+jobFromDb.start.N);
+  const end = dayjs(+jobFromDb.end.N);
+  return {
+    id: jobFromDb.SK.S.replace("job_", ""),
+    date: start.format("YYYY-MM-DD"),
+    startTime: start.format("HH:mm"),
+    endTime: end.format("HH:mm"),
+    price: +jobFromDb.price.N,
+    customer: jobFromDb.customer ? mapCustomer(jobFromDb.customer) : undefined,
+  };
+};
+
 const mapJobFromRequestBody = (job) => ({
   ...job,
   start: +new Date(`${job.date} ${job.startTime}`),
@@ -36,6 +49,7 @@ const mapJobTemporalFilters = (start, end) => {
 module.exports = {
   mapCustomer,
   mapCustomerJobs,
+  mapJob,
   mapJobFromRequestBody,
   mapJobTemporalFilters,
 };

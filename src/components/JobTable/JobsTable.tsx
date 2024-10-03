@@ -16,12 +16,14 @@ import dayjs from "dayjs";
 
 type JobsTableProps = {
   jobs: Job[];
+  jobIdSelected?: string | null;
   customer: Customer;
   onEditClick: (jobId: string) => void;
 };
 
 export const JobsTable: FC<JobsTableProps> = ({
   jobs,
+  jobIdSelected,
   customer,
   onEditClick,
 }) => {
@@ -41,9 +43,19 @@ export const JobsTable: FC<JobsTableProps> = ({
           {jobs &&
             jobs.map((job) => (
               <TableRow
+                style={
+                  job.id === jobIdSelected
+                    ? {
+                        backgroundColor: "#e3f2fd",
+                      }
+                    : {}
+                }
+                hover={true}
                 key={job.id}
                 sx={{
-                  "&:last-child td, &:last-child th": { border: 0 },
+                  "&:last-child td, &:last-child th": {
+                    border: 0,
+                  },
                 }}
               >
                 <TableCell align="right">
