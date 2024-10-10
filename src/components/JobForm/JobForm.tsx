@@ -39,6 +39,7 @@ type JobFormProps = {
   onDelete?: () => void;
   defaultValues?: JobFormValues;
   loading?: boolean;
+
   layout?: "vertical" | "horizontal";
 };
 
@@ -87,9 +88,10 @@ export const JobForm: FC<JobFormProps> = ({
             value={formik.values.date}
             autoFocus
             label="Date"
-            minDate={dayjs()}
+            format="DD/MM/YYYY"
           />
         </Grid>
+
         <Grid item xs={6} md={columns}>
           <TimeField
             label="Start Time"

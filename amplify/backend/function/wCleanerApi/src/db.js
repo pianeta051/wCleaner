@@ -454,12 +454,44 @@ const getCustomerJobs = async (
     params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S <= :end`;
   }
 
-  const result = await ddb.query(params).promise();
-  const nextItemResult = await ddb
+  let result = await ddb.query(params).promise();
+  let nextItemResult = await ddb
     .query({ ...params, ExclusiveStartKey: result.LastEvaluatedKey, Limit: 1 })
     .promise();
+  const items = [...result.Items];
+
+  console.log({
+    length: items.length,
+    pageSize: PAGE_SIZE,
+    nextItemsLength: nextItemResult.Items.length,
+  });
+
+  // Make sure we iterate until the page is full or there are no more items
+  while (items.length < PAGE_SIZE && nextItemResult.Items.length) {
+    result = await ddb
+      .query({
+        ...params,
+        Limit: PAGE_SIZE - items.length,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+      })
+      .promise();
+    nextItemResult = await ddb
+      .query({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: 1,
+      })
+      .promise();
+    items.push(...result.Items);
+    console.log({
+      length: items.length,
+      pageSize: PAGE_SIZE,
+      nextItemsLength: nextItemResult.Items.length,
+    });
+  }
+
   return {
-    items: result.Items,
+    items: items,
     lastEvaluatedKey: nextItemResult.Items.length
       ? result.LastEvaluatedKey
       : null,
