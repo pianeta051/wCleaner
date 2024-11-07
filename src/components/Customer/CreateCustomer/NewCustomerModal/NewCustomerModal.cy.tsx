@@ -1,7 +1,6 @@
 import { NewCustomerModal } from "./NewCustomerModal";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@mui/material";
-import { CustomersProvider } from "../../../../components/CustomersProvider/CustomersProvider";
 import { theme } from "../../../../theme";
 import { API } from "aws-amplify";
 import { customerFactory } from "../../../../factories/customers";
@@ -10,22 +9,20 @@ import { CustomerFormValues } from "../../CustomerForm/CustomerForm";
 const mountComponent = () => {
   cy.mount(
     <ThemeProvider theme={theme}>
-      <CustomersProvider>
-        <MemoryRouter initialEntries={["/customers"]}>
-          <Routes>
-            <Route
-              path="customers"
-              element={
-                <NewCustomerModal
-                  onSubmit={cy.spy().as("submitHandler")}
-                  open={true}
-                  onClose={cy.spy().as("closeHandler")}
-                />
-              }
-            />
-          </Routes>
-        </MemoryRouter>
-      </CustomersProvider>
+      <MemoryRouter initialEntries={["/customers"]}>
+        <Routes>
+          <Route
+            path="customers"
+            element={
+              <NewCustomerModal
+                onSubmit={cy.spy().as("submitHandler")}
+                open={true}
+                onClose={cy.spy().as("closeHandler")}
+              />
+            }
+          />
+        </Routes>
+      </MemoryRouter>
     </ThemeProvider>
   );
 };

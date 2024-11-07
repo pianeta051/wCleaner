@@ -42,6 +42,7 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
   );
+
   next();
 });
 
@@ -81,41 +82,41 @@ const checkGroup = function (req, res, next) {
 
 app.all("*", checkGroup);
 
-app.post("/addUserToGroup", async (req, res, next) => {
-  if (!req.body.username || !req.body.groupname) {
-    const err = new Error("username and groupname are required");
-    err.statusCode = 400;
-    return next(err);
-  }
+// app.post("/addUserToGroup", async (req, res, next) => {
+//   if (!req.body.username || !req.body.groupname) {
+//     const err = new Error("username and groupname are required");
+//     err.statusCode = 400;
+//     return next(err);
+//   }
 
-  try {
-    const response = await addUserToGroup(
-      req.body.username,
-      req.body.groupname
-    );
-    res.status(200).json(response);
-  } catch (err) {
-    next(err);
-  }
-});
+//   try {
+//     const response = await addUserToGroup(
+//       req.body.username,
+//       req.body.groupname
+//     );
+//     res.status(200).json(response);
+//   } catch (err) {
+//     next(err);
+//   }
+// });
 
-app.post("/removeUserFromGroup", async (req, res, next) => {
-  if (!req.body.username || !req.body.groupname) {
-    const err = new Error("username and groupname are required");
-    err.statusCode = 400;
-    return next(err);
-  }
+// app.post("/removeUserFromGroup", async (req, res, next) => {
+//   if (!req.body.username || !req.body.groupname) {
+//     const err = new Error("username and groupname are required");
+//     err.statusCode = 400;
+//     return next(err);
+//   }
 
-  try {
-    const response = await removeUserFromGroup(
-      req.body.username,
-      req.body.groupname
-    );
-    res.status(200).json(response);
-  } catch (err) {
-    next(err);
-  }
-});
+//   try {
+//     const response = await removeUserFromGroup(
+//       req.body.username,
+//       req.body.groupname
+//     );
+//     res.status(200).json(response);
+//   } catch (err) {
+//     next(err);
+//   }
+// });
 
 app.post("/createUser", async (req, res, next) => {
   if (!req.body.email || !req.body.password) {
@@ -224,34 +225,34 @@ app.get("/listUsers", async (req, res, next) => {
 //   }
 // });
 
-app.get("/listGroupsForUser", async (req, res, next) => {
-  if (!req.query.username) {
-    const err = new Error("username is required");
-    err.statusCode = 400;
-    return next(err);
-  }
+// app.get("/listGroupsForUser", async (req, res, next) => {
+//   if (!req.query.username) {
+//     const err = new Error("username is required");
+//     err.statusCode = 400;
+//     return next(err);
+//   }
 
-  try {
-    let response;
-    if (req.query.token) {
-      response = await listGroupsForUser(
-        req.query.username,
-        req.query.limit || 25,
-        req.query.token
-      );
-    } else if (req.query.limit) {
-      response = await listGroupsForUser(
-        req.query.username,
-        (Limit = req.query.limit)
-      );
-    } else {
-      response = await listGroupsForUser(req.query.username);
-    }
-    res.status(200).json(response);
-  } catch (err) {
-    next(err);
-  }
-});
+//   try {
+//     let response;
+//     if (req.query.token) {
+//       response = await listGroupsForUser(
+//         req.query.username,
+//         req.query.limit || 25,
+//         req.query.token
+//       );
+//     } else if (req.query.limit) {
+//       response = await listGroupsForUser(
+//         req.query.username,
+//         (Limit = req.query.limit)
+//       );
+//     } else {
+//       response = await listGroupsForUser(req.query.username);
+//     }
+//     res.status(200).json(response);
+//   } catch (err) {
+//     next(err);
+//   }
+// });
 
 // app.get("/listUsersInGroup", async (req, res, next) => {
 //   if (!req.query.groupname) {

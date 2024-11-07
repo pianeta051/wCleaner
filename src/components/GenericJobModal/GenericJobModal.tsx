@@ -1,52 +1,51 @@
-import { Alert, Modal } from "@mui/material";
 import { FC, useState } from "react";
-
 import { Customer, Job } from "../../types/types";
-import { Grid } from "@mui/material";
-import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { JobForm, JobFormValues } from "../JobForm/JobForm";
-import { ModalBox } from "./JobModal.style";
-import { Background, Title, Wrapper } from "../JobForm/JobForm.style";
-
 import { useAddJob } from "../../hooks/Jobs/useAddJob";
 import { useCustomerEditJob } from "../../hooks/Jobs/useEditJob";
+import { Modal, Grid, Stepper, Step, StepLabel, Stack } from "@mui/material";
+import { ModalBox } from "../DeleteCustomerButton/DeleteCustomerButton.style";
+import { Background, Title, Wrapper } from "../JobForm/JobForm.style";
+import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
+import { CustomerSelector } from "../CustomerSelector/CustomerSelector";
 
-type JobModalProps = {
+type GenericJobModalProps = {
   open: boolean;
-  customer: Customer;
   initialValues?: JobFormValues;
   jobId?: string;
   onClose: () => void;
   onSubmit: (job: Job) => void;
 };
-export const JobModal: FC<JobModalProps> = ({
+
+export const GenericJobModal: FC<GenericJobModalProps> = ({
   open,
-  customer,
   jobId,
   initialValues,
   onClose,
   onSubmit,
 }) => {
-  const [alertMessage, setAlertMessage] = useState("");
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const {
     addJob,
     loading: creating,
     error: creationError,
-  } = useAddJob(customer.id);
+  } = useAddJob(customer?.id);
   const {
     editCustomerJob,
     loading: editing,
     error: editionError,
-  } = useCustomerEditJob(customer.id, jobId);
+  } = useCustomerEditJob(customer?.id, jobId);
+  const [activeStep, setActiveStep] = useState(0);
 
   const submitHandler = (formValues: JobFormValues) => {
     if (jobId) {
       editCustomerJob(formValues)
-        .then(onClose)
+        .then(() => {
+          onClose();
+        })
         .catch(() => {
           // Do nothing, error is handled by the hook
         });
-      setAlertMessage("Job Edited");
     } else {
       addJob(formValues)
         .then((job) => {
@@ -56,7 +55,6 @@ export const JobModal: FC<JobModalProps> = ({
         .catch(() => {
           // Do nothing, the hook manages the error
         });
-      setAlertMessage("Job Added");
     }
   };
   const error = creationError ?? editionError;
@@ -64,6 +62,11 @@ export const JobModal: FC<JobModalProps> = ({
 
   const closeHandler = () => {
     onClose();
+  };
+
+  const selectCustomerHandler = (customer: Customer) => {
+    setCustomer(customer);
+    setActiveStep(1);
   };
 
   return (
@@ -81,16 +84,28 @@ export const JobModal: FC<JobModalProps> = ({
         </Wrapper>
 
         <Background>
-          <JobForm
-            onSubmit={submitHandler}
-            onCancel={closeHandler}
-            loading={loading}
-            defaultValues={initialValues}
-          />
+          <Stack>
+            <Stepper activeStep={activeStep}>
+              <Step>
+                <StepLabel>Select Customer</StepLabel>
+              </Step>
+              <Step>
+                <StepLabel>{jobId ? "Edit Job" : "Add Job"}</StepLabel>
+              </Step>
+            </Stepper>
+            {activeStep === 0 && (
+              <CustomerSelector onSelectCustomer={selectCustomerHandler} />
+            )}
+            {activeStep === 1 && (
+              <JobForm
+                onSubmit={submitHandler}
+                onCancel={closeHandler}
+                loading={loading}
+                defaultValues={initialValues}
+              />
+            )}
+          </Stack>
         </Background>
-        {alertMessage.length != 0 && (
-          <Alert severity="success">{alertMessage}</Alert>
-        )}
         {error && <ErrorMessage code={error} />}
       </ModalBox>
     </Modal>

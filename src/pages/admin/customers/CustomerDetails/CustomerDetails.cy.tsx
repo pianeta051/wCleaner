@@ -2,19 +2,16 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { CustomerDetails } from "./CustomerDetails";
 
 import { customerFactory } from "../../../../factories/customers";
-import { CustomersProvider } from "../../../../components/CustomersProvider/CustomersProvider";
 import { API } from "aws-amplify";
 
 describe("CustomerDetails", () => {
   it("renders 404 page when the URL parameter url is not defined", () => {
     cy.mount(
-      <CustomersProvider>
-        <MemoryRouter initialEntries={["/customers/amalia"]}>
-          <Routes>
-            <Route path="/customers/:incorrect" element={<CustomerDetails />} />
-          </Routes>
-        </MemoryRouter>
-      </CustomersProvider>
+      <MemoryRouter initialEntries={["/customers/amalia"]}>
+        <Routes>
+          <Route path="/customers/:incorrect" element={<CustomerDetails />} />
+        </Routes>
+      </MemoryRouter>
     );
     cy.contains("404 Page Not Found");
   });
@@ -25,13 +22,11 @@ describe("CustomerDetails", () => {
       customer,
     });
     cy.mount(
-      <CustomersProvider>
-        <MemoryRouter initialEntries={[`/customers/${customer.slug}`]}>
-          <Routes>
-            <Route path="/customers/:id" element={<CustomerDetails />} />
-          </Routes>
-        </MemoryRouter>
-      </CustomersProvider>
+      <MemoryRouter initialEntries={[`/customers/${customer.slug}`]}>
+        <Routes>
+          <Route path="/customers/:id" element={<CustomerDetails />} />
+        </Routes>
+      </MemoryRouter>
     );
 
     cy.findByDisplayValue(customer.name);
@@ -40,13 +35,11 @@ describe("CustomerDetails", () => {
   it("renders 404 page when the URL parameter is defined with a not exiting customer", () => {
     cy.stub(API, "get").rejects({ response: { status: 404 } });
     cy.mount(
-      <CustomersProvider>
-        <MemoryRouter initialEntries={["/customers/not-existent"]}>
-          <Routes>
-            <Route path="/customers/:id" element={<CustomerDetails />} />
-          </Routes>
-        </MemoryRouter>
-      </CustomersProvider>
+      <MemoryRouter initialEntries={["/customers/not-existent"]}>
+        <Routes>
+          <Route path="/customers/:id" element={<CustomerDetails />} />
+        </Routes>
+      </MemoryRouter>
     );
     cy.contains("404 Page Not Found");
   });

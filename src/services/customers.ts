@@ -5,7 +5,7 @@ import { isErrorResponse } from "./error";
 
 const get = async (
   path: string,
-  queryParams: { [param: string]: string | undefined | number } = {}
+  queryParams: { [param: string]: string | undefined | number | boolean } = {}
 ) => {
   return API.get("wCleanerApi", path, {
     queryStringParameters: queryParams,
@@ -102,15 +102,23 @@ export const editCustomer = async (
 };
 
 export const getCustomers = async (
-  nextToken?: string,
-  searchInput?: string
+  filters: {
+    searchInput?: string;
+  },
+  pagination: {
+    nextToken?: string;
+    disabled?: boolean;
+  }
 ): Promise<{
   customers: Customer[];
   nextToken?: string;
 }> => {
+  const { searchInput } = filters;
+  const { nextToken, disabled } = pagination;
   const response = await get("/customers", {
     nextToken,
     search: searchInput,
+    paginationDisabled: disabled,
   });
 
   const customers = response.customers as Customer[];

@@ -8,17 +8,17 @@ import { addJob } from "../../services/jobs";
 import { JobFormValues } from "../../components/JobForm/JobForm";
 import { keyFunctionGenerator } from "./useCustomerJobs";
 
-export const useAddJob = (customerId: string) => {
+export const useAddJob = (customerId?: string) => {
   const { mutate } = useSWRConfig();
   const { trigger, isMutating, error } = useSWRMutation<
     Job,
     Error,
-    [string, string],
+    [string, string] | null,
     JobFormValues,
     Job | null
   >(
-    ["add-Job", customerId],
-    async (_operation, { arg: formValues }) => {
+    customerId ? ["add-Job", customerId] : null,
+    async ([_operation, customerId], { arg: formValues }) => {
       const job = await addJob(customerId, formValues);
 
       // modificar cache de solo un job
@@ -28,18 +28,6 @@ export const useAddJob = (customerId: string) => {
 
         { populateCache: true, revalidate: false }
       );
-
-      // modificar cache de la coleccion
-      // await mutate<
-      //   readonly [string, string | undefined, string | undefined],
-      //   {
-      //     jobs: Job[];
-      //     nextToken?: string;
-      //   } | null
-      // >(unstable_serialize(keyFunctionGenerator(customerId)), () => undefined, {
-      //   revalidate: true,
-      //   populateCache: false,
-      // });
       return job;
     },
     {

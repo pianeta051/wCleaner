@@ -34,6 +34,7 @@ const {
 } = require("./mappers");
 
 const { generateToken, parseToken } = require("./token");
+const { getAuthData, getUserInfo, getJobUsers } = require("./authentication");
 
 // declare a new express app
 const app = express();
@@ -41,7 +42,8 @@ app.use(bodyParser.json());
 app.use(awsServerlessExpressMiddleware.eventContext());
 
 // Enable CORS for all methods
-app.use(function (req, res, next) {
+app.use(async function (req, res, next) {
+  req.authData = await getAuthData(req);
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
   next();
@@ -51,13 +53,13 @@ app.use(function (req, res, next) {
 
 app.get("/customers", async function (req, res) {
   const nextToken = req.query?.nextToken;
-  const limit = req.query?.limit ? +req.query?.limit : 5;
+  const limit = req.query?.limit ? +req.query?.limit : 50;
   const search = req.query?.search;
+  const paginationEnabled = req.query?.paginationDisabled !== "true";
   const exclusiveStartKey = parseToken(nextToken);
   const { items, lastEvaluatedKey } = await getCustomers(
-    exclusiveStartKey,
-    limit,
-    search
+    { searchInput: search },
+    { exclusiveStartKey, limit, enabled: paginationEnabled }
   );
 
   const customers = items.map(mapCustomer);
@@ -155,39 +157,47 @@ app.get("/jobs", async function (req, res) {
   const { start, end } = mapJobTemporalFilters(startParameter, endParameter);
   const order = req.query?.order;
   const exclusiveStartKey = parseToken(nextToken);
+  const userSub = req.authData?.userSub;
+  const groups = req.authData?.groups;
+  const isAdmin = groups.includes("Admin");
   const { items, lastEvaluatedKey } = await getJobs(
     {
       start,
       end,
+      assignedTo: isAdmin ? undefined : userSub,
     },
     order,
     exclusiveStartKey,
     paginate
   );
+  console.log("Items: " + items);
   const responseToken = generateToken(lastEvaluatedKey);
+  let jobs = items.map(mapJob);
+  if (isAdmin) {
+    jobs = await getJobUsers(items);
+  }
   res.json({ jobs: items.map(mapJob), nextToken: responseToken });
 });
 
 // Get a single customer's Job
 app.get("/customers/:customerId/jobs", async function (req, res) {
   const id = req.params.customerId;
-  const nextToken = req.query?.nextToken;
   const startParameter = req.query?.start;
   const endParameter = req.query?.end;
   const { start, end } = mapJobTemporalFilters(startParameter, endParameter);
 
   const order = req.query?.order;
-  const exclusiveStartKey = parseToken(nextToken);
-  const { items, lastEvaluatedKey } = await getCustomerJobs(
+
+  const { items } = await getCustomerJobs(
     id,
     { start, end },
-    exclusiveStartKey,
+
     order
   );
   const jobs = items.map(mapCustomerJobs);
-  const responseToken = generateToken(lastEvaluatedKey);
+
   try {
-    res.json({ jobs, nextToken: responseToken });
+    res.json({ jobs });
   } catch (e) {
     if (e.message === "Customer not found") {
       res.status(404).json({ error: e.message });
@@ -204,7 +214,8 @@ app.post("/customers/:customerId/job", async function (req, res) {
   try {
     const customerId = req.params.customerId;
     const job = mapJobFromRequestBody(req.body);
-    const createdJob = await addCustomerJob(customerId, job);
+    const userSub = req.authData?.userSub;
+    const createdJob = await addCustomerJob(customerId, job, userSub);
     res.json({ job: { ...createdJob, customerId } });
   } catch (error) {
     if (error.message === "CUSTOMER_NOT_FOUND") {

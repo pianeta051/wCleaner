@@ -8,6 +8,11 @@ export type Customer = {
   id: string;
   slug: string;
 };
+export type JobAssignation = {
+  sub: string;
+  name?: string;
+  email: string;
+};
 
 export type Job = {
   customerId: string;
@@ -17,6 +22,7 @@ export type Job = {
   endTime: string;
   price: number;
   customer?: Customer;
+  assignedTo?: JobAssignation;
 };
 
 export type JobFilters = {

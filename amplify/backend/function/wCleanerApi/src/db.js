@@ -146,11 +146,13 @@ const getCustomer = async (id) => {
   return customer.Item;
 };
 
-const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
+const getCustomers = async (filters, pagination) => {
+  const { exclusiveStartKey, limit, enabled } = pagination;
+
+  const { searchInput } = filters;
   let params = {
     TableName: TABLE_NAME,
-    Limit: limit,
-    ExclusiveStartKey: exclusiveStartKey,
+
     FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
     ExpressionAttributeNames: {
       "#PK": "PK",
@@ -161,6 +163,11 @@ const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
       ":sk": { S: "profile" },
     },
   };
+
+  if (enabled) {
+    params.Limit = limit;
+    params.ExclusiveStartKey = exclusiveStartKey;
+  }
 
   if (searchInput?.length) {
     const searchParams = {
@@ -190,21 +197,27 @@ const getCustomers = async (exclusiveStartKey, limit, searchInput) => {
   let result = await ddb.scan(params).promise();
   const items = result.Items;
 
-  while (result.LastEvaluatedKey && items.length < limit) {
-    const exclusiveStartKey = result.LastEvaluatedKey;
-    params = {
-      ...params,
-      ExclusiveStartKey: exclusiveStartKey,
-      Limit: limit - items.length,
-    };
-    result = await ddb.scan(params).promise();
-    items.push(...result.Items);
+  let lastEvaluatedKey;
+
+  if (enabled) {
+    while (result.LastEvaluatedKey && items.length < limit) {
+      const exclusiveStartKey = result.LastEvaluatedKey;
+      params = {
+        ...params,
+        ExclusiveStartKey: exclusiveStartKey,
+        Limit: limit - items.length,
+      };
+      result = await ddb.scan(params).promise();
+      items.push(...result.Items);
+    }
+
+    const nextItem = await getNextCustomer(result.LastEvaluatedKey);
+    lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
   }
 
-  const nextItem = await getNextCustomer(result.LastEvaluatedKey);
   return {
     items,
-    lastEvaluatedKey: nextItem ? result.LastEvaluatedKey : null,
+    lastEvaluatedKey,
   };
 };
 
@@ -278,7 +291,7 @@ const deleteCustomer = async (id) => {
 
 //ADD JOB TO CUSTOMER
 
-const addCustomerJob = async (customerId, job) => {
+const addCustomerJob = async (customerId, job, assignedTo) => {
   if (!(await getCustomer(customerId))) {
     throw "CUSTOMER_NOT_FOUND";
   }
@@ -288,6 +301,9 @@ const addCustomerJob = async (customerId, job) => {
     Item: {
       PK: { S: `customer_${customerId}` },
       SK: { S: `job_${jobId}` },
+      assigned_to: {
+        S: assignedTo,
+      },
       start: {
         N: job.start.toString(),
       },
@@ -301,12 +317,13 @@ const addCustomerJob = async (customerId, job) => {
     },
   };
   await ddb.putItem(params).promise();
-  return { ...job, id: jobId };
+  return { ...job, id: jobId, assignedTo: { sub: assignedTo } };
 };
 
 //GET JOBS
 const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
-  const { start, end } = filters;
+  const { start, end, assignedTo } = filters;
+  const DEFAULT_FILTER_EXPRESSION = "begins_with(#SK, :sk)";
   const params = {
     TableName: TABLE_NAME,
     IndexName: "job_start_time",
@@ -320,7 +337,7 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
       ":aggregator": { N: "1" },
     },
 
-    FilterExpression: "begins_with(#SK, :sk)",
+    FilterExpression: DEFAULT_FILTER_EXPRESSION,
     KeyConditionExpression: "#JSTPK = :aggregator",
   };
 
@@ -328,7 +345,13 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
     params.ExclusiveStartKey = exclusiveStartKey;
     params.Limit = PAGE_SIZE;
   }
-
+  const filterExpressions = [];
+  if (assignedTo) {
+    const filterExpression = "#AT = :assigned_to";
+    params.ExpressionAttributeNames["#AT"] = "assigned_to";
+    params.ExpressionAttributeValues[":assigned_to"] = { S: assignedTo };
+    filterExpressions.push(filterExpression);
+  }
   if (start && end) {
     params.ExpressionAttributeNames["#S"] = "start";
     params.ExpressionAttributeValues[":start"] = {
@@ -351,7 +374,11 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
     };
     params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S <= :end`;
   }
-
+  if (filterExpressions.length) {
+    params.FilterExpression = [...filterExpressions, DEFAULT_FILTER_EXPRESSION]
+      .map((e) => `(${e})`)
+      .join(" AND ");
+  }
   let result = await ddb.query(params).promise();
   const items = result.Items;
   let lastEvaluatedKey;
@@ -396,7 +423,6 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
     const customer = await getCustomerById(job.PK.S.replace("customer_", ""));
     items[i].customer = customer;
   }
-
   return {
     items,
     lastEvaluatedKey,
@@ -404,12 +430,7 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
 };
 
 // GET CUSTOMER JOBS
-const getCustomerJobs = async (
-  customerId,
-  filters,
-  exclusiveStartKey,
-  order
-) => {
+const getCustomerJobs = async (customerId, filters, order) => {
   const { start, end } = filters;
   const params = {
     TableName: TABLE_NAME,
@@ -423,11 +444,9 @@ const getCustomerJobs = async (
       ":sk": { S: "job_" },
       ":aggregator": { N: "1" },
     },
-    Limit: PAGE_SIZE,
     IndexName: "job_start_time",
     KeyConditionExpression: "#JSTPK = :aggregator",
     FilterExpression: "#PK = :pk AND begins_with(#SK, :sk)",
-    ExclusiveStartKey: exclusiveStartKey,
     ScanIndexForward: order === "asc",
   };
 
@@ -455,46 +474,11 @@ const getCustomerJobs = async (
   }
 
   let result = await ddb.query(params).promise();
-  let nextItemResult = await ddb
-    .query({ ...params, ExclusiveStartKey: result.LastEvaluatedKey, Limit: 1 })
-    .promise();
+
   const items = [...result.Items];
-
-  console.log({
-    length: items.length,
-    pageSize: PAGE_SIZE,
-    nextItemsLength: nextItemResult.Items.length,
-  });
-
-  // Make sure we iterate until the page is full or there are no more items
-  while (items.length < PAGE_SIZE && nextItemResult.Items.length) {
-    result = await ddb
-      .query({
-        ...params,
-        Limit: PAGE_SIZE - items.length,
-        ExclusiveStartKey: result.LastEvaluatedKey,
-      })
-      .promise();
-    nextItemResult = await ddb
-      .query({
-        ...params,
-        ExclusiveStartKey: result.LastEvaluatedKey,
-        Limit: 1,
-      })
-      .promise();
-    items.push(...result.Items);
-    console.log({
-      length: items.length,
-      pageSize: PAGE_SIZE,
-      nextItemsLength: nextItemResult.Items.length,
-    });
-  }
 
   return {
     items: items,
-    lastEvaluatedKey: nextItemResult.Items.length
-      ? result.LastEvaluatedKey
-      : null,
   };
 };
 

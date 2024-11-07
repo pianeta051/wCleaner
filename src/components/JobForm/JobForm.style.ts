@@ -41,6 +41,6 @@ export const DateField = styled(DatePicker)(() => ({
 }));
 export const TimeField = styled(TimePicker)(() => ({
   marginBottom: "100px",
-  width: "46%",
+  width: "94%",
   marginLeft: "20px",
 }));

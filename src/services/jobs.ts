@@ -1,6 +1,11 @@
 import { API } from "aws-amplify";
 
-import { Job, JobFilters, JobsPaginationArguments } from "../types/types";
+import {
+  Job,
+  JobAssignation,
+  JobFilters,
+  JobsPaginationArguments,
+} from "../types/types";
 import { isErrorResponse } from "./error";
 import { JobFormValues } from "../components/JobForm/JobForm";
 const get = async (
@@ -34,6 +39,19 @@ const put = async (
   });
 };
 
+const isJobAssignation = (value: unknown): value is JobAssignation => {
+  if (!value || typeof value !== "object") return false;
+  const jobAssignation = value as JobAssignation;
+  if (
+    !jobAssignation.sub ||
+    typeof jobAssignation.sub !== "string" ||
+    (jobAssignation.name && typeof jobAssignation.name !== "string") ||
+    (jobAssignation.email && typeof jobAssignation.email !== "string")
+  )
+    return false;
+  return true;
+};
+
 const isJob = (value: unknown): value is Job => {
   return (
     typeof value === "object" &&
@@ -47,7 +65,9 @@ const isJob = (value: unknown): value is Job => {
     "price" in value &&
     typeof (value as Job)["price"] === "number" &&
     "id" in value &&
-    typeof (value as Job)["id"] === "string"
+    typeof (value as Job)["id"] === "string" &&
+    (("assignedTo" in value && isJobAssignation(value.assignedTo)) ||
+      (value as Job)["assignedTo"] === undefined)
   );
 };
 
@@ -119,13 +139,12 @@ export const editCustomerJob = async (
 export const getCustomerJobs = async (
   customerId: string,
   filters?: JobFilters,
-  nextToken?: string,
+
   order: "asc" | "desc" = "asc"
-): Promise<{ items: Job[]; nextToken?: string }> => {
+): Promise<{ items: Job[] }> => {
   try {
     const response = await get(`/customers/${customerId}/jobs`, {
       ...filters,
-      nextToken,
       order,
     });
 
@@ -140,7 +159,6 @@ export const getCustomerJobs = async (
     }
     return {
       items: response.jobs,
-      nextToken: response.nextToken,
     };
   } catch (error) {
     if (isErrorResponse(error)) {
@@ -182,8 +200,8 @@ export const getJobs = async (
   try {
     const response = await get("/jobs", {
       ...filters,
-      nextToken,
       order,
+      nextToken,
       paginate: paginate === false ? "false" : "true",
     });
     if (!Array.isArray(response.jobs) || !response.jobs.every(isJob)) {

@@ -14,7 +14,7 @@ import { Link, useParams } from "react-router-dom";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useJobCustomer } from "../../../hooks/Jobs/useJobCustomer";
-
+import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCode } from "../../../services/error";
 
 type JobDetailsParams = {
@@ -76,6 +76,19 @@ export const JobDetailsPage: FC = () => {
           </ListItemIcon>
           <ListItemText primary="End time" secondary={job?.endTime} />
         </ListItem>
+        {job?.assignedTo && (
+          <ListItem disablePadding>
+            <ListItemIcon>
+              <PersonIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary="Assigned to"
+              secondary={[job.assignedTo.name, job.assignedTo.email]
+                .filter(Boolean)
+                .join(" - ")}
+            />
+          </ListItem>
+        )}
       </List>
     </>
   );

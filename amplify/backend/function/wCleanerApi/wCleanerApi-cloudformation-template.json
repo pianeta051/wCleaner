@@ -187,6 +187,29 @@
                   ]
                 ]
               }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cognito-idp:AdminListGroupsForUser",
+                "cognito-idp:AdminGetUser"
+              ],
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:cognito-idp:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":userpool/*"
+                  ]
+                ]
+              }
             }
           ]
         }

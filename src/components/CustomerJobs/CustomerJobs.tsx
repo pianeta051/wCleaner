@@ -1,14 +1,13 @@
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useState } from "react";
 import { Button, CircularProgress, Stack } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./CustomerJobs.style";
 
-import { JobModal } from "../JobModal/JobModal";
+import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
 import { EmptyJobs } from "../EmptyJobs/EmptyJobs";
 import { JobsTable } from "../JobTable/JobsTable";
 import { Customer } from "../../types/types";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { useCustomerJobs } from "../../hooks/Jobs/useCustomerJobs";
-import { LoadingButton } from "@mui/lab";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import AddIcon from "@mui/icons-material/Add";
@@ -23,6 +22,7 @@ type CustomerJobsProps = {
 export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const [searchParams] = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
+  const [assignedJobs, serAssignedJobs] = useState([]);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const date = searchParams.get("date");
   const jobId = searchParams.get("jobId");
@@ -35,11 +35,10 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
       .format("YYYY-MM-DD")
   );
   const currentSunday = dayjs(currentMonday).add(6, "day").format("YYYY-MM-DD");
-  const { customerJobs, error, loading, moreToLoad, loadMore, loadingMore } =
-    useCustomerJobs(customer.id, {
-      start: `${currentMonday} 00:00`,
-      end: `${currentSunday} 23:59`,
-    });
+  const { customerJobs, error, loading } = useCustomerJobs(customer.id, {
+    start: `${currentMonday} 00:00`,
+    end: `${currentSunday} 23:59`,
+  });
 
   const closeHandler = () => {
     {
@@ -123,8 +122,11 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
             Next Week
           </Button>
         </Stack>
+
         <Title>{title}</Title>
-        {customerJobs.length === 0 ? (
+        {error ? (
+          <ErrorMessage code={error} />
+        ) : customerJobs.length === 0 ? (
           <EmptyJobs onCreateNew={() => openHandler()} />
         ) : (
           <>
@@ -144,7 +146,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
         )}
       </>
       {modalOpen && (
-        <JobModal
+        <CustomerJobModal
           customer={customer}
           open={modalOpen}
           onClose={closeHandler}
@@ -163,12 +165,6 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
           }
           jobId={editingJobId ?? undefined}
         />
-      )}
-
-      {moreToLoad && (
-        <LoadingButton variant="text" onClick={loadMore} loading={loadingMore}>
-          Load more
-        </LoadingButton>
       )}
     </Wrapper>
   );

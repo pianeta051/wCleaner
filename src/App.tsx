@@ -4,7 +4,6 @@ import { FC } from "react";
 import { theme } from "./theme";
 import { AppRoutes } from "./routes/AppRoutes";
 import { AuthProvider } from "./components/AuthProvider/AuthProvider";
-import { CustomersProvider } from "./components/CustomersProvider/CustomersProvider";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import "./index.css";
@@ -14,11 +13,9 @@ export const App: FC = () => {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <ThemeProvider theme={theme}>
         <AuthProvider>
-          <CustomersProvider>
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
-          </CustomersProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>
     </LocalizationProvider>

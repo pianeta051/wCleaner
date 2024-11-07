@@ -1,6 +1,5 @@
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@mui/material";
-import { CustomersProvider } from "../../../../components/CustomersProvider/CustomersProvider";
 import { theme } from "../../../../theme";
 import { API } from "aws-amplify";
 import { customerFactory } from "../../../../factories/customers";
@@ -12,20 +11,17 @@ import { contains } from "cypress/types/jquery";
 const mountComponent = () => {
   cy.mount(
     <ThemeProvider theme={theme}>
-      <CustomersProvider>
-        <MemoryRouter initialEntries={["/customers"]}>
-          <Routes>
-            <Route path="customers" element={<Customers />} />
-          </Routes>
-        </MemoryRouter>
-      </CustomersProvider>
+      <MemoryRouter initialEntries={["/customers"]}>
+        <Routes>
+          <Route path="customers" element={<Customers />} />
+        </Routes>
+      </MemoryRouter>
     </ThemeProvider>
   );
 };
 // const mountNewCustomerComponent = ()=>{
 //    cy.mount(
 //      <ThemeProvider theme={theme}>
-//        <CustomersProvider>
 //          <MemoryRouter initialEntries={["/customers"]}>
 //            <Routes>
 //              <Route
@@ -40,7 +36,6 @@ const mountComponent = () => {
 //              />
 //            </Routes>
 //          </MemoryRouter>
-//        </CustomersProvider>
 //      </ThemeProvider>
 //    );
 // }

@@ -12,45 +12,45 @@ import { useNavigate } from "react-router-dom";
 import { MenuButton } from "./TopBar.style";
 import { useAuth } from "../../context/AuthContext";
 import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
-import { Modal, Tooltip } from "@mui/material";
-import Link from "@mui/material/Link";
+import { Divider, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 
 type Page = {
   label: string;
   url: string;
   exclusiveFor?: string;
 };
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-  display: "block",
-};
 
 export const TopBar: FC = () => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const { logOut } = useAuth();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { logOut, isInGroup, user } = useAuth();
   const navigate = useNavigate();
-  const { isInGroup } = useAuth();
+
   const openUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
+  };
+  const openIconMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
   const pages: Page[] = [
     { label: "customers", url: "/admin/customers" },
     { label: "users", url: "/admin/users", exclusiveFor: "Admin" },
     { label: "jobs  ", url: "/admin/jobs" },
   ];
+  const open = Boolean(anchorEl);
   const closeUserMenu = () => {
     setAnchorElUser(null);
   };
+  const closeMenuIconHandler = () => {
+    setAnchorEl(null);
+  };
 
   const toProfile = () => navigate("/admin/profile");
+  const toCustomers = () => navigate("/admin/customers");
+
+  const toUsers = () => navigate("/admin/users");
+  const toJobs = () => navigate("/admin/jobs");
 
   const logOutHandler = async () => {
     if (logOut) {
@@ -60,9 +60,6 @@ export const TopBar: FC = () => {
     navigate("/");
   };
 
-  const [open, setOpen] = useState(false);
-  const menuIconHandler = () => setOpen(true);
-  const handleClose = () => setOpen(false);
   const menuClickHandler: React.MouseEventHandler<HTMLButtonElement> = (
     event
   ) => {
@@ -85,6 +82,8 @@ export const TopBar: FC = () => {
     );
   });
 
+  console.log(user);
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <FormGroup></FormGroup>
@@ -96,10 +95,33 @@ export const TopBar: FC = () => {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
-            onClick={menuIconHandler}
+            aria-controls={open ? "demo-positioned-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? "true" : undefined}
+            onClick={openIconMenu}
           >
             <MenuIcon />
           </IconButton>
+          <Menu
+            id="menu-appbar"
+            aria-labelledby="demo-positioned-button"
+            anchorEl={anchorEl}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "left",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "left",
+            }}
+            open={Boolean(anchorEl)}
+            onClose={closeMenuIconHandler}
+          >
+            <MenuItem onClick={toCustomers}>Customers</MenuItem>
+            <MenuItem onClick={toUsers}>Users</MenuItem>
+            <MenuItem onClick={toJobs}>Jobs</MenuItem>
+          </Menu>
+
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Window Cleaner
           </Typography>
@@ -127,53 +149,19 @@ export const TopBar: FC = () => {
               open={Boolean(anchorElUser)}
               onClose={closeUserMenu}
             >
+              {user?.attributes?.email && (
+                <>
+                  <MenuItem>
+                    <ListItemText>{user?.attributes?.email}</ListItemText>
+                  </MenuItem>
+                  <Divider />
+                </>
+              )}
               <MenuItem onClick={toProfile}>Profile</MenuItem>
               <MenuItem onClick={logOutHandler}>Log out</MenuItem>
             </Menu>
           </div>
         </Toolbar>
-        <div>
-          <Modal
-            open={open}
-            onClose={handleClose}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-          >
-            <Box sx={style}>
-              <Link
-                component="button"
-                variant="body2"
-                onClick={() => {
-                  navigate("/admin/customers");
-                  setOpen(false);
-                }}
-              >
-                Customers
-              </Link>
-              <Link
-                component="button"
-                variant="body2"
-                sx={{ m: 3 }}
-                onClick={() => {
-                  navigate("/admin/users");
-                  setOpen(false);
-                }}
-              >
-                Users
-              </Link>
-              <Link
-                component="button"
-                variant="body2"
-                onClick={() => {
-                  navigate("/admin/jobs");
-                  setOpen(false);
-                }}
-              >
-                Jobs
-              </Link>
-            </Box>
-          </Modal>
-        </div>
       </AppBar>
       <Toolbar />
     </Box>
