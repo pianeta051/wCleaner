@@ -15,7 +15,7 @@ export type JobAssignation = {
 };
 
 export type Job = {
-  customerId: string;
+  customerId?: string;
   id: string;
   date: string;
   startTime: string;

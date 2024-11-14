@@ -28,7 +28,7 @@ const put = async (path: string, body: { [param: string]: string } = {}) => {
   });
 };
 
-const isCustomer = (value: unknown): value is Customer => {
+export const isCustomer = (value: unknown): value is Customer => {
   return (
     typeof value === "object" &&
     value !== null &&

@@ -431,7 +431,8 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
 
 // GET CUSTOMER JOBS
 const getCustomerJobs = async (customerId, filters, order) => {
-  const { start, end } = filters;
+  const { start, end, assignedTo } = filters;
+  const DEFAULT_FILTER_EXPRESSION = "#PK = :pk AND begins_with(#SK, :sk)";
   const params = {
     TableName: TABLE_NAME,
     ExpressionAttributeNames: {
@@ -446,15 +447,22 @@ const getCustomerJobs = async (customerId, filters, order) => {
     },
     IndexName: "job_start_time",
     KeyConditionExpression: "#JSTPK = :aggregator",
-    FilterExpression: "#PK = :pk AND begins_with(#SK, :sk)",
+    FilterExpression: DEFAULT_FILTER_EXPRESSION,
     ScanIndexForward: order === "asc",
   };
-
+  const filterExpressions = [];
+  if (assignedTo) {
+    const filterExpression = "#AT = :assigned_to";
+    params.ExpressionAttributeNames["#AT"] = "assigned_to";
+    params.ExpressionAttributeValues[":assigned_to"] = { S: assignedTo };
+    filterExpressions.push(filterExpression);
+  }
   if (start && end) {
     params.ExpressionAttributeNames["#S"] = "start";
     params.ExpressionAttributeValues[":start"] = {
       N: start.toString(),
     };
+
     params.ExpressionAttributeValues[":end"] = {
       N: end.toString(),
     };
@@ -472,11 +480,15 @@ const getCustomerJobs = async (customerId, filters, order) => {
     };
     params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S <= :end`;
   }
-
+  if (filterExpressions.length) {
+    params.FilterExpression = [...filterExpressions, DEFAULT_FILTER_EXPRESSION]
+      .map((e) => `(${e})`)
+      .join(" AND ");
+  }
   let result = await ddb.query(params).promise();
 
   const items = [...result.Items];
-
+  console.log(JSON.stringify({ items }, null, 2));
   return {
     items: items,
   };

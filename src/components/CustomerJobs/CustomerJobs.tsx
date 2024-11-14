@@ -97,6 +97,8 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   return (
     <Wrapper>
       <>
+        {" "}
+        <Title>Jobs</Title>
         <Stack
           spacing={2}
           direction="row"
@@ -122,7 +124,6 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
             Next Week
           </Button>
         </Stack>
-
         <Title>{title}</Title>
         {error ? (
           <ErrorMessage code={error} />

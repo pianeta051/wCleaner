@@ -8,6 +8,7 @@ import {
 } from "../types/types";
 import { isErrorResponse } from "./error";
 import { JobFormValues } from "../components/JobForm/JobForm";
+import { isCustomer } from "./customers";
 const get = async (
   path: string,
   queryParams: { [param: string]: string | undefined | number } = {}
@@ -40,35 +41,120 @@ const put = async (
 };
 
 const isJobAssignation = (value: unknown): value is JobAssignation => {
-  if (!value || typeof value !== "object") return false;
-  const jobAssignation = value as JobAssignation;
-  if (
-    !jobAssignation.sub ||
-    typeof jobAssignation.sub !== "string" ||
-    (jobAssignation.name && typeof jobAssignation.name !== "string") ||
-    (jobAssignation.email && typeof jobAssignation.email !== "string")
-  )
+  if (!value) {
+    // If value is null, then it's not a JobAssignation
     return false;
+  }
+  if (typeof value !== "object") {
+    // If value is not an object, then it's not a JobAssignation
+    return false;
+  }
+  // Trick so we get correct suggestions from VSCode
+  const objectValue = value as JobAssignation;
+  if (!objectValue.sub) {
+    // sub is mandatory
+    return false;
+  }
+  if (typeof objectValue.sub !== "string") {
+    // sub must be of type string
+    return false;
+  }
+  if (objectValue.name !== undefined) {
+    // if it's not undefined, it must be a string
+    if (typeof objectValue.name !== "string") {
+      return false;
+    }
+  }
+  if (!objectValue.email) {
+    // email is mandatory
+    return false;
+  }
+  if (typeof objectValue.email !== "string") {
+    // email must be of type string
+    return false;
+  }
   return true;
 };
 
 const isJob = (value: unknown): value is Job => {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "date" in value &&
-    typeof (value as Job)["date"] === "string" &&
-    "startTime" in value &&
-    typeof (value as Job)["startTime"] === "string" &&
-    "endTime" in value &&
-    typeof (value as Job)["endTime"] === "string" &&
-    "price" in value &&
-    typeof (value as Job)["price"] === "number" &&
-    "id" in value &&
-    typeof (value as Job)["id"] === "string" &&
-    (("assignedTo" in value && isJobAssignation(value.assignedTo)) ||
-      (value as Job)["assignedTo"] === undefined)
-  );
+  if (!value) {
+    // If value is null, then it's not a Job
+    return false;
+  }
+  if (typeof value !== "object") {
+    // If value is not an object, then it's not a Job
+    return false;
+  }
+  // Trick so we get correct suggestions from VSCode
+  const objectValue = value as Job;
+
+  if (objectValue.customerId !== undefined) {
+    // customerId must be of type string when it's not undefined
+    if (typeof objectValue.customerId !== "string") {
+      return false;
+    }
+  }
+
+  if (!objectValue.id) {
+    // id is mandatory
+    return false;
+  }
+  if (typeof objectValue.id !== "string") {
+    // id must be of type string
+    return false;
+  }
+
+  if (!objectValue.startTime) {
+    // startTime is mandatory
+    return false;
+  }
+  if (typeof objectValue.startTime !== "string") {
+    // startTime must be of type string
+    return false;
+  }
+
+  if (!objectValue.date) {
+    // date is mandatory
+    return false;
+  }
+  if (typeof objectValue.date !== "string") {
+    // date must be of type string
+    return false;
+  }
+
+  if (!objectValue.endTime) {
+    // endTime is mandatory
+    return false;
+  }
+  if (typeof objectValue.endTime !== "string") {
+    // endTime must be of type string
+    return false;
+  }
+
+  if (!objectValue.price) {
+    // price is mandatory
+    return false;
+  }
+  if (typeof objectValue.price !== "number") {
+    // price must be of type string
+    return false;
+  }
+
+  if (objectValue.customer !== undefined) {
+    // if it's not undefined, it must be a valid customer
+    if (!isCustomer(objectValue.customer)) {
+      return false;
+    }
+  }
+
+  if (objectValue.assignedTo !== undefined) {
+    // if it's not undefined, it must be a valid JobAssignation
+    if (!isJobAssignation(objectValue.assignedTo)) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 export const addJob = async (
@@ -152,8 +238,7 @@ export const getCustomerJobs = async (
       !response.jobs ||
       !Array.isArray(response.jobs) ||
       response.jobs.some((element: unknown) => !isJob(element)) ||
-      (response.nextToken !== undefined &&
-        typeof response.nextToken !== "string")
+      response.nextToken !== undefined
     ) {
       throw "INTERNAL_ERROR";
     }

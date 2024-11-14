@@ -185,16 +185,20 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   const startParameter = req.query?.start;
   const endParameter = req.query?.end;
   const { start, end } = mapJobTemporalFilters(startParameter, endParameter);
-
+  const userSub = req.authData?.userSub;
+  const groups = req.authData?.groups;
   const order = req.query?.order;
+  const isAdmin = groups.includes("Admin");
 
   const { items } = await getCustomerJobs(
     id,
-    { start, end },
-
+    { start, end, assignedTo: isAdmin ? undefined : userSub },
     order
   );
-  const jobs = items.map(mapCustomerJobs);
+  let jobs = items.map(mapCustomerJobs);
+  if (isAdmin) {
+    jobs = await getJobUsers(items);
+  }
 
   try {
     res.json({ jobs });

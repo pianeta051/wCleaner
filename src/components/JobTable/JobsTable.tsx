@@ -13,6 +13,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Customer, Job } from "../../types/types";
 import { DeleteJobButton } from "../DeleteJobButton/DeleteJobButton";
 import dayjs from "dayjs";
+import { useAuth } from "../../context/AuthContext";
 
 type JobsTableProps = {
   jobs: Job[];
@@ -27,6 +28,22 @@ export const JobsTable: FC<JobsTableProps> = ({
   customer,
   onEditClick,
 }) => {
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
+  const jobText = (job: Job): string | React.ReactNode => {
+    if (job.assignedTo) {
+      const assignedTo = [job.assignedTo.name, job.assignedTo.email]
+        .filter(Boolean)
+        .join(" - ");
+      return (
+        <>
+          {assignedTo}
+          <br />
+        </>
+      );
+    }
+  };
+
   return (
     <TableContainer component={Grid}>
       <Table aria-label="simple table">
@@ -36,6 +53,7 @@ export const JobsTable: FC<JobsTableProps> = ({
             <TableCell align="right">Start Time</TableCell>
             <TableCell align="right">End Time</TableCell>
             <TableCell align="right">Price</TableCell>
+            {isAdmin && <TableCell align="right">Assigned to</TableCell>}
             <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
@@ -64,6 +82,12 @@ export const JobsTable: FC<JobsTableProps> = ({
                 <TableCell align="right">{job.startTime}</TableCell>
                 <TableCell align="right">{job.endTime}</TableCell>
                 <TableCell align="right">{job.price}</TableCell>
+                {isAdmin && (
+                  <TableCell align="right">
+                    {jobText(job) ?? "Not assigned"}
+                  </TableCell>
+                )}
+
                 <TableCell align="right">
                   <DeleteJobButton jobId={job.id} customerId={customer.id} />
                 </TableCell>
