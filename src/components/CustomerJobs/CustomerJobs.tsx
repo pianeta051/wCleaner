@@ -13,20 +13,18 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 type CustomerJobsProps = {
   customer: Customer;
 };
 
 export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
-  const [assignedJobs, serAssignedJobs] = useState([]);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const date = searchParams.get("date");
   const jobId = searchParams.get("jobId");
-
   dayjs.extend(isoWeek);
 
   const [currentMonday, setCurrentMonday] = useState(
@@ -57,20 +55,37 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   };
 
   const nextWeekHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
-    setCurrentMonday(dayjs(currentMonday).add(7, "day").format("YYYY-MM-DD"));
+    const nextMonday = dayjs(currentMonday).add(7, "day").format("YYYY-MM-DD");
+    setCurrentMonday(nextMonday);
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set("date", nextMonday);
+      return newParams;
+    });
   };
 
   const currentWeekHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
     const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
     setCurrentMonday(lastMonday);
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set("date", lastMonday);
+      return newParams;
+    });
   };
 
-  const previousDateHandler: React.MouseEventHandler<
+  const previousWeekHandler: React.MouseEventHandler<
     HTMLButtonElement
   > = () => {
-    setCurrentMonday(
-      dayjs(currentMonday).subtract(1, "week").format("YYYY-MM-DD")
-    );
+    const previousMonday = dayjs(currentMonday)
+      .subtract(1, "week")
+      .format("YYYY-MM-DD");
+    setCurrentMonday(previousMonday);
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set("date", previousMonday);
+      return newParams;
+    });
   };
 
   const title = `${dayjs(currentMonday).format("MMM D")} - ${dayjs(
@@ -108,7 +123,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
         >
           <Button
             variant="outlined"
-            onClick={previousDateHandler}
+            onClick={previousWeekHandler}
             startIcon={<ArrowBackIosIcon />}
           >
             Previous Week

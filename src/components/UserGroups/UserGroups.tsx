@@ -65,10 +65,15 @@ export const UserGroups: FC<UserGroupsProps> = ({ id }) => {
 
   useEffect(() => {
     if (loading) {
-      getUserGroups(id).then((groups: SetStateAction<string[]>) => {
-        setLoading(false);
-        setGroups(groups);
-      });
+      getUserGroups(id)
+        .then((groups: SetStateAction<string[]>) => {
+          setLoading(false);
+          setGroups(groups);
+        })
+        .catch(() => {
+          setError("INTERNAL_ERROR");
+          setLoading(false);
+        });
     }
   }, [loading, setGroups, setLoading, id]);
 

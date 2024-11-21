@@ -57,6 +57,7 @@ export const useCustomers = (
 
   return {
     customers,
+
     moreToLoad,
     error: extractErrorCode(error),
     loading,

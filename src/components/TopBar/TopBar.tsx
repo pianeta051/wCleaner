@@ -82,8 +82,6 @@ export const TopBar: FC = () => {
     );
   });
 
-  console.log(user);
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <FormGroup></FormGroup>
@@ -150,13 +148,11 @@ export const TopBar: FC = () => {
               onClose={closeUserMenu}
             >
               {user?.attributes?.email && (
-                <>
-                  <MenuItem>
-                    <ListItemText>{user?.attributes?.email}</ListItemText>
-                  </MenuItem>
-                  <Divider />
-                </>
+                <MenuItem>
+                  <ListItemText>{user?.attributes?.email}</ListItemText>
+                </MenuItem>
               )}
+              {user?.attributes?.email && <Divider />}
               <MenuItem onClick={toProfile}>Profile</MenuItem>
               <MenuItem onClick={logOutHandler}>Log out</MenuItem>
             </Menu>

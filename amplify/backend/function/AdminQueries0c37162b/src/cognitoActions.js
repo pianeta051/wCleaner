@@ -84,24 +84,26 @@ async function confirmUserSignUp(username) {
   }
 }
 
-async function createUser(email, password) {
+async function createUser(user) {
+  const { email, password, color } = user;
   const params = {
     DesiredDeliveryMediums: ["EMAIL"],
     TemporaryPassword: password,
     UserAttributes: [
-      {
-        Name: "email",
-        Value: email,
-      },
-      {
-        Name: "email_verified",
-        Value: "True",
-      },
+      { Name: "email", Value: email },
+      { Name: "email_verified", Value: "True" },
     ],
-    UserPoolId: userPoolId,
     Username: email,
+    UserPoolId: userPoolId,
   };
 
+  // Add color as a custom attribute
+  if (color) {
+    params.UserAttributes.push({
+      Name: "custom:color",
+      Value: color,
+    });
+  }
   try {
     const result = await cognitoIdentityServiceProvider
       .adminCreateUser(params)

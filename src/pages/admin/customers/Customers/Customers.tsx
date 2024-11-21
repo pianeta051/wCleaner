@@ -32,43 +32,46 @@ export const Customers: FC = () => {
     setSearchInput(searchInput);
   };
 
+  const isEmpty = customers.length === 0 && !loading && searchInput === "";
+
   return (
     <Wrapper>
-      {loading ? (
-        <CircularProgress />
-      ) : error ? (
-        <ErrorMessage code={error} />
+      {isEmpty ? (
+        <EmptyCustomers onCreateNew={openHandler} />
       ) : (
         <>
-          {customers.length === 0 ? (
-            <EmptyCustomers onCreateNew={openHandler} />
+          <IconButton>
+            <Button startIcon={<AddIcon />} onClick={openHandler}>
+              New customer
+            </Button>
+          </IconButton>
+          <Title>Customers</Title>
+          <SearchBar onSearch={searchHandler} initialValue={searchInput} />
+          {loading ? (
+            <CircularProgress />
+          ) : error ? (
+            <ErrorMessage code={error} />
           ) : (
             <>
-              <IconButton>
-                <Button startIcon={<AddIcon />} onClick={openHandler}>
-                  New customer
-                </Button>
-              </IconButton>
-              <Title>Customers</Title>
-              <SearchBar onSearch={searchHandler} initialValue={searchInput} />
-
               <CustomersTable customers={customers} />
+              {moreToLoad && (
+                <LoadingButton
+                  variant="text"
+                  onClick={loadMore}
+                  loading={loadingMore}
+                >
+                  Load more
+                </LoadingButton>
+              )}
             </>
           )}
         </>
       )}
-
       <NewCustomerModal
         open={modalOpen}
         onClose={closeHandler}
         onSubmit={closeHandler}
       />
-
-      {moreToLoad && (
-        <LoadingButton variant="text" onClick={loadMore} loading={loadingMore}>
-          Load more
-        </LoadingButton>
-      )}
     </Wrapper>
   );
 };

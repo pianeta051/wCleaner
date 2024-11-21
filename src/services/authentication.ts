@@ -1,6 +1,7 @@
 import { Auth } from "aws-amplify";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import * as AdminQueries from "./adminQueries";
+import { CreateUserFormValues } from "../components/CreateUserForm/CreateUserForm";
 type UserAttribute = { Name: string; Value: string };
 
 type UserResponse = {
@@ -25,15 +26,10 @@ export type CognitoUserWithAttributes = CognitoUser & {
 };
 
 export const createUser = async (
-  email: string,
-  password: string
+  formValues: CreateUserFormValues
 ): Promise<void> => {
   try {
-    const response = await AdminQueries.post("/createUser", {
-      email: email,
-      password: password,
-    });
-    console.log(response);
+    await AdminQueries.post("/createUser", formValues);
   } catch (error) {
     if (hasResponseMessage(error)) {
       if (

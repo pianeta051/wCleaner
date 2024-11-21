@@ -12,9 +12,11 @@ import moment from "moment";
 import isoWeek from "dayjs/plugin/isoWeek";
 import dayjs, { Dayjs } from "dayjs";
 import { useJobs } from "../../hooks/Jobs/useJobs";
-import { useNavigate } from "react-router-dom";
 import { GenericJobModal } from "../GenericJobModal/GenericJobModal";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
+import { Popover } from "@mui/material";
+import { Job } from "../../types/types";
+import { JobCard } from "../JobCard/JobCard";
 
 export const JobCalendars: FC = () => {
   moment.updateLocale("en", {
@@ -30,10 +32,17 @@ export const JobCalendars: FC = () => {
   const [modalStartTime, setModalStartTime] = useState<Dayjs | null>(null);
   const [modalEndTime, setModalEndTime] = useState<Dayjs | null>(null);
   const [modalDate, setModalDate] = useState<Dayjs | null>(null);
-
+  const [eventJob, setEventJob] = useState<Job>();
   const [view, setView] = useState<View>(Views.WEEK);
   const [startDay, setStartDay] = useState(lastMonday);
-  const navigate = useNavigate();
+
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
 
   const endDay = useMemo(() => {
     if (view === Views.DAY) {
@@ -61,11 +70,13 @@ export const JobCalendars: FC = () => {
     end: new Date(`${job.date} ${job.endTime}`),
   }));
 
-  const eventClickHandler = (event: Event) => {
+  const eventClickHandler = (
+    event: Event,
+    e: React.SyntheticEvent<HTMLElement>
+  ) => {
     const job = event.resource;
-    navigate(
-      `/admin/customers/${job.customer.slug}?date=${job.date}&jobId=${job.id}`
-    );
+    setEventJob(job);
+    setAnchorEl(e.currentTarget);
   };
 
   const viewChangeHandler = (view: View) => {
@@ -131,6 +142,23 @@ export const JobCalendars: FC = () => {
           <ErrorMessage code={error} />
         )}
       </CalendarWrapper>
+      {eventJob && (
+        <Popover
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handlePopoverClose}
+          anchorOrigin={{
+            vertical: "top",
+            horizontal: "left",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+        >
+          <JobCard job={eventJob} />
+        </Popover>
+      )}
       {isModalOpen && modalDate && modalStartTime && modalEndTime && (
         <GenericJobModal
           open={isModalOpen}

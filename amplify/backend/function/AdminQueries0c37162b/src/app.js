@@ -126,7 +126,7 @@ app.post("/createUser", async (req, res, next) => {
   }
 
   try {
-    const response = await createUser(req.body.email, req.body.password);
+    const response = await createUser(req.body);
     res.status(200).json(response);
   } catch (err) {
     next(err);
@@ -225,34 +225,34 @@ app.get("/listUsers", async (req, res, next) => {
 //   }
 // });
 
-// app.get("/listGroupsForUser", async (req, res, next) => {
-//   if (!req.query.username) {
-//     const err = new Error("username is required");
-//     err.statusCode = 400;
-//     return next(err);
-//   }
+app.get("/listGroupsForUser", async (req, res, next) => {
+  if (!req.query.username) {
+    const err = new Error("username is required");
+    err.statusCode = 400;
+    return next(err);
+  }
 
-//   try {
-//     let response;
-//     if (req.query.token) {
-//       response = await listGroupsForUser(
-//         req.query.username,
-//         req.query.limit || 25,
-//         req.query.token
-//       );
-//     } else if (req.query.limit) {
-//       response = await listGroupsForUser(
-//         req.query.username,
-//         (Limit = req.query.limit)
-//       );
-//     } else {
-//       response = await listGroupsForUser(req.query.username);
-//     }
-//     res.status(200).json(response);
-//   } catch (err) {
-//     next(err);
-//   }
-// });
+  try {
+    let response;
+    if (req.query.token) {
+      response = await listGroupsForUser(
+        req.query.username,
+        req.query.limit || 25,
+        req.query.token
+      );
+    } else if (req.query.limit) {
+      response = await listGroupsForUser(
+        req.query.username,
+        (Limit = req.query.limit)
+      );
+    } else {
+      response = await listGroupsForUser(req.query.username);
+    }
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // app.get("/listUsersInGroup", async (req, res, next) => {
 //   if (!req.query.groupname) {

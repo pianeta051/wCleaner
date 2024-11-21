@@ -18,7 +18,7 @@ export const CreateUserPage: FC = () => {
   const submitHandler = (formValues: CreateUserFormValues) => {
     setLoading(true);
     setError(null);
-    createUser(formValues.email, formValues.password)
+    createUser(formValues)
       .then(() => {
         setLoading(false);
         navigate("/admin/users/");

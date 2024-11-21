@@ -7,6 +7,7 @@ import {
   TableRow,
   TableBody,
   TableHead,
+  Alert,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { Customer } from "../../types/types";
@@ -17,6 +18,9 @@ type CustomersTableProps = {
 };
 
 export const CustomersTable: FC<CustomersTableProps> = ({ customers }) => {
+  if (customers.length === 0) {
+    return <Alert severity="warning">No customers found</Alert>;
+  }
   return (
     <TableContainer component={Grid}>
       <Table aria-label="simple table">
