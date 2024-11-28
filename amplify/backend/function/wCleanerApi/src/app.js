@@ -34,7 +34,7 @@ const {
 } = require("./mappers");
 
 const { generateToken, parseToken } = require("./token");
-const { getAuthData, getUserInfo, getJobUsers } = require("./authentication");
+const { getAuthData, getJobUsers } = require("./authentication");
 
 // declare a new express app
 const app = express();
@@ -170,13 +170,13 @@ app.get("/jobs", async function (req, res) {
     exclusiveStartKey,
     paginate
   );
-  console.log("Items: " + items);
+
   const responseToken = generateToken(lastEvaluatedKey);
   let jobs = items.map(mapJob);
   if (isAdmin) {
     jobs = await getJobUsers(items);
   }
-  res.json({ jobs: items.map(mapJob), nextToken: responseToken });
+  res.json({ jobs, nextToken: responseToken });
 });
 
 // Get a single customer's Job
@@ -219,8 +219,22 @@ app.post("/customers/:customerId/job", async function (req, res) {
     const customerId = req.params.customerId;
     const job = mapJobFromRequestBody(req.body);
     const userSub = req.authData?.userSub;
+    const email = req.authData?.userInfo?.email;
+    const name = req.authData?.userInfo?.name;
+    const color = req.authData?.userInfo?.color;
     const createdJob = await addCustomerJob(customerId, job, userSub);
-    res.json({ job: { ...createdJob, customerId } });
+    res.json({
+      job: {
+        ...createdJob,
+        customerId,
+        assignedTo: {
+          sub: userSub,
+          email,
+          name,
+          color,
+        },
+      },
+    });
   } catch (error) {
     if (error.message === "CUSTOMER_NOT_FOUND") {
       res.status(404).json({

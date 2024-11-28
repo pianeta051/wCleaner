@@ -2,6 +2,7 @@ import { FC } from "react";
 import { User } from "../../services/authentication";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { Wrapper, StyledDataGrid } from "./UsersTable.style";
+import { UserColor } from "../UserColor/UserColor";
 
 type UsersTableProps = {
   users?: User[];
@@ -21,6 +22,12 @@ const columns: GridColDef[] = [
     headerName: "Email",
     sortable: true,
     width: 150,
+  },
+  {
+    field: "color",
+    headerName: "Color",
+    renderCell: (params) =>
+      params.value ? <UserColor color={params.value as string} /> : null,
   },
 ];
 

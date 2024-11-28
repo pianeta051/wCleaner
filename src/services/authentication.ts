@@ -13,6 +13,7 @@ export type User = {
   id: string;
   email: string;
   name?: string;
+  color?: string;
 };
 
 type GroupResponse = {
@@ -127,10 +128,11 @@ export const getUsers = async (): Promise<User[]> => {
       const id = user.Username;
       const email = findAttributeValue(user, "email");
       const name = findAttributeValue(user, "name");
+      const color = findAttributeValue(user, "custom:color");
       if (!id || !email) {
         return null;
       }
-      return { id, email, name };
+      return { id, email, name, color };
     }).filter((user: User | null) => user !== null);
     return users;
   } catch (error) {

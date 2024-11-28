@@ -64,7 +64,16 @@ export const JobCalendars: FC = () => {
   );
 
   const events: Event[] = jobs.map((job) => ({
-    resource: job,
+    resource: {
+      id: job.id,
+      customer: job.customer,
+      price: job.price,
+      color: job.assignedTo?.color,
+      title: `${job.customer?.name} - ${job.customer?.address}`,
+      startTime: job.startTime,
+      endTime: job.endTime,
+      date: job.date,
+    },
     title: `${job.customer?.name} - ${job.customer?.address}`,
     start: new Date(`${job.date} ${job.startTime}`),
     end: new Date(`${job.date} ${job.endTime}`),
@@ -116,6 +125,17 @@ export const JobCalendars: FC = () => {
     setIsModalOpen(true);
   };
 
+  const eventProps = (event: Event) => {
+    if (event.resource) {
+      return {
+        style: {
+          backgroundColor: event.resource.color,
+        },
+      };
+    }
+    return {};
+  };
+
   return (
     <>
       <CalendarWrapper className={loading ? "filtering" : undefined}>
@@ -137,6 +157,7 @@ export const JobCalendars: FC = () => {
             step={30}
             min={new Date(`${startDay} 6:00`)}
             max={new Date(`${endDay} 17:00`)}
+            eventPropGetter={eventProps}
           />
         ) : (
           <ErrorMessage code={error} />
