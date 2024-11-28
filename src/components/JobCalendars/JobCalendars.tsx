@@ -14,7 +14,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { useJobs } from "../../hooks/Jobs/useJobs";
 import { GenericJobModal } from "../GenericJobModal/GenericJobModal";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { Popover } from "@mui/material";
+import { Popover, useMediaQuery, useTheme } from "@mui/material";
 import { Job } from "../../types/types";
 import { JobCard } from "../JobCard/JobCard";
 
@@ -26,16 +26,19 @@ export const JobCalendars: FC = () => {
   });
   const localizer = momentLocalizer(moment);
   dayjs.extend(isoWeek);
+  const today = dayjs().format("YYYY-MM-DD");
   const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStartTime, setModalStartTime] = useState<Dayjs | null>(null);
   const [modalEndTime, setModalEndTime] = useState<Dayjs | null>(null);
   const [modalDate, setModalDate] = useState<Dayjs | null>(null);
   const [eventJob, setEventJob] = useState<Job>();
-  const [view, setView] = useState<View>(Views.WEEK);
-  const [startDay, setStartDay] = useState(lastMonday);
-
+  const [view, setView] = useState<View>(isMobile ? Views.DAY : Views.WEEK);
+  const [startDay, setStartDay] = useState(isMobile ? today : lastMonday);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handlePopoverClose = () => {
@@ -144,8 +147,12 @@ export const JobCalendars: FC = () => {
             localizer={localizer}
             timeslots={2}
             events={events}
-            defaultView={Views.WEEK}
-            views={[Views.DAY, Views.WEEK, Views.MONTH]}
+            defaultView={isMobile ? Views.DAY : Views.WEEK}
+            views={
+              isMobile
+                ? [Views.DAY, Views.MONTH]
+                : [Views.DAY, Views.WEEK, Views.MONTH]
+            }
             startAccessor="start"
             endAccessor="end"
             onView={viewChangeHandler}
