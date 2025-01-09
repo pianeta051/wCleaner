@@ -28,6 +28,7 @@ const {
   listUsersInGroup,
   createUser,
   signUserOut,
+  updateUser,
 } = require("./cognitoActions");
 
 const app = express();
@@ -249,6 +250,16 @@ app.get("/listGroupsForUser", async (req, res, next) => {
       response = await listGroupsForUser(req.query.username);
     }
     res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put("/user/:userId", async (req, res, next) => {
+  try {
+    const id = req.params.userId;
+    await updateUser(id, req.body);
+    res.status(200).json({ message: "User updated" });
   } catch (err) {
     next(err);
   }

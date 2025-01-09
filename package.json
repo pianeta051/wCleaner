@@ -67,6 +67,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@faker-js/faker": "^8.2.0",
     "@testing-library/cypress": "^9.0.0",
     "@types/jest": "^29.1.1",

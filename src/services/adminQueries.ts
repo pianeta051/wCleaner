@@ -1,15 +1,7 @@
 import { API, Auth } from "aws-amplify";
 
-const PATHS = [
-  "/listUsers",
-  "/createUser",
-  "/listGroupsForUser",
-  "/addUserToGroup",
-  "/removeUserFromGroup",
-] as const;
-
 export const get = async (
-  path: typeof PATHS[number],
+  path: string,
   queryParams: { [param: string]: string } = {}
 ) => {
   return API.get("AdminQueries", path, {
@@ -24,10 +16,24 @@ export const get = async (
 };
 
 export const post = async (
-  path: typeof PATHS[number],
+  path: string,
   body: { [param: string]: string } = {}
 ) => {
   return API.post("AdminQueries", path, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `${(await Auth.currentSession())
+        .getAccessToken()
+        .getJwtToken()}`,
+    },
+    body,
+  });
+};
+export const put = async (
+  path: string,
+  body: { [param: string]: string } = {}
+) => {
+  return API.put("AdminQueries", path, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `${(await Auth.currentSession())

@@ -1,7 +1,7 @@
 import { Auth } from "aws-amplify";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import * as AdminQueries from "./adminQueries";
-import { CreateUserFormValues } from "../components/CreateUserForm/CreateUserForm";
+import { UserFormValues } from "../components/UserForm/UserForm";
 type UserAttribute = { Name: string; Value: string };
 
 type UserResponse = {
@@ -26,9 +26,7 @@ export type CognitoUserWithAttributes = CognitoUser & {
   };
 };
 
-export const createUser = async (
-  formValues: CreateUserFormValues
-): Promise<void> => {
+export const createUser = async (formValues: UserFormValues): Promise<void> => {
   try {
     await AdminQueries.post("/createUser", formValues);
   } catch (error) {
@@ -248,6 +246,14 @@ export const removeUserAdmin = async (id: string) => {
   }
 };
 
+export const updateUser = async (id: string, formValues: UserFormValues) => {
+  try {
+    await AdminQueries.put("/user/" + id, formValues);
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
+
 export const resetPassword = async (
   email: string,
   code: string,
@@ -296,6 +302,22 @@ export const setPassword = async (
   }
 };
 
+export const updateColor = async (
+  user: CognitoUserWithAttributes,
+  newColor: string
+): Promise<CognitoUserWithAttributes> => {
+  try {
+    await Auth.updateUserAttributes(user, { "custom:color": newColor });
+    const newUser: CognitoUserWithAttributes = user;
+    newUser.attributes = {
+      ...user.attributes,
+      "custom:color": newColor,
+    };
+    return newUser;
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
 export const updateName = async (
   user: CognitoUserWithAttributes,
   newName: string

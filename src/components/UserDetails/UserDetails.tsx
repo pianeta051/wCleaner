@@ -17,6 +17,7 @@ export const UserDetails: FC<UserDetailsProps> = ({ user }) => {
       </Typography>
       <Wrapper>
         <h3>Name:</h3>
+
         <p>{user.name}</p>
         <h3>Email:</h3>
         <p>{user.email}</p>

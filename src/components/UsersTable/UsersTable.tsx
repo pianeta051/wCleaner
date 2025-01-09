@@ -1,13 +1,18 @@
 import { FC } from "react";
 import { User } from "../../services/authentication";
-import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import { Wrapper, StyledDataGrid } from "./UsersTable.style";
+import {
+  GridActionsCellItem,
+  GridActionsColDef,
+  GridColDef,
+} from "@mui/x-data-grid";
+import { StyledDataGrid, Wrapper } from "./UsersTable.style";
 import { UserColor } from "../UserColor/UserColor";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 type UsersTableProps = {
   users?: User[];
-  selectedUserId: string;
-  onSelectUser: (id: string) => void;
+  onUserEditClick?: (userId: string) => void;
 };
 
 const columns: GridColDef[] = [
@@ -21,7 +26,7 @@ const columns: GridColDef[] = [
     field: "email",
     headerName: "Email",
     sortable: true,
-    width: 150,
+    width: 200,
   },
   {
     field: "color",
@@ -33,23 +38,31 @@ const columns: GridColDef[] = [
 
 export const UsersTable: FC<UsersTableProps> = ({
   users = [],
-  selectedUserId,
-  onSelectUser,
+  onUserEditClick,
 }) => {
-  const rowClickHandler = (params: GridRowParams) => {
-    const userId = params.row.id;
-    onSelectUser(userId);
+  const actionsColumn: GridActionsColDef = {
+    field: "actions",
+    type: "actions",
+    getActions: (params) => {
+      return [
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          label="Edit"
+          key="edit"
+          onClick={() => onUserEditClick?.(params.row.id)}
+        />,
+        <GridActionsCellItem
+          icon={<DeleteIcon />}
+          label="Delete"
+          key="delete"
+        />,
+      ];
+    },
   };
+
   return (
     <Wrapper elements={users.length}>
-      <StyledDataGrid
-        columns={columns}
-        rows={users}
-        getRowClassName={(params) =>
-          params.row.id === selectedUserId ? "user-selected" : ""
-        }
-        onRowClick={rowClickHandler}
-      />
+      <StyledDataGrid columns={[...columns, actionsColumn]} rows={users} />
     </Wrapper>
   );
 };

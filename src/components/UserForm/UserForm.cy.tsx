@@ -1,8 +1,8 @@
-import { CreateUserForm, CreateUserFormValues } from "./CreateUserForm";
+import { UserForm, UserFormValues } from "./UserForm";
 
-describe("CreateUserForm", () => {
+describe("UserForm", () => {
   it("calls onSubmit when clicking a Create button", () => {
-    cy.mount(<CreateUserForm onSubmit={cy.spy().as("submitHandler")} />);
+    cy.mount(<UserForm onSubmit={cy.spy().as("submitHandler")} />);
     cy.findByLabelText("Email *").type("carlos@h.com");
     cy.findByLabelText("Password *").type("password");
     cy.findByText("Create").click();
@@ -13,7 +13,7 @@ describe("CreateUserForm", () => {
   });
 
   it("calls onSubmit when pressing intro in a text input", () => {
-    cy.mount(<CreateUserForm onSubmit={cy.spy().as("submitHandler")} />);
+    cy.mount(<UserForm onSubmit={cy.spy().as("submitHandler")} />);
     cy.findByLabelText("Email *").type("carlos@h.com");
     cy.findByLabelText("Password *").type("password{enter}");
     cy.get("@submitHandler").should("have.been.calledWith", {
@@ -24,9 +24,9 @@ describe("CreateUserForm", () => {
 
   it("shows a spinner when loading is true", () => {
     cy.mount(
-      <CreateUserForm
+      <UserForm
         loading={true}
-        onSubmit={function (values: CreateUserFormValues): void {
+        onSubmit={function (values: UserFormValues): void {
           throw new Error("Function not implemented.");
         }}
       />
@@ -36,9 +36,9 @@ describe("CreateUserForm", () => {
 
   it("shows a create button when loading is false", () => {
     cy.mount(
-      <CreateUserForm
+      <UserForm
         loading={false}
-        onSubmit={function (values: CreateUserFormValues): void {
+        onSubmit={function (values: UserFormValues): void {
           throw new Error("Function not implemented.");
         }}
       />
@@ -48,8 +48,8 @@ describe("CreateUserForm", () => {
 
   it("shows a create button when loading is undefined", () => {
     cy.mount(
-      <CreateUserForm
-        onSubmit={function (values: CreateUserFormValues): void {
+      <UserForm
+        onSubmit={function (values: UserFormValues): void {
           throw new Error("Function not implemented.");
         }}
       />
@@ -59,13 +59,14 @@ describe("CreateUserForm", () => {
 
   it("displays the values in the form when the initial values are provided", () => {
     cy.mount(
-      <CreateUserForm
+      <UserForm
         initialValues={{
           email: "carlos@h.com",
           password: "password",
           color: "#f44336",
+          name: "carlos",
         }}
-        onSubmit={function (values: CreateUserFormValues): void {
+        onSubmit={function (values: UserFormValues): void {
           throw new Error("Function not implemented.");
         }}
       />
@@ -76,9 +77,9 @@ describe("CreateUserForm", () => {
 
   it("displays an empty form when the initial values are undefined", () => {
     cy.mount(
-      <CreateUserForm
+      <UserForm
         initialValues={undefined}
-        onSubmit={function (values: CreateUserFormValues): void {
+        onSubmit={function (values: UserFormValues): void {
           throw new Error("Function not implemented.");
         }}
       />

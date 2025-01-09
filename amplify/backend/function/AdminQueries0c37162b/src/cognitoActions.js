@@ -85,7 +85,8 @@ async function confirmUserSignUp(username) {
 }
 
 async function createUser(user) {
-  const { email, password, color } = user;
+  const { email, password, color, name } = user;
+
   const params = {
     DesiredDeliveryMediums: ["EMAIL"],
     TemporaryPassword: password,
@@ -104,11 +105,11 @@ async function createUser(user) {
       Value: color,
     });
   }
+  if (name) {
+    params.UserAttributes.push({ Name: "name", Value: name });
+  }
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminCreateUser(params)
-      .promise();
-    console.log(`Create user ${email}`);
+    await cognitoIdentityServiceProvider.adminCreateUser(params).promise();
     return {
       message: `Create user ${email}`,
     };
@@ -116,6 +117,40 @@ async function createUser(user) {
     console.log(err);
     throw err;
   }
+}
+
+async function updateUser(id, user) {
+  const { email, color, name } = user;
+  if (!email && !color && !name) {
+    return;
+  }
+  console.log("Usuario: " + JSON.stringify(user));
+  const params = {
+    UserAttributes: [],
+    Username: id,
+    UserPoolId: userPoolId,
+  };
+  if (email) {
+    params.UserAttributes.push({ Name: "email", Value: email });
+    params.UserAttributes.push({
+      Name: "email_verified",
+      Value: "False",
+    });
+  }
+  if (color) {
+    params.UserAttributes.push({
+      Name: "custom:color",
+      Value: color,
+    });
+  }
+  if (name) {
+    params.UserAttributes.push({ Name: "name", Value: name });
+  }
+
+  console.log(JSON.stringify(params, null, 2));
+  await cognitoIdentityServiceProvider
+    .adminUpdateUserAttributes(params)
+    .promise();
 }
 
 async function disableUser(username) {
@@ -317,4 +352,5 @@ module.exports = {
   listGroupsForUser,
   listUsersInGroup,
   signUserOut,
+  updateUser,
 };

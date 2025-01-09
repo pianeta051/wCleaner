@@ -1,48 +1,68 @@
 import { LoadingButton } from "@mui/lab";
-import { FC, useState } from "react";
+import { FC } from "react";
 import { EmailInput } from "../EmailInput/EmailInput";
 import { Form } from "../Form/Form";
 import { PasswordInput } from "../PasswordInput/PasswordInput";
-import { Card, CardContent, CardHeader, CardMedia } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardMedia,
+  TextField,
+} from "@mui/material";
 import { CirclePicker, ColorResult } from "react-color";
 import * as yup from "yup";
 import { useFormik } from "formik";
 
-export type CreateUserFormValues = {
+export type UserFormValues = {
   email: string;
   password: string;
   color: string;
+  name: string;
 };
 
 const EMPTY_FORM = {
   email: "",
   password: "",
   color: "#f44336",
+  name: "",
 };
-const validationSchema = yup.object<CreateUserFormValues>({
+const validationSchemaCreate = yup.object<UserFormValues>({
   email: yup.string().email().required(),
   password: yup
     .string()
     .required("Password require.")
     .min(8, "Password is too short - should be 8 chars minimum."),
   color: yup.string().required(),
+  name: yup.string(),
 });
 
-type CreateUserFormProps = {
-  onSubmit: (values: CreateUserFormValues) => void;
+const validationSchemaUpdate = yup.object<UserFormValues>({
+  email: yup.string().email().required(),
+  password: yup.string(),
+  color: yup.string().required(),
+  name: yup.string(),
+});
+
+type UserFormProps = {
+  onSubmit: (values: UserFormValues) => void;
   loading?: boolean;
-  initialValues?: CreateUserFormValues;
+  initialValues?: UserFormValues;
+  isUpdate?: boolean;
 };
 
-export const CreateUserForm: FC<CreateUserFormProps> = ({
+export const UserForm: FC<UserFormProps> = ({
   onSubmit,
   loading = false,
   initialValues = EMPTY_FORM,
+  isUpdate = false,
 }) => {
-  const formik = useFormik<CreateUserFormValues>({
+  const formik = useFormik<UserFormValues>({
     initialValues: initialValues,
     onSubmit,
-    validationSchema,
+    validationSchema: isUpdate
+      ? validationSchemaUpdate
+      : validationSchemaCreate,
   });
 
   const colorChangeHandler = (color: ColorResult) => {
@@ -53,10 +73,27 @@ export const CreateUserForm: FC<CreateUserFormProps> = ({
       },
     });
   };
+  const getUsername = (email: string) => {
+    return email.split("@")[0];
+  };
 
   return (
     <Form onSubmit={formik.handleSubmit}>
       <EmailInput value={formik.values.email} onChange={formik.handleChange} />
+
+      <TextField
+        label="Name "
+        name="name"
+        variant="outlined"
+        margin="normal"
+        onChange={formik.handleChange}
+        value={
+          formik.values.name
+            ? formik.values.name
+            : getUsername(formik.values.email)
+        }
+      />
+
       <PasswordInput
         value={formik.values.password}
         onChange={formik.handleChange}
@@ -75,9 +112,8 @@ export const CreateUserForm: FC<CreateUserFormProps> = ({
           />
         </CardContent>
       </Card>
-
       <LoadingButton loading={loading} variant="outlined" type="submit">
-        Create
+        Save
       </LoadingButton>
     </Form>
   );

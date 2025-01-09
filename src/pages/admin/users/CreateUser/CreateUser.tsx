@@ -2,12 +2,12 @@ import { Typography } from "@mui/material";
 import { FC, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
-import {
-  CreateUserForm,
-  CreateUserFormValues,
-} from "../../../../components/CreateUserForm/CreateUserForm";
 import { createUser } from "../../../../services/authentication";
 import { ErrorCode, isErrorCode } from "../../../../services/error";
+import {
+  UserForm,
+  UserFormValues,
+} from "../../../../components/UserForm/UserForm";
 
 export const CreateUserPage: FC = () => {
   const [loading, setLoading] = useState(false);
@@ -15,7 +15,7 @@ export const CreateUserPage: FC = () => {
 
   const navigate = useNavigate();
 
-  const submitHandler = (formValues: CreateUserFormValues) => {
+  const submitHandler = (formValues: UserFormValues) => {
     setLoading(true);
     setError(null);
     createUser(formValues)
@@ -40,7 +40,7 @@ export const CreateUserPage: FC = () => {
         Create user
       </Typography>
       {error && <ErrorMessage code={error} />}
-      <CreateUserForm loading={loading} onSubmit={submitHandler} />
+      <UserForm loading={loading} onSubmit={submitHandler} />
     </>
   );
 };

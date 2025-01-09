@@ -6,6 +6,7 @@ export const Background = styled(Grid)(() => ({
   alignItems: "center",
   minHeight: "100vh",
   backgroundColor: "#F0F2F5",
+  width: "100%",
 }));
 
 export const FormPaper = styled(Paper)(() => ({

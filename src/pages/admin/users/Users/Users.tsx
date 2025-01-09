@@ -5,22 +5,33 @@ import { getUsers, User } from "../../../../services/authentication";
 import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
 import { UserBackground, Wrapper } from "./Users.style";
-import { UserDetails } from "../../../../components/UserDetails/UserDetails";
+import { EditUserModal } from "../../../../components/EditUserModal/EditUserModal";
 
 export const UsersPage: FC = () => {
   const [loading, setLoading] = useState(true);
-  const [selectedUserId, setSelectedUserId] = useState("");
   const [users, setUsers] = useState<User[]>([]);
+  const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const navigate = useNavigate();
 
   const toCreateUser = () => navigate("/admin/users/create");
 
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const userClickEditHandler = (userId: string) => {
+    const user = users.find((user) => user.id === userId);
+    if (user) {
+      setSelectedUser(user);
+      handleOpen();
+    }
+  };
+
   useEffect(() => {
     if (loading) {
       getUsers()
         .then((users) => {
-          setSelectedUserId(users[0].id);
           setLoading(false);
           setUsers(users);
         })
@@ -30,18 +41,10 @@ export const UsersPage: FC = () => {
     }
   }, [loading, setUsers, setLoading]);
 
-  const selectUserHandler = (id: string) => {
-    setSelectedUserId(id);
-  };
-
-  const selectedUser = selectedUserId
-    ? users.find((user) => user.id === selectedUserId)
-    : null;
-
   return (
     <UserBackground>
-      <Wrapper container spacing={1} columns={16}>
-        <Grid item xs={8}>
+      <Wrapper container spacing={1} columns={12}>
+        <Grid item xs={12}>
           <Typography align="center" variant="h3" gutterBottom>
             Users
           </Typography>
@@ -51,17 +54,15 @@ export const UsersPage: FC = () => {
           {loading ? (
             <CircularProgress />
           ) : (
-            <UsersTable
-              users={users}
-              selectedUserId={selectedUserId}
-              onSelectUser={selectUserHandler}
-            />
+            <UsersTable users={users} onUserEditClick={userClickEditHandler} />
           )}
         </Grid>
         {selectedUser && (
-          <Grid item xs={8}>
-            <UserDetails user={selectedUser} />
-          </Grid>
+          <EditUserModal
+            open={open}
+            onClose={handleClose}
+            user={selectedUser}
+          />
         )}
       </Wrapper>
     </UserBackground>
