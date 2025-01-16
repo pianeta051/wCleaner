@@ -21,7 +21,7 @@
       "function": {
         "AdminQueries0c37162b": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/AdminQueries0c37162b-787a474b725772704762-build.zip"
+          "s3Key": "amplify-builds/AdminQueries0c37162b-6b32366f314149514a32-build.zip"
         },
         "wcleanerCustomMessage": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",

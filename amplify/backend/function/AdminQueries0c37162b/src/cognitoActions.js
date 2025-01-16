@@ -121,31 +121,42 @@ async function createUser(user) {
   }
 }
 async function updateUser(id, user) {
-  const { email, color, name } = user;
-  if (!email && !color && !name) {
+  const { email, color, name, password } = user;
+  if (!email && !color && !name && !password) {
     return;
   }
-  const params = {
-    Username: id,
-    UserPoolId: userPoolId,
-    UserAttributes: [],
-  };
-  if (email) {
-    params.UserAttributes.push({ Name: "email_verified", Value: "true" });
-  }
-  if (color) {
-    params.UserAttributes.push({
-      Name: "custom:color",
-      Value: color,
-    });
-  }
-  if (name) {
-    params.UserAttributes.push({ Name: "name", Value: name });
-  }
+  if (email || color || name) {
+    const params = {
+      Username: id,
+      UserPoolId: userPoolId,
+      UserAttributes: [],
+    };
+    if (email) {
+      params.UserAttributes.push({ Name: "email_verified", Value: "true" });
+    }
+    if (color) {
+      params.UserAttributes.push({
+        Name: "custom:color",
+        Value: color,
+      });
+    }
+    if (name) {
+      params.UserAttributes.push({ Name: "name", Value: name });
+    }
 
-  await cognitoIdentityServiceProvider
-    .adminUpdateUserAttributes(params)
-    .promise();
+    await cognitoIdentityServiceProvider
+      .adminUpdateUserAttributes(params)
+      .promise();
+  }
+  if (password) {
+    const params = {
+      Username: id,
+      UserPoolId: userPoolId,
+      Password: password,
+      Permanent: true,
+    };
+    await cognitoIdentityServiceProvider.adminSetUserPassword(params).promise();
+  }
 }
 
 async function disableUser(username) {

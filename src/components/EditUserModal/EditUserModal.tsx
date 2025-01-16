@@ -43,8 +43,14 @@ export const EditUserModal: FC<EditUserModalProps> = ({
     color: user.color ?? "#f44336",
     name: user.name ?? "",
   };
+
+  const closeHandler = () => {
+    setError(null);
+    onClose();
+  };
+
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={closeHandler}>
       <ModalContent>
         <Wrapper container>
           <Grid item xs={12}>
