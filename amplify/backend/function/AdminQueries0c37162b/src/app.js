@@ -29,6 +29,7 @@ const {
   createUser,
   signUserOut,
   updateUser,
+  removeUser,
 } = require("./cognitoActions");
 
 const app = express();
@@ -128,6 +129,21 @@ app.post("/createUser", async (req, res, next) => {
 
   try {
     const response = await createUser(req.body);
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/removeUser", async (req, res, next) => {
+  if (!req.body.username) {
+    const err = new Error("username are required");
+    err.statusCode = 400;
+    return next(err);
+  }
+
+  try {
+    const response = await removeUser(req.body.username);
     res.status(200).json(response);
   } catch (err) {
     next(err);

@@ -84,6 +84,8 @@ async function confirmUserSignUp(username) {
   }
 }
 
+// Operations with USER : create, update, delete Disable, enable
+
 async function createUser(user) {
   const { email, password, color, name } = user;
 
@@ -118,24 +120,13 @@ async function createUser(user) {
     throw err;
   }
 }
-
 async function updateUser(id, user) {
   const { email, color, name } = user;
   if (!email && !color && !name) {
     return;
   }
-  console.log("Usuario: " + JSON.stringify(user));
-  const params = {
-    UserAttributes: [],
-    Username: id,
-    UserPoolId: userPoolId,
-  };
   if (email) {
-    params.UserAttributes.push({ Name: "email", Value: email });
-    params.UserAttributes.push({
-      Name: "email_verified",
-      Value: "False",
-    });
+    params.UserAttributes.push({ Name: "email_verified", Value: "true" });
   }
   if (color) {
     params.UserAttributes.push({
@@ -147,7 +138,6 @@ async function updateUser(id, user) {
     params.UserAttributes.push({ Name: "name", Value: name });
   }
 
-  console.log(JSON.stringify(params, null, 2));
   await cognitoIdentityServiceProvider
     .adminUpdateUserAttributes(params)
     .promise();
@@ -206,6 +196,28 @@ async function getUser(username) {
       .adminGetUser(params)
       .promise();
     return result;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+}
+
+async function removeUser(username) {
+  const params = {
+    UserPoolId: userPoolId,
+    Username: username,
+  };
+
+  console.log(`Attempting to remove ${username}`);
+
+  try {
+    const result = await cognitoIdentityServiceProvider
+      .adminDeleteUser(params)
+      .promise();
+    console.log(`Removed ${username}`);
+    return {
+      message: `Removed ${username}`,
+    };
   } catch (err) {
     console.log(err);
     throw err;
@@ -353,4 +365,5 @@ module.exports = {
   listUsersInGroup,
   signUserOut,
   updateUser,
+  removeUser,
 };

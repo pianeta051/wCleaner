@@ -13,6 +13,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 type UsersTableProps = {
   users?: User[];
   onUserEditClick?: (userId: string) => void;
+  onUserDeleteClick?: (userId: string) => void;
 };
 
 const columns: GridColDef[] = [
@@ -39,6 +40,7 @@ const columns: GridColDef[] = [
 export const UsersTable: FC<UsersTableProps> = ({
   users = [],
   onUserEditClick,
+  onUserDeleteClick,
 }) => {
   const actionsColumn: GridActionsColDef = {
     field: "actions",
@@ -55,6 +57,7 @@ export const UsersTable: FC<UsersTableProps> = ({
           icon={<DeleteIcon />}
           label="Delete"
           key="delete"
+          onClick={() => onUserDeleteClick?.(params.row.id)}
         />,
       ];
     },

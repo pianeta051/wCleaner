@@ -2,6 +2,7 @@ import { Auth } from "aws-amplify";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import * as AdminQueries from "./adminQueries";
 import { UserFormValues } from "../components/UserForm/UserForm";
+
 type UserAttribute = { Name: string; Value: string };
 
 type UserResponse = {
@@ -238,6 +239,16 @@ export const logOut = async () => {
 export const removeUserAdmin = async (id: string) => {
   try {
     await AdminQueries.post("/removeUserFromGroup", {
+      username: id,
+      groupname: "Admin",
+    });
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
+export const removeUser = async (id: string) => {
+  try {
+    await AdminQueries.post("/removeUser", {
       username: id,
       groupname: "Admin",
     });

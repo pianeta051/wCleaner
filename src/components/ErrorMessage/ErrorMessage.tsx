@@ -132,5 +132,14 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "INVALID_CONFIRMATION_LINK") {
+    return (
+      <Alert severity="error">
+        <Typography>
+          Your confirmation link is invalid, please contact a site admin
+        </Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

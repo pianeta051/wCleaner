@@ -1,30 +1,54 @@
 import { Button, CircularProgress, Grid, Typography } from "@mui/material";
 import { FC, useEffect, useState } from "react";
 import { UsersTable } from "../../../../components/UsersTable/UsersTable";
-import { getUsers, User } from "../../../../services/authentication";
+import {
+  getUsers,
+  removeUser,
+  User,
+} from "../../../../services/authentication";
 import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
 import { UserBackground, Wrapper } from "./Users.style";
 import { EditUserModal } from "../../../../components/EditUserModal/EditUserModal";
-
+import { ErrorCode, isErrorCode } from "../../../../services/error";
+import { DeleteUser } from "../../../../components/DeleteUser/DeleteUser";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
+import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 export const UsersPage: FC = () => {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
-  const [open, setOpen] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [error, setError] = useState<ErrorCode | null>(null);
 
   const navigate = useNavigate();
 
   const toCreateUser = () => navigate("/admin/users/create");
-
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleOpenEditModal = () => setOpenEditModal(true);
+  const handleCloseEditModal = () => setOpenEditModal(false);
+  const handleOpenDeleteAlert = () => setOpenDeleteAlert(true);
+  const handleCloseDeleteAlert = () => setOpenDeleteAlert(false);
 
   const userClickEditHandler = (userId: string) => {
     const user = users.find((user) => user.id === userId);
     if (user) {
       setSelectedUser(user);
-      handleOpen();
+      handleOpenEditModal();
+    }
+  };
+
+  const userClickDeleteHandler = (userId: string) => {
+    const user = users.find((user) => user.id === userId);
+    if (user) {
+      setSelectedUser(user);
+      handleOpenDeleteAlert();
     }
   };
 
@@ -54,17 +78,29 @@ export const UsersPage: FC = () => {
           {loading ? (
             <CircularProgress />
           ) : (
-            <UsersTable users={users} onUserEditClick={userClickEditHandler} />
+            <UsersTable
+              users={users}
+              onUserEditClick={userClickEditHandler}
+              onUserDeleteClick={userClickDeleteHandler}
+            />
           )}
         </Grid>
         {selectedUser && (
           <EditUserModal
-            open={open}
-            onClose={handleClose}
+            open={openEditModal}
+            onClose={handleCloseEditModal}
             user={selectedUser}
           />
         )}
       </Wrapper>
+      {selectedUser && (
+        <DeleteUser
+          id={selectedUser.id}
+          openDialog={openDeleteAlert}
+          onClose={handleCloseDeleteAlert}
+        />
+      )}
+      {error && <ErrorMessage code={error} />}
     </UserBackground>
   );
 };

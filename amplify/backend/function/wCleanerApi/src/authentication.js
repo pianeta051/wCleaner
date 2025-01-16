@@ -21,6 +21,9 @@ const getGroups = async (userSub) => {
 const getAuthData = async (req) => {
   const authProvider =
     req.apiGateway.event.requestContext.identity.cognitoAuthenticationProvider;
+  if (!authProvider) {
+    return {};
+  }
   const providerParts = authProvider.split(":");
   const userSub = providerParts[providerParts.length - 1];
   const groups = await getGroups(userSub);

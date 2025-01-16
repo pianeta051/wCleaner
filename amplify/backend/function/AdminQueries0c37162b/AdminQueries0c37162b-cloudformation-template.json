@@ -175,7 +175,8 @@
                 "cognito-idp:ListUsers",
                 "cognito-idp:ListGroups",
                 "cognito-idp:AdminCreateUser",
-                "cognito-idp:AdminUpdateUserAttributes"
+                "cognito-idp:AdminUpdateUserAttributes",
+                "cognito-idp:AdminDeleteUser"
               ],
               "Resource": {
                 "Fn::Join": [
