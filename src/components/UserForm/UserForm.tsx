@@ -73,25 +73,33 @@ export const UserForm: FC<UserFormProps> = ({
       },
     });
   };
+
+  const emailChangeHandler: React.ChangeEventHandler<
+    HTMLTextAreaElement | HTMLInputElement
+  > = (event) => {
+    formik.handleChange(event);
+    if (!formik.touched.name) {
+      const name = getUsername(event.target.value);
+      formik.handleChange({ target: { name: "name", value: name } });
+    }
+  };
+
   const getUsername = (email: string) => {
     return email.split("@")[0];
   };
 
   return (
     <Form onSubmit={formik.handleSubmit}>
-      <EmailInput value={formik.values.email} onChange={formik.handleChange} />
+      <EmailInput value={formik.values.email} onChange={emailChangeHandler} />
 
       <TextField
-        label="Name "
+        label="Name"
         name="name"
         variant="outlined"
         margin="normal"
         onChange={formik.handleChange}
-        value={
-          formik.values.name
-            ? formik.values.name
-            : getUsername(formik.values.email)
-        }
+        value={formik.values.name}
+        onBlur={formik.handleBlur}
       />
 
       <PasswordInput
