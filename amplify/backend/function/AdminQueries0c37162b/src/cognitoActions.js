@@ -125,6 +125,11 @@ async function updateUser(id, user) {
   if (!email && !color && !name) {
     return;
   }
+  const params = {
+    Username: id,
+    UserPoolId: userPoolId,
+    UserAttributes: [],
+  };
   if (email) {
     params.UserAttributes.push({ Name: "email_verified", Value: "true" });
   }
