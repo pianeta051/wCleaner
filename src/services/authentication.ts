@@ -8,6 +8,7 @@ type UserAttribute = { Name: string; Value: string };
 type UserResponse = {
   Username: string;
   Attributes: UserAttribute[];
+  Groups: string[];
 };
 
 export type User = {
@@ -15,6 +16,7 @@ export type User = {
   email: string;
   name?: string;
   color?: string;
+  isAdmin: boolean;
 };
 
 type GroupResponse = {
@@ -128,10 +130,11 @@ export const getUsers = async (): Promise<User[]> => {
       const email = findAttributeValue(user, "email");
       const name = findAttributeValue(user, "name");
       const color = findAttributeValue(user, "custom:color");
+      const isAdmin = user.Groups?.includes("Admin");
       if (!id || !email) {
         return null;
       }
-      return { id, email, name, color };
+      return { id, email, name, color, isAdmin };
     }).filter((user: User | null) => user !== null);
     return users;
   } catch (error) {
@@ -192,7 +195,9 @@ const isUserResponse = (value: unknown): value is UserResponse =>
   (value as UserResponse)["Attributes"].reduce(
     (correct, value) => correct && isAttribute(value),
     true
-  );
+  ) &&
+  "Groups" in value &&
+  Array.isArray((value as UserResponse).Groups);
 
 export const logIn = async (
   email: string,
