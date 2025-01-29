@@ -14,9 +14,10 @@ import { JobCalendars } from "../../../components/JobCalendars/JobCalendars";
 import { useJobs } from "../../../hooks/Jobs/useJobs";
 import dayjs, { Dayjs } from "dayjs";
 import { JobCalendarColorLegend } from "../../../components/JobCalendarColorLegend/JobCalendarColorLegend";
+import { CalendarContainer } from "./Jobs.style";
 
 export const JobsPage: FC = () => {
-  const [view, setView] = useState<"users" | "jobTypes">("users");
+  const [view, setView] = useState<"users" | "jobTypes">("jobTypes");
   dayjs.extend(isoWeek);
   const today = dayjs().format("YYYY-MM-DD");
   const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
@@ -27,11 +28,10 @@ export const JobsPage: FC = () => {
     isMobile ? Views.DAY : Views.WEEK
   );
 
-  const changeViewHandler: (
-    event: React.MouseEvent<HTMLElement>,
-    value: string
-  ) => void = (_event, view) => {
-    setView(view as "users" | "jobTypes");
+  const changeCalendarViewHandler: (view: "users" | "jobTypes") => void = (
+    view
+  ) => {
+    setView(view);
   };
 
   const endDay = useMemo(() => {
@@ -66,30 +66,26 @@ export const JobsPage: FC = () => {
         Jobs
       </Typography>
 
-      <Grid container justifyContent="flex-end">
-        <ToggleButtonGroup
-          value={view}
-          exclusive
-          onChange={changeViewHandler}
-          aria-label="text alignment"
-        >
-          <ToggleButton value="jobTypes">Job Types</ToggleButton>
-          <ToggleButton value="users">Users</ToggleButton>
-        </ToggleButtonGroup>
-      </Grid>
-      <JobCalendars
-        loading={loading}
-        error={error}
-        jobs={jobs}
-        isMobile={isMobile}
-        onViewChange={viewChangeHandler}
-        view={calendarView}
-        onStartDayChange={startDayChangeHanlder}
-        startDay={startDay}
-        endDay={endDay}
-        onJobsChanged={reload}
-      />
-      <JobCalendarColorLegend jobs={jobs} mode={view} />
+      <Grid container justifyContent="flex-end"></Grid>
+      <CalendarContainer>
+        <JobCalendars
+          loading={loading}
+          error={error}
+          jobs={jobs}
+          isMobile={isMobile}
+          onViewChange={viewChangeHandler}
+          view={calendarView}
+          onStartDayChange={startDayChangeHanlder}
+          startDay={startDay}
+          endDay={endDay}
+          onJobsChanged={reload}
+        />
+        <JobCalendarColorLegend
+          jobs={jobs}
+          view={view}
+          onChangeView={changeCalendarViewHandler}
+        />
+      </CalendarContainer>
     </>
   );
 };
