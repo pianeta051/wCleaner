@@ -19,6 +19,7 @@ export const ERROR_CODES = [
   "REQUIRED_FIELDS",
   "JOB_NOT_EXISTS",
   "INVALID_CONFIRMATION_LINK",
+  "USER_IS_LAST_ADMIN",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>
@@ -29,6 +30,7 @@ type ErrorResponse = {
     status: number;
     data?: {
       error?: string;
+      message?: string;
     };
   };
 };

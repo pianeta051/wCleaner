@@ -222,7 +222,14 @@ app.post("/customers/:customerId/job", async function (req, res) {
     const email = req.authData?.userInfo?.email;
     const name = req.authData?.userInfo?.name;
     const color = req.authData?.userInfo?.color;
-    const createdJob = await addCustomerJob(customerId, job, userSub);
+    const groups = req.authData?.groups;
+    const isAdmin = groups?.includes("Admin");
+    console.log("Info User:" + JSON.stringify(req.authData?.userInfo));
+    let assignedTo = userSub;
+    if (isAdmin && job?.assignedTo) {
+      assignedTo = job.assignedTo;
+    }
+    const createdJob = await addCustomerJob(customerId, job, assignedTo);
     res.json({
       job: {
         ...createdJob,
@@ -251,6 +258,10 @@ app.put("/customers/:customerId/job/:jobId", async function (req, res) {
     const customerId = req.params.customerId;
     const jobId = req.params.jobId;
     const updatedJob = req.body;
+    console.log(
+      JSON.stringify("Estos son los params : " + { updatedJob }, null, 2)
+    );
+
     const jobUpdated = await editJobFromCustomer(
       customerId,
       jobId,

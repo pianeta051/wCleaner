@@ -14,6 +14,7 @@ import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 type CustomerJobsProps = {
   customer: Customer;
@@ -25,6 +26,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const date = searchParams.get("date");
   const jobId = searchParams.get("jobId");
+  const { user } = useAuth();
   dayjs.extend(isoWeek);
 
   const [currentMonday, setCurrentMonday] = useState(
@@ -176,6 +178,8 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
                     `${editingJob.date} ${editingJob.startTime}`
                   ),
                   endTime: dayjs(`${editingJob.date} ${editingJob?.endTime}`),
+                  assignedTo:
+                    editingJob.assignedTo?.sub ?? user?.getUsername() ?? "",
                 }
               : undefined
           }

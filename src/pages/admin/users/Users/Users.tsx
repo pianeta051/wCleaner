@@ -41,6 +41,7 @@ export const UsersPage: FC = () => {
 
   const userClickDeleteHandler = (userId: string) => {
     const user = users.find((user) => user.id === userId);
+
     if (user) {
       setSelectedUser(user);
       handleOpenDeleteAlert();

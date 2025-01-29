@@ -488,7 +488,7 @@ const getCustomerJobs = async (customerId, filters, order) => {
   let result = await ddb.query(params).promise();
 
   const items = [...result.Items];
-  console.log(JSON.stringify({ items }, null, 2));
+  // console.log(JSON.stringify({ items }, null, 2));
   return {
     items: items,
   };
@@ -497,11 +497,14 @@ const getCustomerJobs = async (customerId, filters, order) => {
 //EDIT JOB
 
 const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
+  console.log("Update Job :");
+  console.log(JSON.stringify({ updatedJob }, 2, null));
   const params = {
     ExpressionAttributeNames: {
       "#ST": "start",
       "#ET": "end",
       "#P": "price",
+      "#A": "assigned_to",
     },
     ExpressionAttributeValues: {
       ":start": {
@@ -513,6 +516,9 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       ":price": {
         N: updatedJob.price.toString(),
       },
+      ":assigned_to": {
+        S: updatedJob.assigned_to,
+      },
     },
     Key: {
       PK: {
@@ -523,7 +529,8 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       },
     },
     TableName: TABLE_NAME,
-    UpdateExpression: "SET #ST = :start, #ET = :end, #P = :price",
+    UpdateExpression:
+      "SET #ST = :start, #ET = :end, #P = :price, #A=:assigned_to",
   };
   await ddb.updateItem(params).promise();
   return updatedJob;

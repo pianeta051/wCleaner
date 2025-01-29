@@ -1,5 +1,5 @@
-import { FC } from "react";
-import { Button, Grid } from "@mui/material";
+import { FC, useState } from "react";
+import { Button, Grid, TextField } from "@mui/material";
 import { DateField, Field, TimeField } from "./JobForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../Form/Form";
@@ -12,12 +12,17 @@ import {
   TimeValidationError,
 } from "@mui/x-date-pickers";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
+import { useAuth } from "../../context/AuthContext";
+
+import { User } from "../../services/authentication";
+import { UserSelector } from "../UserSelector/UserSelector";
 
 export type JobFormValues = {
   date: Dayjs;
   startTime: Dayjs;
   endTime: Dayjs;
   price: number;
+  assignedTo: string;
 };
 
 const INITIAL_VALUES: JobFormValues = {
@@ -25,12 +30,15 @@ const INITIAL_VALUES: JobFormValues = {
   startTime: dayjs(),
   endTime: dayjs().add(1, "hour"),
   price: 0,
+  assignedTo: "",
 };
+
 const validationSchema = yup.object<JobFormValues>({
   date: yup.date(),
   startTime: yup.string(),
   endTime: yup.string(),
   price: yup.number().required().positive(),
+  assignedTo: yup.string(),
 });
 
 type JobFormProps = {
@@ -39,7 +47,6 @@ type JobFormProps = {
   onDelete?: () => void;
   defaultValues?: JobFormValues;
   loading?: boolean;
-
   layout?: "vertical" | "horizontal";
 };
 
@@ -50,12 +57,17 @@ export const JobForm: FC<JobFormProps> = ({
   loading = false,
   layout = "vertical",
 }) => {
+  const { isInGroup } = useAuth();
+
   const defaultValuesForm = !defaultValues ? INITIAL_VALUES : defaultValues;
   const formik = useFormik<JobFormValues>({
     initialValues: defaultValuesForm,
     onSubmit,
     validationSchema,
   });
+  const changeUserHandler = (value: string | null) => {
+    formik.handleChange({ target: { name: "assignedTo", value } });
+  };
   const columns = layout === "vertical" ? 12 : 4;
 
   const dateChangeHandler: (
@@ -128,7 +140,7 @@ export const JobForm: FC<JobFormProps> = ({
           <Field
             name="price"
             id="price"
-            label="price"
+            label="Price"
             type="number"
             fullWidth
             onChange={formik.handleChange}
@@ -138,6 +150,12 @@ export const JobForm: FC<JobFormProps> = ({
             helperText={formik.touched.price ? formik.errors.price : undefined}
           />
         </Grid>
+        {isInGroup("Admin") && (
+          <UserSelector
+            value={formik.values.assignedTo}
+            onChange={changeUserHandler}
+          />
+        )}
 
         <Grid item xs={6} textAlign="right">
           <LoadingButton

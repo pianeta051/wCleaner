@@ -30,6 +30,7 @@ const {
   signUserOut,
   updateUser,
   removeUser,
+  listUsersWithGroups,
 } = require("./cognitoActions");
 
 const app = express();
@@ -107,6 +108,17 @@ app.post("/removeUserFromGroup", async (req, res, next) => {
     const err = new Error("username and groupname are required");
     err.statusCode = 400;
     return next(err);
+  }
+  if (req.body.groupname === "Admin") {
+    const response = await listUsersWithGroups();
+    const admins = response.Users.filter((user) =>
+      user.Groups.includes("Admin")
+    );
+    if (admins.length === 1 && admins[0].Username === req.body.username) {
+      const err = new Error("User is the last admin");
+      err.statusCode = 400;
+      return next(err);
+    }
   }
 
   try {
@@ -214,23 +226,14 @@ app.get("/listUsers", async (req, res, next) => {
   try {
     let response;
     if (req.query.token) {
-      response = await listUsers(req.query.limit || 25, req.query.token);
-    } else if (req.query.limit) {
-      response = await listUsers((Limit = req.query.limit));
-    } else {
-      response = await listUsers();
-    }
-    if (response.Users?.length > 0) {
-      response.Users = await Promise.all(
-        response.Users.map(async (user) => {
-          const groupsResponse = await listGroupsForUser(user.Username, 25);
-          const groups = groupsResponse.Groups?.map((g) => g.GroupName) ?? [];
-          return {
-            ...user,
-            Groups: groups,
-          };
-        })
+      response = await listUsersWithGroups(
+        req.query.limit || 25,
+        req.query.token
       );
+    } else if (req.query.limit) {
+      response = await listUsersWithGroups((Limit = req.query.limit));
+    } else {
+      response = await listUsersWithGroups();
     }
     res.status(200).json(response);
   } catch (err) {

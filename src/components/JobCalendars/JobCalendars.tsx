@@ -17,6 +17,8 @@ import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { Popover, useMediaQuery, useTheme } from "@mui/material";
 import { Job } from "../../types/types";
 import { JobCard } from "../JobCard/JobCard";
+import { useAuth } from "../../context/AuthContext";
+import { JobCalendarColorLegend } from "../JobCalendarColorLegend/JobCalendarColorLegend";
 
 export const JobCalendars: FC = () => {
   moment.updateLocale("en", {
@@ -40,6 +42,7 @@ export const JobCalendars: FC = () => {
   const [view, setView] = useState<View>(isMobile ? Views.DAY : Views.WEEK);
   const [startDay, setStartDay] = useState(isMobile ? today : lastMonday);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { user } = useAuth();
 
   const handlePopoverClose = () => {
     setAnchorEl(null);
@@ -197,6 +200,7 @@ export const JobCalendars: FC = () => {
             startTime: modalStartTime,
             endTime: modalEndTime,
             price: 0,
+            assignedTo: "",
           }}
         />
       )}

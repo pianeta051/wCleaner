@@ -141,5 +141,14 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "USER_IS_LAST_ADMIN") {
+    return (
+      <Alert severity="error">
+        <Typography>
+          User cannot be removed from group Admin because it&apos;s the last one
+        </Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

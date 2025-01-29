@@ -33,7 +33,8 @@ export const RemoveAdminButton: FC<RemoveAdminButtonProps> = ({
   return (
     <LoadingButton
       loading={loading}
-      variant="outlined"
+      variant="text"
+      color="error"
       onClick={removeAdminHandler}
     >
       Remove Admin

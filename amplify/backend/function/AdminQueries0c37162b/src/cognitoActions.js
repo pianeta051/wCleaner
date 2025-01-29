@@ -240,6 +240,23 @@ async function removeUser(username) {
   }
 }
 
+async function listUsersWithGroups(Limit, PaginationToken) {
+  const response = await listUsers(Limit, PaginationToken);
+  if (response.Users?.length > 0) {
+    response.Users = await Promise.all(
+      response.Users.map(async (user) => {
+        const groupsResponse = await listGroupsForUser(user.Username, 25);
+        const groups = groupsResponse.Groups?.map((g) => g.GroupName) ?? [];
+        return {
+          ...user,
+          Groups: groups,
+        };
+      })
+    );
+  }
+  return response;
+}
+
 async function listUsers(Limit, PaginationToken) {
   const params = {
     UserPoolId: userPoolId,
@@ -382,4 +399,5 @@ module.exports = {
   signUserOut,
   updateUser,
   removeUser,
+  listUsersWithGroups,
 };

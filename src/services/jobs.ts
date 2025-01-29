@@ -147,12 +147,12 @@ const isJob = (value: unknown): value is Job => {
     }
   }
 
-  if (objectValue.assignedTo !== undefined) {
-    // if it's not undefined, it must be a valid JobAssignation
-    if (!isJobAssignation(objectValue.assignedTo)) {
-      return false;
-    }
-  }
+  // if (objectValue.assignedTo !== undefined) {
+  //   // if it's not undefined, it must be a valid JobAssignation
+  //   if (!isJobAssignation(objectValue.assignedTo)) {
+  //     return false;
+  //   }
+  // }
 
   return true;
 };
@@ -206,6 +206,7 @@ export const editCustomerJob = async (
       date: formValues.date.format("YYYY-MM-DD"),
       startTime: formValues.startTime.format("HH:mm"),
       endTime: formValues.endTime.format("HH:mm"),
+      assigned_to: formValues.assignedTo,
     });
     if (!isJob(response.job)) {
       throw "INTERNAL_ERROR";

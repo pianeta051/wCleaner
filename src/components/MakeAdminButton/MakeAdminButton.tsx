@@ -35,7 +35,8 @@ export const MakeAdminButton: FC<MakeAdminButtonProps> = ({
   return (
     <LoadingButton
       loading={loading}
-      variant="outlined"
+      variant="text"
+      color="success"
       onClick={makeAdminHandler}
     >
       Make Admin

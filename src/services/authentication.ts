@@ -2,6 +2,7 @@ import { Auth } from "aws-amplify";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import * as AdminQueries from "./adminQueries";
 import { UserFormValues } from "../components/UserForm/UserForm";
+import { isErrorResponse } from "./error";
 
 type UserAttribute = { Name: string; Value: string };
 
@@ -122,6 +123,7 @@ export const getUsers = async (): Promise<User[]> => {
     ) {
       return [];
     }
+
     const users: User[] = response.Users.map((user: unknown): User | null => {
       if (!isUserResponse(user)) {
         return null;
@@ -131,6 +133,7 @@ export const getUsers = async (): Promise<User[]> => {
       const name = findAttributeValue(user, "name");
       const color = findAttributeValue(user, "custom:color");
       const isAdmin = user.Groups?.includes("Admin");
+
       if (!id || !email) {
         return null;
       }
@@ -242,15 +245,32 @@ export const logOut = async () => {
 };
 
 export const removeUserAdmin = async (id: string) => {
+  const users = await getUsers();
+  let usersAdmin = 0;
+  users.forEach((user) => {
+    if (user.isAdmin === true) {
+      usersAdmin++;
+    }
+  });
+  if (usersAdmin === 1) {
+    throw "USER_IS_LAST_ADMIN";
+  }
   try {
     await AdminQueries.post("/removeUserFromGroup", {
       username: id,
       groupname: "Admin",
     });
   } catch (error) {
+    if (isErrorResponse(error)) {
+      const errorMessage = error.response.data?.message;
+      if (errorMessage === "User is the last admin") {
+        throw "USER_IS_LAST_ADMIN";
+      }
+    }
     throw "INTERNAL_ERROR";
   }
 };
+
 export const removeUser = async (id: string) => {
   try {
     await AdminQueries.post("/removeUser", {
