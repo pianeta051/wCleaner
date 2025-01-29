@@ -1,6 +1,4 @@
 import { styled, Box, Grid, Paper, Typography, TextField } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 
 export const Background = styled(Paper)(() => ({
   display: "flex",
@@ -24,28 +22,9 @@ export const ModalBox = styled(Box)(({ theme }) => ({
   position: "absolute",
   top: "50%",
   left: "50%",
-  width: "100%",
-  [theme.breakpoints.down("md")]: {
-    width: "100%",
-  },
-
   transform: "translate(-50%, -50%)",
-  borderRadius: "300px",
-}));
-
-export const Field = styled(TextField)(() => ({
-  marginBottom: "10px",
-  width: "94%",
-  marginLeft: "20px",
-}));
-
-export const DateField = styled(DatePicker)(() => ({
-  marginBottom: "10px",
-  width: "94%",
-  marginLeft: "20px",
-}));
-export const TimeField = styled(TimePicker)(() => ({
-  marginBottom: "100px",
-  width: "94%",
-  marginLeft: "20px",
+  borderRadius: "10px",
+  [theme.breakpoints.down("md")]: {
+    width: "80%",
+  },
 }));

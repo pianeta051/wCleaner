@@ -4,10 +4,10 @@ import { JobForm, JobFormValues } from "../JobForm/JobForm";
 import { useAddJob } from "../../hooks/Jobs/useAddJob";
 import { useCustomerEditJob } from "../../hooks/Jobs/useEditJob";
 import { Modal, Grid, Stepper, Step, StepLabel, Stack } from "@mui/material";
-import { ModalBox } from "../DeleteCustomerButton/DeleteCustomerButton.style";
-import { Background, Title, Wrapper } from "../JobForm/JobForm.style";
+
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { CustomerSelector } from "../CustomerSelector/CustomerSelector";
+import { Background, ModalBox, Title, Wrapper } from "./GenericJobModal.style";
 
 type GenericJobModalProps = {
   open: boolean;
