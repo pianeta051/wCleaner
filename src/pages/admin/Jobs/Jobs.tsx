@@ -1,4 +1,4 @@
-import { momentLocalizer, Views } from "react-big-calendar";
+import { momentLocalizer, View, Views } from "react-big-calendar";
 import {
   Grid,
   ToggleButton,
@@ -16,49 +16,48 @@ import dayjs, { Dayjs } from "dayjs";
 import { JobCalendarColorLegend } from "../../../components/JobCalendarColorLegend/JobCalendarColorLegend";
 
 export const JobsPage: FC = () => {
-  const [view, setView] = useState("users");
-  moment.updateLocale("en", {
-    week: {
-      dow: 1,
-    },
-  });
-
+  const [view, setView] = useState<"users" | "jobTypes">("users");
   dayjs.extend(isoWeek);
   const today = dayjs().format("YYYY-MM-DD");
   const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [startDay, setStartDay] = useState(isMobile ? today : lastMonday);
-  const [showColorLegent, setShowColorLegent] = useState(false);
+  const [calendarView, setCalendarView] = useState<View>(
+    isMobile ? Views.DAY : Views.WEEK
+  );
+
   const changeViewHandler: (
     event: React.MouseEvent<HTMLElement>,
     value: string
   ) => void = (_event, view) => {
-    setView(view);
+    setView(view as "users" | "jobTypes");
   };
+
   const endDay = useMemo(() => {
-    if (view === Views.DAY) {
+    if (calendarView === Views.DAY) {
       return startDay;
     }
-    if (view === Views.WEEK) {
+    if (calendarView === Views.WEEK) {
       return dayjs(startDay).add(6, "days").format("YYYY-MM-DD");
     }
-    if (view === Views.MONTH) {
+    if (calendarView === Views.MONTH) {
       return dayjs(startDay).endOf("month").format("YYYY-MM-DD");
     }
     return "";
-  }, [startDay, view]);
+  }, [startDay, calendarView]);
   const { jobs, error, loading, reload } = useJobs(
     { start: `${startDay} 00:00`, end: `${endDay} 23:59` },
     "desc",
     false
   );
-  const usersHandler = () => {
-    setShowColorLegent(true);
+
+  const viewChangeHandler = (view: View) => {
+    setCalendarView(view);
   };
-  const jobTypesHandler = () => {
-    setShowColorLegent(false);
+
+  const startDayChangeHanlder = (startDay: string) => {
+    setStartDay(startDay);
   };
 
   return (
@@ -74,17 +73,23 @@ export const JobsPage: FC = () => {
           onChange={changeViewHandler}
           aria-label="text alignment"
         >
-          <ToggleButton value="jobTypes" onClick={jobTypesHandler}>
-            Job Types
-          </ToggleButton>
-          <ToggleButton value="users" onClick={usersHandler}>
-            Users
-          </ToggleButton>
+          <ToggleButton value="jobTypes">Job Types</ToggleButton>
+          <ToggleButton value="users">Users</ToggleButton>
         </ToggleButtonGroup>
       </Grid>
-      {showColorLegent ? <JobCalendarColorLegend jobs={jobs} /> : null}
-
-      <JobCalendars />
+      <JobCalendars
+        loading={loading}
+        error={error}
+        jobs={jobs}
+        isMobile={isMobile}
+        onViewChange={viewChangeHandler}
+        view={calendarView}
+        onStartDayChange={startDayChangeHanlder}
+        startDay={startDay}
+        endDay={endDay}
+        onJobsChanged={reload}
+      />
+      <JobCalendarColorLegend jobs={jobs} mode={view} />
     </>
   );
 };

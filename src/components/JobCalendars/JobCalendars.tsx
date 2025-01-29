@@ -7,67 +7,60 @@ import {
   Event,
 } from "react-big-calendar";
 import { CalendarWrapper } from "./JobCalendar.style";
-import { FC, useMemo, useState } from "react";
+import { FC, useState } from "react";
 import moment from "moment";
-import isoWeek from "dayjs/plugin/isoWeek";
 import dayjs, { Dayjs } from "dayjs";
-import { useJobs } from "../../hooks/Jobs/useJobs";
 import { GenericJobModal } from "../GenericJobModal/GenericJobModal";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { Popover, useMediaQuery, useTheme } from "@mui/material";
+import { Popover } from "@mui/material";
 import { Job } from "../../types/types";
 import { JobCard } from "../JobCard/JobCard";
-import { useAuth } from "../../context/AuthContext";
-import { JobCalendarColorLegend } from "../JobCalendarColorLegend/JobCalendarColorLegend";
+import { ErrorCode } from "../../services/error";
 
-export const JobCalendars: FC = () => {
+type JobCalendarsProps = {
+  loading?: boolean;
+  error?: ErrorCode | null;
+  jobs: Job[];
+  isMobile?: boolean;
+  onViewChange: (view: View) => void;
+  view: View;
+  onStartDayChange: (startDate: string) => void;
+  startDay: string;
+  endDay: string;
+  onJobsChanged: () => void;
+};
+
+export const JobCalendars: FC<JobCalendarsProps> = ({
+  loading,
+  error,
+  jobs,
+  isMobile,
+  onViewChange,
+  view,
+  onStartDayChange,
+  startDay,
+  endDay,
+  onJobsChanged,
+}) => {
   moment.updateLocale("en", {
     week: {
       dow: 1,
     },
   });
   const localizer = momentLocalizer(moment);
-  dayjs.extend(isoWeek);
-  const today = dayjs().format("YYYY-MM-DD");
-  const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStartTime, setModalStartTime] = useState<Dayjs | null>(null);
   const [modalEndTime, setModalEndTime] = useState<Dayjs | null>(null);
   const [modalDate, setModalDate] = useState<Dayjs | null>(null);
   const [eventJob, setEventJob] = useState<Job>();
-  const [view, setView] = useState<View>(isMobile ? Views.DAY : Views.WEEK);
-  const [startDay, setStartDay] = useState(isMobile ? today : lastMonday);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const { user } = useAuth();
 
   const handlePopoverClose = () => {
     setAnchorEl(null);
   };
 
   const open = Boolean(anchorEl);
-
-  const endDay = useMemo(() => {
-    if (view === Views.DAY) {
-      return startDay;
-    }
-    if (view === Views.WEEK) {
-      return dayjs(startDay).add(6, "days").format("YYYY-MM-DD");
-    }
-    if (view === Views.MONTH) {
-      return dayjs(startDay).endOf("month").format("YYYY-MM-DD");
-    }
-    return "";
-  }, [startDay, view]);
-
-  const { jobs, error, loading, reload } = useJobs(
-    { start: `${startDay} 00:00`, end: `${endDay} 23:59` },
-    "desc",
-    false
-  );
 
   const events: Event[] = jobs.map((job) => ({
     resource: {
@@ -94,10 +87,6 @@ export const JobCalendars: FC = () => {
     setAnchorEl(e.currentTarget);
   };
 
-  const viewChangeHandler = (view: View) => {
-    setView(view);
-  };
-
   const rangeChangeHandler = (
     range: Date[] | { start: Date; end: Date },
     viewParam?: View
@@ -105,23 +94,23 @@ export const JobCalendars: FC = () => {
     const currentView = viewParam ?? view;
     if (currentView === Views.DAY) {
       const currentDate = (range as Date[])[0];
-      setStartDay(dayjs(currentDate).format("YYYY-MM-DD"));
+      onStartDayChange(dayjs(currentDate).format("YYYY-MM-DD"));
     } else if (currentView === Views.WEEK) {
       const currentMonday = (range as Date[])[0];
-      setStartDay(dayjs(currentMonday).format("YYYY-MM-DD"));
+      onStartDayChange(dayjs(currentMonday).format("YYYY-MM-DD"));
     } else if (currentView === Views.MONTH) {
       const firstDayOfTheRange = dayjs(
         (range as { start: Date; end: Date }).start
       );
       const firstDayOfSecondWeek = firstDayOfTheRange.add(7, "day");
       const firstDayOfTheMonth = firstDayOfSecondWeek.startOf("month");
-      setStartDay(firstDayOfTheMonth.format("YYYY-MM-DD"));
+      onStartDayChange(firstDayOfTheMonth.format("YYYY-MM-DD"));
     }
   };
 
   const closeHandler = () => {
     setIsModalOpen(false);
-    reload();
+    onJobsChanged();
   };
 
   const calendarClickHandler = (slotInfo: SlotInfo) => {
@@ -158,7 +147,7 @@ export const JobCalendars: FC = () => {
             }
             startAccessor="start"
             endAccessor="end"
-            onView={viewChangeHandler}
+            onView={onViewChange}
             view={view}
             onSelectEvent={eventClickHandler}
             onSelectSlot={calendarClickHandler}

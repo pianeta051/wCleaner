@@ -17,6 +17,7 @@ import { AdminRoute } from "./AdminRoute";
 import { JobsPage } from "../pages/admin/Jobs/Jobs";
 
 import { JobDetailsPage } from "../pages/admin/JobDetails/JobDetails";
+import { AdminLayoutFullWidth } from "../components/AdminLayout/AdminLayoutFullWidth";
 
 export const AppRoutes: FC = () => {
   return (
@@ -39,22 +40,24 @@ export const AppRoutes: FC = () => {
         path="admin"
         element={
           <AuthenticatedRoute>
-            <AdminLayout />
+            <Outlet />
           </AuthenticatedRoute>
         }
       >
         <Route index element={<Navigate to="customers" />} />
-        <Route path="customers">
+        <Route path="customers" element={<AdminLayout />}>
           <Route index element={<Customers />} />
           <Route path=":slug" element={<CustomerDetails />} />
         </Route>
 
-        <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile" element={<AdminLayout />}>
+          <Route index element={<ProfilePage />} />
+        </Route>
         <Route
           path="users"
           element={
             <AdminRoute>
-              <Outlet />
+              <AdminLayout />
             </AdminRoute>
           }
         >
@@ -62,7 +65,7 @@ export const AppRoutes: FC = () => {
           <Route path="create" element={<CreateUserPage />} />
         </Route>
 
-        <Route path="jobs">
+        <Route path="jobs" element={<AdminLayoutFullWidth />}>
           <Route index element={<JobsPage />} />
 
           <Route path=":jobId">

@@ -16,10 +16,12 @@ import { Padding } from "@mui/icons-material";
 
 type JobCalendarColorLegendProps = {
   jobs: Job[];
+  mode?: "users" | "jobTypes";
 };
 
 export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
   jobs,
+  mode = "users",
 }) => {
   const usersWithColors = jobs
     .filter((job) => !!job.assignedTo?.color)
