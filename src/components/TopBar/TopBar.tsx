@@ -12,8 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { MenuButton } from "./TopBar.style";
 import { useAuth } from "../../context/AuthContext";
 import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
-import { Divider, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
-import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import { Divider, ListItemText, Tooltip } from "@mui/material";
 
 type Page = {
   label: string;

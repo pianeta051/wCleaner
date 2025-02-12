@@ -63,11 +63,43 @@ const addCustomer = async (customer) => {
       },
     },
   };
-  const data = await ddb.putItem(params).promise();
+  await ddb.putItem(params).promise();
   return {
     ...customer,
     id,
     slug,
+  };
+};
+
+const addJobType = async (jobType) => {
+  if (!jobType.name?.length) {
+    throw "NAME_CANNOT_BE_EMPTY";
+  }
+  if (!jobType.color?.length) {
+    throw "COLOR_CANNOT_BE_EMPTY";
+  }
+  const id = uuid.v1();
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: {
+        S: `job_type_${id}`,
+      },
+      SK: {
+        S: "definition",
+      },
+      name: {
+        S: jobType.name,
+      },
+      color: {
+        S: jobType.color,
+      },
+    },
+  };
+  await ddb.putItem(params).promise();
+  return {
+    ...jobType,
+    id,
   };
 };
 
@@ -600,6 +632,7 @@ const getJobIDs = async (customerId) => {
 module.exports = {
   addCustomer,
   addCustomerJob,
+  addJobType,
   editCustomer,
   getCustomerBySlug,
   getCustomerById,

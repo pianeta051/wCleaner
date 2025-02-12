@@ -9,7 +9,7 @@ import {
 import { useFormik } from "formik";
 import { FC } from "react";
 import { CirclePicker, ColorResult } from "react-color";
-import { Form } from "react-router-dom";
+import { Form } from "../Form/Form";
 import * as yup from "yup";
 
 export type JobTypeFormValues = {
@@ -17,7 +17,7 @@ export type JobTypeFormValues = {
   name: string;
 };
 
-const EMPTY_FORM = {
+const EMPTY_FORM: JobTypeFormValues = {
   color: "#f44336",
   name: "",
 };
@@ -36,7 +36,7 @@ export const JobTypeForm: FC<JobTypeFormProps> = ({
   onSubmit,
 }) => {
   const formik = useFormik<JobTypeFormValues>({
-    initialValues: initialValues,
+    initialValues,
     onSubmit,
     validationSchema,
   });

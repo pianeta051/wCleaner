@@ -1,18 +1,11 @@
-import { momentLocalizer, View, Views } from "react-big-calendar";
-import {
-  Grid,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+import { View, Views } from "react-big-calendar";
+import { Grid, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { FC, useMemo, useState } from "react";
 import isoWeek from "dayjs/plugin/isoWeek";
-import moment from "moment";
+
 import { JobCalendars } from "../../../components/JobCalendars/JobCalendars";
 import { useJobs } from "../../../hooks/Jobs/useJobs";
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import { JobCalendarColorLegend } from "../../../components/JobCalendarColorLegend/JobCalendarColorLegend";
 import { CalendarContainer } from "./Jobs.style";
 

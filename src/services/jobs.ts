@@ -5,10 +5,12 @@ import {
   JobAssignation,
   JobFilters,
   JobsPaginationArguments,
+  JobType,
 } from "../types/types";
 import { isErrorResponse } from "./error";
 import { JobFormValues } from "../components/JobForm/JobForm";
 import { isCustomer } from "./customers";
+import { JobTypeFormValues } from "../components/JobTypeForm/JobTypeForm";
 const get = async (
   path: string,
   queryParams: { [param: string]: string | undefined | number } = {}
@@ -18,10 +20,7 @@ const get = async (
   });
 };
 
-const post = async (
-  path: string,
-  body: { [param: string]: string | number } = {}
-) => {
+const post = async (path: string, body: { [param: string]: unknown } = {}) => {
   return API.post("wCleanerApi", path, {
     body,
   });
@@ -31,10 +30,7 @@ const remove = async (path: string) => {
   return API.del("wCleanerApi", path, {});
 };
 
-const put = async (
-  path: string,
-  body: { [param: string]: string | number } = {}
-) => {
+const put = async (path: string, body: { [param: string]: unknown } = {}) => {
   return API.put("wCleanerApi", path, {
     body,
   });
@@ -76,6 +72,28 @@ const isJobAssignation = (value: unknown): value is JobAssignation => {
   return true;
 };
 
+const isJobType = (value: unknown): value is JobType => {
+  if (!value) {
+    return false;
+  }
+  if (typeof value !== "object") {
+    // If value is not an object, then it's not a Job
+    return false;
+  }
+
+  const jobTypeValue = value as JobType;
+
+  if (!jobTypeValue.color) {
+    return false;
+  }
+  if (typeof jobTypeValue.color !== "string") {
+    return false;
+  }
+  if (typeof jobTypeValue.name !== "string") {
+    return false;
+  }
+  return true;
+};
 const isJob = (value: unknown): value is Job => {
   if (!value) {
     // If value is null, then it's not a Job
@@ -147,12 +165,12 @@ const isJob = (value: unknown): value is Job => {
     }
   }
 
-  // if (objectValue.assignedTo !== undefined) {
-  //   // if it's not undefined, it must be a valid JobAssignation
-  //   if (!isJobAssignation(objectValue.assignedTo)) {
-  //     return false;
-  //   }
-  // }
+  if (objectValue.assignedTo !== undefined) {
+    // if it's not undefined, it must be a valid JobAssignation
+    if (!isJobAssignation(objectValue.assignedTo)) {
+      return false;
+    }
+  }
 
   return true;
 };
@@ -179,6 +197,20 @@ export const addJob = async (
         throw "CUSTOMER_NOT_FOUND";
       }
     }
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const addJobType = async (
+  formValues: JobTypeFormValues
+): Promise<JobType> => {
+  try {
+    const response = await post(`/job-type`, formValues);
+    if (!isJobType(response.jobType)) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.job;
+  } catch (error) {
     throw "INTERNAL_ERROR";
   }
 };

@@ -14,6 +14,7 @@ const awsServerlessExpressMiddleware = require("aws-serverless-express/middlewar
 const {
   addCustomer,
   addCustomerJob,
+  addJobType,
   getCustomers,
   getCustomerBySlug,
   getCustomerById,
@@ -224,7 +225,7 @@ app.post("/customers/:customerId/job", async function (req, res) {
     const color = req.authData?.userInfo?.color;
     const groups = req.authData?.groups;
     const isAdmin = groups?.includes("Admin");
-    console.log("Info User:" + JSON.stringify(req.authData?.userInfo));
+
     let assignedTo = userSub;
     if (isAdmin && job?.assignedTo) {
       assignedTo = job.assignedTo;
@@ -250,6 +251,32 @@ app.post("/customers/:customerId/job", async function (req, res) {
     } else {
       throw error;
     }
+  }
+});
+
+app.post("/job-type", async function (req, res) {
+  const groups = req.authData?.groups;
+  const isAdmin = groups?.includes("Admin");
+  if (!isAdmin) {
+    res.status(403).json({ error: "You must be Admin" });
+    return;
+  }
+  const jobType = req.body;
+  try {
+    const createJobType = await addJobType(jobType);
+    res.json({ jobType: createJobType });
+  } catch (error) {
+    if (error === "NAME_CANNOT_BE_EMPTY") {
+      res.status(400).json({
+        error: "Name cannot be empty",
+      });
+    } else if (error === "COLOR_CANNOT_BE_EMPTY") {
+      res.status(400).json({
+        error: "Color cannot be empty",
+      });
+    }
+
+    throw error;
   }
 });
 

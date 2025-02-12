@@ -1,23 +1,19 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 
 import {
-  Card,
-  CardContent,
-  Grid,
-  List,
+  Button,
   ListItem,
   ListItemIcon,
   ListItemText,
-  Paper,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import { UserColor } from "../UserColor/UserColor";
 import { Job } from "../../types/types";
-import { Padding } from "@mui/icons-material";
 import { LegendList, Wrapper } from "./JobCalendarColorLegend.style";
 import { useAuth } from "../../context/AuthContext";
+import { JobTypeModal } from "../JobTypeModal/JobTypeModal";
 
 type JobCalendarColorLegendProps = {
   jobs: Job[];
@@ -30,7 +26,11 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
   view = "users",
   onChangeView,
 }) => {
+  const USER = "users";
+  const JOBTYPE = "jobTypes";
   const { isInGroup } = useAuth();
+  const [legendView, setLegendView] = useState(view);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const usersWithColors = jobs
     .filter((job) => !!job.assignedTo?.color)
     .map((job) => job.assignedTo)
@@ -49,33 +49,62 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
   ) => void = (_event, view) => {
     onChangeView(view as "users" | "jobTypes");
   };
+  const closeHandler = () => {
+    setIsModalOpen(false);
+  };
+  const jobTypeHandler = () => {
+    setLegendView(JOBTYPE);
+  };
+  const userHandler = () => {
+    setLegendView(USER);
+  };
+  const newJobTypeHandler = () => {
+    setIsModalOpen(true);
+  };
 
   return (
-    <Wrapper>
-      {isInGroup("Admin") && (
-        <ToggleButtonGroup
-          value={view}
-          exclusive
-          onChange={changeViewHandler}
-          aria-label="text alignment"
-        >
-          <ToggleButton value="jobTypes">Job Types</ToggleButton>
-          <ToggleButton value="users">Users</ToggleButton>
-        </ToggleButtonGroup>
-      )}
-      <Typography gutterBottom variant="h5" component="div">
-        Color legend
-      </Typography>
-      <LegendList>
-        {usersWithColors.map((user) => (
-          <ListItem alignItems="flex-start" disablePadding key={user?.sub}>
-            <ListItemIcon>
-              <UserColor color={user?.color as string} />
-            </ListItemIcon>
-            <ListItemText primary={user?.name ?? user?.email} />
-          </ListItem>
-        ))}
-      </LegendList>
-    </Wrapper>
+    <>
+      <Wrapper>
+        {isInGroup("Admin") && (
+          <ToggleButtonGroup
+            value={view}
+            exclusive
+            onChange={changeViewHandler}
+            aria-label="text alignment"
+          >
+            <ToggleButton value="jobTypes" onClick={jobTypeHandler}>
+              Job Types
+            </ToggleButton>
+            <ToggleButton value="users" onClick={userHandler}>
+              Users
+            </ToggleButton>
+          </ToggleButtonGroup>
+        )}
+        <Typography gutterBottom variant="h5" component="div">
+          Color legend
+        </Typography>
+        {legendView === USER ? (
+          <LegendList>
+            {usersWithColors.map((user) => (
+              <ListItem alignItems="flex-start" disablePadding key={user?.sub}>
+                <ListItemIcon>
+                  <UserColor color={user?.color as string} />
+                </ListItemIcon>
+                <ListItemText primary={user?.name ?? user?.email} />
+              </ListItem>
+            ))}
+          </LegendList>
+        ) : (
+          <Button variant="text" onClick={newJobTypeHandler}>
+            New Job Type
+          </Button>
+        )}
+      </Wrapper>
+      <JobTypeModal
+        open={isModalOpen}
+        onClose={closeHandler}
+        onSubmit={closeHandler}
+      />
+    </>
   );
 };

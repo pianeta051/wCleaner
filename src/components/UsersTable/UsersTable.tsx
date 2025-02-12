@@ -21,6 +21,7 @@ import { useUsers } from "../../hooks/Users/useUsers";
 import { Snackbar } from "@mui/material";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { RemoveAdminButton } from "../RemoveAdminButton/RemoveAdminButton";
+import { theme } from "../../theme";
 
 type UsersTableProps = {
   users?: User[];
@@ -33,17 +34,18 @@ const columns: GridColDef[] = [
     field: "name",
     headerName: "Name",
     sortable: true,
-    width: 150,
+    width: 200,
   },
   {
     field: "email",
     headerName: "Email",
     sortable: true,
-    width: 200,
+    width: 190,
   },
   {
     field: "color",
     headerName: "Color",
+    width: 50,
     renderCell: (params) =>
       params.value ? <UserColor color={params.value as string} /> : null,
   },
@@ -51,7 +53,7 @@ const columns: GridColDef[] = [
     field: "isAdmin",
     headerName: "Is Admin",
     sortable: true,
-    width: 100,
+    width: 70,
     renderCell: (params) => (params.value ? <DoneIcon /> : <CloseIcon />),
   },
 ];
@@ -74,6 +76,9 @@ export const UsersTable: FC<UsersTableProps> = ({
   const actionsColumn: GridActionsColDef = {
     field: "actions",
     type: "actions",
+    [theme.breakpoints.down("md")]: {
+      width: 200,
+    },
     width: 300,
     headerName: "Actions",
 

@@ -35,3 +35,8 @@ export type JobsPaginationArguments = {
   nextToken?: string;
   paginate?: boolean;
 };
+
+export type JobType = {
+  name: string;
+  color: string;
+};

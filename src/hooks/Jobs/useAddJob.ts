@@ -3,10 +3,8 @@ import { Job } from "../../types/types";
 
 import { extractErrorCode } from "../../services/error";
 import { useSWRConfig } from "swr";
-import { unstable_serialize } from "swr/infinite";
 import { addJob } from "../../services/jobs";
 import { JobFormValues } from "../../components/JobForm/JobForm";
-import { keyFunctionGenerator } from "./useCustomerJobs";
 
 export const useAddJob = (customerId?: string) => {
   const { mutate } = useSWRConfig();
