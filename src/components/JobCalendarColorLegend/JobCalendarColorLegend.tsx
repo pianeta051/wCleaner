@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { UserColor } from "../UserColor/UserColor";
-import { Job } from "../../types/types";
+import { Job, JobType } from "../../types/types";
 import { LegendList, Wrapper } from "./JobCalendarColorLegend.style";
 import { useAuth } from "../../context/AuthContext";
 import { JobTypeModal } from "../JobTypeModal/JobTypeModal";
@@ -39,9 +39,15 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
       (user, index, self) =>
         index === self.findIndex((t) => t?.sub === user?.sub)
     );
-  if (usersWithColors.length === 0) {
-    return null;
-  }
+
+  // This will come later from a hook
+  const jobTypes: JobType[] = [
+    {
+      id: "lsdfljksf",
+      name: "Areas",
+      color: "#4caf50",
+    },
+  ];
 
   const changeViewHandler: (
     event: React.MouseEvent<HTMLElement>,
@@ -83,7 +89,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
         <Typography gutterBottom variant="h5" component="div">
           Color legend
         </Typography>
-        {legendView === USER ? (
+        {legendView === USER && usersWithColors.length ? (
           <LegendList>
             {usersWithColors.map((user) => (
               <ListItem alignItems="flex-start" disablePadding key={user?.sub}>
@@ -95,9 +101,27 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
             ))}
           </LegendList>
         ) : (
-          <Button variant="text" onClick={newJobTypeHandler}>
-            New Job Type
-          </Button>
+          <>
+            {isInGroup("Admin") && (
+              <Button variant="text" onClick={newJobTypeHandler}>
+                New Job Type
+              </Button>
+            )}
+            <LegendList>
+              {jobTypes.map((jobType) => (
+                <ListItem
+                  alignItems="flex-start"
+                  disablePadding
+                  key={jobType.id}
+                >
+                  <ListItemIcon>
+                    <UserColor color={jobType.color as string} />
+                  </ListItemIcon>
+                  <ListItemText primary={jobType.name} />
+                </ListItem>
+              ))}
+            </LegendList>
+          </>
         )}
       </Wrapper>
       <JobTypeModal

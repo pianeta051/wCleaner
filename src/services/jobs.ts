@@ -92,6 +92,9 @@ const isJobType = (value: unknown): value is JobType => {
   if (typeof jobTypeValue.name !== "string") {
     return false;
   }
+  if (typeof jobTypeValue.id !== "string") {
+    return false;
+  }
   return true;
 };
 const isJob = (value: unknown): value is Job => {
