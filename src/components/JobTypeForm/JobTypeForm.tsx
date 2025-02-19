@@ -7,7 +7,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { CirclePicker, ColorResult } from "react-color";
 import { Form } from "../Form/Form";
 import * as yup from "yup";
@@ -17,8 +17,31 @@ export type JobTypeFormValues = {
   name: string;
 };
 
+const DEFAULT_COLORS = [
+  "#f44336",
+  "#e91e63",
+  "#9c27b0",
+  "#673ab7",
+  "#3f51b5",
+  "#2196f3",
+  "#03a9f4",
+  "#00bcd4",
+  "#009688",
+  "#4caf50",
+  "#8bc34a",
+  "#cddc39",
+  "#ffeb3b",
+  "#ffc107",
+  "#ff9800",
+  "#ff5722",
+  "#795548",
+  "#607d8b",
+];
+
+export const MAX_JOB_TYPES = DEFAULT_COLORS.length;
+
 const EMPTY_FORM: JobTypeFormValues = {
-  color: "#f44336",
+  color: "",
   name: "",
 };
 const validationSchema = yup.object<JobTypeFormValues>({
@@ -29,14 +52,24 @@ type JobTypeFormProps = {
   onSubmit: (values: JobTypeFormValues) => void;
   loading?: boolean;
   initialValues?: JobTypeFormValues;
+  omitColors?: string[];
 };
 export const JobTypeForm: FC<JobTypeFormProps> = ({
   loading = false,
   initialValues = EMPTY_FORM,
   onSubmit,
+  omitColors = [],
 }) => {
+  const colors = useMemo(
+    () => DEFAULT_COLORS.filter((color) => !omitColors.includes(color)),
+    [omitColors]
+  );
+  const initialColor = initialValues.color ? initialValues.color : colors[0];
   const formik = useFormik<JobTypeFormValues>({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      color: initialColor,
+    },
     onSubmit,
     validationSchema,
   });
@@ -72,6 +105,7 @@ export const JobTypeForm: FC<JobTypeFormProps> = ({
           <CirclePicker
             color={formik.values.color}
             onChange={colorChangeHandler}
+            colors={colors}
           />
         </CardContent>
       </Card>

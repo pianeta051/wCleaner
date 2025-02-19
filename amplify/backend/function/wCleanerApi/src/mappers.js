@@ -34,7 +34,7 @@ const mapJob = (jobFromDb) => {
 
 const mapJobType = (jobTypeFromDb) => {
   return {
-    id: jobTypeFromDb.PK.S.replace("job_type", ""),
+    id: jobTypeFromDb.PK.S.replace("job_type_", ""),
     name: jobTypeFromDb.name.S,
     color: jobTypeFromDb.color.S,
   };

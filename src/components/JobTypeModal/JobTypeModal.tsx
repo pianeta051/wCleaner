@@ -11,11 +11,13 @@ type JobTypeModalProps = {
   open: boolean;
   onSubmit: (jobType: JobType) => void;
   onClose: () => void;
+  omitColors?: string[];
 };
 export const JobTypeModal: FC<JobTypeModalProps> = ({
   open,
   onSubmit,
   onClose,
+  omitColors,
 }) => {
   const [error, setError] = useState<ErrorCode | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,7 +56,11 @@ export const JobTypeModal: FC<JobTypeModalProps> = ({
           </Grid>
         </Wrapper>
         <Background>
-          <JobTypeForm onSubmit={submitHandler} loading={loading} />
+          <JobTypeForm
+            onSubmit={submitHandler}
+            loading={loading}
+            omitColors={omitColors}
+          />
         </Background>
         {error && <ErrorMessage code={error} />}
       </ModalBox>

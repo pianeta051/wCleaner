@@ -16,6 +16,7 @@ import { useAuth } from "../../context/AuthContext";
 import { JobTypeModal } from "../JobTypeModal/JobTypeModal";
 import { useJobTypes } from "../../hooks/Jobs/useJobTypes";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
+import { MAX_JOB_TYPES } from "../JobTypeForm/JobTypeForm";
 
 type JobCalendarColorLegendProps = {
   jobs: Job[];
@@ -62,6 +63,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
   const newJobTypeHandler = () => {
     setIsModalOpen(true);
   };
+  const omittedColors = jobTypes?.map((type) => type.color) ?? [];
 
   return (
     <>
@@ -97,7 +99,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
           </LegendList>
         ) : (
           <>
-            {isInGroup("Admin") && (
+            {isInGroup("Admin") && (jobTypes?.length ?? 0) < MAX_JOB_TYPES && (
               <Button variant="text" onClick={newJobTypeHandler}>
                 New Job Type
               </Button>
@@ -129,6 +131,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
         open={isModalOpen}
         onClose={closeHandler}
         onSubmit={closeHandler}
+        omitColors={omittedColors}
       />
     </>
   );
