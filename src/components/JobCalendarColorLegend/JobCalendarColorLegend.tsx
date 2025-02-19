@@ -2,6 +2,7 @@ import { FC, useState } from "react";
 import {
   Button,
   CircularProgress,
+  IconButton,
   ListItem,
   ListItemIcon,
   ListItemText,
@@ -15,8 +16,10 @@ import { LegendList, Wrapper } from "./JobCalendarColorLegend.style";
 import { useAuth } from "../../context/AuthContext";
 import { JobTypeModal } from "../JobTypeModal/JobTypeModal";
 import { useJobTypes } from "../../hooks/Jobs/useJobTypes";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { MAX_JOB_TYPES } from "../JobTypeForm/JobTypeForm";
+import { DeleteJobTypeButton } from "../DeleteJobTypeButton/DeleteJobTypeButton";
 
 type JobCalendarColorLegendProps = {
   jobs: Job[];
@@ -113,8 +116,13 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
                 jobTypes?.map((jobType) => (
                   <ListItem
                     alignItems="flex-start"
-                    disablePadding
                     key={jobType.id}
+                    secondaryAction={
+                      <DeleteJobTypeButton
+                        onDelete={reload}
+                        jobTypeId={jobType.id}
+                      />
+                    }
                   >
                     <ListItemIcon>
                       <UserColor color={jobType.color as string} />

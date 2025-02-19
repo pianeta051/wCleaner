@@ -22,6 +22,7 @@ const {
   getJobs,
   getJobTypes,
   deleteCustomer,
+  deleteJobType,
   editJobFromCustomer,
   deleteJobFromCustomer,
   editCustomer,
@@ -338,6 +339,16 @@ app.delete("/customers/:customerId/job/:jobId", async function (req, res) {
     } else {
       throw error;
     }
+  }
+});
+
+app.delete("/job-type/:jobTypeId", async function (req, res) {
+  try {
+    const jobTypeId = req.params.jobTypeId;
+    await deleteJobType(jobTypeId);
+    res.json({ message: "Job Type Deleted" });
+  } catch (error) {
+    throw error;
   }
 });
 

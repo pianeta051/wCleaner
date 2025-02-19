@@ -11,6 +11,8 @@ import { isErrorResponse } from "./error";
 import { JobFormValues } from "../components/JobForm/JobForm";
 import { isCustomer } from "./customers";
 import { JobTypeFormValues } from "../components/JobTypeForm/JobTypeForm";
+
+// GENERAL FUNCTIONS
 const get = async (
   path: string,
   queryParams: { [param: string]: string | undefined | number } = {}
@@ -35,6 +37,8 @@ const put = async (path: string, body: { [param: string]: unknown } = {}) => {
     body,
   });
 };
+
+// TYPE GUARDS
 
 const isJobAssignation = (value: unknown): value is JobAssignation => {
   if (!value) {
@@ -97,6 +101,7 @@ const isJobType = (value: unknown): value is JobType => {
   }
   return true;
 };
+
 const isJob = (value: unknown): value is Job => {
   if (!value) {
     // If value is null, then it's not a Job
@@ -178,6 +183,8 @@ const isJob = (value: unknown): value is Job => {
   return true;
 };
 
+// ASYNC CALLS
+
 export const addJob = async (
   customerId: string,
   formValues: JobFormValues
@@ -244,6 +251,14 @@ export const deleteCustomerJob = async (
 ): Promise<void> => {
   try {
     await remove(`/customers/${customerId}/job/${jobId}`);
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const deleteJobType = async (jobTypeId: string): Promise<void> => {
+  try {
+    await remove(`/job-type/${jobTypeId}`);
   } catch (error) {
     throw "INTERNAL_ERROR";
   }
@@ -353,6 +368,7 @@ export const getJobs = async (
     throw "INTERNAL_ERROR";
   }
 };
+
 export const getJobTypes = async (): Promise<JobType[]> => {
   try {
     const response = await get("/job-types");

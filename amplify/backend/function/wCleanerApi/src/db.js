@@ -650,6 +650,16 @@ const deleteJobFromCustomer = async (customerId, jobId) => {
   await ddb.deleteItem(params).promise();
 };
 
+const deleteJobType = async (jobTypeId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `job_type_${jobTypeId}` },
+      SK: { S: "definition" },
+    },
+  };
+  await ddb.deleteItem(params).promise();
+};
 const getNextValue = async (lastEvaluatedKey, filter) => {
   const params = {
     TableName: TABLE_NAME,
@@ -713,6 +723,7 @@ module.exports = {
   getJobTypes,
   queryCustomersByEmail,
   deleteCustomer,
+  deleteJobType,
   editJobFromCustomer,
   deleteJobFromCustomer,
 };
