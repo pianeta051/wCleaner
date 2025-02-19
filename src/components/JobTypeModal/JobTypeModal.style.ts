@@ -4,6 +4,7 @@ export const Background = styled(Paper)(() => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  padding: "20px",
 }));
 
 export const Wrapper = styled(Grid)(() => ({
@@ -23,6 +24,7 @@ export const ModalBox = styled(Box)(({ theme }) => ({
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
+
   borderRadius: "10px",
   [theme.breakpoints.down("md")]: {
     width: "80%",

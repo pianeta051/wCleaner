@@ -78,6 +78,15 @@ const addJobType = async (jobType) => {
   if (!jobType.color?.length) {
     throw "COLOR_CANNOT_BE_EMPTY";
   }
+  const nameExisting = await queryJobTypeByName(jobType.name);
+  if (nameExisting.length > 0) {
+    throw "NAME_ALREADY_EXISTS";
+  }
+  const colorExisting = await queryJobTypeByColor(jobType.color);
+  if (colorExisting.length > 0) {
+    throw "COLOR_ALREADY_EXISTS";
+  }
+
   const id = uuid.v1();
   const params = {
     TableName: TABLE_NAME,
@@ -90,6 +99,9 @@ const addJobType = async (jobType) => {
       },
       name: {
         S: jobType.name,
+      },
+      name_lowercase: {
+        S: jobType.name.toLowerCase(),
       },
       color: {
         S: jobType.color,
@@ -295,6 +307,7 @@ const getNextCustomer = async (lastEvaluatedKey) => {
   }
   return null;
 };
+
 const queryCustomersByEmail = async (email) => {
   const params = {
     ExpressionAttributeValues: {
@@ -303,6 +316,40 @@ const queryCustomersByEmail = async (email) => {
     KeyConditionExpression: "email = :email",
     TableName: TABLE_NAME,
     IndexName: "customer_email",
+  };
+  const result = await ddb.query(params).promise();
+  return result.Items;
+};
+
+const queryJobTypeByName = async (name) => {
+  const params = {
+    ExpressionAttributeNames: {
+      "#N": "name_lowercase",
+      "#PK": "PK",
+      "#SK": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":name": { S: name.toLowerCase() },
+      ":pk": { S: "job_type_" },
+      ":sk": { S: "definition" },
+    },
+    KeyConditionExpression: "#N = :name",
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
+    TableName: TABLE_NAME,
+    IndexName: "job_type_name",
+  };
+  const result = await ddb.query(params).promise();
+  return result.Items;
+};
+
+const queryJobTypeByColor = async (color) => {
+  const params = {
+    ExpressionAttributeValues: {
+      ":color": { S: color },
+    },
+    KeyConditionExpression: "color = :color",
+    TableName: TABLE_NAME,
+    IndexName: "job_type_color",
   };
   const result = await ddb.query(params).promise();
   return result.Items;
@@ -458,6 +505,29 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
   return {
     items,
     lastEvaluatedKey,
+  };
+};
+
+//GET JOB TYPES
+const getJobTypes = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":sk": { S: "definition" },
+      ":pk": { S: "job_type" },
+    },
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
+  };
+
+  let result = await ddb.scan(params).promise();
+  const items = result.Items;
+
+  return {
+    items,
   };
 };
 
@@ -640,6 +710,7 @@ module.exports = {
   getCustomer,
   getCustomerJobs,
   getJobs,
+  getJobTypes,
   queryCustomersByEmail,
   deleteCustomer,
   editJobFromCustomer,

@@ -34,6 +34,21 @@
         "fieldName": "start",
         "fieldType": "number"
       }
+    },
+    {
+      "name": "job_type_name",
+      "partitionKey": {
+        "fieldName": "name_lowercase",
+        "fieldType": "string"
+      }
+    },
+
+    {
+      "name": "job_type_color",
+      "partitionKey": {
+        "fieldName": "color",
+        "fieldType": "string"
+      }
     }
   ],
   "triggerFunctions": []

@@ -150,5 +150,19 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "DUPLICATED_COLOR") {
+    return (
+      <Alert severity="error">
+        <Typography>Color cannot be duplicated</Typography>
+      </Alert>
+    );
+  }
+  if (code === "DUPLICATED_NAME") {
+    return (
+      <Alert severity="error">
+        <Typography>Name cannot be duplicated</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

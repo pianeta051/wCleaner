@@ -1,7 +1,7 @@
 import { FC, useState } from "react";
-
 import {
   Button,
+  CircularProgress,
   ListItem,
   ListItemIcon,
   ListItemText,
@@ -10,10 +10,12 @@ import {
   Typography,
 } from "@mui/material";
 import { UserColor } from "../UserColor/UserColor";
-import { Job, JobType } from "../../types/types";
+import { Job } from "../../types/types";
 import { LegendList, Wrapper } from "./JobCalendarColorLegend.style";
 import { useAuth } from "../../context/AuthContext";
 import { JobTypeModal } from "../JobTypeModal/JobTypeModal";
+import { useJobTypes } from "../../hooks/Jobs/useJobTypes";
+import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 
 type JobCalendarColorLegendProps = {
   jobs: Job[];
@@ -40,15 +42,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
         index === self.findIndex((t) => t?.sub === user?.sub)
     );
 
-  // This will come later from a hook
-  const jobTypes: JobType[] = [
-    {
-      id: "lsdfljksf",
-      name: "Areas",
-      color: "#4caf50",
-    },
-  ];
-
+  const { jobTypes, error, loading, reload } = useJobTypes();
   const changeViewHandler: (
     event: React.MouseEvent<HTMLElement>,
     value: string
@@ -57,6 +51,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
   };
   const closeHandler = () => {
     setIsModalOpen(false);
+    reload();
   };
   const jobTypeHandler = () => {
     setLegendView(JOBTYPE);
@@ -108,18 +103,24 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
               </Button>
             )}
             <LegendList>
-              {jobTypes.map((jobType) => (
-                <ListItem
-                  alignItems="flex-start"
-                  disablePadding
-                  key={jobType.id}
-                >
-                  <ListItemIcon>
-                    <UserColor color={jobType.color as string} />
-                  </ListItemIcon>
-                  <ListItemText primary={jobType.name} />
-                </ListItem>
-              ))}
+              {loading ? (
+                <CircularProgress />
+              ) : error ? (
+                <ErrorMessage code={error} />
+              ) : (
+                jobTypes?.map((jobType) => (
+                  <ListItem
+                    alignItems="flex-start"
+                    disablePadding
+                    key={jobType.id}
+                  >
+                    <ListItemIcon>
+                      <UserColor color={jobType.color as string} />
+                    </ListItemIcon>
+                    <ListItemText primary={jobType.name} />
+                  </ListItem>
+                ))
+              )}
             </LegendList>
           </>
         )}

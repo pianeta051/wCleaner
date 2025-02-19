@@ -214,6 +214,26 @@ export const addJobType = async (
     }
     return response.job;
   } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response.status;
+      if (status === 403) {
+        throw "UNAUTHORIZED";
+      }
+      if (status === 400) {
+        if (error.response.data?.error === "Name cannot be empty") {
+          throw "NAME_CANNOT_BE_EMPTY";
+        }
+        if (error.response.data?.error === "Color cannot be empty") {
+          throw "COLOR_CANNOT_BE_EMPTY";
+        }
+        if (error.response.data?.error === "Name cannot be duplicated") {
+          throw "DUPLICATED_NAME";
+        }
+        if (error.response.data?.error === "Color cannot be duplicated") {
+          throw "DUPLICATED_COLOR";
+        }
+      }
+    }
     throw "INTERNAL_ERROR";
   }
 };
@@ -329,6 +349,20 @@ export const getJobs = async (
       throw "INTERNAL_ERROR";
     }
     return { jobs: response.jobs, nextToken: response.nextToken };
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
+export const getJobTypes = async (): Promise<JobType[]> => {
+  try {
+    const response = await get("/job-types");
+    if (
+      !Array.isArray(response.jobTypes) ||
+      !response.jobTypes.every(isJobType)
+    ) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.jobTypes;
   } catch (error) {
     throw "INTERNAL_ERROR";
   }

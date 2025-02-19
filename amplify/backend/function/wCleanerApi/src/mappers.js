@@ -32,6 +32,14 @@ const mapJob = (jobFromDb) => {
   };
 };
 
+const mapJobType = (jobTypeFromDb) => {
+  return {
+    id: jobTypeFromDb.PK.S.replace("job_type", ""),
+    name: jobTypeFromDb.name.S,
+    color: jobTypeFromDb.color.S,
+  };
+};
+
 const mapJobFromRequestBody = (job) => ({
   ...job,
   start: +new Date(`${job.date} ${job.startTime}`),
@@ -52,4 +60,5 @@ module.exports = {
   mapJob,
   mapJobFromRequestBody,
   mapJobTemporalFilters,
+  mapJobType,
 };

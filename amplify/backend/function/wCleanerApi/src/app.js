@@ -20,6 +20,7 @@ const {
   getCustomerById,
   getCustomerJobs,
   getJobs,
+  getJobTypes,
   deleteCustomer,
   editJobFromCustomer,
   deleteJobFromCustomer,
@@ -32,6 +33,7 @@ const {
   mapJob,
   mapJobFromRequestBody,
   mapJobTemporalFilters,
+  mapJobType,
 } = require("./mappers");
 
 const { generateToken, parseToken } = require("./token");
@@ -254,6 +256,8 @@ app.post("/customers/:customerId/job", async function (req, res) {
   }
 });
 
+//JOB TYPE FUNCTIONS
+
 app.post("/job-type", async function (req, res) {
   const groups = req.authData?.groups;
   const isAdmin = groups?.includes("Admin");
@@ -274,10 +278,24 @@ app.post("/job-type", async function (req, res) {
       res.status(400).json({
         error: "Color cannot be empty",
       });
+    } else if (error === "NAME_ALREADY_EXISTS") {
+      res.status(400).json({
+        error: "Name cannot be duplicated",
+      });
+    } else if (error === "COLOR_ALREADY_EXISTS") {
+      res.status(400).json({
+        error: "Color cannot be duplicated",
+      });
     }
-
     throw error;
   }
+});
+
+//Get job types
+app.get("/job-types", async function (req, res) {
+  const { items } = await getJobTypes();
+  const jobTypes = items.map(mapJobType);
+  res.json({ jobTypes });
 });
 
 app.put("/customers/:customerId/job/:jobId", async function (req, res) {
