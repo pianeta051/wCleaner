@@ -399,6 +399,7 @@ const addCustomerJob = async (customerId, job, assignedTo) => {
       job_start_time_pk: {
         N: "1",
       },
+      job_type_id: { S: job.jobTypeId },
     },
   };
   await ddb.putItem(params).promise();
@@ -716,22 +717,7 @@ const deleteJobType = async (jobTypeId) => {
   };
   await ddb.deleteItem(params).promise();
 };
-const getNextValue = async (lastEvaluatedKey, filter) => {
-  const params = {
-    TableName: TABLE_NAME,
-    Limit: 1,
-    ExclusiveStartKey: lastEvaluatedKey,
-    FilterExpression: filter.filterExpression,
-    ExpressionAttributeNames: filter.expressionAttributeNames,
-    ExpressionAttributeValues: filter.expressionAttributeValues,
-  };
-  const result = await ddb.scan(params).promise();
-  if (result.Items.length) {
-    const item = result.Items[0];
-    return item;
-  }
-  return null;
-};
+
 const getAllRows = async (params) => {
   let result = await ddb.scan(params).promise();
   const items = result.Items;
@@ -746,23 +732,6 @@ const getAllRows = async (params) => {
     items.push(...result.Items);
   }
   return items;
-};
-const getJobIDs = async (customerId) => {
-  const params = {
-    FilterExpression: "#CI = :ci",
-    ExpressionAttributeNames: {
-      "#CI": "customer_id",
-    },
-    ExpressionAttributeValues: {
-      ":ci": { S: customerId },
-    },
-    TableName: TABLE_NAME,
-    Limit: PAGE_SIZE,
-  };
-  const items = await getAllRows(params);
-
-  const jobIds = items.map((item) => item.PK.S.split("_")[1]);
-  return jobIds;
 };
 
 module.exports = {

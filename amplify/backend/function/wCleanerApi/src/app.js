@@ -217,8 +217,6 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   }
 });
 
-//
-
 //Create a Job
 app.post("/customers/:customerId/job", async function (req, res) {
   try {
@@ -248,6 +246,46 @@ app.post("/customers/:customerId/job", async function (req, res) {
         },
       },
     });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({
+        error: "Customer not registered!",
+      });
+    } else {
+      throw error;
+    }
+  }
+});
+
+app.put("/customers/:customerId/job/:jobId", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const jobId = req.params.jobId;
+    const updatedJob = req.body;
+
+    const jobUpdated = await editJobFromCustomer(
+      customerId,
+      jobId,
+      mapJobFromRequestBody(updatedJob)
+    );
+    res.json({ job: jobUpdated });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({
+        error: "Customer not registered!",
+      });
+    } else {
+      throw error;
+    }
+  }
+});
+
+app.delete("/customers/:customerId/job/:jobId", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const jobId = req.params.jobId;
+    await deleteJobFromCustomer(customerId, jobId);
+    res.json({ message: "Job Deleted" });
   } catch (error) {
     if (error.message === "CUSTOMER_NOT_FOUND") {
       res.status(404).json({
@@ -335,46 +373,6 @@ app.put("/job-type/:jobTypeId", async function (req, res) {
       } else {
         throw error;
       }
-    }
-  }
-});
-
-app.put("/customers/:customerId/job/:jobId", async function (req, res) {
-  try {
-    const customerId = req.params.customerId;
-    const jobId = req.params.jobId;
-    const updatedJob = req.body;
-
-    const jobUpdated = await editJobFromCustomer(
-      customerId,
-      jobId,
-      mapJobFromRequestBody(updatedJob)
-    );
-    res.json({ job: jobUpdated });
-  } catch (error) {
-    if (error.message === "CUSTOMER_NOT_FOUND") {
-      res.status(404).json({
-        error: "Customer not registered!",
-      });
-    } else {
-      throw error;
-    }
-  }
-});
-
-app.delete("/customers/:customerId/job/:jobId", async function (req, res) {
-  try {
-    const customerId = req.params.customerId;
-    const jobId = req.params.jobId;
-    await deleteJobFromCustomer(customerId, jobId);
-    res.json({ message: "Job Deleted" });
-  } catch (error) {
-    if (error.message === "CUSTOMER_NOT_FOUND") {
-      res.status(404).json({
-        error: "Customer not registered!",
-      });
-    } else {
-      throw error;
     }
   }
 });

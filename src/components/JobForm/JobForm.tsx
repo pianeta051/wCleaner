@@ -1,5 +1,5 @@
-import { FC, useState } from "react";
-import { Button, Grid, TextField } from "@mui/material";
+import { FC } from "react";
+import { Button, Grid } from "@mui/material";
 import { DateField, Field, TimeField } from "./JobForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../Form/Form";
@@ -13,9 +13,8 @@ import {
 } from "@mui/x-date-pickers";
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import { useAuth } from "../../context/AuthContext";
-
-import { User } from "../../services/authentication";
 import { UserSelector } from "../UserSelector/UserSelector";
+import { JobTypeSelector } from "../JobTypeSelector/JobTypeSelector";
 
 export type JobFormValues = {
   date: Dayjs;
@@ -23,6 +22,7 @@ export type JobFormValues = {
   endTime: Dayjs;
   price: number;
   assignedTo: string;
+  jobTypeId: string;
 };
 
 const INITIAL_VALUES: JobFormValues = {
@@ -31,6 +31,7 @@ const INITIAL_VALUES: JobFormValues = {
   endTime: dayjs().add(1, "hour"),
   price: 0,
   assignedTo: "",
+  jobTypeId: "",
 };
 
 const validationSchema = yup.object<JobFormValues>({
@@ -39,6 +40,7 @@ const validationSchema = yup.object<JobFormValues>({
   endTime: yup.string(),
   price: yup.number().required().positive(),
   assignedTo: yup.string(),
+  jobTypeId: yup.string(),
 });
 
 type JobFormProps = {
@@ -67,6 +69,11 @@ export const JobForm: FC<JobFormProps> = ({
   });
   const changeUserHandler = (value: string | null) => {
     formik.handleChange({ target: { name: "assignedTo", value } });
+  };
+
+  const changeJobTypeHandler = (value: string | null) => {
+    console.log({ value });
+    formik.handleChange({ target: { name: "jobTypeId", value } });
   };
   const columns = layout === "vertical" ? 12 : 4;
 
@@ -156,6 +163,10 @@ export const JobForm: FC<JobFormProps> = ({
             onChange={changeUserHandler}
           />
         )}
+        <JobTypeSelector
+          value={formik.values.jobTypeId}
+          onChange={changeJobTypeHandler}
+        />
 
         <Grid item xs={6} textAlign="right">
           <LoadingButton

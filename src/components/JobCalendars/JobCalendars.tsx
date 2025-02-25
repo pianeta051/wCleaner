@@ -42,6 +42,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   endDay,
   onJobsChanged,
 }) => {
+  console.log({ jobs });
   moment.updateLocale("en", {
     week: {
       dow: 1,
@@ -190,6 +191,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             endTime: modalEndTime,
             price: 0,
             assignedTo: "",
+            jobTypeId: "",
           }}
         />
       )}

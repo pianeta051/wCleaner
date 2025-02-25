@@ -24,6 +24,7 @@ export type Job = {
   price: number;
   customer?: Customer;
   assignedTo?: JobAssignation;
+  jobTypeId?: string;
 };
 
 export type JobFilters = {

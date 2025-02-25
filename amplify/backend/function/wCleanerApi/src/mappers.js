@@ -17,6 +17,7 @@ const mapCustomerJobs = (customerJob) => ({
   startTime: dayjs(+customerJob.start.N).format("HH:mm"),
   endTime: dayjs(+customerJob.end.N).format("HH:mm"),
   price: +customerJob.price.N,
+  jobTypeId: customerJob.job_type_id?.S,
 });
 
 const mapJob = (jobFromDb) => {
@@ -29,6 +30,7 @@ const mapJob = (jobFromDb) => {
     endTime: end.format("HH:mm"),
     price: +jobFromDb.price.N,
     customer: jobFromDb.customer ? mapCustomer(jobFromDb.customer) : undefined,
+    jobTypeId: jobFromDb.job_type_id?.S,
   };
 };
 

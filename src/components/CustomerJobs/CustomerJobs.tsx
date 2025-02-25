@@ -180,6 +180,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
                   endTime: dayjs(`${editingJob.date} ${editingJob?.endTime}`),
                   assignedTo:
                     editingJob.assignedTo?.sub ?? user?.getUsername() ?? "",
+                  jobTypeId: editingJob.jobTypeId ?? "",
                 }
               : undefined
           }
