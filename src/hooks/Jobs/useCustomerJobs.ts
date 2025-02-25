@@ -25,6 +25,7 @@ export const useCustomerJobs = (
     data,
     error,
     isLoading: loading,
+    mutate,
   } = useSWRInfinite<
     {
       items: Job[];
@@ -46,5 +47,6 @@ export const useCustomerJobs = (
     customerJobs,
     error: extractErrorCode(error),
     loading,
+    reload: mutate,
   };
 };

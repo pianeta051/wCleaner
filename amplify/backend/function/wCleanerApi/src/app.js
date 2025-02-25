@@ -268,7 +268,7 @@ app.put("/customers/:customerId/job/:jobId", async function (req, res) {
       jobId,
       mapJobFromRequestBody(updatedJob)
     );
-    res.json({ job: jobUpdated });
+    res.json({ job: { ...jobUpdated, assignedTo: undefined } });
   } catch (error) {
     if (error.message === "CUSTOMER_NOT_FOUND") {
       res.status(404).json({

@@ -35,15 +35,19 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
       .format("YYYY-MM-DD")
   );
   const currentSunday = dayjs(currentMonday).add(6, "day").format("YYYY-MM-DD");
-  const { customerJobs, error, loading } = useCustomerJobs(customer.id, {
-    start: `${currentMonday} 00:00`,
-    end: `${currentSunday} 23:59`,
-  });
+  const { customerJobs, error, loading, reload } = useCustomerJobs(
+    customer.id,
+    {
+      start: `${currentMonday} 00:00`,
+      end: `${currentSunday} 23:59`,
+    }
+  );
 
   const closeHandler = () => {
     {
       setModalOpen(false);
       setEditingJobId(null);
+      reload();
     }
   };
 
