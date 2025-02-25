@@ -26,6 +26,7 @@ const {
   editJobFromCustomer,
   deleteJobFromCustomer,
   editCustomer,
+  editJobType,
 } = require("./db");
 
 const {
@@ -33,6 +34,7 @@ const {
   mapCustomerJobs,
   mapJob,
   mapJobFromRequestBody,
+  mapJobTypeFromRequestBody,
   mapJobTemporalFilters,
   mapJobType,
 } = require("./mappers");
@@ -287,8 +289,9 @@ app.post("/job-type", async function (req, res) {
       res.status(400).json({
         error: "Color cannot be duplicated",
       });
+    } else {
+      throw error;
     }
-    throw error;
   }
 });
 
@@ -299,14 +302,48 @@ app.get("/job-types", async function (req, res) {
   res.json({ jobTypes });
 });
 
+// Update Job Type
+app.put("/job-type/:jobTypeId", async function (req, res) {
+  try {
+    const jobTypeId = req.params.jobTypeId;
+    const updatedJobType = req.body;
+
+    const jobTypeUpdated = await editJobType(
+      jobTypeId,
+      mapJobTypeFromRequestBody(updatedJobType)
+    );
+
+    res.json({ jobType: jobTypeUpdated });
+  } catch (error) {
+    {
+      if (error === "NAME_CANNOT_BE_EMPTY") {
+        res.status(400).json({
+          error: "Name cannot be empty",
+        });
+      } else if (error === "COLOR_CANNOT_BE_EMPTY") {
+        res.status(400).json({
+          error: "Color cannot be empty",
+        });
+      } else if (error === "NAME_ALREADY_EXISTS") {
+        res.status(400).json({
+          error: "Name cannot be duplicated",
+        });
+      } else if (error === "COLOR_ALREADY_EXISTS") {
+        res.status(400).json({
+          error: "Color cannot be duplicated",
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+});
+
 app.put("/customers/:customerId/job/:jobId", async function (req, res) {
   try {
     const customerId = req.params.customerId;
     const jobId = req.params.jobId;
     const updatedJob = req.body;
-    console.log(
-      JSON.stringify("Estos son los params : " + { updatedJob }, null, 2)
-    );
 
     const jobUpdated = await editJobFromCustomer(
       customerId,

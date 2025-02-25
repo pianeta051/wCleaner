@@ -11,12 +11,12 @@ import {
   Typography,
 } from "@mui/material";
 import { UserColor } from "../UserColor/UserColor";
-import { Job } from "../../types/types";
+import { Job, JobType } from "../../types/types";
 import { LegendList, Wrapper } from "./JobCalendarColorLegend.style";
 import { useAuth } from "../../context/AuthContext";
 import { JobTypeModal } from "../JobTypeModal/JobTypeModal";
 import { useJobTypes } from "../../hooks/Jobs/useJobTypes";
-import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { MAX_JOB_TYPES } from "../JobTypeForm/JobTypeForm";
 import { DeleteJobTypeButton } from "../DeleteJobTypeButton/DeleteJobTypeButton";
@@ -37,6 +37,9 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
   const { isInGroup } = useAuth();
   const [legendView, setLegendView] = useState(view);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingJobType, setEditingJobType] = useState<JobType | undefined>(
+    undefined
+  );
   const usersWithColors = jobs
     .filter((job) => !!job.assignedTo?.color)
     .map((job) => job.assignedTo)
@@ -55,6 +58,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
   };
   const closeHandler = () => {
     setIsModalOpen(false);
+    setEditingJobType(undefined);
     reload();
   };
   const jobTypeHandler = () => {
@@ -64,6 +68,11 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
     setLegendView(USER);
   };
   const newJobTypeHandler = () => {
+    setIsModalOpen(true);
+  };
+  const editJobTypeHandler = (jobTypeId: string) => {
+    const jobType = jobTypes?.find((jobType) => jobType.id === jobTypeId);
+    setEditingJobType(jobType);
     setIsModalOpen(true);
   };
   const omittedColors = jobTypes?.map((type) => type.color) ?? [];
@@ -114,20 +123,21 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
                 <ErrorMessage code={error} />
               ) : (
                 jobTypes?.map((jobType) => (
-                  <ListItem
-                    alignItems="flex-start"
-                    key={jobType.id}
-                    secondaryAction={
-                      <DeleteJobTypeButton
-                        onDelete={reload}
-                        jobTypeId={jobType.id}
-                      />
-                    }
-                  >
+                  <ListItem disablePadding key={jobType.id}>
                     <ListItemIcon>
                       <UserColor color={jobType.color as string} />
                     </ListItemIcon>
                     <ListItemText primary={jobType.name} />
+                    <IconButton
+                      aria-label="edit"
+                      onClick={() => editJobTypeHandler(jobType.id)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <DeleteJobTypeButton
+                      onDelete={reload}
+                      jobTypeId={jobType.id}
+                    />
                   </ListItem>
                 ))
               )}
@@ -140,6 +150,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
         onClose={closeHandler}
         onSubmit={closeHandler}
         omitColors={omittedColors}
+        editingJobType={editingJobType}
       />
     </>
   );

@@ -45,6 +45,9 @@ const mapJobFromRequestBody = (job) => ({
   start: +new Date(`${job.date} ${job.startTime}`),
   end: +new Date(`${job.date} ${job.endTime}`),
 });
+const mapJobTypeFromRequestBody = (jobType) => ({
+  ...jobType,
+});
 const mapJobTemporalFilters = (start, end) => {
   const startNumeric = +new Date(start);
   const endNumeric = +new Date(end);
@@ -59,6 +62,7 @@ module.exports = {
   mapCustomerJobs,
   mapJob,
   mapJobFromRequestBody,
+  mapJobTypeFromRequestBody,
   mapJobTemporalFilters,
   mapJobType,
 };

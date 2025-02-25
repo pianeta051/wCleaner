@@ -293,6 +293,40 @@ export const editCustomerJob = async (
   }
 };
 
+export const editJobType = async (
+  jobTypeId: string,
+  formValues: JobTypeFormValues
+): Promise<JobType> => {
+  try {
+    const response = await put(`/job-type/${jobTypeId}`, formValues);
+    if (!isJobType(response.jobType)) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.jobType;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response.status;
+      if (status === 403) {
+        throw "UNAUTHORIZED";
+      }
+      if (status === 400) {
+        if (error.response.data?.error === "Name cannot be empty") {
+          throw "NAME_CANNOT_BE_EMPTY";
+        }
+        if (error.response.data?.error === "Color cannot be empty") {
+          throw "COLOR_CANNOT_BE_EMPTY";
+        }
+        if (error.response.data?.error === "Name cannot be duplicated") {
+          throw "DUPLICATED_NAME";
+        }
+        if (error.response.data?.error === "Color cannot be duplicated") {
+          throw "DUPLICATED_COLOR";
+        }
+      }
+    }
+    throw "INTERNAL_ERROR";
+  }
+};
 export const getCustomerJobs = async (
   customerId: string,
   filters?: JobFilters,

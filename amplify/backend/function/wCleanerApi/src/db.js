@@ -83,6 +83,7 @@ const addJobType = async (jobType) => {
     throw "NAME_ALREADY_EXISTS";
   }
   const colorExisting = await queryJobTypeByColor(jobType.color);
+
   if (colorExisting.length > 0) {
     throw "COLOR_ALREADY_EXISTS";
   }
@@ -339,6 +340,7 @@ const queryJobTypeByName = async (name) => {
     IndexName: "job_type_name",
   };
   const result = await ddb.query(params).promise();
+
   return result.Items;
 };
 
@@ -352,6 +354,10 @@ const queryJobTypeByColor = async (color) => {
     IndexName: "job_type_color",
   };
   const result = await ddb.query(params).promise();
+  // console.log("Result :" + JSON.stringify(result.Items));
+
+  // console.log("PK: " + JSON.stringify(result.Items[0].PK, null, 2));
+
   return result.Items;
 };
 
@@ -529,6 +535,56 @@ const getJobTypes = async () => {
   return {
     items,
   };
+};
+
+//EDIT JOB TYPE
+const editJobType = async (jobTypeId, updatedJobType) => {
+  if (!updatedJobType.name?.length) {
+    throw "NAME_CANNOT_BE_EMPTY";
+  }
+  if (!updatedJobType.color?.length) {
+    throw "COLOR_CANNOT_BE_EMPTY";
+  }
+  const nameExisting = await queryJobTypeByName(updatedJobType.name);
+  if (nameExisting.length > 0) {
+    if (nameExisting[0].PK.S !== `job_type_${jobTypeId}`) {
+      throw "NAME_ALREADY_EXISTS";
+    }
+  }
+
+  const colorExisting = await queryJobTypeByColor(updatedJobType.color);
+  if (colorExisting.length > 0) {
+    if (colorExisting[0].PK.S !== `job_type_${jobTypeId}`) {
+      throw "COLOR_ALREADY_EXISTS";
+    }
+  }
+
+  const params = {
+    ExpressionAttributeNames: {
+      "#N": "name",
+      "#C": "color",
+    },
+    ExpressionAttributeValues: {
+      ":name": {
+        S: updatedJobType.name,
+      },
+      ":color": {
+        S: updatedJobType.color,
+      },
+    },
+    Key: {
+      PK: {
+        S: `job_type_${jobTypeId}`,
+      },
+      SK: {
+        S: `definition`,
+      },
+    },
+    TableName: TABLE_NAME,
+    UpdateExpression: "SET #N = :name, #C = :color",
+  };
+  await ddb.updateItem(params).promise();
+  return updatedJobType;
 };
 
 // GET CUSTOMER JOBS
@@ -714,6 +770,7 @@ module.exports = {
   addCustomerJob,
   addJobType,
   editCustomer,
+  editJobType,
   getCustomerBySlug,
   getCustomerById,
   getCustomers,
