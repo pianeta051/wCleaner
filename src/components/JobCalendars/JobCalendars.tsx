@@ -16,6 +16,30 @@ import { Popover } from "@mui/material";
 import { Job } from "../../types/types";
 import { JobCard } from "../JobCard/JobCard";
 import { ErrorCode } from "../../services/error";
+import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
+
+const DEFAULT_COLOR = "#3174ad";
+const BACKGROUND_TO_TEXT: Record<string, string> = {
+  [DEFAULT_COLOR]: "white",
+  "#f44336": "white",
+  "#e91e63": "white",
+  "#9c27b0": "white",
+  "#673ab7": "white",
+  "#3f51b5": "white",
+  "#2196f3": "white",
+  "#03a9f4": "white",
+  "#00bcd4": "white",
+  "#009688": "white",
+  "#4caf50": "white",
+  "#8bc34a": "white",
+  "#cddc39": "black",
+  "#ffeb3b": "black",
+  "#ffc107": "black",
+  "#ff9800": "white",
+  "#ff5722": "white",
+  "#795548": "white",
+  "#607d8b": "white",
+};
 
 type JobCalendarsProps = {
   loading?: boolean;
@@ -28,6 +52,7 @@ type JobCalendarsProps = {
   startDay: string;
   endDay: string;
   onJobsChanged: () => void;
+  colorLegendView: "users" | "jobTypes";
 };
 
 export const JobCalendars: FC<JobCalendarsProps> = ({
@@ -41,8 +66,8 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   startDay,
   endDay,
   onJobsChanged,
+  colorLegendView,
 }) => {
-  console.log({ jobs });
   moment.updateLocale("en", {
     week: {
       dow: 1,
@@ -56,9 +81,23 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   const [modalDate, setModalDate] = useState<Dayjs | null>(null);
   const [eventJob, setEventJob] = useState<Job>();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
+  const jobType = useJobTypeGetter();
   const handlePopoverClose = () => {
     setAnchorEl(null);
+  };
+
+  const getColor = (job: Job) => {
+    if (colorLegendView === "users") {
+      if (job.assignedTo?.color) {
+        return job.assignedTo?.color;
+      }
+      return DEFAULT_COLOR;
+    }
+    if (job.jobTypeId) {
+      const jobTypeColor = jobType(job.jobTypeId)?.color;
+      return jobTypeColor ?? DEFAULT_COLOR;
+    }
+    return DEFAULT_COLOR;
   };
 
   const open = Boolean(anchorEl);
@@ -68,7 +107,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
       id: job.id,
       customer: job.customer,
       price: job.price,
-      color: job.assignedTo?.color,
+      color: getColor(job),
       title: `${job.customer?.name} - ${job.customer?.address}`,
       startTime: job.startTime,
       endTime: job.endTime,
@@ -126,6 +165,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
       return {
         style: {
           backgroundColor: event.resource.color,
+          color: BACKGROUND_TO_TEXT[event.resource.color],
         },
       };
     }

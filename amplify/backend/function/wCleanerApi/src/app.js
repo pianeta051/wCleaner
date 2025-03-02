@@ -342,10 +342,14 @@ app.get("/job-types", async function (req, res) {
 
 // Update Job Type
 app.put("/job-type/:jobTypeId", async function (req, res) {
+  const groups = req.authData?.groups;
+  const isAdmin = groups?.includes("Admin");
   try {
     const jobTypeId = req.params.jobTypeId;
     const updatedJobType = req.body;
-
+    if (!isAdmin) {
+      throw "User unauthorized";
+    }
     const jobTypeUpdated = await editJobType(
       jobTypeId,
       mapJobTypeFromRequestBody(updatedJobType)
@@ -378,7 +382,12 @@ app.put("/job-type/:jobTypeId", async function (req, res) {
 });
 
 app.delete("/job-type/:jobTypeId", async function (req, res) {
+  const groups = req.authData?.groups;
+  const isAdmin = groups?.includes("Admin");
   try {
+    if (!isAdmin) {
+      throw "User unauthorized";
+    }
     const jobTypeId = req.params.jobTypeId;
     await deleteJobType(jobTypeId);
     res.json({ message: "Job Type Deleted" });

@@ -72,6 +72,7 @@ export const JobsPage: FC = () => {
           startDay={startDay}
           endDay={endDay}
           onJobsChanged={reload}
+          colorLegendView={view}
         />
         <JobCalendarColorLegend
           jobs={jobs}

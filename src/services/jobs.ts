@@ -306,6 +306,9 @@ export const editJobType = async (
   } catch (error) {
     if (isErrorResponse(error)) {
       const status = error.response.status;
+      if (error.response.data?.message === "User unauthorized") {
+        throw "UNAUTHORIZED";
+      }
       if (status === 403) {
         throw "UNAUTHORIZED";
       }
@@ -324,6 +327,7 @@ export const editJobType = async (
         }
       }
     }
+
     throw "INTERNAL_ERROR";
   }
 };

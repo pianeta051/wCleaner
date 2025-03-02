@@ -14,6 +14,7 @@ import { Customer, Job } from "../../types/types";
 import { DeleteJobButton } from "../DeleteJobButton/DeleteJobButton";
 import dayjs from "dayjs";
 import { useAuth } from "../../context/AuthContext";
+import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
 
 type JobsTableProps = {
   jobs: Job[];
@@ -30,6 +31,7 @@ export const JobsTable: FC<JobsTableProps> = ({
 }) => {
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
+  const jobTypeGetter = useJobTypeGetter();
   const jobText = (job: Job): string | React.ReactNode => {
     if (job.assignedTo) {
       const assignedTo = [job.assignedTo.name, job.assignedTo.email]
@@ -54,6 +56,7 @@ export const JobsTable: FC<JobsTableProps> = ({
             <TableCell align="right">End Time</TableCell>
             <TableCell align="right">Price</TableCell>
             {isAdmin && <TableCell align="right">Assigned to</TableCell>}
+            <TableCell align="right">Type</TableCell>
             <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
@@ -87,7 +90,11 @@ export const JobsTable: FC<JobsTableProps> = ({
                     {jobText(job) ?? "Not assigned"}
                   </TableCell>
                 )}
-
+                <TableCell align="right">
+                  {job.jobTypeId
+                    ? jobTypeGetter(job.jobTypeId)?.name ?? "None"
+                    : "None"}
+                </TableCell>
                 <TableCell align="right">
                   <DeleteJobButton jobId={job.id} customerId={customer.id} />
                 </TableCell>

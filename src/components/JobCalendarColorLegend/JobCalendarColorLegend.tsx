@@ -128,16 +128,20 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
                       <UserColor color={jobType.color as string} />
                     </ListItemIcon>
                     <ListItemText primary={jobType.name} />
-                    <IconButton
-                      aria-label="edit"
-                      onClick={() => editJobTypeHandler(jobType.id)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <DeleteJobTypeButton
-                      onDelete={reload}
-                      jobTypeId={jobType.id}
-                    />
+                    {isInGroup("Admin") && (
+                      <IconButton
+                        aria-label="edit"
+                        onClick={() => editJobTypeHandler(jobType.id)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    )}
+                    {isInGroup("Admin") && (
+                      <DeleteJobTypeButton
+                        onDelete={reload}
+                        jobTypeId={jobType.id}
+                      />
+                    )}
                   </ListItem>
                 ))
               )}
