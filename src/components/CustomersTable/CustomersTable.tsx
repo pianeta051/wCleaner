@@ -23,7 +23,7 @@ export const CustomersTable: FC<CustomersTableProps> = ({ customers }) => {
   }
   return (
     <TableContainer component={Grid}>
-      <Table aria-label="simple table">
+      <Table stickyHeader aria-label="sticky table">
         <TableHead>
           <TableRow>
             <TableCell>Name</TableCell>
