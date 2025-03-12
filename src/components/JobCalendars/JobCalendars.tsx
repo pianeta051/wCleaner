@@ -18,7 +18,7 @@ import { JobCard } from "../JobCard/JobCard";
 import { ErrorCode } from "../../services/error";
 import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
 
-const DEFAULT_COLOR = "#3174ad";
+export const DEFAULT_COLOR = "#3174ad";
 const BACKGROUND_TO_TEXT: Record<string, string> = {
   [DEFAULT_COLOR]: "white",
   "#f44336": "white",

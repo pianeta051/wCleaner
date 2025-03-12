@@ -720,6 +720,40 @@ const deleteJobType = async (jobTypeId) => {
     },
   };
   await ddb.deleteItem(params).promise();
+  const queryParams = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#JTI": "job_type_id",
+    },
+    ExpressionAttributeValues: {
+      ":job_type_id": {
+        S: jobTypeId,
+      },
+    },
+    KeyConditionExpression: "#JTI = :job_type_id",
+    IndexName: "job_type_id",
+  };
+  const result = await ddb.query(queryParams).promise();
+  if (Array.isArray(result?.Items)) {
+    for (const jobItem of result.Items) {
+      const updateParams = {
+        ExpressionAttributeNames: {
+          "#JTI": "job_type_id",
+        },
+        Key: {
+          PK: {
+            S: jobItem.PK.S,
+          },
+          SK: {
+            S: jobItem.SK.S,
+          },
+        },
+        TableName: TABLE_NAME,
+        UpdateExpression: "REMOVE #JTI",
+      };
+      await ddb.updateItem(updateParams).promise();
+    }
+  }
 };
 
 const getAllRows = async (params) => {

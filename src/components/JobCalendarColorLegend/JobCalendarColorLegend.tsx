@@ -20,6 +20,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { MAX_JOB_TYPES } from "../JobTypeForm/JobTypeForm";
 import { DeleteJobTypeButton } from "../DeleteJobTypeButton/DeleteJobTypeButton";
+import { DEFAULT_COLOR } from "../JobCalendars/JobCalendars";
 
 type JobCalendarColorLegendProps = {
   jobs: Job[];
@@ -122,28 +123,38 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
               ) : error ? (
                 <ErrorMessage code={error} />
               ) : (
-                jobTypes?.map((jobType) => (
-                  <ListItem disablePadding key={jobType.id}>
+                <>
+                  <ListItem disablePadding>
                     <ListItemIcon>
-                      <UserColor color={jobType.color as string} />
+                      <UserColor color={DEFAULT_COLOR} />
                     </ListItemIcon>
-                    <ListItemText primary={jobType.name} />
-                    {isInGroup("Admin") && (
-                      <IconButton
-                        aria-label="edit"
-                        onClick={() => editJobTypeHandler(jobType.id)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    )}
-                    {isInGroup("Admin") && (
-                      <DeleteJobTypeButton
-                        onDelete={reload}
-                        jobTypeId={jobType.id}
-                      />
-                    )}
+                    <ListItemText primary="No job type" />
                   </ListItem>
-                ))
+                  <>
+                    {jobTypes?.map((jobType) => (
+                      <ListItem disablePadding key={jobType.id}>
+                        <ListItemIcon>
+                          <UserColor color={jobType.color as string} />
+                        </ListItemIcon>
+                        <ListItemText primary={jobType.name} />
+                        {isInGroup("Admin") && (
+                          <IconButton
+                            aria-label="edit"
+                            onClick={() => editJobTypeHandler(jobType.id)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        )}
+                        {isInGroup("Admin") && (
+                          <DeleteJobTypeButton
+                            onDelete={reload}
+                            jobTypeId={jobType.id}
+                          />
+                        )}
+                      </ListItem>
+                    ))}
+                  </>
+                </>
               )}
             </LegendList>
           </>
