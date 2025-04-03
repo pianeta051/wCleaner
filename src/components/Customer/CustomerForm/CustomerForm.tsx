@@ -27,7 +27,18 @@ const validationSchema = yup.object<CustomerFormValues>({
   email: yup.string().email().required(),
   name: yup.string().required(),
   address: yup.string().required(),
-  postcode: yup.string().required(),
+  postcode: yup
+    .string()
+    .required()
+    .test(
+      "is-valid-uk-postcode",
+      "It must be a valid UK postcode",
+      (postcode) => {
+        const postcodeParts = postcode.split(/\s/g);
+        const filteredPostcodeParts = postcodeParts.filter((part) => !!part);
+        return filteredPostcodeParts.length === 2;
+      }
+    ),
   mainTelephone: yup.string(),
   secondTelephone: yup.string(),
 });
@@ -83,6 +94,10 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             required
             onChange={formik.handleChange}
             value={formik.values.address}
+            error={!!(formik.touched.address && formik.errors.address)}
+            helperText={
+              formik.touched.address ? formik.errors.address : undefined
+            }
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -95,6 +110,10 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             required
             onChange={formik.handleChange}
             value={formik.values.postcode}
+            error={!!(formik.touched.postcode && formik.errors.postcode)}
+            helperText={
+              formik.touched.postcode ? formik.errors.postcode : undefined
+            }
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -106,6 +125,14 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             fullWidth
             onChange={formik.handleChange}
             value={formik.values.mainTelephone}
+            error={
+              !!(formik.touched.mainTelephone && formik.errors.mainTelephone)
+            }
+            helperText={
+              formik.touched.mainTelephone
+                ? formik.errors.mainTelephone
+                : undefined
+            }
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -117,6 +144,16 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             fullWidth
             onChange={formik.handleChange}
             value={formik.values.secondTelephone}
+            error={
+              !!(
+                formik.touched.secondTelephone && formik.errors.secondTelephone
+              )
+            }
+            helperText={
+              formik.touched.secondTelephone
+                ? formik.errors.secondTelephone
+                : undefined
+            }
           />
         </Grid>
         <Grid item xs={12} md={columns}>
@@ -129,6 +166,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             required
             onChange={formik.handleChange}
             value={formik.values.email}
+            error={!!(formik.touched.email && formik.errors.email)}
+            helperText={formik.touched.email ? formik.errors.email : undefined}
           />
         </Grid>
         {!onCancel ? (

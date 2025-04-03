@@ -21,6 +21,7 @@ const {
   getCustomerJobs,
   getJobs,
   getJobTypes,
+  getOutcodes,
   deleteCustomer,
   deleteJobType,
   editJobFromCustomer,
@@ -61,16 +62,26 @@ app.get("/customers", async function (req, res) {
   const nextToken = req.query?.nextToken;
   const limit = req.query?.limit ? +req.query?.limit : 50;
   const search = req.query?.search;
+  const outcodeFilter = req.query?.outcodeFilter
+    ? req.query.outcodeFilter.split(",")
+    : undefined;
+
   const paginationEnabled = req.query?.paginationDisabled !== "true";
   const exclusiveStartKey = parseToken(nextToken);
   const { items, lastEvaluatedKey } = await getCustomers(
-    { searchInput: search },
+    { searchInput: search, outcodeFilter },
     { exclusiveStartKey, limit, enabled: paginationEnabled }
   );
 
   const customers = items.map(mapCustomer);
   const responseToken = generateToken(lastEvaluatedKey);
   res.json({ customers, nextToken: responseToken });
+});
+
+// Get outcodes
+app.get("/outcodes", async function (req, res) {
+  const { outcodes } = await getOutcodes();
+  res.json({ outcodes });
 });
 
 // Get a single customer

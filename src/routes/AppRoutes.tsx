@@ -45,7 +45,7 @@ export const AppRoutes: FC = () => {
         }
       >
         <Route index element={<Navigate to="customers" />} />
-        <Route path="customers" element={<AdminLayout />}>
+        <Route path="customers" element={<AdminLayoutFullWidth />}>
           <Route index element={<Customers />} />
           <Route path=":slug" element={<CustomerDetails />} />
         </Route>

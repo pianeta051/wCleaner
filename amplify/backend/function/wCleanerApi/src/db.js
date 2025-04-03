@@ -17,6 +17,13 @@ const addCustomer = async (customer) => {
     throw "NAME_CANNOT_BE_EMPTY";
   }
 
+  const postcodeParts = customer.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+
+  const outcode = postcodeParts[0];
+
   const emailExisting = await queryCustomersByEmail(customer.email);
   if (emailExisting.length > 0) {
     console.log("Customer already exist");
@@ -45,6 +52,9 @@ const addCustomer = async (customer) => {
       },
       postcode: {
         S: customer.postcode,
+      },
+      outcode: {
+        S: outcode.toUpperCase(),
       },
       mainTelephone: {
         S: customer.mainTelephone,
@@ -123,6 +133,12 @@ const editCustomer = async (id, editedCustomer) => {
     throw "NOT_EXISTING_CUSTOMER";
   }
 
+  const postcodeParts = editedCustomer.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+  const outcode = postcodeParts[0];
+
   const params = {
     TableName: TABLE_NAME,
     ExpressionAttributeNames: {
@@ -130,6 +146,7 @@ const editCustomer = async (id, editedCustomer) => {
       "#NL": "name_lowercase",
       "#A": "address",
       "#P": "postcode",
+      "#OC": "outcode",
       "#MP": "mainTelephone",
       "#SP": "secondTelephone",
       "#E": "email",
@@ -149,6 +166,9 @@ const editCustomer = async (id, editedCustomer) => {
       ":postcode": {
         S: editedCustomer.postcode,
       },
+      ":outcode": {
+        S: outcode,
+      },
       ":mainTelephone": {
         S: editedCustomer.mainTelephone,
       },
@@ -166,7 +186,7 @@ const editCustomer = async (id, editedCustomer) => {
       },
     },
     UpdateExpression:
-      "SET #N = :name, #A = :address, #P = :postcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug",
+      "SET #N = :name, #A = :address, #P = :postcode, #OC = :outcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug",
     Key: {
       PK: { S: `customer_${id}` },
       SK: { S: "profile" },
@@ -194,11 +214,10 @@ const getCustomer = async (id) => {
 const getCustomers = async (filters, pagination) => {
   const { exclusiveStartKey, limit, enabled } = pagination;
 
-  const { searchInput } = filters;
+  const { searchInput, outcodeFilter } = filters;
+  const filterExpressions = ["begins_with(#PK, :pk) AND #SK = :sk"];
   let params = {
     TableName: TABLE_NAME,
-
-    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
     ExpressionAttributeNames: {
       "#PK": "PK",
       "#SK": "SK",
@@ -223,9 +242,6 @@ const getCustomers = async (filters, pagination) => {
         "#P": "postcode",
         ...params.ExpressionAttributeNames,
       },
-      FilterExpression:
-        params.FilterExpression +
-        " AND (contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))",
       ExpressionAttributeValues: {
         ":name": { S: searchInput.toLowerCase() },
         ":email": { S: searchInput.toLowerCase() },
@@ -234,11 +250,42 @@ const getCustomers = async (filters, pagination) => {
         ...params.ExpressionAttributeValues,
       },
     };
+    filterExpressions.push(
+      "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
+    );
     params = {
       ...params,
       ...searchParams,
     };
   }
+
+  if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
+    const expressionAttributeNames = {
+      ...params.ExpressionAttributeNames,
+      "#OC": "outcode",
+    };
+
+    const expressionAttributesValues = {
+      ...params.ExpressionAttributeValues,
+    };
+    for (let i = 0; i < outcodeFilter.length; i++) {
+      const outcode = outcodeFilter[i];
+      expressionAttributesValues[`:outcode${i}`] = { S: outcode };
+    }
+    const filterExpression = `#OC IN (${outcodeFilter
+      .map((_id, index) => `:outcode${index}`)
+      .join(", ")})`;
+    filterExpressions.push(filterExpression);
+    params = {
+      ...params,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributesValues,
+    };
+  }
+
+  params.FilterExpression = filterExpressions.join(" AND ");
+
+  console.log(JSON.stringify({ params }, null, 2));
   let result = await ddb.scan(params).promise();
   const items = result.Items;
 
@@ -263,6 +310,46 @@ const getCustomers = async (filters, pagination) => {
   return {
     items,
     lastEvaluatedKey,
+  };
+};
+
+const getOutcodes = async () => {
+  let params = {
+    TableName: TABLE_NAME,
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: "customer_" },
+      ":sk": { S: "profile" },
+    },
+  };
+
+  let result = await ddb.scan(params).promise();
+  const items = result.Items;
+
+  while (result.LastEvaluatedKey) {
+    const exclusiveStartKey = result.LastEvaluatedKey;
+    params = {
+      ...params,
+      ExclusiveStartKey: exclusiveStartKey,
+      Limit: limit - items.length,
+    };
+    result = await ddb.scan(params).promise();
+    items.push(...result.Items);
+  }
+  const outcodes = [];
+  for (let index = 0; index < items.length; index++) {
+    const outcode = items[index].outcode?.S;
+    if (outcode && !outcodes.includes(outcode)) {
+      outcodes.push(outcode);
+    }
+  }
+
+  return {
+    outcodes,
   };
 };
 
@@ -785,6 +872,7 @@ module.exports = {
   getCustomerJobs,
   getJobs,
   getJobTypes,
+  getOutcodes,
   queryCustomersByEmail,
   deleteCustomer,
   deleteJobType,

@@ -9,7 +9,7 @@ type CustomerSelectorProps = { onSelectCustomer: (customer: Customer) => void };
 export const CustomerSelector: FC<CustomerSelectorProps> = ({
   onSelectCustomer,
 }) => {
-  const { customers } = useCustomers(undefined, true);
+  const { customers } = useCustomers(undefined, undefined, true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );

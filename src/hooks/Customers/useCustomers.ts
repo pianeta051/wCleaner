@@ -9,18 +9,32 @@ type KeyFunctionType = (
     customers: Customer[];
     nextToken?: string;
   } | null
-) => readonly [string, string | undefined, string | undefined, boolean];
+) => readonly [
+  string,
+  string | undefined,
+  string | undefined,
+  string[] | undefined,
+  boolean
+];
 
 export const keyFunctionGenerator: (
   searchInput?: string,
+  outcodeFilter?: string[],
   disablePagination?: boolean
 ) => KeyFunctionType =
-  (searchInput?: string, disablePagination?: boolean) =>
+  (searchInput, outcodeFilter, disablePagination) =>
   (_index, previousRequest) =>
-    ["customers", previousRequest?.nextToken, searchInput, !!disablePagination];
+    [
+      "customers",
+      previousRequest?.nextToken,
+      searchInput,
+      outcodeFilter,
+      !!disablePagination,
+    ];
 
 export const useCustomers = (
   searchInput?: string,
+  outcodeFilter?: string[],
   disablePagination?: boolean
 ) => {
   const {
@@ -37,10 +51,16 @@ export const useCustomers = (
     Error,
     KeyFunctionType
   >(
-    keyFunctionGenerator(searchInput, disablePagination),
-    async ([_operation, nextToken, searchInput, disablePagination]) => {
+    keyFunctionGenerator(searchInput, outcodeFilter, disablePagination),
+    async ([
+      _operation,
+      nextToken,
+      searchInput,
+      outcodeFilter,
+      disablePagination,
+    ]) => {
       return getCustomers(
-        { searchInput },
+        { searchInput, outcodeFilter },
         { nextToken, disabled: disablePagination }
       );
     }

@@ -1,14 +1,14 @@
 import {
   FormControl,
-  IconButton,
   InputAdornment,
-  InputLabel,
   OutlinedInput,
+  IconButton,
+  InputLabel,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import { FC, useState } from "react";
 import { Form } from "../Form/Form";
-
-import SearchIcon from "@mui/icons-material/Search";
+import { SearchBox } from "./SearchBar.style";
 
 type SearchBarProps = {
   onSearch: (searchTerm: string) => void;
@@ -21,41 +21,43 @@ export const SearchBar: FC<SearchBarProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState(initialValue);
 
-  const changeHandler: React.ChangeEventHandler<
-    HTMLInputElement | HTMLTextAreaElement
-  > = (event) => setSearchTerm(event.target.value);
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (event) =>
+    setSearchTerm(event.target.value);
 
-  const submitHandler = () => {
+  const handleSubmit = () => {
     onSearch(searchTerm);
   };
 
   return (
-    <Form onSubmit={submitHandler}>
-      <FormControl
-        variant="outlined"
-        margin="normal"
-        sx={{
-          p: 5,
-          minWidth: 70,
-        }}
-      >
-        <OutlinedInput
-          id="outlined-adornment-password"
-          type="text"
-          endAdornment={
-            <InputAdornment position="start">
-              <InputLabel htmlFor="outlined-adornment-password">
-                Search
-              </InputLabel>
-              <IconButton aria-label="search" type="submit" edge="end">
-                <SearchIcon />
-              </IconButton>
-            </InputAdornment>
-          }
-          value={searchTerm}
-          onChange={changeHandler}
-        />
-      </FormControl>
+    <Form onSubmit={handleSubmit}>
+      <SearchBox>
+        <FormControl
+          variant="outlined"
+          size="small"
+          sx={{ width: "100%", maxWidth: 400 }}
+        >
+          <InputLabel htmlFor="search-customer">Search customer</InputLabel>
+          <OutlinedInput
+            id="search-customer"
+            type="text"
+            value={searchTerm}
+            onChange={handleChange}
+            label="Search customer"
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  edge="end"
+                  type="submit"
+                  aria-label="search"
+                  size="small"
+                >
+                  <SearchIcon />
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+        </FormControl>
+      </SearchBox>
     </Form>
   );
 };

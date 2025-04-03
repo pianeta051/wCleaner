@@ -38,6 +38,14 @@ export const LeftGrid = styled(Grid)(({ theme }) => ({
     borderRight: "1px solid #ddd",
   },
 }));
+export const OutcodeGrid = styled(Grid)(({ theme }) => ({
+  [theme.breakpoints.down("sm")]: {
+    borderRight: "1px solid #ddd",
+  },
+  [theme.breakpoints.up("md")]: {
+    marginTop: "180px",
+  },
+}));
 
 export const TableHead = styledComponents.th`
   border: 1px solid #dddddd;

@@ -104,6 +104,7 @@ export const editCustomer = async (
 export const getCustomers = async (
   filters: {
     searchInput?: string;
+    outcodeFilter?: string[];
   },
   pagination: {
     nextToken?: string;
@@ -113,11 +114,12 @@ export const getCustomers = async (
   customers: Customer[];
   nextToken?: string;
 }> => {
-  const { searchInput } = filters;
+  const { searchInput, outcodeFilter } = filters;
   const { nextToken, disabled } = pagination;
   const response = await get("/customers", {
     nextToken,
     search: searchInput,
+    outcodeFilter: outcodeFilter?.join(","),
     paginationDisabled: disabled,
   });
 
@@ -178,7 +180,20 @@ export const getCustomerById = async (id: string): Promise<Customer> => {
   }
 };
 
-// export const findByEmail = async (email: string): Promise<boolean> => {
-//   const customers: Promise<Customer[]> = getCustomers();
-//   return !!(await customers).find((customer) => customer.email === email);
-// };
+export const getOutcodes = async (): Promise<string[]> => {
+  const response = await get("/outcodes");
+
+  if (!("outcodes" in response) || !Array.isArray(response.outcodes)) {
+    throw "INTERNAL_ERROR";
+  }
+
+  const outcodes = response.outcodes as string[];
+
+  for (const code of outcodes) {
+    if (typeof code !== "string" || !code.trim()) {
+      throw "INTERNAL_ERROR";
+    }
+  }
+
+  return outcodes;
+};
