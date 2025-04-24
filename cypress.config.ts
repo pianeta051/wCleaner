@@ -19,5 +19,12 @@ export default defineConfig({
     screenshotsFolder: "cypress/screenshots/component",
     viewportHeight: 1000,
     viewportWidth: 1000,
+    setupNodeEvents(on, config) {
+      on("before:browser:launch", (_browser, launchOptions) => {
+        launchOptions.args.push("--js-flags=--max-old-space-size=3500");
+
+        return launchOptions;
+      });
+    },
   },
 });

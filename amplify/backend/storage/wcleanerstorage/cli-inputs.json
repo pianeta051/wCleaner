@@ -4,16 +4,8 @@
   "bucketName": "wcleanerstorage",
   "storageAccess": "auth",
   "guestAccess": [],
-  "authAccess": [
-    "CREATE_AND_UPDATE",
-    "READ",
-    "DELETE"
-  ],
+  "authAccess": ["CREATE_AND_UPDATE", "READ", "DELETE"],
   "groupAccess": {
-    "Admin": [
-      "CREATE_AND_UPDATE",
-      "READ",
-      "DELETE"
-    ]
+    "Admin": ["CREATE_AND_UPDATE", "READ", "DELETE"]
   }
 }
