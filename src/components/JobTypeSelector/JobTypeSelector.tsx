@@ -1,4 +1,4 @@
-import { Autocomplete, TextField } from "@mui/material";
+import { Autocomplete, TextField, Box } from "@mui/material";
 import { FC, useMemo } from "react";
 import { JobType } from "../../types/types";
 import { useJobTypes } from "../../hooks/Jobs/useJobTypes";
@@ -13,12 +13,10 @@ type AutoCompleteOption = {
   value: string;
 };
 
-const jobTypeToOption = (jobType: JobType): AutoCompleteOption => {
-  return {
-    label: jobType.name,
-    value: jobType.id,
-  };
-};
+const jobTypeToOption = (jobType: JobType): AutoCompleteOption => ({
+  label: jobType.name,
+  value: jobType.id,
+});
 
 export const JobTypeSelector: FC<JobTypeSelectorProps> = ({
   value,
@@ -44,21 +42,18 @@ export const JobTypeSelector: FC<JobTypeSelectorProps> = ({
   };
 
   return (
-    <Autocomplete
-      options={autocompleteOptions}
-      sx={{ width: "86%" }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="Job Type"
-          sx={{ p: 2, mt: 2, ml: 6 }}
-          fullWidth
-        />
-      )}
-      value={selectedOption}
-      onChange={changeHandler}
-      isOptionEqualToValue={(option, value) => option.value === value.value}
-      disabled={loading}
-    />
+    <Box sx={{ mt: 1, width: "100%" }}>
+      <Autocomplete
+        options={autocompleteOptions}
+        value={selectedOption}
+        onChange={changeHandler}
+        disabled={loading}
+        fullWidth
+        isOptionEqualToValue={(option, value) => option.value === value.value}
+        renderInput={(params) => (
+          <TextField {...params} name="jobType" label="Job Type" fullWidth />
+        )}
+      />
+    </Box>
   );
 };

@@ -152,6 +152,7 @@ const editCustomer = async (id, editedCustomer) => {
       "#E": "email",
       "#EL": "email_lowercase",
       "#SL": "slug",
+      "#F": "fileUrls",
     },
     ExpressionAttributeValues: {
       ":name": {
@@ -184,9 +185,14 @@ const editCustomer = async (id, editedCustomer) => {
       ":slug": {
         S: editedCustomer.slug,
       },
+
+      ":fileUrls": {
+        L: editedCustomer.fileUrls.map((url) => ({ S: url })),
+      },
     },
+
     UpdateExpression:
-      "SET #N = :name, #A = :address, #P = :postcode, #OC = :outcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug",
+      "SET #N = :name, #A = :address, #P = :postcode, #OC = :outcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug, #F = :fileUrls",
     Key: {
       PK: { S: `customer_${id}` },
       SK: { S: "profile" },
@@ -859,6 +865,42 @@ const getAllRows = async (params) => {
   return items;
 };
 
+//FILES
+//ADD FILE
+
+const addFile = async (fileBuffer, path) => {
+  if (!fileBuffer || !fileBuffer.length) {
+    throw "FILE_CANNOT_BE_EMPTY";
+  }
+
+  if (!path?.length) {
+    throw "PATH_CANNOT_BE_EMPTY";
+  }
+
+  const id = uuidv1();
+  const timestamp = new Date().toISOString();
+
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: `file_${id}` },
+      SK: { S: "meta" },
+      path: { S: path },
+      size: { N: String(fileBuffer.length) },
+      uploadedAt: { S: timestamp },
+    },
+  };
+
+  await ddb.putItem(params).promise();
+
+  return {
+    id,
+    path,
+    size: fileBuffer.length,
+    uploadedAt: timestamp,
+  };
+};
+
 module.exports = {
   addCustomer,
   addCustomerJob,
@@ -878,4 +920,5 @@ module.exports = {
   deleteJobType,
   editJobFromCustomer,
   deleteJobFromCustomer,
+  addFile,
 };

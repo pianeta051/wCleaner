@@ -1,9 +1,14 @@
 import { Grid, Modal } from "@mui/material";
 import { FC, useState } from "react";
-import { Background, Title } from "../JobForm/JobForm.style";
+
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { UserForm, UserFormValues } from "../UserForm/UserForm";
-import { ModalContent, Wrapper } from "./EditUserModal.style";
+import {
+  Background,
+  ModalContent,
+  Title,
+  Wrapper,
+} from "./EditUserModal.style";
 import { updateUser, User } from "../../services/authentication";
 import { ErrorCode, isErrorCode } from "../../services/error";
 

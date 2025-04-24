@@ -1,4 +1,4 @@
-import { Autocomplete, TextField } from "@mui/material";
+import { Autocomplete, TextField, Box } from "@mui/material";
 import { FC, useMemo } from "react";
 import { User } from "../../services/authentication";
 import { useUsers } from "../../hooks/Users/useUsers";
@@ -13,12 +13,10 @@ type AutoCompleteOption = {
   value: string;
 };
 
-const userToOption = (user: User): AutoCompleteOption => {
-  return {
-    label: user.name ? user.name : user.email,
-    value: user.id,
-  };
-};
+const userToOption = (user: User): AutoCompleteOption => ({
+  label: user.name || user.email,
+  value: user.id,
+});
 
 export const UserSelector: FC<UserSelectorProps> = ({ value, onChange }) => {
   const { users, loading } = useUsers();
@@ -41,21 +39,18 @@ export const UserSelector: FC<UserSelectorProps> = ({ value, onChange }) => {
   };
 
   return (
-    <Autocomplete
-      options={autocompleteOptions}
-      sx={{ width: "86%" }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="Assign to"
-          sx={{ p: 2, mt: 2, ml: 6 }}
-          fullWidth
-        />
-      )}
-      value={selectedOption}
-      onChange={changeHandler}
-      isOptionEqualToValue={(option, value) => option.value === value.value}
-      disabled={loading}
-    />
+    <Box sx={{ mt: 1, width: "100%" }}>
+      <Autocomplete
+        options={autocompleteOptions}
+        value={selectedOption}
+        onChange={changeHandler}
+        disabled={loading}
+        fullWidth
+        isOptionEqualToValue={(option, value) => option.value === value.value}
+        renderInput={(params) => (
+          <TextField {...params} label="Assign to" fullWidth />
+        )}
+      />
+    </Box>
   );
 };

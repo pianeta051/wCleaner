@@ -22,7 +22,7 @@ export const useAddCustomer = () => {
       // Mutar la cache de customer individual
       await mutate<readonly [string, string], Customer>(
         // Una vez que sabes el id, ya haces la mutacion de cache
-        ["customer", customer.id],
+        ["customer", customer.slug],
         customer,
         // opciones para el mutate de un customer
         { populateCache: true, revalidate: false }

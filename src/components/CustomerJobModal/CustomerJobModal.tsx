@@ -5,8 +5,7 @@ import { Customer, Job } from "../../types/types";
 import { Grid } from "@mui/material";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { JobForm, JobFormValues } from "../JobForm/JobForm";
-import { ModalBox } from "./CustomerJobModal.style";
-import { Background, Title, Wrapper } from "../JobForm/JobForm.style";
+import { Background, ModalBox, Title, Wrapper } from "./CustomerJobModal.style";
 
 import { useAddJob } from "../../hooks/Jobs/useAddJob";
 import { useCustomerEditJob } from "../../hooks/Jobs/useEditJob";

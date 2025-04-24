@@ -76,7 +76,8 @@
     "@types/testing-library__cypress": "^5.0.9",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
-    "cypress": "^13.3.3",
+    "css-loader": "^7.1.2",
+    "cypress": "12.17.4",
     "cypress-get-by-label": "^2.5.0",
     "eslint": "^8.17.0",
     "eslint-config-react": "^1.1.7",
@@ -84,7 +85,11 @@
     "fishery": "^2.2.2",
     "husky": "^8.0.1",
     "prettier": "2.6.2",
-    "ts-jest": "^29.0.3"
+    "style-loader": "^4.0.0",
+    "ts-jest": "^29.0.3",
+    "ts-loader": "^9.5.2",
+    "vite": "^6.3.2",
+    "webpack": "^5.99.6"
   },
   "jest": {
     "transform": {

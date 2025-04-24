@@ -7,6 +7,7 @@ export type Customer = {
   email: string;
   id: string;
   slug: string;
+  fileUrls?: string[];
 };
 export type JobAssignation = {
   sub: string;

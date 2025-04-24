@@ -2,6 +2,7 @@ import { API } from "aws-amplify";
 import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
 import { Customer } from "../types/types";
 import { isErrorResponse } from "./error";
+import { uploadFile } from "./files";
 
 const get = async (
   path: string,
@@ -12,7 +13,16 @@ const get = async (
   });
 };
 
-const post = async (path: string, body: { [param: string]: string } = {}) => {
+// const post = async (path: string, body: { [param: string]: string } = {}) => {
+//   return API.post("wCleanerApi", path, {
+//     body,
+//   });
+// };
+
+const post = async <TBody = unknown, TResponse = any>(
+  path: string,
+  body: TBody
+): Promise<TResponse> => {
   return API.post("wCleanerApi", path, {
     body,
   });
@@ -22,24 +32,34 @@ const remove = async (path: string) => {
   return API.del("wCleanerApi", path, {});
 };
 
-const put = async (path: string, body: { [param: string]: string } = {}) => {
-  return API.put("wCleanerApi", path, {
-    body,
-  });
+// const put = async (path: string, body: { [param: string]: string } = {}) => {
+//   return API.put("wCleanerApi", path, {
+//     body,
+//   });
+// };
+const put = async <TBody = unknown, TResponse = any>(
+  path: string,
+  body: TBody
+): Promise<TResponse> => {
+  return API.put("wCleanerApi", path, { body });
 };
 
 export const isCustomer = (value: unknown): value is Customer => {
+  if (typeof value !== "object" || value === null) return false;
+
+  const v = value as Customer;
+
+  const validFileUrls =
+    typeof v.fileUrls === "undefined" ||
+    (Array.isArray(v.fileUrls) &&
+      v.fileUrls.every((item) => typeof item === "string"));
+
   return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    typeof (value as Customer)["id"] === "string" &&
-    "name" in value &&
-    typeof (value as Customer)["name"] === "string" &&
-    "email" in value &&
-    typeof (value as Customer)["email"] === "string" &&
-    "slug" in value &&
-    typeof (value as Customer)["slug"] === "string"
+    typeof v.id === "string" &&
+    typeof v.name === "string" &&
+    typeof v.email === "string" &&
+    typeof v.slug === "string" &&
+    validFileUrls
   );
 };
 
@@ -47,7 +67,12 @@ export const addCustomer = async (
   formValues: CustomerFormValues
 ): Promise<Customer> => {
   try {
-    const response = await post("/customers", formValues);
+    // const response = await post("/customers", formValues);
+    const response = await post<CustomerFormValues, { customer: Customer }>(
+      "/customers",
+      formValues
+    );
+
     if (!isCustomer(response.customer)) {
       throw "INTERNAL_ERROR";
     }
@@ -77,13 +102,18 @@ export const deleteCustomer = async (id: string): Promise<void> => {
 
 export const editCustomer = async (
   id: string,
-  formValues: CustomerFormValues
+  formValues: Partial<CustomerFormValues>
 ): Promise<Customer> => {
   try {
-    const response = await put("/customers/" + id, formValues);
+    const response = await put<
+      Partial<CustomerFormValues>,
+      { customer: Customer }
+    >(`/customers/${id}`, formValues);
+
     if (!isCustomer(response.customer)) {
       throw "INTERNAL_ERROR";
     }
+
     return response.customer;
   } catch (error) {
     if (isErrorResponse(error)) {
@@ -97,6 +127,7 @@ export const editCustomer = async (
         throw "CUSTOMER_NOT_EXISTS";
       }
     }
+
     throw "INTERNAL_ERROR";
   }
 };
@@ -140,12 +171,15 @@ export const getCustomers = async (
 export const getCustomer = async (slug: string): Promise<Customer> => {
   try {
     const response = await get(`/customers/${slug}`);
-    if (!("customer" in response) && typeof response.customer !== "object") {
+
+    if (!("customer" in response) || typeof response.customer !== "object") {
       throw "INTERNAL_ERROR";
     }
+
     if (!isCustomer(response.customer)) {
       throw "INTERNAL_ERROR";
     }
+
     return response.customer;
   } catch (error) {
     if (isErrorResponse(error)) {
@@ -196,4 +230,25 @@ export const getOutcodes = async (): Promise<string[]> => {
   }
 
   return outcodes;
+};
+
+export const addFile = async (file: File, path: string): Promise<string> => {
+  try {
+    await uploadFile(file, path);
+    return path;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response?.status;
+      const message = error.response?.data?.error;
+
+      if (status === 400 && message === "Invalid file type") {
+        throw "INVALID_FILE_TYPE";
+      }
+      if (status === 413) {
+        throw "FILE_TOO_LARGE";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
 };

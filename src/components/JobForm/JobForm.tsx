@@ -6,11 +6,7 @@ import { Form } from "../Form/Form";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import dayjs, { Dayjs } from "dayjs";
-import {
-  DateValidationError,
-  PickerChangeHandlerContext,
-  TimeValidationError,
-} from "@mui/x-date-pickers";
+
 import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import { useAuth } from "../../context/AuthContext";
 import { UserSelector } from "../UserSelector/UserSelector";
@@ -23,6 +19,7 @@ export type JobFormValues = {
   price: number;
   assignedTo: string;
   jobTypeId: string;
+  fileUrl?: string;
 };
 
 const INITIAL_VALUES: JobFormValues = {
@@ -32,6 +29,7 @@ const INITIAL_VALUES: JobFormValues = {
   price: 0,
   assignedTo: "",
   jobTypeId: "",
+  fileUrl: "",
 };
 
 const validationSchema = yup.object<JobFormValues>({
@@ -41,6 +39,7 @@ const validationSchema = yup.object<JobFormValues>({
   price: yup.number().required().positive(),
   assignedTo: yup.string(),
   jobTypeId: yup.string(),
+  fileUrl: yup.string(),
 });
 
 type JobFormProps = {
@@ -60,127 +59,134 @@ export const JobForm: FC<JobFormProps> = ({
   layout = "vertical",
 }) => {
   const { isInGroup } = useAuth();
-
   const defaultValuesForm = !defaultValues ? INITIAL_VALUES : defaultValues;
+
   const formik = useFormik<JobFormValues>({
     initialValues: defaultValuesForm,
     onSubmit,
     validationSchema,
   });
+
   const changeUserHandler = (value: string | null) => {
     formik.handleChange({ target: { name: "assignedTo", value } });
   };
 
   const changeJobTypeHandler = (value: string | null) => {
-    console.log({ value });
     formik.handleChange({ target: { name: "jobTypeId", value } });
   };
+
+  const dateChangeHandler = (value: Dayjs | null) => {
+    formik.handleChange({ target: { name: "date", value } });
+  };
+
+  const startTimeChangeHandler = (value: Dayjs | null) => {
+    formik.handleChange({ target: { name: "startTime", value } });
+  };
+
+  const endTimeChangeHandler = (value: Dayjs | null) => {
+    formik.handleChange({ target: { name: "endTime", value } });
+  };
+
   const columns = layout === "vertical" ? 12 : 4;
-
-  const dateChangeHandler: (
-    value: dayjs.Dayjs | null,
-    context: PickerChangeHandlerContext<DateValidationError>
-  ) => void = (value) => {
-    formik.handleChange({ target: { value, name: "date" } });
-  };
-  const startTimeChangeHandler: (
-    value: dayjs.Dayjs | null,
-    context: PickerChangeHandlerContext<TimeValidationError>
-  ) => void = (value) => {
-    formik.handleChange({ target: { value, name: "startTime" } });
-  };
-
-  const endTimeChangeHandler: (
-    value: dayjs.Dayjs | null,
-    context: PickerChangeHandlerContext<TimeValidationError>
-  ) => void = (value) => {
-    formik.handleChange({ target: { value, name: "endTime" } });
-  };
 
   return (
     <Form onSubmit={formik.handleSubmit}>
-      <Grid container columnSpacing={5}>
+      <Grid container spacing={3} sx={{ px: { xs: 2, md: 4 } }}>
         <Grid item xs={12} md={columns}>
           <DateField
             name="date"
             onChange={dateChangeHandler}
             value={formik.values.date}
-            autoFocus
             label="Date"
             format="DD/MM/YYYY"
           />
         </Grid>
 
-        <Grid item xs={6} md={columns}>
-          <TimeField
-            label="Start Time"
-            name="startTime"
-            onChange={startTimeChangeHandler}
-            value={formik.values.startTime}
-            autoFocus
-            sx={{ marginY: "10px" }}
-            views={["hours", "minutes"]}
-            ampm={false}
-            viewRenderers={{
-              hours: renderTimeViewClock,
-              minutes: renderTimeViewClock,
-            }}
-          />
-          <TimeField
-            label="End Time"
-            name="endTime"
-            onChange={endTimeChangeHandler}
-            value={formik.values.endTime}
-            autoFocus
-            sx={{ marginY: "10px" }}
-            views={["hours", "minutes"]}
-            ampm={false}
-            viewRenderers={{
-              hours: renderTimeViewClock,
-              minutes: renderTimeViewClock,
-            }}
-            minTime={formik.values.startTime}
-          />
+        <Grid item xs={12} md={columns}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TimeField
+                label="Start Time"
+                name="startTime"
+                onChange={startTimeChangeHandler}
+                value={formik.values.startTime}
+                views={["hours", "minutes"]}
+                ampm={false}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TimeField
+                label="End Time"
+                name="endTime"
+                onChange={endTimeChangeHandler}
+                value={formik.values.endTime}
+                views={["hours", "minutes"]}
+                ampm={false}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                }}
+                minTime={formik.values.startTime}
+              />
+            </Grid>
+          </Grid>
         </Grid>
 
         <Grid item xs={12} md={columns}>
           <Field
             name="price"
-            id="price"
             label="Price"
             type="number"
-            fullWidth
             onChange={formik.handleChange}
-            sx={{ marginY: "10px" }}
             value={formik.values.price}
             error={!!(formik.touched.price && formik.errors.price)}
             helperText={formik.touched.price ? formik.errors.price : undefined}
           />
         </Grid>
-        {isInGroup("Admin") && (
-          <UserSelector
-            value={formik.values.assignedTo}
-            onChange={changeUserHandler}
-          />
-        )}
-        <JobTypeSelector
-          value={formik.values.jobTypeId}
-          onChange={changeJobTypeHandler}
-        />
 
-        <Grid item xs={6} textAlign="right">
+        <Grid item xs={12}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <JobTypeSelector
+                value={formik.values.jobTypeId}
+                onChange={changeJobTypeHandler}
+              />
+            </Grid>
+            {isInGroup("Admin") && (
+              <Grid item xs={12} md={6}>
+                <UserSelector
+                  value={formik.values.assignedTo}
+                  onChange={changeUserHandler}
+                />
+              </Grid>
+            )}
+          </Grid>
+        </Grid>
+
+        <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "right" }}>
           <LoadingButton
             variant="contained"
             color="primary"
             style={{ textTransform: "none" }}
             type="submit"
-            sx={{ width: "50%" }}
+            sx={{ width: { xs: "100%", md: "50%" } }}
             loading={loading}
           >
             Save
           </LoadingButton>
         </Grid>
-        <Grid item xs={6} textAlign="left" mb={2}>
+
+        <Grid
+          item
+          xs={12}
+          md={6}
+          textAlign={{ xs: "center", md: "left" }}
+          mb={2}
+        >
           {onCancel && (
             <Button
               disableFocusRipple
@@ -188,7 +194,7 @@ export const JobForm: FC<JobFormProps> = ({
               style={{ textTransform: "none" }}
               variant="outlined"
               color="primary"
-              sx={{ width: "50%" }}
+              sx={{ width: { xs: "100%", md: "50%" } }}
               onClick={onCancel}
             >
               Cancel

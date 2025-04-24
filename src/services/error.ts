@@ -23,6 +23,7 @@ export const ERROR_CODES = [
   "JOB_NOT_EXISTS",
   "INVALID_CONFIRMATION_LINK",
   "USER_IS_LAST_ADMIN",
+  "UPLOAD_FAILED",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>

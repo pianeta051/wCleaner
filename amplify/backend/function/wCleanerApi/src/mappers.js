@@ -9,6 +9,7 @@ const mapCustomer = (customerFromDb) => ({
   secondTelephone: customerFromDb.secondTelephone.S,
   email: customerFromDb.email.S,
   slug: customerFromDb.slug.S,
+  fileUrls: customerFromDb.fileUrls?.L?.map((f) => f.S) ?? [],
 });
 
 const mapCustomerJobs = (customerJob) => ({

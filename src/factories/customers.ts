@@ -11,4 +11,5 @@ export const customerFactory = Factory.define<Customer>(() => ({
   email: faker.internet.email(),
   id: faker.string.uuid(),
   slug: faker.phone.imei(),
+  fileUrls: [],
 }));

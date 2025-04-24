@@ -5,13 +5,14 @@ import {
   CustomerForm,
   CustomerFormValues,
 } from "../../../../components/Customer/CustomerForm/CustomerForm";
-
 import { NotFound } from "../../../NotFound/NotFound";
 import { DividerLine, Title, Wrapper } from "./CustomerDetails.style";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 import { useCustomer } from "../../../../hooks/Customers/useCustomer";
 import { useEditCustomer } from "../../../../hooks/Customers/useEditCustomer";
 import { CustomerJobs } from "../../../../components/CustomerJobs/CustomerJobs";
+import { deleteFile } from "../../../../services/files";
+import { CustomerFiles } from "../../../../components/CustomerFiles/CustomerFiles";
 
 type CustomerParams = {
   slug: string;
@@ -32,18 +33,12 @@ export const CustomerDetails: FC = () => {
     error: editError,
   } = useEditCustomer(customer?.id, customer?.slug);
 
-  if (!slug) {
-    return <NotFound />;
-  }
-
   const submitHandler = (formValues: CustomerFormValues) => {
     if (customer) {
       editCustomer(formValues)
-        .then(() => {
-          setSnackbarOpen(true);
-        })
-        .catch(() => {
-          // Do nothing, the hook manages the error
+        .then(() => setSnackbarOpen(true))
+        .catch((error) => {
+          throw error;
         });
     }
   };
@@ -51,7 +46,41 @@ export const CustomerDetails: FC = () => {
   const closeHandler = () => {
     setSnackbarOpen(false);
   };
+  const editCustomerHandler = async (
+    updatedFields: Partial<CustomerFormValues>
+  ) => {
+    if (!customer) return;
 
+    await editCustomer({
+      ...customer,
+      ...updatedFields,
+    });
+
+    setSnackbarOpen(true);
+  };
+
+  if (!slug) {
+    return <NotFound />;
+  }
+
+  const deleteFileHandler = async (index: number) => {
+    if (!customer || !customer.fileUrls) return;
+
+    const fileKeyToDelete = customer.fileUrls[index];
+    const newFileKeys = customer.fileUrls.filter((_, i) => i !== index);
+
+    try {
+      // Delete from S3
+      await deleteFile(fileKeyToDelete);
+
+      // Update customer record
+      await editCustomerHandler({ fileUrls: newFileKeys });
+
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Error deleting file:", error);
+    }
+  };
   return (
     <Wrapper>
       <Title variant="h3" align="center">
@@ -73,11 +102,23 @@ export const CustomerDetails: FC = () => {
               layout="horizontal"
             />
             <DividerLine />
-            <CustomerJobs customer={customer} />
+            <Grid item xs={12} style={{ width: "100%" }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={8}>
+                  <CustomerJobs customer={customer} />
+                </Grid>
+                <CustomerFiles
+                  customer={customer}
+                  onEditUrls={(urls) => editCustomerHandler({ fileUrls: urls })}
+                  onDeleteFile={deleteFileHandler}
+                />
+              </Grid>
+            </Grid>
           </>
         ) : (
           <NotFound data-testid="not-found-message" />
         )}
+
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}

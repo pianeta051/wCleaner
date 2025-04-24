@@ -58,6 +58,10 @@ export type AmplifyDependentResourcesAttributes = {
       "SortKeyName": "string",
       "SortKeyType": "string",
       "StreamArn": "string"
+    },
+    "wcleanerstorage": {
+      "BucketName": "string",
+      "Region": "string"
     }
   }
 }

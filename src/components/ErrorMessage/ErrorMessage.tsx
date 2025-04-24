@@ -164,5 +164,12 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "UPLOAD_FAILED") {
+    return (
+      <Alert severity="error">
+        <Typography>Upload Failed</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

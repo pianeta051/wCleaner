@@ -1,4 +1,4 @@
-import { styled, Box } from "@mui/material";
+import { styled, Box, Paper, Grid, Typography } from "@mui/material";
 
 export const ModalBox = styled(Box)({
   backgroundColor: "#fff",
@@ -7,3 +7,20 @@ export const ModalBox = styled(Box)({
   left: "50%",
   transform: "translate(-50%, -50%)",
 });
+
+export const Background = styled(Paper)(() => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "1rem",
+}));
+
+export const Wrapper = styled(Grid)(() => ({
+  width: "100%",
+  paddingTop: "10px",
+  paddingBottom: "10px",
+}));
+
+export const Title = styled(Typography)(() => ({
+  textAlign: "center",
+}));

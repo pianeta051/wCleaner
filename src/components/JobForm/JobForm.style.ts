@@ -1,51 +1,44 @@
-import { styled, Box, Grid, Paper, Typography, TextField } from "@mui/material";
+// JobForm.style.ts
+import { styled } from "@mui/material/styles";
+import { Box, TextField } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 
-export const Background = styled(Paper)(() => ({
+// Shared style for all form fields
+const commonFieldStyle = {
+  marginBottom: "10px",
+  width: "100%",
+};
+
+// Styled Date Picker
+export const DateField = styled(DatePicker)(() => ({
+  ...commonFieldStyle,
+}));
+
+// Styled Time Picker
+export const TimeField = styled(TimePicker)(() => ({
+  ...commonFieldStyle,
+}));
+
+// Styled TextField (for price)
+export const Field = styled(TextField)(() => ({
+  ...commonFieldStyle,
+}));
+
+// Wrapper around ImagePicker and preview image
+export const ImagePreviewWrapper = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
-  justifyContent: "center",
+  flexWrap: "wrap",
+  gap: theme.spacing(2),
+  marginTop: theme.spacing(2),
 }));
 
-export const Wrapper = styled(Grid)(() => ({
-  width: "100%",
-  height: "100%",
-  paddingTop: "10px",
-  paddingBottom: "10px",
-}));
-
-export const Title = styled(Typography)(() => ({
-  textAlign: "center",
-}));
-
-export const ModalBox = styled(Box)(({ theme }) => ({
-  backgroundColor: "#fff",
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  width: "100%",
-  [theme.breakpoints.down("md")]: {
-    width: "100%",
-  },
-
-  transform: "translate(-50%, -50%)",
-  borderRadius: "300px",
-}));
-
-export const Field = styled(TextField)(() => ({
-  marginBottom: "10px",
-  width: "94%",
-  marginLeft: "20px",
-}));
-
-export const DateField = styled(DatePicker)(() => ({
-  marginBottom: "10px",
-  width: "94%",
-  marginLeft: "20px",
-}));
-export const TimeField = styled(TimePicker)(() => ({
-  marginBottom: "100px",
-  width: "94%",
-  marginLeft: "20px",
+// Styled image preview next to ImagePicker
+export const PreviewImage = styled("img")(({ theme }) => ({
+  width: 60,
+  height: 60,
+  objectFit: "cover",
+  borderRadius: theme.shape.borderRadius,
+  border: "1px solid #ccc",
 }));

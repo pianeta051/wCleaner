@@ -1,4 +1,4 @@
-import { styled, Grid, Typography, Button } from "@mui/material";
+import { styled, Grid, Typography, Button, Box } from "@mui/material";
 
 export const Background = styled(Grid)(() => ({
   justifyContent: "center",
@@ -7,6 +7,7 @@ export const Background = styled(Grid)(() => ({
   minHeight: "100vh",
   backgroundColor: "#F0F2F5",
 }));
+
 export const CustomerAttribute = styled(Typography)(() => ({
   fontSize: "14px",
   marginBottom: "20px",

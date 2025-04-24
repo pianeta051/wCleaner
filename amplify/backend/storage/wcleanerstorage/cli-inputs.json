@@ -1,0 +1,19 @@
+{
+  "resourceName": "wcleanerstorage",
+  "policyUUID": "3b04f69a",
+  "bucketName": "wcleanerstorage",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "groupAccess": {
+    "Admin": [
+      "CREATE_AND_UPDATE",
+      "READ",
+      "DELETE"
+    ]
+  }
+}

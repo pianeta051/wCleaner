@@ -28,6 +28,7 @@ const {
   deleteJobFromCustomer,
   editCustomer,
   editJobType,
+  addFile,
 } = require("./db");
 
 const {
@@ -138,6 +139,7 @@ app.post("/customers", async function (req, res) {
 app.put("/customers/:id", async function (req, res) {
   try {
     const id = req.params.id;
+
     const editedCustomer = await editCustomer(id, req.body);
     res.json({ customer: editedCustomer });
   } catch (error) {
@@ -411,4 +413,34 @@ app.listen(3000, function () {
   console.log("App started");
 });
 
+//FILES
+//Add file
+
+app.post("/files", async function (req, res) {
+  try {
+    const file = req.file;
+    const path = req.body.path;
+
+    if (!file) {
+      return res.status(400).json({ error: "File is required" });
+    }
+
+    if (!path) {
+      return res.status(400).json({ error: "Path is required" });
+    }
+
+    const uploadedPath = await addFile(file.buffer, path);
+
+    res.json({ path: uploadedPath });
+  } catch (error) {
+    if (error === "INVALID_FILE_TYPE") {
+      res.status(400).json({ error: "Invalid file type" });
+    } else if (error === "FILE_TOO_LARGE") {
+      res.status(413).json({ error: "File too large" });
+    } else {
+      console.error(error);
+      res.status(500).json({ error: "Internal Error" });
+    }
+  }
+});
 module.exports = app;

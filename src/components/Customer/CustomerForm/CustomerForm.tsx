@@ -13,6 +13,8 @@ export type CustomerFormValues = {
   mainTelephone: string;
   secondTelephone: string;
   email: string;
+
+  fileUrls?: string[];
 };
 
 const INITIAL_VALUES: CustomerFormValues = {
@@ -22,6 +24,7 @@ const INITIAL_VALUES: CustomerFormValues = {
   mainTelephone: "",
   secondTelephone: "",
   email: "",
+  fileUrls: [],
 };
 const validationSchema = yup.object<CustomerFormValues>({
   email: yup.string().email().required(),
