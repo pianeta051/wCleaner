@@ -30,7 +30,8 @@
         "wCleanerApi": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
           "s3Key": "amplify-builds/wCleanerApi-32694a54637243544f32-build.zip"
-        }
+        },
+        "wcleaner": {}
       },
       "hosting": {
         "amplifyhosting": {
@@ -45,6 +46,39 @@
       "storage": {
         "wcleaner": {},
         "wcleanerstorage": {}
+      }
+    }
+  },
+  "prod": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wcleaner-prod-4c21b-authRole",
+      "UnauthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-prod-4c21b-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-prod-4c21b-authRole",
+      "Region": "eu-west-2",
+      "DeploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
+      "UnauthRoleName": "amplify-wcleaner-prod-4c21b-unauthRole",
+      "StackName": "amplify-wcleaner-prod-4c21b",
+      "StackId": "arn:aws:cloudformation:eu-west-2:295621520330:stack/amplify-wcleaner-prod-4c21b/31457bc0-2121-11f0-9140-06d2f463a703",
+      "AmplifyAppId": "d2r3wluo8x2tk9",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-wcleaner-prod-4c21b-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json",
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-prod-4c21b-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json"
+    },
+    "categories": {
+      "auth": {
+        "wcleaner": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "AdminQueries0c37162b": {},
+        "wCleanerApi": {},
+        "wcleanerCustomMessage": {},
+        "wcleaner": {}
+      },
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d2r3wluo8x2tk9",
+          "type": "cicd"
+        }
       }
     }
   }

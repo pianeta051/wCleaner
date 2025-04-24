@@ -3,7 +3,7 @@ AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 
-const TABLE_NAME = "wcleaner-dev";
+const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 5;
 const generateSlug = (email) => {
   return email.split("@")[0];
