@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "{\"createdOn\":\"Linux\",\"createdBy\":\"Amplify\",\"createdWith\":\"11.1.1\",\"stackType\":\"function-Lambda\",\"metadata\":{}}",
+  "Description": "{\"createdOn\":\"Linux\",\"createdBy\":\"Amplify\",\"createdWith\":\"12.14.3\",\"stackType\":\"function-Lambda\",\"metadata\":{\"whyContinueWithGen1\":\"\"}}",
   "Parameters": {
     "CloudWatchRule": {
       "Type": "String",
@@ -75,7 +75,7 @@
         "Role": {
           "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
         },
-        "Runtime": "nodejs16.x",
+        "Runtime": "nodejs18.x",
         "Layers": [],
         "Timeout": 25
       }
