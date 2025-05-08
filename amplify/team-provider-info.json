@@ -29,7 +29,10 @@
         },
         "wCleanerApi": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/wCleanerApi-594f6276706c4f4d542f-build.zip"
+          "s3Key": "amplify-builds/wCleanerApi-3530635452346a717465-build.zip",
+          "wcleanerUserPoolDev": "eu-west-2_nRfe1m5kq",
+          "wcleanerUserPoolProd": "eu-west-2_LtQEoHXvZ",
+          "userPoolId": "eu-west-2_nRfe1m5kq"
         },
         "wcleaner": {}
       },
@@ -69,9 +72,19 @@
         "userPoolGroups": {}
       },
       "function": {
-        "AdminQueries0c37162b": {},
-        "wCleanerApi": {},
-        "wcleanerCustomMessage": {},
+        "AdminQueries0c37162b": {
+          "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
+          "s3Key": "amplify-builds/AdminQueries0c37162b-66384155707055533149-build.zip"
+        },
+        "wCleanerApi": {
+          "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
+          "s3Key": "amplify-builds/wCleanerApi-393352744f6263794847-build.zip",
+          "userPoolId": "eu-west-2_LtQEoHXvZ"
+        },
+        "wcleanerCustomMessage": {
+          "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
+          "s3Key": "amplify-builds/wcleanerCustomMessage-62637a486459416d462f-build.zip"
+        },
         "wcleaner": {}
       },
       "hosting": {
@@ -79,6 +92,14 @@
           "appId": "d2r3wluo8x2tk9",
           "type": "cicd"
         }
+      },
+      "api": {
+        "AdminQueries": {},
+        "wCleanerApi": {}
+      },
+      "storage": {
+        "wcleaner": {},
+        "wcleanerstorage": {}
       }
     }
   }

@@ -5,7 +5,7 @@ import { uploadFile } from "../../../services/files";
 export const useAddFile = () => {
   const { trigger, isMutating, error } = useSWRMutation<
     string, // return type (uploaded key/path)
-    Error,
+    string,
     readonly [string],
     { file: File; path: string }
   >(

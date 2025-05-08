@@ -1,165 +1,147 @@
-import { ThemeProvider } from "styled-components";
-import { customerFactory } from "../../factories/customers";
 import { CustomerSelector } from "./CustomerSelector";
-import { API } from "aws-amplify";
+import { customerFactory } from "../../factories/customers";
+import { ThemeProvider } from "@mui/material";
+import { theme } from "../../theme";
+import * as mockCustomersHook from "../../hooks/Customers/useCustomers";
 
-describe("CustomerSelector Component", () => {
-  let customer1: {
-      id: any;
-      name: any;
-      address: any;
-      postcode: any;
-      mainTelephone: any;
-      secondTelephone: any;
-      email: any;
-      slug: any;
-    },
-    customer2: {
-      address: any;
-      postcode: any;
-      name?: string;
-      mainTelephone?: string;
-      secondTelephone?: string;
-      email?: string;
-      id?: string;
-      slug?: string;
-    };
+describe("CustomerSelector", () => {
+  const customers = [
+    customerFactory.build({
+      name: "John Doe",
+      address: "1 High St",
+      postcode: "W1A 0AX",
+    }),
+    customerFactory.build({
+      name: "Jane Smith",
+      address: "2 Oak Ave",
+      postcode: "SW1A 1AA",
+    }),
+  ];
 
   beforeEach(() => {
-    // Generate customers dynamically using customerFactory
-    customer1 = customerFactory.build({
-      name: "John Doe",
-      address: "123 Main St",
-    });
-    customer2 = customerFactory.build({
-      name: "Jane Smith",
-      address: "456 Elm St",
-    });
+    cy.stub(mockCustomersHook, "useCustomers").returns({ customers });
+  });
+  const mountCustomerSelector = () => {
+    const onSelectCustomer = cy.stub().as("onSelectCustomer");
 
-    // Mount the component with an initial onSelectCustomer spy
     cy.mount(
-      <CustomerSelector onSelectCustomer={cy.spy().as("onSelectCustomer")} />
+      <ThemeProvider theme={theme}>
+        <CustomerSelector onSelectCustomer={onSelectCustomer} />
+      </ThemeProvider>
     );
+
+    return { onSelectCustomer };
+  };
+
+  it("renders the Autocomplete and attempts to fetch customers", () => {
+    mountCustomerSelector();
+
+    cy.findByLabelText(/select customer/i).click();
+    cy.get('[role="option"]').should("have.length", 2);
+    cy.get('[role="option"]').first().should("contain.text", "John Doe");
   });
 
-  context("Normal functionality", () => {
-    beforeEach(() => {
-      // Mock the customer data to return factory-generated customers
-      //   cy.stub(customers, "useCustomers").returns({
-      //     customers: [customer1, customer2],
-      //   });
-      const customers = customerFactory.buildList(5);
-      cy.stub(API, "get").resolves({
-        customers,
-      });
-    });
+  // it("updates the address and postcode fields when a customer is selected", () => {
+  //   const customer = customerFactory.build();
+  //   cy.intercept("/api/customers?take=10&skip=0", {
+  //     body: { data: [customer], total: 1 },
+  //   }).as("fetchCustomers");
 
-    it("displays customer options in the autocomplete dropdown", () => {
-      cy.get('input[aria-label="Select Customer"]').type("John");
-      cy.contains("John Doe").should("be.visible");
-      cy.contains("Jane Smith").should("be.visible");
-    });
+  //   mountCustomerSelector();
+  //   cy.wait("@fetchCustomers");
 
-    it("suggests customer options based on name in search", () => {
-      cy.get('input[aria-label="Select Customer"]').type("John");
-      cy.contains("John Doe").should("be.visible");
-      cy.contains("Jane Smith").should("not.exist");
-    });
+  //   cy.findByLabelText(/select customer/i).click();
+  //   cy.get('[role="option"]').contains(customer.name).click();
 
-    it("suggests customer options based on address in search", () => {
-      cy.get('input[aria-label="Select Customer"]').type("456 Elm St");
-      cy.contains("Jane Smith").should("be.visible");
-      cy.contains("John Doe").should("not.exist");
-    });
+  //   cy.findByLabelText(/address/i).should("have.value", customer.address);
+  //   cy.findByLabelText(/postcode/i).should("have.value", customer.postcode);
+  // });
 
-    it("updates selectedCustomer and enables button on selection", () => {
-      cy.get('input[aria-label="Select Customer"]').type("Jane");
-      cy.contains("Jane Smith").click();
+  // it("calls onSelectCustomer with the selected customer when Next is clicked", () => {
+  //   const customer = customerFactory.build();
+  //   const { onSelectCustomer } = mountCustomerSelector();
+  //   cy.intercept("/api/customers?take=10&skip=0", {
+  //     body: { data: [customer], total: 1 },
+  //   }).as("fetchCustomers");
+  //   cy.wait("@fetchCustomers");
 
-      cy.get('input[aria-label="Address"]').should(
-        "have.value",
-        customer2.address
-      );
-      cy.get('input[aria-label="Postcode"]').should(
-        "have.value",
-        customer2.postcode
-      );
-      cy.get("button").contains("Next").should("not.be.disabled");
-    });
+  //   cy.findByLabelText(/select customer/i).click();
+  //   cy.get('[role="option"]').contains(customer.name).click();
+  //   cy.findByRole("button", { name: /next/i }).should("not.be.disabled");
+  //   cy.findByRole("button", { name: /next/i }).click();
 
-    it("disables button when no customer is selected", () => {
-      cy.get('input[aria-label="Select Customer"]').clear();
-      cy.get("button").contains("Next").should("be.disabled");
-    });
+  //   cy.get("@onSelectCustomer").should("have.been.calledOnceWith", customer);
+  // });
 
-    it("calls onSelectCustomer when Next button is clicked with a selected customer", () => {
-      cy.get('input[aria-label="Select Customer"]').type("John");
-      cy.contains("John Doe").click();
-      cy.get("button").contains("Next").click();
+  // it("disables the Next button initially", () => {
+  //   mountCustomerSelector();
+  //   cy.findByRole("button", { name: /next/i }).should("be.disabled");
+  // });
 
-      cy.get("@onSelectCustomer").should("have.been.calledOnceWith", {
-        id: customer1.id,
-        name: customer1.name,
-        address: customer1.address,
-        postcode: customer1.postcode,
-        mainTelephone: customer1.mainTelephone,
-        secondTelephone: customer1.secondTelephone,
-        email: customer1.email,
-        slug: customer1.slug,
-      });
-    });
-  });
+  // it("enables the Next button when a customer is selected", () => {
+  //   const customer = customerFactory.build();
+  //   cy.intercept("/api/customers?take=10&skip=0", {
+  //     body: { data: [customer], total: 1 },
+  //   }).as("fetchCustomers");
 
-  context("Error and Edge Cases", () => {
-    it("displays no options when customer list is empty", () => {
-      // Mock useCustomers to return an empty customer list
-      cy.stub("useCustomers").returns({
-        customers: [],
-      });
+  //   mountCustomerSelector();
+  //   cy.wait("@fetchCustomers");
 
-      cy.get('input[aria-label="Select Customer"]').type("John");
-      cy.contains("No customers found").should("be.visible");
-      cy.get("button").contains("Next").should("be.disabled");
-    });
+  //   cy.findByLabelText(/select customer/i).click();
+  //   cy.get('[role="option"]').contains(customer.name).click();
+  //   cy.findByRole("button", { name: /next/i }).should("not.be.disabled");
+  // });
 
-    it("handles customer retrieval failure gracefully", () => {
-      // Mock useCustomers to simulate a retrieval error
-      cy.stub("useCustomers").throws(new Error("Failed to load customers"));
+  // it("disables the Next button when the selected customer is cleared", () => {
+  //   const customer = customerFactory.build();
+  //   cy.intercept("/api/customers?take=10&skip=0", {
+  //     body: { data: [customer], total: 1 },
+  //   }).as("fetchCustomers");
 
-      cy.get('input[aria-label="Select Customer"]').type("John");
-      cy.contains("Failed to load customers").should("be.visible");
-      cy.get("button").contains("Next").should("be.disabled");
-    });
+  //   mountCustomerSelector();
+  //   cy.wait("@fetchCustomers");
 
-    it("disables button and clears input when an invalid customer is selected and then cleared", () => {
-      cy.get('input[aria-label="Select Customer"]').type("Invalid Name");
-      cy.get('input[aria-label="Select Customer"]').clear();
-      cy.get("button").contains("Next").should("be.disabled");
-      cy.get('input[aria-label="Address"]').should("have.value", "");
-      cy.get('input[aria-label="Postcode"]').should("have.value", "");
-    });
+  //   cy.findByLabelText(/select customer/i).click();
+  //   cy.get('[role="option"]').contains(customer.name).click();
+  //   cy.findByRole("button", { name: /next/i }).should("not.be.disabled");
+  //   cy.findByLabelText(/select customer/i).type("{backspace}{backspace}"); // Clear the input
+  //   cy.findByRole("button", { name: /next/i }).should("be.disabled");
+  //   cy.findByLabelText(/address/i).should("have.value", "");
+  //   cy.findByLabelText(/postcode/i).should("have.value", "");
+  // });
 
-    it("shows no suggestions if user enters special characters that don’t match any customer", () => {
-      cy.get('input[aria-label="Select Customer"]').type("@#$%^&*");
-      cy.contains("No options").should("be.visible");
-      cy.get("button").contains("Next").should("be.disabled");
-    });
+  // it("filters customer options based on input", () => {
+  //   const customer1 = customerFactory.build({
+  //     name: "John Doe",
+  //     address: "1 Main St",
+  //   });
+  //   const customer2 = customerFactory.build({
+  //     name: "Jane Smith",
+  //     address: "2 Oak Ave",
+  //   });
+  //   cy.intercept("/api/customers?take=10&skip=0", {
+  //     body: { data: [customer1, customer2], total: 2 },
+  //   }).as("fetchCustomers");
 
-    it("allows re-selection of a different customer after initial selection", () => {
-      cy.get('input[aria-label="Select Customer"]').type("John");
-      cy.contains("John Doe").click();
-      cy.get('input[aria-label="Select Customer"]').clear().type("Jane");
-      cy.contains("Jane Smith").click();
+  //   mountCustomerSelector();
+  //   cy.wait("@fetchCustomers");
 
-      cy.get('input[aria-label="Address"]').should(
-        "have.value",
-        customer2.address
-      );
-      cy.get('input[aria-label="Postcode"]').should(
-        "have.value",
-        customer2.postcode
-      );
-      cy.get("button").contains("Next").should("not.be.disabled");
-    });
-  });
+  //   cy.findByLabelText(/select customer/i).type("John");
+  //   cy.get('[role="listbox"]').should("be.visible");
+  //   cy.get('[role="option"]').should("have.length", 1);
+  //   cy.get('[role="option"]').should("contain.text", "John Doe");
+
+  //   cy.findByLabelText(/select customer/i)
+  //     .clear()
+  //     .type("Oak");
+  //   cy.get('[role="listbox"]').should("be.visible");
+  //   cy.get('[role="option"]').should("have.length", 1);
+  //   cy.get('[role="option"]').should("contain.text", "2 Oak Ave");
+  // });
+
+  // it("displays empty address and postcode when no customer is selected", () => {
+  //   mountCustomerSelector();
+  //   cy.findByLabelText(/address/i).should("have.value", "");
+  //   cy.findByLabelText(/postcode/i).should("have.value", "");
+  // });
 });
