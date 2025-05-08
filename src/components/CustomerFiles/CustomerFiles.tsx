@@ -16,9 +16,7 @@ type CustomerFilesProps = {
 };
 
 const isImageFile = (url: string): boolean => {
-  const match = url.match(
-    /uploads\/[^/]+\/[^/?]+\.(jpg|jpeg|png|gif|bmp|webp|svg)(?=\?|$)/i
-  );
+  const match = url.match(/\/[^\/]*\.(jpg|jpeg|png|gif|bmp|webp|svg)(?=\?|$)/i);
   return !!match;
 };
 
@@ -49,7 +47,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({
             customer.fileUrls.map((key) => getFileUrl(key))
           );
           setSignedFileUrls(urls);
-        } catch {
+        } catch (e) {
           setSignedFileUrls([]);
         }
       } else {
@@ -84,12 +82,13 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({
                 {isImageFile(url) ? (
                   <StyledImage src={url} alt={`Uploaded file ${index + 1}`} />
                 ) : (
-                  <BoxField>
+                  <BoxField aria-label="File">
                     <InsertDriveFileIcon fontSize="large" />
                   </BoxField>
                 )}
 
                 <DeleteButton
+                  aria-label="Delete"
                   onClick={(e) => {
                     e.preventDefault();
                     onDeleteFile(index);

@@ -1,4 +1,5 @@
 import { defineConfig } from "cypress";
+import webpackConfig from "./config/webpack.config";
 
 export default defineConfig({
   e2e: {
@@ -12,8 +13,9 @@ export default defineConfig({
 
   component: {
     devServer: {
-      framework: "create-react-app",
+      framework: "react",
       bundler: "webpack",
+      webpackConfig: webpackConfig("development"),
     },
     videosFolder: "cypress/videos/component",
     screenshotsFolder: "cypress/screenshots/component",

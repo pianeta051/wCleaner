@@ -4,12 +4,17 @@
       "authorizationType": "AMAZON_COGNITO_USER_POOLS",
       "dependsOn": [
         {
-          "attributes": ["UserPoolId"],
+          "attributes": [
+            "UserPoolId"
+          ],
           "category": "auth",
           "resourceName": "wcleaner"
         },
         {
-          "attributes": ["Arn", "Name"],
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
           "category": "function",
           "resourceName": "AdminQueries0c37162b"
         }
@@ -20,17 +25,24 @@
     "wCleanerApi": {
       "dependsOn": [
         {
-          "attributes": ["Name", "Arn"],
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
           "category": "function",
           "resourceName": "wCleanerApi"
         },
         {
-          "attributes": ["UserPoolId"],
+          "attributes": [
+            "UserPoolId"
+          ],
           "category": "auth",
           "resourceName": "wcleaner"
         },
         {
-          "attributes": ["AdminGroupRole"],
+          "attributes": [
+            "AdminGroupRole"
+          ],
           "category": "auth",
           "resourceName": "userPoolGroups"
         }
@@ -60,7 +72,10 @@
       "customAuth": false,
       "dependsOn": [
         {
-          "attributes": ["Arn", "Name"],
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
           "category": "function",
           "resourceName": "wcleanerCustomMessage",
           "triggerProvider": "Cognito"
@@ -68,7 +83,9 @@
       ],
       "frontendAuthConfig": {
         "mfaConfiguration": "OFF",
-        "mfaTypes": ["SMS"],
+        "mfaTypes": [
+          "SMS"
+        ],
         "passwordProtectionSettings": {
           "passwordPolicyCharacters": [
             "REQUIRES_LOWERCASE",
@@ -78,10 +95,16 @@
           ],
           "passwordPolicyMinLength": 8
         },
-        "signupAttributes": ["EMAIL"],
+        "signupAttributes": [
+          "EMAIL"
+        ],
         "socialProviders": [],
-        "usernameAttributes": ["EMAIL"],
-        "verificationMechanisms": ["EMAIL"]
+        "usernameAttributes": [
+          "EMAIL"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
       },
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
@@ -92,7 +115,9 @@
       "build": true,
       "dependsOn": [
         {
-          "attributes": ["UserPoolId"],
+          "attributes": [
+            "UserPoolId"
+          ],
           "category": "auth",
           "resourceName": "wcleaner"
         }
@@ -120,6 +145,72 @@
       "type": "cicd"
     }
   },
+  "parameters": {
+    "AMPLIFY_function_AdminQueries0c37162b_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "AdminQueries0c37162b"
+        }
+      ]
+    },
+    "AMPLIFY_function_AdminQueries0c37162b_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "AdminQueries0c37162b"
+        }
+      ]
+    },
+    "AMPLIFY_function_wCleanerApi_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wCleanerApi"
+        }
+      ]
+    },
+    "AMPLIFY_function_wCleanerApi_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wCleanerApi"
+        }
+      ]
+    },
+    "AMPLIFY_function_wcleanerCustomMessage_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wcleanerCustomMessage"
+        }
+      ]
+    },
+    "AMPLIFY_function_wcleanerCustomMessage_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wcleanerCustomMessage"
+        }
+      ]
+    },
+    "AMPLIFY_hosting_amplifyhosting_appId": {
+      "usedBy": [
+        {
+          "category": "hosting",
+          "resourceName": "amplifyhosting"
+        }
+      ]
+    },
+    "AMPLIFY_hosting_amplifyhosting_type": {
+      "usedBy": [
+        {
+          "category": "hosting",
+          "resourceName": "amplifyhosting"
+        }
+      ]
+    }
+  },
   "storage": {
     "wcleaner": {
       "providerPlugin": "awscloudformation",
@@ -128,12 +219,16 @@
     "wcleanerstorage": {
       "dependsOn": [
         {
-          "attributes": ["UserPoolId"],
+          "attributes": [
+            "UserPoolId"
+          ],
           "category": "auth",
           "resourceName": "wcleaner"
         },
         {
-          "attributes": ["AdminGroupRole"],
+          "attributes": [
+            "AdminGroupRole"
+          ],
           "category": "auth",
           "resourceName": "userPoolGroups"
         }
