@@ -178,6 +178,14 @@
         }
       ]
     },
+    "AMPLIFY_function_wCleanerApi_userPoolId": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wCleanerApi"
+        }
+      ]
+    },
     "AMPLIFY_function_wcleanerCustomMessage_deploymentBucketName": {
       "usedBy": [
         {
