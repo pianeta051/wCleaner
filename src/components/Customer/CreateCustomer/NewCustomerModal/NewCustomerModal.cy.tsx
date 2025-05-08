@@ -112,19 +112,17 @@ describe("NewCustomerModal", () => {
 
   it("renders an error message when there is already a user with that email", () => {
     const customer = customerFactory.build();
-    const formValues: CustomerFormValues = {
-      ...customer,
-    };
-    <Route
-      path="customers"
-      element={
-        <NewCustomerModal
-          onSubmit={cy.spy().as("submitHandler")}
-          open={true}
-          onClose={cy.spy().as("closeHandler")}
-        />
-      }
-    />;
+    const formValues: CustomerFormValues = { ...customer };
+
+    // Simulate a 409 conflict response (email already exists)
+    cy.stub(API, "post")
+      .as("apiPost")
+      .rejects({
+        response: {
+          status: 409,
+        },
+      });
+
     cy.mount(
       <NewCustomerModal
         onSubmit={cy.spy().as("submitHandler")}
@@ -132,20 +130,18 @@ describe("NewCustomerModal", () => {
         onClose={cy.spy().as("closeHandler")}
       />
     );
-    cy.stub(API, "post").rejects({
-      response: {
-        status: 409,
-      },
-    });
-    mountComponent();
+
     cy.findByLabelText("name *").type(formValues.name);
     cy.findByLabelText("address *").type(formValues.address);
     cy.findByLabelText("postcode *").type(formValues.postcode);
     cy.findByLabelText("email *").type(formValues.email);
+
     cy.findByText("Save").click();
+
     cy.get("@submitHandler").should("not.have.been.called");
+
     cy.contains(
       "There is an existing customer with this email. Please try with other email"
-    );
+    ).should("be.visible");
   });
 });

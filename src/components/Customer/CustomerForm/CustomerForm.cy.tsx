@@ -1,68 +1,96 @@
-import { CustomerForm } from "./CustomerForm";
+import { CustomerForm, CustomerFormValues } from "./CustomerForm";
+import { customerFactory } from "../../../factories/customers";
+import { ThemeProvider } from "@mui/material";
+import { theme } from "../../../theme";
 
 describe("CustomerForm", () => {
-  it("calls onSubmit when clicking a send button", () => {
-    cy.mount(<CustomerForm onSubmit={cy.spy().as("submitHandler")} />);
-    cy.findByLabelText("name *").type("carlos");
-    cy.findByLabelText("address *").type("92 high streer");
-    cy.findByLabelText("postcode *").type("Lug5fr");
-    cy.findByLabelText("email *").type("carlos@email.com");
-    cy.findByText("Save").click();
-    cy.get("@submitHandler").should("have.been.calledWith", {
-      name: "carlos",
-      address: "92 high streer",
-      postcode: "Lug5fr",
-      mainTelephone: "",
-      secondTelephone: "",
-      email: "carlos@email.com",
+  const mountCustomerForm = () => {
+    const submitHandler = cy.stub().as("submitHandler");
+    const cancelHandler = cy.stub().as("cancelHandler");
+
+    cy.mount(
+      <ThemeProvider theme={theme}>
+        <CustomerForm onSubmit={submitHandler} onCancel={cancelHandler} />
+      </ThemeProvider>
+    );
+
+    return { submitHandler, cancelHandler };
+  };
+
+  it("calls onSubmit with correct values when form is valid and Save is clicked", () => {
+    const customer = customerFactory.build();
+
+    mountCustomerForm();
+
+    cy.findByLabelText(/name \*/i).type(customer.name);
+    cy.findByLabelText(/address \*/i).type(customer.address);
+    cy.findByLabelText(/postcode \*/i).type(customer.postcode);
+    cy.findByLabelText(/email \*/i).type(customer.email);
+    cy.findByLabelText(/main telephone/i).type(customer.mainTelephone);
+    cy.findByLabelText(/second telephone/i).type(customer.secondTelephone);
+
+    cy.findByRole("button", { name: /save/i }).click();
+
+    cy.get("@submitHandler").should("have.been.calledOnce");
+
+    cy.get("@submitHandler").should("have.been.calledWithMatch", {
+      name: customer.name,
+      address: customer.address,
+      postcode: customer.postcode,
+      email: customer.email,
+      mainTelephone: customer.mainTelephone,
+      secondTelephone: customer.secondTelephone,
+      fileUrls: [],
     });
   });
 
   it("calls onSubmit when pressing intro in a text input", () => {
-    cy.mount(<CustomerForm onSubmit={cy.spy().as("submitHandler")} />);
-    cy.findByLabelText("name *").type("carlos");
-    cy.findByLabelText("address *").type("92 high streer");
-    cy.findByLabelText("postcode *").type("Lug5fr");
-    cy.findByLabelText("email *").type("carlos@email.com{enter}");
+    const customer = customerFactory.build();
 
-    cy.get("@submitHandler").should("have.been.calledWith", {
-      name: "carlos",
-      address: "92 high streer",
-      postcode: "Lug5fr",
-      mainTelephone: "",
-      secondTelephone: "",
-      email: "carlos@email.com",
+    mountCustomerForm();
+
+    cy.findByLabelText(/name \*/i).type(customer.name);
+    cy.findByLabelText(/address \*/i).type(customer.address);
+    cy.findByLabelText(/postcode \*/i).type(customer.postcode);
+    cy.findByLabelText(/email \*/i).type(customer.email);
+    cy.findByLabelText(/main telephone/i).type(customer.mainTelephone);
+    cy.findByLabelText(/second telephone/i).type(
+      `${customer.secondTelephone}{enter}`
+    );
+
+    cy.get("@submitHandler").should("have.been.calledOnce");
+
+    cy.get("@submitHandler").should("have.been.calledWithMatch", {
+      name: customer.name,
+      address: customer.address,
+      postcode: customer.postcode,
+      email: customer.email,
+      mainTelephone: customer.mainTelephone,
+      secondTelephone: customer.secondTelephone,
+      fileUrls: [],
     });
   });
 
   it("calls OnCancel when clicking on cancel button", () => {
-    cy.mount(
-      <CustomerForm
-        onSubmit={cy.spy().as("submitHandler")}
-        onCancel={cy.spy().as("cancelHandler")}
-      />
-    );
+    mountCustomerForm();
     cy.findByText("Cancel").click();
     cy.get("@cancelHandler").should("have.been.called");
   });
 
   it("displays the values in the form when initialValues is defined", () => {
+    const customer = customerFactory.build();
+    const formValues: CustomerFormValues = {
+      ...customer,
+    };
     cy.mount(
       <CustomerForm
         onSubmit={cy.spy().as("submitHandler")}
         onCancel={cy.spy().as("closeHandler")}
-        initialValues={{
-          name: "carlos",
-          address: "",
-          postcode: "",
-          mainTelephone: "",
-          secondTelephone: "",
-          email: "some@email.com",
-        }}
+        initialValues={formValues}
       />
     );
-    cy.findByLabelText("name *").should("have.value", "carlos");
-    cy.findByLabelText("email *").should("have.value", "some@email.com");
+    cy.findByLabelText("name *").should("have.value", formValues.name);
+    cy.findByLabelText("email *").should("have.value", formValues.email);
   });
 
   it("displays an empty form when initialValues is empty", () => {
