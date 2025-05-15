@@ -51,6 +51,6 @@ export const useAddCustomer = () => {
   return {
     addCustomer: trigger,
     loading: isMutating,
-    error: extractErrorCode(error),
+    error: error ? extractErrorCode(error) : undefined,
   };
 };
