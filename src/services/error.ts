@@ -60,7 +60,7 @@ export const extractErrorCode = (error: Error | string | undefined) => {
     return "INTERNAL_ERROR";
   }
   if (error) {
-    errorCode = isErrorCode(error.message) ? error.message : "INTERNAL_ERROR";
+    errorCode = isErrorCode(error) ? error : "INTERNAL_ERROR";
   }
   return errorCode;
 };
