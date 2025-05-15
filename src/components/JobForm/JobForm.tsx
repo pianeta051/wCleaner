@@ -32,10 +32,40 @@ const INITIAL_VALUES: JobFormValues = {
   fileUrl: "",
 };
 
-const validationSchema = yup.object<JobFormValues>({
-  date: yup.date(),
-  startTime: yup.string(),
-  endTime: yup.string(),
+// const validationSchema = yup.object<JobFormValues>({
+//   date: yup.date(),
+//   startTime: yup.string(),
+//   endTime: yup.string(),
+//   price: yup.number().required().positive(),
+//   assignedTo: yup.string(),
+//   jobTypeId: yup.string(),
+//   fileUrl: yup.string(),
+// });
+const validationSchema = yup.object({
+  date: yup
+    .mixed<Dayjs>()
+    .test(
+      "is-dayjs",
+      "Invalid date",
+      (value) => dayjs.isDayjs(value) && value.isValid()
+    ),
+
+  startTime: yup
+    .mixed<Dayjs>()
+    .test(
+      "is-dayjs",
+      "Invalid start time",
+      (value) => dayjs.isDayjs(value) && value.isValid()
+    ),
+
+  endTime: yup
+    .mixed<Dayjs>()
+    .test(
+      "is-dayjs",
+      "Invalid end time",
+      (value) => dayjs.isDayjs(value) && value.isValid()
+    ),
+
   price: yup.number().required().positive(),
   assignedTo: yup.string(),
   jobTypeId: yup.string(),
@@ -75,16 +105,27 @@ export const JobForm: FC<JobFormProps> = ({
     formik.handleChange({ target: { name: "jobTypeId", value } });
   };
 
+  // const dateChangeHandler = (value: Dayjs | null) => {
+  //   formik.handleChange({ target: { name: "date", value } });
+  // };
+
+  // const startTimeChangeHandler = (value: Dayjs | null) => {
+  //   formik.handleChange({ target: { name: "startTime", value } });
+  // };
+
+  // const endTimeChangeHandler = (value: Dayjs | null) => {
+  //   formik.handleChange({ target: { name: "endTime", value } });
+  // };
   const dateChangeHandler = (value: Dayjs | null) => {
-    formik.handleChange({ target: { name: "date", value } });
+    formik.setFieldValue("date", value);
   };
 
   const startTimeChangeHandler = (value: Dayjs | null) => {
-    formik.handleChange({ target: { name: "startTime", value } });
+    formik.setFieldValue("startTime", value);
   };
 
   const endTimeChangeHandler = (value: Dayjs | null) => {
-    formik.handleChange({ target: { name: "endTime", value } });
+    formik.setFieldValue("endTime", value);
   };
 
   const columns = layout === "vertical" ? 12 : 4;

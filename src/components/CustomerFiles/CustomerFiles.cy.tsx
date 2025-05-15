@@ -3,15 +3,34 @@ import { ThemeProvider } from "@mui/material";
 import { theme } from "../../theme";
 import { Storage } from "aws-amplify";
 import "cypress-file-upload";
-
-const mountCustomerFiles = (fileUrls: string[] = []) => {
+let fileUrls: string[] = [];
+const remountCustomerFiles = () => {
   const customer = {
     id: "customer-123",
-    fileUrls,
+    get fileUrls() {
+      return fileUrls;
+    },
+  } as any;
+};
+const mountCustomerFiles = (initialFileUrls: string[] = []) => {
+  fileUrls = [...initialFileUrls];
+
+  const customer = {
+    id: "customer-123",
+    get fileUrls() {
+      return fileUrls;
+    },
   } as any;
 
   const onEditUrls = cy.stub().as("editHandler");
-  const onDeleteFile = cy.stub().as("deleteHandler");
+
+  const onDeleteFile = cy
+    .stub()
+    .as("deleteHandler")
+    .callsFake((index: number) => {
+      fileUrls.splice(index, 1);
+      remountCustomerFiles();
+    });
 
   cy.mount(
     <ThemeProvider theme={theme}>
@@ -67,5 +86,37 @@ describe("CustomerFiles Component", () => {
     mountCustomerFiles();
     cy.get("img").should("not.exist");
     cy.get('[aria-label="File"]').should("not.exist");
+  });
+
+  it("displays the correct file label and upload date", () => {
+    const timestamp = Date.now();
+    const key = `${timestamp}-document.pdf`;
+    mountCustomerFiles([`https://storage-service/${key}`]);
+    const label = "document.pdf";
+    const date = new Date(timestamp).toLocaleDateString("en-GB");
+
+    cy.contains(label).should("exist");
+    cy.contains(`Uploaded: ${date}`).should("exist");
+  });
+
+  it("renders and deletes multiple files independently", () => {
+    const files = [
+      `https://fake-file/${Date.now()}-file1.jpg`,
+      `https://fake-file/${Date.now() + 1}-file2.pdf`,
+    ];
+    mountCustomerFiles(files);
+
+    cy.get('[aria-label="Delete"]').should("have.length", 2).first().click();
+    cy.get("@deleteHandler").should("have.been.calledWith", 0);
+  });
+
+  it("does not show images or file icons after remove icon clicked", () => {
+    fileUrls = [`https://fake-file/${new Date().getTime()}-1.pdf`];
+
+    mountCustomerFiles(fileUrls);
+    cy.get('[aria-label="Delete"]').click();
+
+    mountCustomerFiles(fileUrls);
+    cy.get('[aria-label="Delete"]').should("not.exist");
   });
 });
