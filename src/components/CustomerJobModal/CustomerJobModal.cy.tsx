@@ -1,132 +1,167 @@
-// import { customerFactory } from "../../factories/customers";
-// import { JobModal } from "./JobModal";
+import { ThemeProvider } from "@mui/material";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { CustomerJobModal } from "./CustomerJobModal";
+import { theme } from "../../theme";
+import { customerFactory } from "../../factories/customers";
+import * as jobHooks from "../../hooks/Jobs/useAddJob";
+import * as editJobHooks from "../../hooks/Jobs/useEditJob";
+import * as userHooks from "../../hooks/Users/useUsers";
+import * as jobTypeHooks from "../../hooks/Jobs/useJobTypes";
+import dayjs from "dayjs";
+import { JobFormValues } from "../JobForm/JobForm";
+import { Job } from "../../types/types";
 
-// describe("JobModal Component", () => {
-//   beforeEach(() => {
-//     // Mock customer and initial values for testing
-//     const customers = customerFactory.buildList(5);
-//     const customerSelected = customers[0];
-//     const initialValues = {
-//       date: "2024-10-10",
-//       startTime: "09:00",
-//       endTime: "11:00",
-//       price: 100,
-//     };
+const customer = customerFactory.build();
+const baseDate = dayjs("2024-10-10");
 
-//     // Mount the JobModal component with required props
-//     cy.mount(
-//       <JobModal
-//         open={true}
-//         customer={customerSelected}
-//         initialValues={initialValues}
-//         onClose={cy.stub().as("onClose")}
-//         onSubmit={cy.stub().as("onSubmit")}
-//       />
-//     );
-//   });
+const defaultInitialValues: JobFormValues = {
+  date: baseDate,
+  startTime: baseDate.hour(9).minute(0),
+  endTime: baseDate.hour(11).minute(0),
+  price: 100,
+  assignedTo: "mock-user-id-123",
+  jobTypeId: "mock-job-type-id-456",
+};
 
-//   it("should render the modal with the correct title for a new job", () => {
-//     // Check that the modal title shows "New Job"
-//     cy.contains("New Job").should("be.visible");
-//   });
+beforeEach(() => {
+  if (!document.getElementById("modal-root")) {
+    const modalRoot = document.createElement("div");
+    modalRoot.id = "modal-root";
+    document.body.appendChild(modalRoot);
+  }
 
-//   it("should render the modal with the correct title for editing a job", () => {
-//     // Mount again with jobId to simulate editing
+  cy.stub(userHooks, "useUsers").returns([
+    { id: "mock-user-id-123", name: "Test User" },
+  ]);
 
-//     cy.mount(
-//       <JobModal
-//         open={true}
-//         customer={customerSelected}
-//         jobId={customer.jobId}
-//         initialValues={initialValues}
-//         onClose={cy.stub().as("onClose")}
-//         onSubmit={cy.stub().as("onSubmit")}
-//       />
-//     );
+  cy.stub(jobTypeHooks, "useJobTypes").returns([
+    { id: "mock-job-type-id-456", name: "Mock Job Type" },
+  ]);
+});
 
-//     // Check that the modal title changes to "Edit Job"
-//     cy.contains("Edit Job").should("be.visible");
-//   });
+const mountComponent = (
+  props: Partial<React.ComponentProps<typeof CustomerJobModal>> = {}
+) => {
+  const onSubmit = cy.stub().as("onSubmit") as unknown as (job: Job) => void;
+  const onClose = cy.stub().as("onClose");
 
-//   it("should submit the form and show a success alert for adding a new job", () => {
-//     // Fill out the job form
-//     cy.get('input[name="date"]').clear().type("2024-12-12");
-//     cy.get('input[name="startTime"]').clear().type("10:00");
-//     cy.get('input[name="endTime"]').clear().type("12:00");
-//     cy.get('input[name="price"]').clear().type("200");
+  cy.mount(
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <ThemeProvider theme={theme}>
+        <CustomerJobModal
+          open={true}
+          customer={customer}
+          onClose={onClose}
+          onSubmit={onSubmit}
+          {...props}
+        />
+      </ThemeProvider>
+    </LocalizationProvider>
+  );
+};
 
-//     // Submit the form
-//     cy.get('button[type="submit"]').click();
+describe("CustomerJobModal", () => {
+  beforeEach(() => {
+    cy.stub(jobHooks, "useAddJob").returns({
+      addJob: cy.stub().resolves({
+        id: "job_123",
+        ...defaultInitialValues,
+      }),
+      loading: false,
+      error: null,
+    });
 
-//     // Ensure that onSubmit handler is called
-//     cy.get("@onSubmit").should("have.been.called");
+    cy.stub(editJobHooks, "useCustomerEditJob").returns({
+      editCustomerJob: cy.stub().resolves(),
+      loading: false,
+      error: null,
+    });
+  });
 
-//     // Check that the success alert message is shown
-//     cy.contains("Job Added").should("be.visible");
-//   });
+  it("renders 'New Job' title when creating", () => {
+    mountComponent();
+    cy.findByRole("heading", { name: /new job/i }).should("exist");
+  });
 
-//   it("should submit the form and show a success alert for editing a job", () => {
-//     // Mount again with jobId to simulate editing
+  it("renders 'Edit Job' title when editing", () => {
+    mountComponent({
+      jobId: "job_123",
+      initialValues: defaultInitialValues,
+    });
+    cy.findByRole("heading", { name: /edit job/i }).should("exist");
+  });
 
-//     const initialValues = {
-//       date: "2024-10-10",
-//       startTime: "09:00",
-//       endTime: "11:00",
-//       price: 100,
-//     };
+  it("displays default values passed via props", () => {
+    mountComponent({ initialValues: defaultInitialValues });
 
-//     cy.mount(
-//       <JobModal
-//         open={true}
-//         customer={customerSelected}
-//         jobId={"job123"}
-//         initialValues={initialValues}
-//         onClose={cy.stub().as("onClose")}
-//         onSubmit={cy.stub().as("onSubmit")}
-//       />
-//     );
+    cy.get('input[name="price"]').should("have.value", "100");
+    cy.get('input[name="startTime"]').should("have.value", "09:00");
+    cy.get('input[name="endTime"]').should("have.value", "11:00");
+    cy.get('input[name="date"]').should("exist");
+  });
 
-//     // Submit the form
-//     cy.get('button[type="submit"]').click();
+  it("submits form and calls onSubmit for a new job", () => {
+    mountComponent({ initialValues: defaultInitialValues });
 
-//     // Ensure that onSubmit handler is called
-//     cy.get("@onSubmit").should("have.been.called");
+    cy.get('input[name="price"]').clear().type("250");
+    cy.findByRole("button", { name: /save/i }).click();
 
-//     // Check that the success alert message is shown
-//     cy.contains("Job Edited").should("be.visible");
-//   });
+    cy.get("@onSubmit").should("have.been.called");
+    cy.get("@onClose").should("have.been.called");
+  });
 
-//   it("should close the modal when the cancel button is clicked", () => {
-//     // Click the cancel button
-//     cy.contains("Cancel").click();
+  //   it("submits form and closes modal when editing a job", () => {
+  //     mountComponent({
+  //       jobId: "job_123",
+  //       initialValues: defaultInitialValues,
+  //     });
 
-//     // Ensure that the onClose handler is called
-//     cy.get("@onClose").should("have.been.called");
-//   });
+  //     cy.findByRole("button", { name: /save/i }).click();
+  //     cy.get("@onClose").should("have.been.called");
+  //   });
 
-//   it("should display an error message when there is an error during job creation", () => {
-//     // Simulate an error by mounting the component with a fake error
+  //   it("calls onClose when Cancel button is clicked", () => {
+  //     mountComponent();
+  //     cy.findByRole("button", { name: /cancel/i }).click();
+  //     cy.get("@onClose").should("have.been.called");
+  //   });
 
-//     const initialValues = {
-//       date: "2024-10-10",
-//       startTime: "09:00",
-//       endTime: "11:00",
-//       price: 100,
-//     };
-//     const creationError = "Error creating job!";
+  //   // ---------- Error state tests ----------
+  //   it("shows error message if there is a creation error", () => {
+  //     cy.stub(jobHooks, "useAddJob").returns({
+  //       addJob: cy.stub().rejects(),
+  //       loading: false,
+  //       error: "Error creating job!",
+  //     });
 
-//     cy.mount(
-//       <JobModal
-//         open={true}
-//         customer={customerSelected}
-//         initialValues={initialValues}
-//         onClose={cy.stub().as("onClose")}
-//         onSubmit={cy.stub().as("onSubmit")}
-//         creationError={creationError} // Simulate an error
-//       />
-//     );
+  //     mountComponent();
+  //     cy.contains("Error creating job!").should("exist");
+  //   });
 
-//     // Ensure that the error message is shown
-//     cy.contains("Error creating job!").should("be.visible");
-//   });
-// });
+  //   it("shows error message if there is an edition error", () => {
+  //     cy.stub(editJobHooks, "useCustomerEditJob").returns({
+  //       editCustomerJob: cy.stub().rejects(),
+  //       loading: false,
+  //       error: "Error updating job!",
+  //     });
+
+  //     mountComponent({
+  //       jobId: "job_123",
+  //       initialValues: defaultInitialValues,
+  //     });
+
+  //     cy.contains("Error updating job!").should("exist");
+  //   });
+
+  //   it("disables save button while loading", () => {
+  //     cy.stub(jobHooks, "useAddJob").returns({
+  //       addJob: cy.stub().resolves(),
+  //       loading: true,
+  //       error: null,
+  //     });
+
+  //     mountComponent();
+  //     cy.findByRole("button", { name: /save/i }).should("be.disabled");
+  //   });
+});
