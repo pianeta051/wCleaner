@@ -10,7 +10,7 @@ export const useAddJob = (customerId?: string) => {
   const { mutate } = useSWRConfig();
   const { trigger, isMutating, error } = useSWRMutation<
     Job,
-    Error,
+    string,
     [string, string] | null,
     JobFormValues,
     Job | null

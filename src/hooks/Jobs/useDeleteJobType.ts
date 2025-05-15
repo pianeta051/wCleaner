@@ -5,7 +5,7 @@ import { deleteJobType } from "../../services/jobs";
 export const useDeleteJobType = (jobTypeId: string) => {
   const { trigger, isMutating, error } = useSWRMutation<
     void,
-    Error,
+    string,
     readonly [string, string] | null,
     string
   >(

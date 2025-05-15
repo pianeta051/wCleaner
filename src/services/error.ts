@@ -51,8 +51,14 @@ export const isErrorResponse = (value: unknown): value is ErrorResponse => {
   );
 };
 
-export const extractErrorCode = (error: string | undefined) => {
+export const extractErrorCode = (error: Error | string | undefined) => {
   let errorCode: ErrorCode | null = null;
+  if (typeof error === "string") {
+    if (isErrorCode(error)) {
+      return error;
+    }
+    return "INTERNAL_ERROR";
+  }
   if (error) {
     errorCode = isErrorCode(error) ? error : "INTERNAL_ERROR";
   }

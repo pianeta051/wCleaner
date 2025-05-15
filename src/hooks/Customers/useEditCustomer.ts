@@ -10,7 +10,7 @@ export const useEditCustomer = (
 ) => {
   const { trigger, isMutating, error } = useSWRMutation<
     Customer,
-    Error,
+    string,
     readonly [string, string] | null,
     CustomerFormValues
   >(

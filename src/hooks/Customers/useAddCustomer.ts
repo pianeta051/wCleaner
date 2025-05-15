@@ -11,7 +11,7 @@ export const useAddCustomer = () => {
   const { mutate } = useSWRConfig();
   const { trigger, isMutating, error } = useSWRMutation<
     Customer,
-    Error,
+    string,
     [string],
     CustomerFormValues,
     Customer | null
@@ -51,6 +51,6 @@ export const useAddCustomer = () => {
   return {
     addCustomer: trigger,
     loading: isMutating,
-    error: error ? extractErrorCode(error) : undefined,
+    error: extractErrorCode(error),
   };
 };
