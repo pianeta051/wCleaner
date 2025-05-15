@@ -13,7 +13,6 @@ export type CustomerFormValues = {
   mainTelephone: string;
   secondTelephone: string;
   email: string;
-
   fileUrls?: string[];
 };
 
@@ -26,6 +25,7 @@ const INITIAL_VALUES: CustomerFormValues = {
   email: "",
   fileUrls: [],
 };
+
 const validationSchema = yup.object<CustomerFormValues>({
   email: yup.string().email().required(),
   name: yup.string().required(),
@@ -50,7 +50,6 @@ type CustomerFormProps = {
   onSubmit: (customer: CustomerFormValues) => void;
   onCancel?: () => void;
   onDelete?: () => void;
-
   initialValues?: CustomerFormValues;
   loading?: boolean;
   layout?: "vertical" | "horizontal";
@@ -64,159 +63,95 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   layout = "vertical",
 }) => {
   const formik = useFormik<CustomerFormValues>({
-    initialValues: initialValues,
+    initialValues,
     onSubmit,
     validationSchema,
   });
-  const columns = layout === "vertical" ? 12 : 4;
+
+  const columns = layout === "vertical" ? 12 : { xs: 12, sm: 6, md: 4 };
 
   return (
     <Form onSubmit={formik.handleSubmit}>
-      <Grid container columnSpacing={5}>
-        <Grid item xs={12} md={columns}>
-          <Field
-            name="name"
-            id="name"
-            label="name"
-            type="text"
-            autoFocus
-            required
-            onChange={formik.handleChange}
-            value={formik.values.name}
-            error={!!(formik.touched.name && formik.errors.name)}
-            helperText={formik.touched.name ? formik.errors.name : undefined}
-          />
-        </Grid>
-        <Grid item xs={12} md={columns}>
-          <Field
-            name="address"
-            id="address"
-            label="address"
-            type="text"
-            fullWidth
-            required
-            onChange={formik.handleChange}
-            value={formik.values.address}
-            error={!!(formik.touched.address && formik.errors.address)}
-            helperText={
-              formik.touched.address ? formik.errors.address : undefined
-            }
-          />
-        </Grid>
-        <Grid item xs={12} md={columns}>
-          <Field
-            name="postcode"
-            id="postcode"
-            label="postcode"
-            type="text"
-            fullWidth
-            required
-            onChange={formik.handleChange}
-            value={formik.values.postcode}
-            error={!!(formik.touched.postcode && formik.errors.postcode)}
-            helperText={
-              formik.touched.postcode ? formik.errors.postcode : undefined
-            }
-          />
-        </Grid>
-        <Grid item xs={12} md={columns}>
-          <Field
-            name="mainTelephone"
-            id="mainTelephone"
-            label="main telephone"
-            type="text"
-            fullWidth
-            onChange={formik.handleChange}
-            value={formik.values.mainTelephone}
-            error={
-              !!(formik.touched.mainTelephone && formik.errors.mainTelephone)
-            }
-            helperText={
-              formik.touched.mainTelephone
-                ? formik.errors.mainTelephone
-                : undefined
-            }
-          />
-        </Grid>
-        <Grid item xs={12} md={columns}>
-          <Field
-            name="secondTelephone"
-            id="secondTelephone"
-            label="second telephone"
-            type="text"
-            fullWidth
-            onChange={formik.handleChange}
-            value={formik.values.secondTelephone}
-            error={
-              !!(
-                formik.touched.secondTelephone && formik.errors.secondTelephone
-              )
-            }
-            helperText={
-              formik.touched.secondTelephone
-                ? formik.errors.secondTelephone
-                : undefined
-            }
-          />
-        </Grid>
-        <Grid item xs={12} md={columns}>
-          <Field
-            name="email"
-            id="email"
-            label="email"
-            type="email"
-            fullWidth
-            required
-            onChange={formik.handleChange}
-            value={formik.values.email}
-            error={!!(formik.touched.email && formik.errors.email)}
-            helperText={formik.touched.email ? formik.errors.email : undefined}
-          />
-        </Grid>
-        {!onCancel ? (
-          <Grid item xs={12} textAlign="center" mb={2} mt={2}>
-            <LoadingButton
-              variant="contained"
-              color="primary"
-              style={{ textTransform: "none" }}
-              type="submit"
-              sx={{ width: "20%" }}
-              loading={loading}
-            >
-              Save
-            </LoadingButton>
+      <Grid container spacing={3}>
+        {[
+          "name",
+          "address",
+          "postcode",
+          "mainTelephone",
+          "secondTelephone",
+          "email",
+        ].map((fieldName) => (
+          <Grid
+            item
+            key={fieldName}
+            {...(typeof columns === "number" ? { xs: columns } : columns)}
+          >
+            <Field
+              name={fieldName}
+              id={fieldName}
+              label={fieldName.replace(/([A-Z])/g, " $1").toLowerCase()}
+              type={fieldName === "email" ? "email" : "text"}
+              fullWidth
+              required={["name", "address", "postcode", "email"].includes(
+                fieldName
+              )}
+              onChange={formik.handleChange}
+              value={formik.values[fieldName as keyof CustomerFormValues]}
+              error={
+                !!(
+                  formik.touched[fieldName as keyof CustomerFormValues] &&
+                  formik.errors[fieldName as keyof CustomerFormValues]
+                )
+              }
+              helperText={
+                formik.touched[fieldName as keyof CustomerFormValues]
+                  ? formik.errors[fieldName as keyof CustomerFormValues]
+                  : undefined
+              }
+            />
           </Grid>
-        ) : (
-          <Grid item xs={6} textAlign="right">
-            <LoadingButton
-              variant="contained"
-              color="primary"
-              style={{ textTransform: "none" }}
-              type="submit"
-              sx={{ width: "50%" }}
-              loading={loading}
-            >
-              Save
-            </LoadingButton>
-          </Grid>
-        )}
+        ))}
 
-        <Grid container spacing={2} item xs={6} mb={2}>
-          {onCancel && (
-            <Grid item xs={6} textAlign="left">
-              <Button
-                disableFocusRipple
-                disableRipple
-                style={{ textTransform: "none" }}
-                variant="outlined"
+        <Grid item xs={12} mt={3}>
+          <Grid
+            container
+            direction="column"
+            alignItems="center"
+            justifyContent="center"
+            spacing={2}
+          >
+            <Grid item>
+              <LoadingButton
+                variant="contained"
                 color="primary"
-                sx={{ width: "100%" }}
-                onClick={onCancel}
+                type="submit"
+                loading={loading}
+                sx={{
+                  width: { xs: "100%", sm: "200px" },
+                  textTransform: "none",
+                }}
               >
-                Cancel
-              </Button>
+                Save
+              </LoadingButton>
             </Grid>
-          )}
+
+            {onCancel && (
+              <Grid item>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={onCancel}
+                  sx={{
+                    width: { xs: "100%", sm: "200px" },
+                    textTransform: "none",
+                    mb: 2,
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Grid>
+            )}
+          </Grid>
         </Grid>
       </Grid>
     </Form>

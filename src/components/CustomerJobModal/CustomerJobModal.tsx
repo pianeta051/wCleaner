@@ -16,7 +16,6 @@ type CustomerJobModalProps = {
   initialValues?: JobFormValues;
   jobId?: string;
   onClose: () => void;
-  onSubmit: (job: Job) => void;
 };
 export const CustomerJobModal: FC<CustomerJobModalProps> = ({
   open,
@@ -24,7 +23,6 @@ export const CustomerJobModal: FC<CustomerJobModalProps> = ({
   jobId,
   initialValues,
   onClose,
-  onSubmit,
 }) => {
   const {
     addJob,
@@ -48,8 +46,7 @@ export const CustomerJobModal: FC<CustomerJobModalProps> = ({
         });
     } else {
       addJob(formValues)
-        .then((job) => {
-          onSubmit(job);
+        .then(() => {
           onClose();
         })
         .catch(() => {

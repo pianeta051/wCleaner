@@ -43,7 +43,6 @@ beforeEach(() => {
 const mountComponent = (
   props: Partial<React.ComponentProps<typeof CustomerJobModal>> = {}
 ) => {
-  const onSubmit = cy.stub().as("onSubmit") as unknown as (job: Job) => void;
   const onClose = cy.stub().as("onClose");
 
   cy.mount(
@@ -53,7 +52,6 @@ const mountComponent = (
           open={true}
           customer={customer}
           onClose={onClose}
-          onSubmit={onSubmit}
           {...props}
         />
       </ThemeProvider>
@@ -107,7 +105,6 @@ describe("CustomerJobModal", () => {
     cy.get('input[name="price"]').clear().type("250");
     cy.findByRole("button", { name: /save/i }).click();
 
-    cy.get("@onSubmit").should("have.been.called");
     cy.get("@onClose").should("have.been.called");
   });
 
