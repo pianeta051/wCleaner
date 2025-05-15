@@ -2,7 +2,7 @@ const { CognitoIdentityServiceProvider } = require("aws-sdk");
 const { mapJob } = require("./mappers");
 
 const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider();
-const userPoolId = "eu-west-2_nRfe1m5kq";
+const userPoolId = process.env.USER_POOL_ID;
 
 const getGroups = async (userSub) => {
   const params = {

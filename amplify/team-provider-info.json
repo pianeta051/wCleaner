@@ -21,7 +21,7 @@
       "function": {
         "AdminQueries0c37162b": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/AdminQueries0c37162b-66384155707055533149-build.zip"
+          "s3Key": "amplify-builds/AdminQueries0c37162b-52644c4a5346792f4867-build.zip"
         },
         "wcleanerCustomMessage": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
@@ -29,7 +29,8 @@
         },
         "wCleanerApi": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/wCleanerApi-594f6276706c4f4d542f-build.zip"
+          "s3Key": "amplify-builds/wCleanerApi-594f6276706c4f4d542f-build.zip",
+          "userPoolId": "eu-west-2_nRfe1m5kq"
         },
         "wcleaner": {}
       },
