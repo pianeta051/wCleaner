@@ -172,7 +172,6 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
           customer={customer}
           open={modalOpen}
           onClose={closeHandler}
-          onSubmit={() => openHandler}
           initialValues={
             editingJob
               ? {
