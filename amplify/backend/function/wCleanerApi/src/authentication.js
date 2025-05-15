@@ -5,8 +5,6 @@ const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider();
 
 const userPoolId = process.env.USER_POOL_ID;
 
-
-const userPoolId = process.env.USER_POOL_ID;
 console.log("USER POOL ID : " + userPoolId);
 const getGroups = async (userSub) => {
   const params = {
