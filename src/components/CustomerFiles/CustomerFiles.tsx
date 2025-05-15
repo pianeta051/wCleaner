@@ -16,7 +16,7 @@ type CustomerFilesProps = {
 };
 
 const isImageFile = (url: string): boolean => {
-  const match = url.match(/\/[^\/]*\.(jpg|jpeg|png|gif|bmp|webp|svg)(?=\?|$)/i);
+  const match = url.match(/\/[^/]*\.(jpg|jpeg|png|gif|bmp|webp|svg)(?=\?|$)/i);
   return !!match;
 };
 
