@@ -10,7 +10,7 @@ export const useDeleteCustomer = (id: string | undefined) => {
   const { mutate } = useSWRConfig();
   const { trigger, isMutating, error } = useSWRMutation<
     void,
-    Error,
+    string,
     readonly [string, string] | null,
     never,
     Customer | null

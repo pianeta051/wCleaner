@@ -15,7 +15,7 @@ export const useCustomerEditJob = (
   const filters: JobFilters = { start: "", end: "" };
   const { trigger, isMutating, error } = useSWRMutation<
     Job,
-    Error,
+    string,
     readonly [string, string, string] | null,
     JobFormValues
   >(
