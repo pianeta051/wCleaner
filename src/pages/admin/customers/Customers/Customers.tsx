@@ -20,8 +20,11 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useAuth } from "../../../../context/AuthContext";
 
 export const Customers: FC = () => {
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOutcodes, setSelectedOutcodes] = useState<string[]>([]);
   const [appliedOutcodes, setAppliedOutcodes] = useState<string[]>([]);
@@ -53,20 +56,40 @@ export const Customers: FC = () => {
 
   return (
     <Wrapper>
-      {isEmpty ? (
-        <EmptyCustomers onCreateNew={openNewMHandler} />
-      ) : (
+      {isAdmin && (
         <>
-          <Title>Customers</Title>
+          {" "}
+          {isEmpty ? (
+            <EmptyCustomers onCreateNew={openNewMHandler} />
+          ) : (
+            <>
+              <Title>Customers</Title>
 
-          <Grid container spacing={1}>
-            {isMobile ? (
-              <Grid item xs={12}>
-                <Accordion>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography>Filter by Outcode</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
+              <Grid container spacing={1}>
+                {isMobile ? (
+                  <Grid item xs={12}>
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography>Filter by Outcode</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        {loadingOutcodes ? (
+                          <CircularProgress />
+                        ) : (
+                          outcodes && (
+                            <OutcodesSelector
+                              outcodes={outcodes}
+                              selected={selectedOutcodes}
+                              onChange={setSelectedOutcodes}
+                              onFilter={applyOutcodeFilterHandler}
+                            />
+                          )
+                        )}
+                      </AccordionDetails>
+                    </Accordion>
+                  </Grid>
+                ) : (
+                  <OutcodeGrid item xs={12} md={2}>
                     {loadingOutcodes ? (
                       <CircularProgress />
                     ) : (
@@ -79,60 +102,48 @@ export const Customers: FC = () => {
                         />
                       )
                     )}
-                  </AccordionDetails>
-                </Accordion>
-              </Grid>
-            ) : (
-              <OutcodeGrid item xs={12} md={2}>
-                {loadingOutcodes ? (
-                  <CircularProgress />
-                ) : (
-                  outcodes && (
-                    <OutcodesSelector
-                      outcodes={outcodes}
-                      selected={selectedOutcodes}
-                      onChange={setSelectedOutcodes}
-                      onFilter={applyOutcodeFilterHandler}
-                    />
-                  )
+                  </OutcodeGrid>
                 )}
-              </OutcodeGrid>
-            )}
 
-            <Grid item xs={9}>
-              <IconButton>
-                <Button startIcon={<AddIcon />} onClick={openNewMHandler}>
-                  New customer
-                </Button>
-              </IconButton>
-              <SearchBar onSearch={searchHandler} initialValue={searchInput} />
-              {loading ? (
-                <CircularProgress />
-              ) : error ? (
-                <ErrorMessage code={error} />
-              ) : (
-                <>
-                  <CustomersTable customers={customers} />
-                  {moreToLoad && (
-                    <LoadingButton
-                      variant="text"
-                      onClick={loadMore}
-                      loading={loadingMore}
-                    >
-                      Load more
-                    </LoadingButton>
+                <Grid item xs={9}>
+                  <IconButton>
+                    <Button startIcon={<AddIcon />} onClick={openNewMHandler}>
+                      New customer
+                    </Button>
+                  </IconButton>
+                  <SearchBar
+                    onSearch={searchHandler}
+                    initialValue={searchInput}
+                  />
+                  {loading ? (
+                    <CircularProgress />
+                  ) : error ? (
+                    <ErrorMessage code={error} />
+                  ) : (
+                    <>
+                      <CustomersTable customers={customers} />
+                      {moreToLoad && (
+                        <LoadingButton
+                          variant="text"
+                          onClick={loadMore}
+                          loading={loadingMore}
+                        >
+                          Load more
+                        </LoadingButton>
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </Grid>
-          </Grid>
+                </Grid>
+              </Grid>
+            </>
+          )}
+          <NewCustomerModal
+            open={modalOpen}
+            onClose={closeNewModalHandler}
+            onSubmit={closeNewModalHandler}
+          />
         </>
       )}
-      <NewCustomerModal
-        open={modalOpen}
-        onClose={closeNewModalHandler}
-        onSubmit={closeNewModalHandler}
-      />
     </Wrapper>
   );
 };

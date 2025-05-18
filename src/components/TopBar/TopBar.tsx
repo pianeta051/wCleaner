@@ -24,6 +24,7 @@ export const TopBar: FC = () => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { logOut, isInGroup, user } = useAuth();
+  const isAdmin = isInGroup("Admin");
   const navigate = useNavigate();
 
   const openUserMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -33,7 +34,7 @@ export const TopBar: FC = () => {
     setAnchorEl(event.currentTarget);
   };
   const pages: Page[] = [
-    { label: "customers", url: "/admin/customers" },
+    { label: "customers", url: "/admin/customers", exclusiveFor: "Admin" },
     { label: "users", url: "/admin/users", exclusiveFor: "Admin" },
     { label: "jobs  ", url: "/admin/jobs" },
   ];
@@ -99,25 +100,27 @@ export const TopBar: FC = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Menu
-            id="menu-appbar"
-            aria-labelledby="demo-positioned-button"
-            anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: "top",
-              horizontal: "left",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "left",
-            }}
-            open={Boolean(anchorEl)}
-            onClose={closeMenuIconHandler}
-          >
-            <MenuItem onClick={toCustomers}>Customers</MenuItem>
-            <MenuItem onClick={toUsers}>Users</MenuItem>
-            <MenuItem onClick={toJobs}>Jobs</MenuItem>
-          </Menu>
+          {isAdmin && (
+            <Menu
+              id="menu-appbar"
+              aria-labelledby="demo-positioned-button"
+              anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "left",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "left",
+              }}
+              open={Boolean(anchorEl)}
+              onClose={closeMenuIconHandler}
+            >
+              <MenuItem onClick={toCustomers}>Customers</MenuItem>
+              <MenuItem onClick={toUsers}>Users</MenuItem>
+              <MenuItem onClick={toJobs}>Jobs</MenuItem>
+            </Menu>
+          )}
 
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Window Cleaner

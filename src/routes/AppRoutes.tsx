@@ -15,11 +15,14 @@ import { UnAuthenticatedRoute } from "./UnAuthenticateRoute";
 import { AuthenticatedRoute } from "./AuthenticatedRoute";
 import { AdminRoute } from "./AdminRoute";
 import { JobsPage } from "../pages/admin/Jobs/Jobs";
-
 import { JobDetailsPage } from "../pages/admin/JobDetails/JobDetails";
 import { AdminLayoutFullWidth } from "../components/AdminLayout/AdminLayoutFullWidth";
+import { useAuth } from "../context/AuthContext";
 
 export const AppRoutes: FC = () => {
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
+
   return (
     <Routes>
       <Route
@@ -44,15 +47,28 @@ export const AppRoutes: FC = () => {
           </AuthenticatedRoute>
         }
       >
-        <Route index element={<Navigate to="customers" />} />
-        <Route path="customers" element={<AdminLayoutFullWidth />}>
-          <Route index element={<Customers />} />
-          <Route path=":slug" element={<CustomerDetails />} />
-        </Route>
+        <Route
+          index
+          element={
+            <Navigate to={isAdmin ? "/admin/customers" : "/admin/jobs"} />
+          }
+        />
+
+        {isAdmin ? (
+          <Route path="customers" element={<AdminLayoutFullWidth />}>
+            <Route index element={<Customers />} />
+            <Route path=":slug" element={<CustomerDetails />} />
+          </Route>
+        ) : (
+          <Route path="jobs" element={<AdminLayoutFullWidth />}>
+            <Route index element={<JobsPage />} />
+          </Route>
+        )}
 
         <Route path="profile" element={<AdminLayout />}>
           <Route index element={<ProfilePage />} />
         </Route>
+
         <Route
           path="users"
           element={
@@ -67,7 +83,6 @@ export const AppRoutes: FC = () => {
 
         <Route path="jobs" element={<AdminLayoutFullWidth />}>
           <Route index element={<JobsPage />} />
-
           <Route path=":jobId">
             <Route index element={<JobDetailsPage />} />
           </Route>
