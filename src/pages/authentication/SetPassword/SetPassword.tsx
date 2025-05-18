@@ -32,6 +32,8 @@ export const SetPassword: FC<SetPasswordProps> = ({
   const [error, setError] = useState<ErrorCode | null>(null);
 
   const { user, logIn } = useAuth();
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState(initialValues);
@@ -45,7 +47,9 @@ export const SetPassword: FC<SetPasswordProps> = ({
             logIn(user);
           }
           setLoading(false);
-          navigate("/admin/customers");
+          {
+            isAdmin ? navigate("/admin/customers") : navigate("/");
+          }
         })
         .catch((error) => {
           setLoading(false);
