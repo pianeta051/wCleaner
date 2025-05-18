@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Button, Grid } from "@mui/material";
+import { Button, Grid, Container, Box } from "@mui/material";
 import { Field } from "./CustomerForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../../Form/Form";
@@ -27,19 +27,18 @@ const INITIAL_VALUES: CustomerFormValues = {
 };
 
 const validationSchema = yup.object<CustomerFormValues>({
-  email: yup.string().email().required(),
-  name: yup.string().required(),
-  address: yup.string().required(),
+  email: yup.string().email("Invalid email").required("Email is required"),
+  name: yup.string().required("Name is required"),
+  address: yup.string().required("Address is required"),
   postcode: yup
     .string()
-    .required()
+    .required("Postcode is required")
     .test(
       "is-valid-uk-postcode",
       "It must be a valid UK postcode",
       (postcode) => {
-        const postcodeParts = postcode.split(/\s/g);
-        const filteredPostcodeParts = postcodeParts.filter((part) => !!part);
-        return filteredPostcodeParts.length === 2;
+        const postcodeParts = postcode?.trim().split(/\s+/) || [];
+        return postcodeParts.length === 2;
       }
     ),
   mainTelephone: yup.string(),
@@ -68,92 +67,84 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     validationSchema,
   });
 
-  const columns = layout === "vertical" ? 12 : { xs: 12, sm: 6, md: 4 };
+  const gridSize =
+    layout === "vertical" ? { xs: 12 } : { xs: 12, sm: 6, md: 4 };
+
+  const requiredFields = ["name", "address", "postcode", "email"];
 
   return (
-    <Form onSubmit={formik.handleSubmit}>
-      <Grid container spacing={3}>
-        {[
-          "name",
-          "address",
-          "postcode",
-          "mainTelephone",
-          "secondTelephone",
-          "email",
-        ].map((fieldName) => (
-          <Grid
-            item
-            key={fieldName}
-            {...(typeof columns === "number" ? { xs: columns } : columns)}
-          >
-            <Field
-              name={fieldName}
-              id={fieldName}
-              label={fieldName.replace(/([A-Z])/g, " $1").toLowerCase()}
-              type={fieldName === "email" ? "email" : "text"}
-              fullWidth
-              required={["name", "address", "postcode", "email"].includes(
-                fieldName
-              )}
-              onChange={formik.handleChange}
-              value={formik.values[fieldName as keyof CustomerFormValues]}
-              error={
-                !!(
-                  formik.touched[fieldName as keyof CustomerFormValues] &&
-                  formik.errors[fieldName as keyof CustomerFormValues]
-                )
-              }
-              helperText={
-                formik.touched[fieldName as keyof CustomerFormValues]
-                  ? formik.errors[fieldName as keyof CustomerFormValues]
-                  : undefined
-              }
-            />
-          </Grid>
-        ))}
-
-        <Grid item xs={12} mt={3}>
-          <Grid
-            container
-            direction="column"
-            alignItems="center"
-            justifyContent="center"
-            spacing={2}
-          >
-            <Grid item>
-              <LoadingButton
-                variant="contained"
-                color="primary"
-                type="submit"
-                loading={loading}
-                sx={{
-                  width: { xs: "100%", sm: "200px" },
-                  textTransform: "none",
-                }}
-              >
-                Save
-              </LoadingButton>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Form onSubmit={formik.handleSubmit}>
+        <Grid container spacing={3}>
+          {[
+            "name",
+            "address",
+            "postcode",
+            "mainTelephone",
+            "secondTelephone",
+            "email",
+          ].map((fieldName) => (
+            <Grid item {...gridSize} key={fieldName}>
+              <Field
+                name={fieldName}
+                id={fieldName}
+                label={fieldName.replace(/([A-Z])/g, " $1").toLowerCase()}
+                type={fieldName === "email" ? "email" : "text"}
+                fullWidth
+                required={requiredFields.includes(fieldName)}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values[fieldName as keyof CustomerFormValues]}
+                error={
+                  !!(
+                    formik.touched[fieldName as keyof CustomerFormValues] &&
+                    formik.errors[fieldName as keyof CustomerFormValues]
+                  )
+                }
+                helperText={
+                  formik.touched[fieldName as keyof CustomerFormValues]
+                    ? formik.errors[fieldName as keyof CustomerFormValues]
+                    : ""
+                }
+              />
             </Grid>
+          ))}
 
-            {onCancel && (
+          <Grid item xs={12}>
+            <Grid
+              container
+              spacing={2}
+              justifyContent="center"
+              alignItems="center"
+            >
               <Grid item>
-                <Button
-                  variant="outlined"
+                <LoadingButton
+                  variant="contained"
                   color="primary"
-                  onClick={onCancel}
-                  sx={{
-                    width: { xs: "100%", sm: "200px" },
-                    textTransform: "none",
-                    mb: 2,
-                  }}
+                  type="submit"
+                  loading={loading}
+                  sx={{ minWidth: 120, textTransform: "none" }}
                 >
-                  Cancel
-                </Button>
+                  Save
+                </LoadingButton>
               </Grid>
-            )}
+
+              {onCancel && (
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={onCancel}
+                    sx={{ minWidth: 120, textTransform: "none" }}
+                  >
+                    Cancel
+                  </Button>
+                </Grid>
+              )}
+            </Grid>
           </Grid>
         </Grid>
-      </Grid>
-    </Form>
+      </Form>
+    </Container>
   );
 };
