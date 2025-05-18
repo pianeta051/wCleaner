@@ -17,6 +17,8 @@ export const Login: FC = () => {
   const { setUser, logIn } = useAuth();
   const navigate = useNavigate();
   const toForgotPassword = () => navigate("/forgot-password");
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
   const submitHandler = (formValues: LogInFormData) => {
     setErrorCode(null);
     setLoading(true);
@@ -30,7 +32,9 @@ export const Login: FC = () => {
           navigate("/set-password");
         } else if (logIn) {
           logIn(user);
-          navigate("/admin/customers");
+          {
+            isAdmin ? navigate("/admin/customers") : navigate("/");
+          }
         }
       })
       .catch((error) => {
