@@ -32,15 +32,6 @@ const INITIAL_VALUES: JobFormValues = {
   fileUrl: "",
 };
 
-// const validationSchema = yup.object<JobFormValues>({
-//   date: yup.date(),
-//   startTime: yup.string(),
-//   endTime: yup.string(),
-//   price: yup.number().required().positive(),
-//   assignedTo: yup.string(),
-//   jobTypeId: yup.string(),
-//   fileUrl: yup.string(),
-// });
 const validationSchema = yup.object({
   date: yup
     .mixed<Dayjs>()
@@ -105,17 +96,6 @@ export const JobForm: FC<JobFormProps> = ({
     formik.handleChange({ target: { name: "jobTypeId", value } });
   };
 
-  // const dateChangeHandler = (value: Dayjs | null) => {
-  //   formik.handleChange({ target: { name: "date", value } });
-  // };
-
-  // const startTimeChangeHandler = (value: Dayjs | null) => {
-  //   formik.handleChange({ target: { name: "startTime", value } });
-  // };
-
-  // const endTimeChangeHandler = (value: Dayjs | null) => {
-  //   formik.handleChange({ target: { name: "endTime", value } });
-  // };
   const dateChangeHandler = (value: Dayjs | null) => {
     formik.setFieldValue("date", value);
   };

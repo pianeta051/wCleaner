@@ -54,14 +54,10 @@ export const AppRoutes: FC = () => {
           }
         />
 
-        {isAdmin ? (
+        {isAdmin && (
           <Route path="customers" element={<AdminLayoutFullWidth />}>
             <Route index element={<Customers />} />
             <Route path=":slug" element={<CustomerDetails />} />
-          </Route>
-        ) : (
-          <Route path="jobs" element={<AdminLayoutFullWidth />}>
-            <Route index element={<JobsPage />} />
           </Route>
         )}
 
