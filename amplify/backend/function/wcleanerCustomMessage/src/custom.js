@@ -54,11 +54,6 @@ const createUserTemplate = (email, password) => `
 </html>
 `;
 
-// const forgotPasswordTemplate = (email, code, redirectTo) => `
-// <p>Need to update your password? Click to follow button</p>
-// <a href="${redirectTo}/reset-password?email=${email}&code=${code}" target="_blank">Click here</a>
-// `;
-
 const forgotPasswordTemplate = (email, code, redirectTo) => `
 <html style="margin: 0;padding: 0;font-family: &quot;Lucida Sans&quot;, &quot;Lucida Sans Regular&quot;, &quot;Lucida Grande&quot;,
          &quot;Lucida Sans Unicode&quot;, Geneva, Verdana, sans-serif;text-align: center;background-color: rgb(196, 240, 225);">
