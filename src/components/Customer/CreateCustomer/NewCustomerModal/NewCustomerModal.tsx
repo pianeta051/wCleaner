@@ -6,7 +6,6 @@ import {
   CustomerFormValues,
 } from "../../CustomerForm/CustomerForm";
 import {
-  ModalBox,
   Background,
   Wrapper,
   Title,
@@ -14,6 +13,7 @@ import {
 import { Grid } from "@mui/material";
 import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
 import { useAddCustomer } from "../../../../hooks/Customers/useAddCustomer";
+import { ModalBox } from "./NewCustomerModal.style";
 
 type NewCustomerModalProps = {
   open: boolean;
