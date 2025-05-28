@@ -20,6 +20,7 @@ const {
   getCustomerBySlug,
   getCustomerById,
   getCustomerJobs,
+  getJob,
   getJobs,
   getJobTypes,
   getOutcodes,
@@ -198,6 +199,14 @@ app.get("/jobs", async function (req, res) {
     jobs = await getJobUsers(items);
   }
   res.json({ jobs, nextToken: responseToken });
+});
+
+app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
+  const customerId = req.params.customerId;
+  const jobId = req.params.jobId;
+  const jobFromDb = await getJob(customerId, jobId);
+  const job = mapJob(jobFromDb);
+  res.json({ job });
 });
 
 // Get a single customer's Job

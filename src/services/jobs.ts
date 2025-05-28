@@ -365,9 +365,12 @@ export const getCustomerJobs = async (
   }
 };
 
-export const getJob = async (id: string): Promise<Job> => {
+export const getJob = async (
+  customerId: string,
+  jobId: string
+): Promise<Job> => {
   try {
-    const response = await get(`/jobs/${id}`);
+    const response = await get(`/customers/${customerId}/jobs/${jobId}`);
     if (!("job" in response) && typeof response.job !== "object") {
       throw "INTERNAL_ERROR";
     }

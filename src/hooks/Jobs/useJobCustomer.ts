@@ -3,12 +3,15 @@ import { Job } from "../../types/types";
 import { getJob } from "../../services/jobs";
 import { extractErrorCode } from "../../services/error";
 
-export const useJobCustomer = (id: string | undefined) => {
+export const useJobCustomer = (customerId?: string, jobId?: string) => {
   const { data, isLoading, error } = useSWR<
     Job | null,
     Error,
-    readonly [string, string] | null
-  >(id ? ["job", id] : null, async ([_operation, id]) => getJob(id));
+    readonly [string, string, string] | null
+  >(
+    customerId && jobId ? ["job", customerId, jobId] : null,
+    async ([_operation, customerId, jobId]) => getJob(customerId, jobId)
+  );
 
   return {
     job: data,

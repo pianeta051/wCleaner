@@ -72,9 +72,7 @@ export const JobCard: FC<JobCardProps> = ({ job }) => {
             component="button"
             variant="body2"
             onClick={() => {
-              navigate(
-                `/admin/customers/${job.customer?.slug}?date=${job.date}&jobId=${job.id}`
-              );
+              navigate(`/admin/customers/${job.customer?.id}/jobs/${job.id}`);
             }}
           >
             Read more

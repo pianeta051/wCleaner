@@ -501,6 +501,18 @@ const addCustomerJob = async (customerId, job, assignedTo) => {
 };
 
 //GET JOBS
+
+const getJob = async (customerId, jobId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+  };
+  const job = await ddb.getItem(params).promise();
+  return job.Item;
+};
 const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
   const { start, end, assignedTo } = filters;
   const DEFAULT_FILTER_EXPRESSION = "begins_with(#SK, :sk)";
@@ -1003,6 +1015,7 @@ module.exports = {
   getCustomers,
   getCustomer,
   getCustomerJobs,
+  getJob,
   getJobs,
   getJobTypes,
   getOutcodes,
