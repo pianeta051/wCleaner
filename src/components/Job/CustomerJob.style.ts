@@ -17,17 +17,14 @@ export const Title = styled(Typography)(() => ({
   textAlign: "center",
 }));
 
-export const ModalBox = styled(Box)({
+export const ModalBox = styled(Box)(({ theme }) => ({
   backgroundColor: "#fff",
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
   borderRadius: "10px",
-});
-
-export const Field = styled(TextField)(() => ({
-  marginBottom: "10px",
-  width: "100%",
-  marginLeft: "20px",
+  [theme.breakpoints.down("md")]: {
+    width: "80%",
+  },
 }));

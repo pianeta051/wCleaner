@@ -10,6 +10,18 @@ const mapCustomer = (customerFromDb) => ({
   email: customerFromDb.email.S,
   slug: customerFromDb.slug.S,
   fileUrls: customerFromDb.fileUrls?.L?.map((f) => f.S) ?? [],
+  notes:
+    customerFromDb.notes?.L?.map((item) => {
+      const note = item.M;
+      return {
+        id: note.id?.S || "",
+        title: note.title?.S || "",
+        content: note.content?.S || "",
+        author: note.author?.S || "",
+        timestamp: note.timestamp ? Number(note.timestamp.N) : undefined,
+        isFavourite: !!note?.isFavourite,
+      };
+    }) || [],
 });
 
 const mapCustomerJobs = (customerJob) => ({

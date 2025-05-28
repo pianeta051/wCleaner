@@ -8,6 +8,15 @@ export type Customer = {
   id: string;
   slug: string;
   fileUrls?: string[];
+  notes?: CustomerNote[];
+};
+export type CustomerNote = {
+  id: string;
+  title: string;
+  content: string;
+  author?: string;
+  timestamp?: number;
+  isFavourite: boolean;
 };
 export type JobAssignation = {
   sub: string;

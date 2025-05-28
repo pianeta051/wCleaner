@@ -40,7 +40,7 @@ export const Wrapper = styled(Grid)(() => ({
 export const DividerLine = styled(Grid)(() => ({
   p: 0,
   width: "100%",
-  maxWidth: 360,
+  maxWidth: "90%",
   borderRadius: 1,
   border: "1px solid",
   borderColor: "divider",
