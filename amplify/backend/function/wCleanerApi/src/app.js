@@ -14,6 +14,7 @@ const awsServerlessExpressMiddleware = require("aws-serverless-express/middlewar
 const {
   addCustomer,
   addCustomerJob,
+  addCustomerNote,
   addJobType,
   getCustomers,
   getCustomerBySlug,
@@ -443,4 +444,59 @@ app.post("/files", async function (req, res) {
     }
   }
 });
+
+// Customers Notes
+
+//Add customer note
+
+app.post("/customers/:customerId/note", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const { title, content, isFavourite = false } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: "Title cannot be empty" });
+    }
+
+    if (!content) {
+      return res.status(400).json({ error: "Content cannot be empty" });
+    }
+
+    const author = req.authData?.userInfo?.name;
+    const timestamp = Date.now();
+
+    const note = {
+      title,
+      content,
+      author,
+      timestamp,
+      isFavourite,
+    };
+
+    let createdNote = null;
+    try {
+      createdNote = await addCustomerNote(customerId, note);
+    } catch (e) {
+      if (e.message === "CUSTOMER_NOT_FOUND") {
+        return res.status(404).json({ error: "The customer does not exist" });
+      }
+      throw e;
+    }
+
+    res.json({
+      note: {
+        ...createdNote,
+        customerId,
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    console.error("Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = app;

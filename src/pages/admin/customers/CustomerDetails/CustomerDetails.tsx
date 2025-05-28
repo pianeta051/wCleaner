@@ -13,6 +13,7 @@ import { useEditCustomer } from "../../../../hooks/Customers/useEditCustomer";
 import { CustomerJobs } from "../../../../components/CustomerJobs/CustomerJobs";
 import { deleteFile } from "../../../../services/files";
 import { CustomerFiles } from "../../../../components/CustomerFiles/CustomerFiles";
+import { CustomerNotes } from "../../../../components/CustomerNotes/CustomerNotes";
 
 type CustomerParams = {
   slug: string;
@@ -83,10 +84,6 @@ export const CustomerDetails: FC = () => {
   };
   return (
     <Wrapper>
-      <Title variant="h3" align="center">
-        Customer details
-      </Title>
-
       <Grid container spacing={0} direction="column" alignItems="center">
         {initialLoading ? (
           <CircularProgress />
@@ -95,12 +92,23 @@ export const CustomerDetails: FC = () => {
         ) : customer ? (
           <>
             {editError && <ErrorMessage code={editError} />}
-            <CustomerForm
-              onSubmit={submitHandler}
-              initialValues={customer}
-              loading={editing}
-              layout="horizontal"
-            />
+            <Title variant="h3" align="center">
+              Customer details
+            </Title>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={9}>
+                <CustomerForm
+                  onSubmit={submitHandler}
+                  initialValues={customer}
+                  loading={editing}
+                  layout="horizontal"
+                />
+              </Grid>
+
+              <Grid item xs={12} md={3}>
+                <CustomerNotes customer={customer} />
+              </Grid>
+            </Grid>
             <DividerLine />
             <Grid item xs={12} style={{ width: "100%" }}>
               <Grid container spacing={2}>

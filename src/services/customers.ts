@@ -3,6 +3,7 @@ import { CustomerFormValues } from "../components/Customer/CustomerForm/Customer
 import { Customer } from "../types/types";
 import { isErrorResponse } from "./error";
 import { uploadFile } from "./files";
+import { NoteFormValues } from "../components/NoteForm/NoteForm";
 
 const get = async (
   path: string,
@@ -246,6 +247,34 @@ export const addFile = async (file: File, path: string): Promise<string> => {
       }
       if (status === 413) {
         throw "FILE_TOO_LARGE";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const addCustomerNote = async (
+  customerId: string,
+  formValues: NoteFormValues
+): Promise<void> => {
+  try {
+    await post(`/customers/${customerId}/note`, formValues);
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const { status, data } = error.response;
+
+      if (status === 400) {
+        if (data?.error === "Title cannot be empty") {
+          throw "TITLE_CANNOT_BE_EMPTY";
+        }
+        if (data?.error === "Content cannot be empty") {
+          throw "CONTENT_CANNOT_BE_EMPTY";
+        }
+      }
+
+      if (status === 404) {
+        throw "CUSTOMER_NOT_FOUND";
       }
     }
 

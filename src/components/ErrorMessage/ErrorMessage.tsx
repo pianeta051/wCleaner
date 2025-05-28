@@ -171,5 +171,19 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "TITLE_CANNOT_BE_EMPTY") {
+    return (
+      <Alert severity="error">
+        <Typography>Title cannot be empty.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "CONTENT_CANNOT_BE_EMPTY") {
+    return (
+      <Alert severity="error">
+        <Typography>Content cannot be empty.</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

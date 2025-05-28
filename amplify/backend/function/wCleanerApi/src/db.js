@@ -901,9 +901,58 @@ const addFile = async (fileBuffer, path) => {
   };
 };
 
+//CUSTOMER NOTES
+const addCustomerNote = async (customerId, note) => {
+  const customer = await getCustomer(customerId);
+  if (!customer) {
+    throw new Error("CUSTOMER_NOT_FOUND");
+  }
+
+  if (!note.title || !note.content || !note.author || !note.timestamp) {
+    throw new Error(
+      "Invalid note: missing required fields. " + JSON.stringify({ note })
+    );
+  }
+
+  const noteId = uuid.v1();
+
+  const dynamoNote = {
+    id: { S: noteId },
+    title: { S: note.title },
+    content: { S: note.content },
+    author: { S: note.author },
+    timestamp: { N: note.timestamp.toString() },
+    isFavourite: { BOOL: note.isFavourite },
+  };
+
+  console.log("Saving note to DynamoDB:", JSON.stringify(dynamoNote, null, 2));
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `profile` },
+    },
+    UpdateExpression:
+      "SET notes = list_append(if_not_exists(notes, :empty_list), :new_note)",
+    ExpressionAttributeValues: {
+      ":empty_list": { L: [] },
+      ":new_note": { L: [{ M: dynamoNote }] },
+    },
+    ReturnValues: "UPDATED_NEW",
+  };
+
+  await ddb.updateItem(params).promise();
+
+  return {
+    id: noteId,
+    ...note,
+  };
+};
 module.exports = {
   addCustomer,
   addCustomerJob,
+  addCustomerNote,
   addJobType,
   editCustomer,
   editJobType,

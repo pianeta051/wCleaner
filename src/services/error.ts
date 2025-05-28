@@ -24,6 +24,8 @@ export const ERROR_CODES = [
   "INVALID_CONFIRMATION_LINK",
   "USER_IS_LAST_ADMIN",
   "UPLOAD_FAILED",
+  "TITLE_CANNOT_BE_EMPTY",
+  "CONTENT_CANNOT_BE_EMPTY",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>
