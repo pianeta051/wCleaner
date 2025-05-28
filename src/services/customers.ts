@@ -281,3 +281,37 @@ export const addCustomerNote = async (
     throw "INTERNAL_ERROR";
   }
 };
+
+export const editCustomerNote = async (
+  customerId: string,
+  noteId: string,
+  formValues: NoteFormValues
+): Promise<void> => {
+  try {
+    await put(`/customers/${customerId}/note/${noteId}`, formValues);
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const { status, data } = error.response;
+
+      if (status === 400) {
+        if (data?.error === "Title cannot be empty") {
+          throw "TITLE_CANNOT_BE_EMPTY";
+        }
+        if (data?.error === "Content cannot be empty") {
+          throw "CONTENT_CANNOT_BE_EMPTY";
+        }
+      }
+
+      if (status === 404) {
+        if (data?.error === "The customer does not exist") {
+          throw "CUSTOMER_NOT_FOUND";
+        }
+        if (data?.error === "The note does not exist") {
+          throw "NOTE_NOT_FOUND";
+        }
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};

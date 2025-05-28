@@ -28,6 +28,7 @@ const {
   editJobFromCustomer,
   deleteJobFromCustomer,
   editCustomer,
+  editCustomerNote,
   editJobType,
   addFile,
 } = require("./db");
@@ -486,6 +487,55 @@ app.post("/customers/:customerId/note", async function (req, res) {
     res.json({
       note: {
         ...createdNote,
+        customerId,
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    console.error("Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.put("/customers/:customerId/note/:noteId", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const noteId = req.params.noteId;
+    const { title, content, isFavourite = false } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: "Title cannot be empty" });
+    }
+
+    if (!content) {
+      return res.status(400).json({ error: "Content cannot be empty" });
+    }
+
+    const note = {
+      title,
+      content,
+      isFavourite,
+    };
+
+    let updatedNote = null;
+    try {
+      updatedNote = await editCustomerNote(customerId, noteId, note);
+    } catch (e) {
+      if (e.message === "CUSTOMER_NOT_FOUND") {
+        return res.status(404).json({ error: "The customer does not exist" });
+      }
+      if (e.message === "NOTE_NOT_FOUND") {
+        return res.status(404).json({ error: "The note does not exist" });
+      }
+      throw e;
+    }
+
+    res.json({
+      note: {
+        ...updatedNote,
         customerId,
       },
     });

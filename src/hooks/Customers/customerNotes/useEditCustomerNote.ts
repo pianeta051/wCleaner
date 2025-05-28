@@ -1,26 +1,29 @@
 import useSWRMutation from "swr/mutation";
 import { useSWRConfig } from "swr";
 
-import { addCustomerNote } from "../../../services/customers";
+import { editCustomerNote } from "../../../services/customers";
 import { extractErrorCode } from "../../../services/error";
 import { NoteFormValues } from "../../../components/NoteForm/NoteForm";
 
-export const useAddCustomerNote = (
+export const useEditCustomerNote = (
   customerId?: string,
-  customerSlug?: string
+  customerSlug?: string,
+  noteId?: string
 ) => {
   const { mutate } = useSWRConfig();
 
   const { trigger, isMutating, error } = useSWRMutation<
     void,
     string,
-    [string, string] | null,
+    [string, string, string] | null,
     NoteFormValues,
     void
   >(
-    customerId && customerSlug ? ["add-CustomerNote", customerId] : null,
-    async ([_operation, customerId], { arg: formValues }) => {
-      await addCustomerNote(customerId, formValues);
+    customerId && noteId && customerSlug
+      ? ["edit-CustomerNote", customerId, noteId]
+      : null,
+    async ([_operation, customerId, noteId], { arg: formValues }) => {
+      await editCustomerNote(customerId, noteId, formValues);
 
       await mutate(["customer", customerSlug]);
     },
@@ -31,7 +34,7 @@ export const useAddCustomerNote = (
   );
 
   return {
-    addCustomerNote: trigger,
+    editCustomerNote: trigger,
     loading: isMutating,
     error: extractErrorCode(error),
   };

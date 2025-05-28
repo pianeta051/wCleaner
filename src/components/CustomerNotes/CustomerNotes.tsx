@@ -138,6 +138,7 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
         customer={customer}
         onClose={closeModalHandler}
         initialValues={editingNote}
+        noteId={editingNote?.id}
       />
     </>
   );

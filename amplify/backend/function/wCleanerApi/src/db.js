@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
+const { mapCustomer } = require("./mappers");
 
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 5;
@@ -925,8 +926,6 @@ const addCustomerNote = async (customerId, note) => {
     isFavourite: { BOOL: note.isFavourite },
   };
 
-  console.log("Saving note to DynamoDB:", JSON.stringify(dynamoNote, null, 2));
-
   const params = {
     TableName: TABLE_NAME,
     Key: {
@@ -949,12 +948,55 @@ const addCustomerNote = async (customerId, note) => {
     ...note,
   };
 };
+
+const editCustomerNote = async (customerId, noteId, note) => {
+  const customer = mapCustomer(await getCustomer(customerId));
+  if (!customer.notes?.length) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+  const index = customer.notes.findIndex((note) => note.id === noteId);
+  if (index === -1) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+  const existingNote = customer.notes[index];
+  const dynamoNote = {
+    id: { S: noteId },
+    title: { S: note.title },
+    content: { S: note.content },
+    author: { S: existingNote.author },
+    timestamp: { N: existingNote.timestamp.toString() },
+    isFavourite: { BOOL: note.isFavourite },
+  };
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `profile` },
+    },
+    UpdateExpression: `SET notes[${index}] = :new_note`,
+    ExpressionAttributeValues: {
+      ":new_note": { M: dynamoNote },
+    },
+    ReturnValues: "UPDATED_NEW",
+  };
+
+  await ddb.updateItem(params).promise();
+
+  return {
+    id: noteId,
+    ...existingNote,
+    ...note,
+  };
+};
+
 module.exports = {
   addCustomer,
   addCustomerJob,
   addCustomerNote,
   addJobType,
   editCustomer,
+  editCustomerNote,
   editJobType,
   getCustomerBySlug,
   getCustomerById,
