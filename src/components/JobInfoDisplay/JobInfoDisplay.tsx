@@ -35,7 +35,6 @@ type JobInfoDisplayProps = {
 };
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, customer }) => {
-  const { users } = useUsers();
   const { editCustomer, loading, error, reload } = useEditCustomer(
     customer.id,
     customer.slug
@@ -47,11 +46,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, customer }) => {
     jobTypes?.find((jobType) => jobType.id === job.jobTypeId)?.name ??
     job.jobTypeId;
 
-  const assignedUser = users?.find((user) => user.id === job.assignedTo?.sub);
-
-  const assignedToName = assignedUser
-    ? assignedUser.name ?? assignedUser.email
-    : job.assignedTo?.sub ?? "";
+  const assignedTo = job?.assignedTo?.name ?? job?.assignedTo?.email;
 
   const editCustomerHandler = async (updatedFields: Partial<Customer>) => {
     await editCustomer({ ...customer, ...updatedFields });
@@ -146,13 +141,15 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, customer }) => {
                     </Stack>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <PersonIcon fontSize="small" color="primary" />
-                      <Typography fontWeight="bold">Assigned To:</Typography>
-                      <Typography>{assignedToName}</Typography>
-                    </Stack>
-                  </Grid>
+                  {assignedTo && (
+                    <Grid item xs={12} sm={6}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <PersonIcon fontSize="small" color="primary" />
+                        <Typography fontWeight="bold">Assigned To:</Typography>
+                        <Typography>{assignedTo}</Typography>
+                      </Stack>
+                    </Grid>
+                  )}
 
                   <Grid item xs={12}>
                     <Stack direction="row" spacing={1.5} alignItems="center">

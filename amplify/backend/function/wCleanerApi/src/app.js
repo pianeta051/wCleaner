@@ -206,7 +206,12 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
   const customerId = req.params.customerId;
   const jobId = req.params.jobId;
   const jobFromDb = await getJob(customerId, jobId);
-  const job = mapJob(jobFromDb);
+  let job = mapJob(jobFromDb);
+  const groups = req.authData?.groups;
+  const isAdmin = groups.includes("Admin");
+  if (isAdmin) {
+    job = (await getJobUsers([jobFromDb]))[0];
+  }
   res.json({ job });
 });
 

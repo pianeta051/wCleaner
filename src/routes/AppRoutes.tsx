@@ -54,10 +54,20 @@ export const AppRoutes: FC = () => {
           }
         />
 
-        {isAdmin && (
+        {isAdmin ? (
           <Route path="customers" element={<AdminLayoutFullWidth />}>
             <Route index element={<Customers />} />
             <Route path=":slug" element={<CustomerDetails />} />
+            <Route path=":customerId">
+              <Route path="jobs">
+                <Route path=":jobId">
+                  <Route index element={<JobDetailsPage />} />
+                </Route>
+              </Route>
+            </Route>
+          </Route>
+        ) : (
+          <Route path="customers">
             <Route path=":customerId">
               <Route path="jobs">
                 <Route path=":jobId">
