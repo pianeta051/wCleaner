@@ -10,12 +10,6 @@ type JobInfoProps = {
   customerId: string;
 };
 
-export const JobInfo: FC<JobInfoProps> = ({ job, customerId }) => {
-  const { customer, loading, error } = useCustomerById(customerId);
-
-  if (loading) return <CircularProgress />;
-  if (error || !customer)
-    return <ErrorMessage code={error || "CUSTOMER_NOT_FOUND"} />;
-
-  return <JobInfoDisplay job={job} customer={customer} />;
+export const JobInfo: FC<JobInfoProps> = ({ job }) => {
+  return <JobInfoDisplay job={job} />;
 };

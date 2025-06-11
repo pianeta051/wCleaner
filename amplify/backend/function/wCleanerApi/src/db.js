@@ -511,7 +511,14 @@ const getJob = async (customerId, jobId) => {
     },
   };
   const job = await ddb.getItem(params).promise();
-  return job.Item;
+  const customer = await getCustomerById(
+    job.Item.PK.S.replace("customer_", "")
+  );
+  const item = {
+    ...job.Item,
+    customer,
+  };
+  return item;
 };
 const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
   const { start, end, assignedTo } = filters;
@@ -622,6 +629,17 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
 };
 
 //GET JOB TYPES
+const getJobType = async (jobTypeId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `job_type_${jobTypeId}` },
+      SK: { S: "definition" },
+    },
+  };
+  const job = await ddb.getItem(params).promise();
+  return job.Item;
+};
 const getJobTypes = async () => {
   const params = {
     TableName: TABLE_NAME,
@@ -1057,6 +1075,7 @@ module.exports = {
   getCustomerJobs,
   getJob,
   getJobs,
+  getJobType,
   getJobTypes,
   getOutcodes,
   queryCustomersByEmail,

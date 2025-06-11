@@ -25,38 +25,31 @@ import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
 import dayjs from "dayjs";
 import { CustomerNotes } from "../CustomerNotes/CustomerNotes";
 import CategoryIcon from "@mui/icons-material/Category";
-import { useAuth } from "../../context/AuthContext";
-import { useJobTypes } from "../../hooks/Jobs/useJobTypes";
-import { useUsers } from "../../hooks/Users/useUsers";
 
 type JobInfoDisplayProps = {
   job: Job;
-  customer: Customer;
 };
 
-export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, customer }) => {
+export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job }) => {
   const { editCustomer, loading, error, reload } = useEditCustomer(
-    customer.id,
-    customer.slug
+    job.customer?.id,
+    job.customer?.slug
   );
   const [modalOpen, setModalOpen] = useState(false);
-  const theme = useTheme();
-  const { jobTypes } = useJobTypes();
-  const jobTypeName =
-    jobTypes?.find((jobType) => jobType.id === job.jobTypeId)?.name ??
-    job.jobTypeId;
 
   const assignedTo = job?.assignedTo?.name ?? job?.assignedTo?.email;
 
   const editCustomerHandler = async (updatedFields: Partial<Customer>) => {
-    await editCustomer({ ...customer, ...updatedFields });
-    reload();
+    if (job.customer) {
+      await editCustomer({ ...job.customer, ...updatedFields });
+      reload();
+    }
   };
 
   const deleteFileHandler = async (index: number) => {
-    if (!customer.fileUrls) return;
-    const fileKeyToDelete = customer.fileUrls[index];
-    const newFileKeys = customer.fileUrls.filter((_, i) => i !== index);
+    if (!job.customer?.fileUrls) return;
+    const fileKeyToDelete = job.customer.fileUrls[index];
+    const newFileKeys = job.customer.fileUrls.filter((_, i) => i !== index);
 
     try {
       await deleteFile(fileKeyToDelete);
@@ -133,13 +126,15 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, customer }) => {
                     </Stack>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <CategoryIcon fontSize="small" color="primary" />
-                      <Typography fontWeight="bold">Job Type:</Typography>
-                      <Typography>{jobTypeName}</Typography>
-                    </Stack>
-                  </Grid>
+                  {job.jobTypeName && (
+                    <Grid item xs={12} sm={6}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <CategoryIcon fontSize="small" color="primary" />
+                        <Typography fontWeight="bold">Job Type:</Typography>
+                        <Typography>{job.jobTypeName}</Typography>
+                      </Stack>
+                    </Grid>
+                  )}
 
                   {assignedTo && (
                     <Grid item xs={12} sm={6}>
@@ -163,38 +158,42 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, customer }) => {
             </CardContent>
           </Card>
 
-          <Grid container spacing={3} mt={3}>
-            <Grid item xs={12} md={6}>
-              <CustomerFiles
-                customer={customer}
-                onEditUrls={(urls) => editCustomerHandler({ fileUrls: urls })}
-                onDeleteFile={deleteFileHandler}
-              />
+          {job.customer && (
+            <Grid container spacing={3} mt={3}>
+              <Grid item xs={12} md={6}>
+                <CustomerFiles
+                  customer={job.customer}
+                  onEditUrls={(urls) => editCustomerHandler({ fileUrls: urls })}
+                  onDeleteFile={deleteFileHandler}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <CustomerNotes customer={job.customer} />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <CustomerNotes customer={customer} />
-            </Grid>
-          </Grid>
+          )}
         </Grid>
       </Grid>
 
-      <CustomerJobModal
-        open={modalOpen}
-        customer={customer}
-        initialValues={{
-          date: dayjs(job.date),
-          startTime: dayjs(`${job.date} ${job.startTime}`),
-          endTime: dayjs(`${job.date} ${job.endTime}`),
-          price: job.price,
-          jobTypeId: job.jobTypeId ?? "",
-          assignedTo: job.assignedTo?.sub ?? "",
-        }}
-        jobId={job.id}
-        onClose={() => {
-          setModalOpen(false);
-          reload();
-        }}
-      />
+      {job.customer && (
+        <CustomerJobModal
+          open={modalOpen}
+          customer={job.customer}
+          initialValues={{
+            date: dayjs(job.date),
+            startTime: dayjs(`${job.date} ${job.startTime}`),
+            endTime: dayjs(`${job.date} ${job.endTime}`),
+            price: job.price,
+            jobTypeId: job.jobTypeId ?? "",
+            assignedTo: job.assignedTo?.sub ?? "",
+          }}
+          jobId={job.id}
+          onClose={() => {
+            setModalOpen(false);
+            reload();
+          }}
+        />
+      )}
     </>
   );
 };

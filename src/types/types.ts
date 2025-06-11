@@ -35,6 +35,7 @@ export type Job = {
   customer?: Customer;
   assignedTo?: JobAssignation;
   jobTypeId?: string;
+  jobTypeName?: string;
 };
 
 export type JobFilters = {

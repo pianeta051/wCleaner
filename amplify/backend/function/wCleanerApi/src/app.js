@@ -22,6 +22,7 @@ const {
   getCustomerJobs,
   getJob,
   getJobs,
+  getJobType,
   getJobTypes,
   getOutcodes,
   deleteCustomer,
@@ -211,7 +212,20 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
   const isAdmin = groups.includes("Admin");
   if (isAdmin) {
     job = (await getJobUsers([jobFromDb]))[0];
+  } else {
+    const restrictedCustomer = {
+      id: job.customer.id,
+      slug: job.customer.slug,
+      name: job.customer.name,
+      address: job.customer.address,
+      postcode: job.customer.postcode,
+      fileUrl: job.customer.fileUrls,
+      notes: job.customer.notes,
+    };
+    job.customer = restrictedCustomer;
   }
+  const jobType = await getJobType(job.jobTypeId);
+  job.jobTypeName = mapJobType(jobType).name;
   res.json({ job });
 });
 
