@@ -1002,6 +1002,46 @@ const editCustomerNote = async (customerId, noteId, note) => {
   };
 };
 
+const deleteCustomerNote = async (customerId, noteId) => {
+  // paramas
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "profile" },
+    },
+    ProjectionExpression: "notes",
+  };
+
+  const result = await ddb.getItem(params).promise();
+
+  if (!result.Item || !result.Item.notes || !result.Item.notes.L) {
+    throw "NOTE_NOT_FOUND";
+  }
+
+  const notes = result.Item.notes.L;
+
+  // Find the index of the note with matching id
+  const indexToRemove = notes.findIndex((n) => n.M?.id?.S === noteId);
+
+  if (indexToRemove === -1) {
+    throw "NOTE_NOT_FOUND";
+  }
+
+  // Remove the note at that index using UpdateExpression
+  console.log("INDEX :" + indexToRemove);
+  const updateParams = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "profile" },
+    },
+    UpdateExpression: `REMOVE notes[${indexToRemove}]`,
+  };
+
+  await ddb.updateItem(updateParams).promise();
+};
+
 module.exports = {
   addCustomer,
   addCustomerJob,
@@ -1022,6 +1062,7 @@ module.exports = {
   queryCustomersByEmail,
   deleteCustomer,
   deleteJobType,
+  deleteCustomerNote,
   editJobFromCustomer,
   deleteJobFromCustomer,
   addFile,

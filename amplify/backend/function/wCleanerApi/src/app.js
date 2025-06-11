@@ -25,6 +25,7 @@ const {
   getJobTypes,
   getOutcodes,
   deleteCustomer,
+  deleteCustomerNote,
   deleteJobType,
   editJobFromCustomer,
   deleteJobFromCustomer,
@@ -263,7 +264,7 @@ app.post("/customers/:customerId/job", async function (req, res) {
         ...createdJob,
         customerId,
         assignedTo: {
-          sub: userSub,
+          sub: assignedTo,
           email,
           name,
           color,
@@ -556,6 +557,13 @@ app.put("/customers/:customerId/note/:noteId", async function (req, res) {
     console.error("Internal error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+app.delete("/customers/:customerId/note/:noteId", async function (req, res) {
+  const noteId = req.params.noteId;
+  const customerId = req.params.customerId;
+  await deleteCustomerNote(customerId, noteId);
+  res.json({ message: "Note Deleted" });
 });
 
 module.exports = app;

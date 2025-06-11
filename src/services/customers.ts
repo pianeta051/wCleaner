@@ -254,6 +254,8 @@ export const addFile = async (file: File, path: string): Promise<string> => {
   }
 };
 
+//CUSTOMER NOTES
+
 export const addCustomerNote = async (
   customerId: string,
   formValues: NoteFormValues
@@ -312,6 +314,30 @@ export const editCustomerNote = async (
       }
     }
 
+    throw "INTERNAL_ERROR";
+  }
+};
+export const deleteCustomerNote = async (
+  customerId: string,
+  noteId: string
+): Promise<void> => {
+  try {
+    await remove(`/customers/${customerId}/note/${noteId}`);
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const updateCustomerNoteFavourite = async (
+  customerId: string,
+  noteId: string,
+  isFavourite: boolean
+): Promise<void> => {
+  try {
+    await put(`/customers/${customerId}/note/${noteId}`, {
+      isFavourite,
+    });
+  } catch (error) {
     throw "INTERNAL_ERROR";
   }
 };

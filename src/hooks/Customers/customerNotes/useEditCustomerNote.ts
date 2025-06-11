@@ -26,6 +26,7 @@ export const useEditCustomerNote = (
       await editCustomerNote(customerId, noteId, formValues);
 
       await mutate(["customer", customerSlug]);
+      await mutate(["customer", customerId]);
     },
     {
       revalidate: false,

@@ -2,31 +2,53 @@ import { FC, useState } from "react";
 import { Customer } from "../../types/types";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import { useCustomers } from "../../hooks/Customers/useCustomers";
-import { Alert, Button, Stack, TextField } from "@mui/material";
-import { ModalBox } from "./CustomerSelector.style";
+import { Alert, Button, Stack, TextField, Grid, Skeleton } from "@mui/material";
+import { ModalBox, SkeletonWrapper } from "./CustomerSelector.style";
 import { useNavigate } from "react-router-dom";
 
-type CustomerSelectorProps = { onSelectCustomer: (customer: Customer) => void };
+type CustomerSelectorProps = {
+  onSelectCustomer: (customer: Customer) => void;
+};
+
 export const CustomerSelector: FC<CustomerSelectorProps> = ({
   onSelectCustomer,
 }) => {
-  const { customers } = useCustomers(undefined, undefined, true);
+  const { customers, loading } = useCustomers(undefined, undefined, true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
+  const [buttonDisabled, setButtonDisabled] = useState(true);
+  const navigate = useNavigate();
+
   const filterOptions = createFilterOptions({
     matchFrom: "any",
     stringify: (option: Customer) =>
       `${option.name} - ${option.address} - ${option.email} - ${option.postcode}`,
   });
-  const [buttonDisabled, setButtonDisabled] = useState(true);
 
   const nextHandler = () => {
     if (selectedCustomer) {
       onSelectCustomer(selectedCustomer);
     }
   };
-  const navigate = useNavigate();
+
+  if (loading) {
+    return (
+      <SkeletonWrapper>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Skeleton variant="text" height={56} />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Skeleton variant="text" height={56} />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Skeleton variant="text" height={56} />
+          </Grid>
+        </Grid>
+      </SkeletonWrapper>
+    );
+  }
 
   return (
     <ModalBox>
@@ -50,42 +72,40 @@ export const CustomerSelector: FC<CustomerSelectorProps> = ({
           <Autocomplete
             options={customers}
             onChange={(_event, value) => {
-              value ? setSelectedCustomer(value) : value;
-              setButtonDisabled(false);
-              if (value === null) {
-                setButtonDisabled(true);
-              }
+              setSelectedCustomer(value ?? null);
+              setButtonDisabled(!value);
             }}
             getOptionLabel={(option) => option.name}
             filterOptions={filterOptions}
             sx={{ width: "94%" }}
             renderInput={(params) => (
-              <>
-                <TextField
-                  {...params}
-                  label="Select Customer"
-                  sx={{ p: 2, mt: 2 }}
-                  fullWidth
-                />
-              </>
+              <TextField
+                {...params}
+                label="Select Customer"
+                sx={{ p: 2, mt: 2 }}
+                fullWidth
+              />
             )}
           />
 
           <TextField
             disabled
             label="Address"
-            id="outlined-disabled"
-            value={selectedCustomer?.address}
+            value={selectedCustomer?.address ?? ""}
             sx={{ p: 2 }}
           />
           <TextField
             disabled
             label="Postcode"
-            id="outlined-disabled"
-            value={selectedCustomer?.postcode}
+            value={selectedCustomer?.postcode ?? ""}
             sx={{ p: 2 }}
           />
-          <Button disabled={buttonDisabled} onClick={nextHandler}>
+          <Button
+            variant="contained"
+            onClick={nextHandler}
+            disabled={buttonDisabled}
+            sx={{ m: 2 }}
+          >
             Next
           </Button>
         </>

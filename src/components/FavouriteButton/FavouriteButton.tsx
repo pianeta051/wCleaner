@@ -18,10 +18,10 @@ export const FavouriteButton: FC<FavouriteButtonProps> = ({
   const clickHandler = () => {
     if (active) {
       setActive(false);
-      if (onDeactivate) onDeactivate();
+      onDeactivate?.();
     } else {
       setActive(true);
-      if (onActivate) onActivate();
+      onActivate?.();
     }
   };
   return (

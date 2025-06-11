@@ -23,6 +23,7 @@ export const useAddCustomerNote = (
       await addCustomerNote(customerId, formValues);
 
       await mutate(["customer", customerSlug]);
+      await mutate(["customer", customerId]);
     },
     {
       revalidate: false,

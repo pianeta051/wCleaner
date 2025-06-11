@@ -18,6 +18,9 @@ import { Customer, CustomerNote } from "../../types/types";
 import { Title } from "./CustomerNotes.style";
 import { CustomerNoteModal } from "../CustomerNoteModal/CustomerNoteModal";
 import { FavouriteButton } from "../FavouriteButton/FavouriteButton";
+import { useDeleteCustomerNote } from "../../hooks/Customers/customerNotes/useDeleteCustomerNote";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert, { AlertColor } from "@mui/material/Alert";
 
 type CustomerNotesProps = {
   customer: Customer;
@@ -26,6 +29,11 @@ type CustomerNotesProps = {
 export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<CustomerNote | undefined>();
+  const { deleteNote } = useDeleteCustomerNote(customer.id, customer.slug);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] =
+    useState<AlertColor>("success");
 
   const openModalHandler = () => {
     setEditingNote(undefined);
@@ -42,8 +50,20 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
     setModalOpen(true);
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    console.log("TODO: delete note with ID:", noteId);
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNote(noteId);
+      setSnackbarMessage("Successfully deleted");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      setSnackbarMessage("Failed to delete note");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   const hasManyNotes = (customer.notes?.length ?? 0) > 3;
@@ -140,6 +160,20 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
         initialValues={editingNote}
         noteId={editingNote?.id}
       />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <MuiAlert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </MuiAlert>
+      </Snackbar>
     </>
   );
 };
