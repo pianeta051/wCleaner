@@ -1,7 +1,6 @@
 import useSWRMutation from "swr/mutation";
 import { extractErrorCode } from "../../../services/error";
 import { replaceCustomerFiles } from "../../../services/customers";
-import { Customer } from "../../../types/types";
 import { useSWRConfig } from "swr";
 
 export const useReplaceCustomerFiles = (

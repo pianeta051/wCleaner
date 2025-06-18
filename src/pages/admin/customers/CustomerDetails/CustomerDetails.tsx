@@ -27,7 +27,6 @@ export const CustomerDetails: FC = () => {
     customer,
     loading: initialLoading,
     error: initialError,
-    reload: reloadCustomer,
   } = useCustomer(slug);
 
   const {
