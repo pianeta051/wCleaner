@@ -1,7 +1,11 @@
 import { CustomerForm, CustomerFormValues } from "./CustomerForm";
-import { customerFactory } from "../../../factories/customers";
+import {
+  customerFactory,
+  customerToFormValuesFactory,
+} from "../../../factories/customers";
 import { ThemeProvider } from "@mui/material";
 import { theme } from "../../../theme";
+import { customerToFormValues } from "../../../helpers/customer";
 
 describe("CustomerForm", () => {
   const mountCustomerForm = () => {
@@ -18,7 +22,7 @@ describe("CustomerForm", () => {
   };
 
   it("calls onSubmit with correct values when form is valid and Save is clicked", () => {
-    const customer = customerFactory.build();
+    const customer = customerToFormValuesFactory.build();
 
     mountCustomerForm();
 
@@ -45,7 +49,7 @@ describe("CustomerForm", () => {
   });
 
   it("calls onSubmit when pressing intro in a text input", () => {
-    const customer = customerFactory.build();
+    const customer = customerToFormValuesFactory.build();
 
     mountCustomerForm();
 
@@ -76,19 +80,20 @@ describe("CustomerForm", () => {
     cy.findByText("Cancel").click();
     cy.get("@cancelHandler").should("have.been.called");
   });
-
   it("displays the values in the form when initialValues is defined", () => {
     const customer = customerFactory.build();
-    const formValues: CustomerFormValues = {
-      ...customer,
-    };
+    const formValues = customerToFormValues(customer);
+
     cy.mount(
-      <CustomerForm
-        onSubmit={cy.spy().as("submitHandler")}
-        onCancel={cy.spy().as("closeHandler")}
-        initialValues={formValues}
-      />
+      <ThemeProvider theme={theme}>
+        <CustomerForm
+          onSubmit={cy.spy().as("submitHandler")}
+          onCancel={cy.spy().as("closeHandler")}
+          initialValues={formValues}
+        />
+      </ThemeProvider>
     );
+
     cy.findByLabelText("name *").should("have.value", formValues.name);
     cy.findByLabelText("email *").should("have.value", formValues.email);
   });

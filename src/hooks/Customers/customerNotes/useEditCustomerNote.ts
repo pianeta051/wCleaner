@@ -8,7 +8,8 @@ import { NoteFormValues } from "../../../components/NoteForm/NoteForm";
 export const useEditCustomerNote = (
   customerId?: string,
   customerSlug?: string,
-  noteId?: string
+  noteId?: string,
+  jobId?: string
 ) => {
   const { mutate } = useSWRConfig();
 
@@ -20,13 +21,16 @@ export const useEditCustomerNote = (
     void
   >(
     customerId && noteId && customerSlug
-      ? ["edit-CustomerNote", customerId, noteId]
+      ? ["customer", customerId, noteId]
       : null,
     async ([_operation, customerId, noteId], { arg: formValues }) => {
       await editCustomerNote(customerId, noteId, formValues);
 
       await mutate(["customer", customerSlug]);
       await mutate(["customer", customerId]);
+      if (jobId) {
+        await mutate(["job", customerId, jobId]);
+      }
     },
     {
       revalidate: false,

@@ -1,13 +1,13 @@
 import useSWRMutation from "swr/mutation";
 import { useSWRConfig } from "swr";
-
 import { addCustomerNote } from "../../../services/customers";
 import { extractErrorCode } from "../../../services/error";
 import { NoteFormValues } from "../../../components/NoteForm/NoteForm";
 
 export const useAddCustomerNote = (
   customerId?: string,
-  customerSlug?: string
+  customerSlug?: string,
+  jobId?: string
 ) => {
   const { mutate } = useSWRConfig();
 
@@ -18,12 +18,15 @@ export const useAddCustomerNote = (
     NoteFormValues,
     void
   >(
-    customerId && customerSlug ? ["add-CustomerNote", customerId] : null,
+    customerId && customerSlug ? ["customer", customerId] : null,
     async ([_operation, customerId], { arg: formValues }) => {
       await addCustomerNote(customerId, formValues);
 
       await mutate(["customer", customerSlug]);
       await mutate(["customer", customerId]);
+      if (jobId) {
+        await mutate(["job", customerId, jobId]);
+      }
     },
     {
       revalidate: false,

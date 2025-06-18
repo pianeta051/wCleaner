@@ -22,23 +22,9 @@ const mountCustomerFiles = (initialFileUrls: string[] = []) => {
     },
   } as any;
 
-  const onEditUrls = cy.stub().as("editHandler");
-
-  const onDeleteFile = cy
-    .stub()
-    .as("deleteHandler")
-    .callsFake((index: number) => {
-      fileUrls.splice(index, 1);
-      remountCustomerFiles();
-    });
-
   cy.mount(
     <ThemeProvider theme={theme}>
-      <CustomerFiles
-        customer={customer}
-        onEditUrls={onEditUrls}
-        onDeleteFile={onDeleteFile}
-      />
+      <CustomerFiles customer={customer} />
     </ThemeProvider>
   );
 

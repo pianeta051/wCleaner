@@ -6,7 +6,8 @@ import { CustomerNote } from "../../../types/types";
 
 export const useDeleteCustomerNote = (
   customerId?: string,
-  customerSlug?: string
+  customerSlug?: string,
+  jobId?: string
 ) => {
   const { mutate } = useSWRConfig();
 
@@ -29,6 +30,9 @@ export const useDeleteCustomerNote = (
         revalidate: true,
         populateCache: false,
       });
+      if (jobId) {
+        await mutate(["job", customerId, jobId]);
+      }
     },
     {
       revalidate: false,

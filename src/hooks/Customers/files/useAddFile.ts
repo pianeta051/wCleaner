@@ -9,7 +9,7 @@ export const useAddFile = () => {
     readonly [string],
     { file: File; path: string }
   >(
-    ["add-file"],
+    ["customer"],
     async ([_operation], { arg: { file, path } }) => {
       const uploadedPath = await uploadFile(file, path);
 

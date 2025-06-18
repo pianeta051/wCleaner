@@ -475,6 +475,39 @@ app.post("/files", async function (req, res) {
   }
 });
 
+// Replace fileUrls on a customer
+app.put("/customers/:customerId/files", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const { fileUrls } = req.body;
+
+    if (!Array.isArray(fileUrls)) {
+      return res
+        .status(400)
+        .json({ error: "FileUrls must be an array of strings" });
+    }
+
+    // Check all elements are strings
+    if (!fileUrls.every((url) => typeof url === "string")) {
+      return res
+        .status(400)
+        .json({ error: "FileUrls must contain only strings" });
+    }
+
+    const updatedCustomer = await editCustomer(customerId, {
+      fileUrls,
+    });
+
+    res.json({ customer: updatedCustomer });
+  } catch (error) {
+    if (error === "NOT_EXISTING_CUSTOMER") {
+      res.status(404).json({ error: "Not existing customer" });
+    } else {
+      throw error;
+    }
+  }
+});
+
 // Customers Notes
 
 //Add customer note

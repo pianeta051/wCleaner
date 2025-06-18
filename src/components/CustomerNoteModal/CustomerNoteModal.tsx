@@ -19,6 +19,7 @@ type CustomerNoteModalProps = {
   initialValues?: NoteFormValues;
   onClose: () => void;
   noteId?: string;
+  jobId?: string;
 };
 
 export const CustomerNoteModal: FC<CustomerNoteModalProps> = ({
@@ -27,18 +28,19 @@ export const CustomerNoteModal: FC<CustomerNoteModalProps> = ({
   initialValues,
   onClose,
   noteId,
+  jobId,
 }) => {
   const {
     addCustomerNote,
     loading: addNoteLoading,
     error: addNoteError,
-  } = useAddCustomerNote(customer.id, customer.slug);
+  } = useAddCustomerNote(customer.id, customer.slug, jobId);
 
   const {
     editCustomerNote,
     loading: editNoteLoading,
     error: editNoteError,
-  } = useEditCustomerNote(customer.id, customer.slug, noteId);
+  } = useEditCustomerNote(customer.id, customer.slug, noteId, jobId);
 
   const loading = addNoteLoading || editNoteLoading;
   const error = addNoteError ?? editNoteError ?? null;

@@ -20,7 +20,7 @@ const get = async (
 //   });
 // };
 
-const post = async <TBody = unknown, TResponse = any>(
+const post = async <TBody = unknown, TResponse = unknown>(
   path: string,
   body: TBody
 ): Promise<TResponse> => {
@@ -38,7 +38,7 @@ const remove = async (path: string) => {
 //     body,
 //   });
 // };
-const put = async <TBody = unknown, TResponse = any>(
+const put = async <TBody = unknown, TResponse = unknown>(
   path: string,
   body: TBody
 ): Promise<TResponse> => {
@@ -58,7 +58,6 @@ export const isCustomer = (value: unknown): value is Customer => {
   return (
     typeof v.id === "string" &&
     typeof v.name === "string" &&
-    typeof v.email === "string" &&
     typeof v.slug === "string" &&
     validFileUrls
   );
@@ -173,7 +172,12 @@ export const getCustomer = async (slug: string): Promise<Customer> => {
   try {
     const response = await get(`/customers/${slug}`);
 
-    if (!("customer" in response) || typeof response.customer !== "object") {
+    if (
+      typeof response !== "object" ||
+      !response ||
+      !("customer" in response) ||
+      typeof response.customer !== "object"
+    ) {
       throw "INTERNAL_ERROR";
     }
 
@@ -247,6 +251,34 @@ export const addFile = async (file: File, path: string): Promise<string> => {
       }
       if (status === 413) {
         throw "FILE_TOO_LARGE";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const replaceCustomerFiles = async (
+  customerId: string,
+  fileUrls: string[]
+): Promise<{ fileUrls: string[]; id: string }> => {
+  try {
+    const response = await put<
+      { fileUrls: string[] },
+      { customer: { fileUrls: string[]; id: string } }
+    >(`/customers/${customerId}/files`, { fileUrls });
+
+    return response.customer;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response?.status;
+      const message = error.response?.data?.error;
+
+      if (status === 400 && message === "Invalid file data") {
+        throw "INVALID_FILE_DATA";
+      }
+      if (status === 404) {
+        throw "CUSTOMER_NOT_FOUND";
       }
     }
 

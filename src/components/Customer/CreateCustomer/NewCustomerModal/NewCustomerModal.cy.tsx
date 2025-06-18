@@ -5,6 +5,8 @@ import { theme } from "../../../../theme";
 import { API } from "aws-amplify";
 import { customerFactory } from "../../../../factories/customers";
 import { CustomerFormValues } from "../../CustomerForm/CustomerForm";
+import { Customer } from "../../../../types/types";
+import { customerToFormValues } from "../../../../helpers/customer";
 
 const mountComponent = () => {
   cy.mount(
@@ -79,9 +81,9 @@ describe("NewCustomerModal", () => {
 
   it("calls onSubmit when submitting the form and the API response is successful", () => {
     const customer = customerFactory.build();
-    const formValues: CustomerFormValues = {
-      ...customer,
-    };
+
+    const formValues: CustomerFormValues = customerToFormValues(customer);
+
     cy.stub(API, "post").resolves({
       customer,
     });
@@ -96,9 +98,8 @@ describe("NewCustomerModal", () => {
 
   it("renders an error message when submitting the form and the API returns an error", () => {
     const customer = customerFactory.build();
-    const formValues: CustomerFormValues = {
-      ...customer,
-    };
+
+    const formValues: CustomerFormValues = customerToFormValues(customer);
     cy.stub(API, "post").rejects();
     mountComponent();
     cy.findByLabelText("name *").type(formValues.name);
@@ -112,7 +113,8 @@ describe("NewCustomerModal", () => {
 
   it("renders an error message when there is already a user with that email", () => {
     const customer = customerFactory.build();
-    const formValues: CustomerFormValues = { ...customer };
+
+    const formValues: CustomerFormValues = customerToFormValues(customer);
 
     // Simulate a 409 conflict response (email already exists)
     cy.stub(API, "post")

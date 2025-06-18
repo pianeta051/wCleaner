@@ -1,10 +1,10 @@
-import { CircularProgress, Typography, Box } from "@mui/material";
+import { CircularProgress, Typography, Box, Grid } from "@mui/material";
 import { FC } from "react";
 import { useParams } from "react-router-dom";
 import { useJobCustomer } from "../../../hooks/Jobs/useJobCustomer";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
-import { JobInfo } from "../../../components/JobInfo/JobInfo";
-import LoadingButton from "@mui/lab/LoadingButton";
+import { JobInfoDisplay } from "../../../components/JobInfoDisplay/JobInfoDisplay";
+import { JobCustomer } from "../../../components/JobCustomer/JobCustomer";
 
 type JobDetailsParams = {
   jobId: string;
@@ -18,7 +18,7 @@ export const JobDetailsPage: FC = () => {
     return <ErrorMessage code="INTERNAL_ERROR" />;
   }
 
-  const { job, loading, error } = useJobCustomer(customerId, jobId);
+  const { job, loading, error, reload } = useJobCustomer(customerId, jobId);
 
   if (loading) {
     return (
@@ -38,5 +38,16 @@ export const JobDetailsPage: FC = () => {
     return <ErrorMessage code="JOB_NOT_EXISTS" />;
   }
 
-  return <JobInfo job={job} customerId={customerId} />;
+  return (
+    <Grid container spacing={4} justifyContent="center">
+      <Grid item xs={12} md={10} lg={8}>
+        <JobInfoDisplay job={job} onEdit={reload} />
+      </Grid>
+      {job.customer && (
+        <Grid item xs={12} md={10} lg={8}>
+          <JobCustomer job={job} />
+        </Grid>
+      )}
+    </Grid>
+  );
 };

@@ -2,14 +2,15 @@ export type Customer = {
   name: string;
   address: string;
   postcode: string;
-  mainTelephone: string;
-  secondTelephone: string;
-  email: string;
+  mainTelephone?: string;
+  secondTelephone?: string;
+  email?: string;
   id: string;
   slug: string;
   fileUrls?: string[];
   notes?: CustomerNote[];
 };
+
 export type CustomerNote = {
   id: string;
   title: string;

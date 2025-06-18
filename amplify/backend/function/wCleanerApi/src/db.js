@@ -127,78 +127,177 @@ const addJobType = async (jobType) => {
   };
 };
 
-const editCustomer = async (id, editedCustomer) => {
-  const customer = await getCustomer(id);
+// const editCustomer = async (id, editedCustomer) => {
+//   const customer = await getCustomer(id);
 
-  if (customer === undefined) {
+//   if (customer === undefined) {
+//     throw "NOT_EXISTING_CUSTOMER";
+//   }
+
+//   const postcodeParts = editedCustomer.postcode.split(/\s/g);
+//   if (postcodeParts.filter((part) => !!part).length !== 2) {
+//     throw "INVALID_POSTCODE";
+//   }
+//   const outcode = postcodeParts[0];
+
+//   const params = {
+//     TableName: TABLE_NAME,
+//     ExpressionAttributeNames: {
+//       "#N": "name",
+//       "#NL": "name_lowercase",
+//       "#A": "address",
+//       "#P": "postcode",
+//       "#OC": "outcode",
+//       "#MP": "mainTelephone",
+//       "#SP": "secondTelephone",
+//       "#E": "email",
+//       "#EL": "email_lowercase",
+//       "#SL": "slug",
+//       "#F": "fileUrls",
+//     },
+//     ExpressionAttributeValues: {
+//       ":name": {
+//         S: editedCustomer.name,
+//       },
+//       ":name_lowercase": {
+//         S: editedCustomer.name?.toLowerCase(),
+//       },
+//       ":address": {
+//         S: editedCustomer.address,
+//       },
+//       ":postcode": {
+//         S: editedCustomer.postcode,
+//       },
+//       ":outcode": {
+//         S: outcode,
+//       },
+//       ":mainTelephone": {
+//         S: editedCustomer.mainTelephone,
+//       },
+//       ":secondTelephone": {
+//         S: editedCustomer.secondTelephone,
+//       },
+//       ":email": {
+//         S: editedCustomer.email,
+//       },
+//       ":email_lowercase": {
+//         S: editedCustomer.email?.toLowerCase(),
+//       },
+//       ":slug": {
+//         S: editedCustomer.slug,
+//       },
+
+//       ":fileUrls": {
+//         L: editedCustomer.fileUrls.map((url) => ({ S: url })),
+//       },
+//     },
+
+//     UpdateExpression:
+//       "SET #N = :name, #A = :address, #P = :postcode, #OC = :outcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug, #F = :fileUrls",
+//     Key: {
+//       PK: { S: `customer_${id}` },
+//       SK: { S: "profile" },
+//     },
+//   };
+//   await ddb.updateItem(params).promise();
+//   return {
+//     id,
+//     ...editedCustomer,
+//   };
+// };
+const editCustomer = async (id, editedCustomer) => {
+  const existing = await getCustomer(id);
+  if (!existing) {
     throw "NOT_EXISTING_CUSTOMER";
   }
 
-  const postcodeParts = editedCustomer.postcode.split(/\s/g);
-  if (postcodeParts.filter((part) => !!part).length !== 2) {
-    throw "INVALID_POSTCODE";
+  const updateExprParts = [];
+  const exprAttrNames = {};
+  const exprAttrValues = {};
+
+  if (editedCustomer.name !== undefined) {
+    exprAttrNames["#N"] = "name";
+    exprAttrNames["#NL"] = "name_lowercase";
+    exprAttrValues[":name"] = { S: editedCustomer.name };
+    exprAttrValues[":name_lowercase"] = {
+      S: editedCustomer.name.toLowerCase(),
+    };
+    updateExprParts.push("#N = :name", "#NL = :name_lowercase");
   }
-  const outcode = postcodeParts[0];
+
+  if (editedCustomer.address !== undefined) {
+    exprAttrNames["#A"] = "address";
+    exprAttrValues[":address"] = { S: editedCustomer.address };
+    updateExprParts.push("#A = :address");
+  }
+
+  if (editedCustomer.postcode !== undefined) {
+    const postcodeParts = editedCustomer.postcode.split(/\s/g);
+    if (postcodeParts.filter((part) => !!part).length !== 2) {
+      throw "INVALID_POSTCODE";
+    }
+    const outcode = postcodeParts[0];
+    exprAttrNames["#P"] = "postcode";
+    exprAttrNames["#OC"] = "outcode";
+    exprAttrValues[":postcode"] = { S: editedCustomer.postcode };
+    exprAttrValues[":outcode"] = { S: outcode };
+    updateExprParts.push("#P = :postcode", "#OC = :outcode");
+  }
+
+  if (editedCustomer.mainTelephone !== undefined) {
+    exprAttrNames["#MP"] = "mainTelephone";
+    exprAttrValues[":mainTelephone"] = { S: editedCustomer.mainTelephone };
+    updateExprParts.push("#MP = :mainTelephone");
+  }
+
+  if (editedCustomer.secondTelephone !== undefined) {
+    exprAttrNames["#SP"] = "secondTelephone";
+    exprAttrValues[":secondTelephone"] = { S: editedCustomer.secondTelephone };
+    updateExprParts.push("#SP = :secondTelephone");
+  }
+
+  if (editedCustomer.email !== undefined) {
+    exprAttrNames["#E"] = "email";
+    exprAttrNames["#EL"] = "email_lowercase";
+    exprAttrValues[":email"] = { S: editedCustomer.email };
+    exprAttrValues[":email_lowercase"] = {
+      S: editedCustomer.email.toLowerCase(),
+    };
+    updateExprParts.push("#E = :email", "#EL = :email_lowercase");
+  }
+
+  if (editedCustomer.slug !== undefined) {
+    exprAttrNames["#SL"] = "slug";
+    exprAttrValues[":slug"] = { S: editedCustomer.slug };
+    updateExprParts.push("#SL = :slug");
+  }
+
+  if (editedCustomer.fileUrls !== undefined) {
+    if (!Array.isArray(editedCustomer.fileUrls)) {
+      throw "FILEURLS_MUST_BE_ARRAY";
+    }
+    exprAttrNames["#F"] = "fileUrls";
+    exprAttrValues[":fileUrls"] = {
+      L: editedCustomer.fileUrls.map((url) => ({ S: url })),
+    };
+    updateExprParts.push("#F = :fileUrls");
+  }
+
+  if (updateExprParts.length === 0) {
+    throw "NO_VALID_FIELDS_TO_UPDATE";
+  }
 
   const params = {
     TableName: TABLE_NAME,
-    ExpressionAttributeNames: {
-      "#N": "name",
-      "#NL": "name_lowercase",
-      "#A": "address",
-      "#P": "postcode",
-      "#OC": "outcode",
-      "#MP": "mainTelephone",
-      "#SP": "secondTelephone",
-      "#E": "email",
-      "#EL": "email_lowercase",
-      "#SL": "slug",
-      "#F": "fileUrls",
-    },
-    ExpressionAttributeValues: {
-      ":name": {
-        S: editedCustomer.name,
-      },
-      ":name_lowercase": {
-        S: editedCustomer.name?.toLowerCase(),
-      },
-      ":address": {
-        S: editedCustomer.address,
-      },
-      ":postcode": {
-        S: editedCustomer.postcode,
-      },
-      ":outcode": {
-        S: outcode,
-      },
-      ":mainTelephone": {
-        S: editedCustomer.mainTelephone,
-      },
-      ":secondTelephone": {
-        S: editedCustomer.secondTelephone,
-      },
-      ":email": {
-        S: editedCustomer.email,
-      },
-      ":email_lowercase": {
-        S: editedCustomer.email?.toLowerCase(),
-      },
-      ":slug": {
-        S: editedCustomer.slug,
-      },
-
-      ":fileUrls": {
-        L: editedCustomer.fileUrls.map((url) => ({ S: url })),
-      },
-    },
-
-    UpdateExpression:
-      "SET #N = :name, #A = :address, #P = :postcode, #OC = :outcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug, #F = :fileUrls",
     Key: {
       PK: { S: `customer_${id}` },
       SK: { S: "profile" },
     },
+    UpdateExpression: `SET ${updateExprParts.join(", ")}`,
+    ExpressionAttributeNames: exprAttrNames,
+    ExpressionAttributeValues: exprAttrValues,
   };
+
   await ddb.updateItem(params).promise();
   return {
     id,

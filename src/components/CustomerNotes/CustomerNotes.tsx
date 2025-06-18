@@ -24,12 +24,17 @@ import MuiAlert, { AlertColor } from "@mui/material/Alert";
 
 type CustomerNotesProps = {
   customer: Customer;
+  jobId?: string;
 };
 
-export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
+export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<CustomerNote | undefined>();
-  const { deleteNote } = useDeleteCustomerNote(customer.id, customer.slug);
+  const { deleteNote } = useDeleteCustomerNote(
+    customer.id,
+    customer.slug,
+    jobId
+  );
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] =
@@ -159,6 +164,7 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
         onClose={closeModalHandler}
         initialValues={editingNote}
         noteId={editingNote?.id}
+        jobId={jobId}
       />
       <Snackbar
         open={snackbarOpen}

@@ -4,7 +4,7 @@ import { getJob } from "../../services/jobs";
 import { extractErrorCode } from "../../services/error";
 
 export const useJobCustomer = (customerId?: string, jobId?: string) => {
-  const { data, isLoading, error } = useSWR<
+  const { data, isLoading, error, mutate } = useSWR<
     Job | null,
     Error,
     readonly [string, string, string] | null
@@ -17,5 +17,6 @@ export const useJobCustomer = (customerId?: string, jobId?: string) => {
     job: data,
     error: extractErrorCode(error),
     loading: isLoading,
+    reload: mutate,
   };
 };
