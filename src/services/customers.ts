@@ -359,17 +359,3 @@ export const deleteCustomerNote = async (
     throw "INTERNAL_ERROR";
   }
 };
-
-export const updateCustomerNoteFavourite = async (
-  customerId: string,
-  noteId: string,
-  isFavourite: boolean
-): Promise<void> => {
-  try {
-    await put(`/customers/${customerId}/note/${noteId}`, {
-      isFavourite,
-    });
-  } catch (error) {
-    throw "INTERNAL_ERROR";
-  }
-};

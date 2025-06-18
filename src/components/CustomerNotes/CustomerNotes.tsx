@@ -21,6 +21,8 @@ import { FavouriteButton } from "../FavouriteButton/FavouriteButton";
 import { useDeleteCustomerNote } from "../../hooks/Customers/customerNotes/useDeleteCustomerNote";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert, { AlertColor } from "@mui/material/Alert";
+import { useEditCustomerNote } from "../../hooks/Customers/customerNotes/useEditCustomerNote";
+import { useEditNoteFavourite } from "../../hooks/Customers/customerNotes/useEditNoteFavourite";
 
 type CustomerNotesProps = {
   customer: Customer;
@@ -30,11 +32,16 @@ type CustomerNotesProps = {
 export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<CustomerNote | undefined>();
-  const { deleteNote } = useDeleteCustomerNote(
-    customer.id,
-    customer.slug,
-    jobId
-  );
+  const {
+    editCustomerNoteFavourite,
+    loading: loadingNoteEdit,
+    error: errorEditNote,
+  } = useEditNoteFavourite(customer.id, customer.slug, jobId);
+  const {
+    deleteNote,
+    loading: loadingNoteDelete,
+    error: errorDeleteNote,
+  } = useDeleteCustomerNote(customer.id, customer.slug, jobId);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] =
@@ -53,6 +60,24 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
   const handleEditNote = (note: CustomerNote) => {
     setEditingNote(note);
     setModalOpen(true);
+  };
+
+  const handleFavourite = (note: CustomerNote) => {
+    editCustomerNoteFavourite({
+      note,
+      newValue: true,
+    }).catch(() => {
+      // the error is managed by the hook
+    });
+  };
+
+  const handleUnfavourite = (note: CustomerNote) => {
+    editCustomerNoteFavourite({
+      note,
+      newValue: false,
+    }).catch(() => {
+      // the error is managed by the hook
+    });
   };
 
   const handleDeleteNote = async (noteId: string) => {
@@ -117,7 +142,16 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
                   justifyContent="space-between"
                   width="100%"
                 >
-                  <FavouriteButton initialState={note.isFavourite} />
+                  <FavouriteButton
+                    initialState={note.isFavourite}
+                    disabled={loadingNoteEdit}
+                    onActivate={() => {
+                      handleFavourite(note);
+                    }}
+                    onDeactivate={() => {
+                      handleUnfavourite(note);
+                    }}
+                  />
                   <Typography fontWeight="bold">
                     {note.title}
                     {note.author ? ` - ${note.author}` : ""}
