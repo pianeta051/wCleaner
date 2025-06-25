@@ -7,25 +7,29 @@ type FavouriteButtonProps = {
   onActivate?: () => void;
   onDeactivate?: () => void;
   initialState?: boolean;
+  disabled?: boolean;
 };
 
 export const FavouriteButton: FC<FavouriteButtonProps> = ({
   onActivate,
   onDeactivate,
   initialState = false,
+  disabled = false,
 }) => {
   const [active, setActive] = useState(initialState);
   const clickHandler = () => {
-    if (active) {
-      setActive(false);
-      if (onDeactivate) onDeactivate();
-    } else {
-      setActive(true);
-      if (onActivate) onActivate();
+    if (!disabled) {
+      if (active) {
+        setActive(false);
+        onDeactivate?.();
+      } else {
+        setActive(true);
+        onActivate?.();
+      }
     }
   };
   return (
-    <IconButton onClick={clickHandler} color="primary">
+    <IconButton onClick={clickHandler} color="primary" disabled={disabled}>
       {active ? <StarIcon /> : <StarBorderIcon />}
     </IconButton>
   );

@@ -120,6 +120,13 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "FILEURLS_MUST_BE_ARRAY") {
+    return (
+      <Alert severity="error">
+        <Typography>Error in the File Url</Typography>
+      </Alert>
+    );
+  }
 
   if (code === "NOT_FOUND") {
     return <NotFound />;
@@ -182,6 +189,13 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
     return (
       <Alert severity="error">
         <Typography>Content cannot be empty.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "INVALID_FILE_DATA") {
+    return (
+      <Alert severity="error">
+        <Typography>Invalid Data File, please contact a site admin</Typography>
       </Alert>
     );
   }

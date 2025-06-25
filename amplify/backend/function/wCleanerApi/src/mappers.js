@@ -19,7 +19,7 @@ const mapCustomer = (customerFromDb) => ({
         content: note.content?.S || "",
         author: note.author?.S || "",
         timestamp: note.timestamp ? Number(note.timestamp.N) : undefined,
-        isFavourite: !!note?.isFavourite,
+        isFavourite: !!note?.isFavourite?.BOOL,
       };
     }) || [],
 });

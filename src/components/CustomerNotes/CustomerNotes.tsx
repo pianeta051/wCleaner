@@ -18,14 +18,37 @@ import { Customer, CustomerNote } from "../../types/types";
 import { Title } from "./CustomerNotes.style";
 import { CustomerNoteModal } from "../CustomerNoteModal/CustomerNoteModal";
 import { FavouriteButton } from "../FavouriteButton/FavouriteButton";
+import { useDeleteCustomerNote } from "../../hooks/Customers/customerNotes/useDeleteCustomerNote";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert, { AlertColor } from "@mui/material/Alert";
+import { useEditCustomerNote } from "../../hooks/Customers/customerNotes/useEditCustomerNote";
+import { useEditNoteFavourite } from "../../hooks/Customers/customerNotes/useEditNoteFavourite";
+import { useAuth } from "../../context/AuthContext";
 
 type CustomerNotesProps = {
   customer: Customer;
+  jobId?: string;
 };
 
-export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
+export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<CustomerNote | undefined>();
+  const {
+    editCustomerNoteFavourite,
+    loading: loadingNoteEdit,
+    error: errorEditNote,
+  } = useEditNoteFavourite(customer.id, customer.slug, jobId);
+  const {
+    deleteNote,
+    loading: loadingNoteDelete,
+    error: errorDeleteNote,
+  } = useDeleteCustomerNote(customer.id, customer.slug, jobId);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const { isInGroup, user } = useAuth();
+  const isAdmin = isInGroup("Admin");
+  const [snackbarSeverity, setSnackbarSeverity] =
+    useState<AlertColor>("success");
 
   const openModalHandler = () => {
     setEditingNote(undefined);
@@ -42,8 +65,38 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
     setModalOpen(true);
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    console.log("TODO: delete note with ID:", noteId);
+  const handleFavourite = (note: CustomerNote) => {
+    editCustomerNoteFavourite({
+      note,
+      newValue: true,
+    }).catch(() => {
+      // the error is managed by the hook
+    });
+  };
+
+  const handleUnfavourite = (note: CustomerNote) => {
+    editCustomerNoteFavourite({
+      note,
+      newValue: false,
+    }).catch(() => {
+      // the error is managed by the hook
+    });
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNote(noteId);
+      setSnackbarMessage("Successfully deleted");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      setSnackbarMessage("Failed to delete note");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  };
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   const hasManyNotes = (customer.notes?.length ?? 0) > 3;
@@ -92,7 +145,16 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
                   justifyContent="space-between"
                   width="100%"
                 >
-                  <FavouriteButton initialState={note.isFavourite} />
+                  <FavouriteButton
+                    initialState={note.isFavourite}
+                    disabled={loadingNoteEdit}
+                    onActivate={() => {
+                      handleFavourite(note);
+                    }}
+                    onDeactivate={() => {
+                      handleUnfavourite(note);
+                    }}
+                  />
                   <Typography fontWeight="bold">
                     {note.title}
                     {note.author ? ` - ${note.author}` : ""}
@@ -100,27 +162,30 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
                       ? ` - ${new Date(note.timestamp).toLocaleString()}`
                       : ""}
                   </Typography>
-                  <Box>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditNote(note);
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteNote(note.id);
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
+                  {}
+                  {isAdmin && (
+                    <Box>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditNote(note);
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteNote(note.id);
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
                 </Stack>
               </AccordionSummary>
               <AccordionDetails>
@@ -138,7 +203,23 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer }) => {
         customer={customer}
         onClose={closeModalHandler}
         initialValues={editingNote}
+        noteId={editingNote?.id}
+        jobId={jobId}
       />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <MuiAlert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </MuiAlert>
+      </Snackbar>
     </>
   );
 };

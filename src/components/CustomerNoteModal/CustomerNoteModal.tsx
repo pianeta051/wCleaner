@@ -11,12 +11,15 @@ import {
   Wrapper,
   Title,
 } from "./CustomerNoteModal.style";
+import { useEditCustomerNote } from "../../hooks/Customers/customerNotes/useEditCustomerNote";
 
 type CustomerNoteModalProps = {
   open: boolean;
   customer: Customer;
   initialValues?: NoteFormValues;
   onClose: () => void;
+  noteId?: string;
+  jobId?: string;
 };
 
 export const CustomerNoteModal: FC<CustomerNoteModalProps> = ({
@@ -24,19 +27,44 @@ export const CustomerNoteModal: FC<CustomerNoteModalProps> = ({
   customer,
   initialValues,
   onClose,
+  noteId,
+  jobId,
 }) => {
-  const { addCustomerNote, loading, error } = useAddCustomerNote(customer.id);
+  const {
+    addCustomerNote,
+    loading: addNoteLoading,
+    error: addNoteError,
+  } = useAddCustomerNote(customer.id, customer.slug, jobId);
 
-  const isEditing = Boolean(initialValues);
+  const {
+    editCustomerNote,
+    loading: editNoteLoading,
+    error: editNoteError,
+  } = useEditCustomerNote(customer.id, customer.slug, noteId, jobId);
+
+  const loading = addNoteLoading || editNoteLoading;
+  const error = addNoteError ?? editNoteError ?? null;
+
+  const isEditing = Boolean(initialValues && noteId);
 
   const handleSubmit = (values: NoteFormValues) => {
-    addCustomerNote(values)
-      .then(() => {
-        onClose();
-      })
-      .catch(() => {
-        // error is handled by the hook
-      });
+    if (!isEditing) {
+      addCustomerNote(values)
+        .then(() => {
+          onClose();
+        })
+        .catch(() => {
+          // error is handled by the hook
+        });
+    } else {
+      editCustomerNote(values)
+        .then(() => {
+          onClose();
+        })
+        .catch(() => {
+          // error is handled by the hook
+        });
+    }
   };
 
   return (

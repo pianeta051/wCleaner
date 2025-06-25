@@ -4,7 +4,7 @@ import { getCustomer } from "../../services/customers";
 import { extractErrorCode } from "../../services/error";
 
 export const useCustomer = (slug: string | undefined) => {
-  const { data, isLoading, error } = useSWR<
+  const { data, isLoading, error, mutate } = useSWR<
     Customer | null,
     Error,
     readonly [string, string] | null
@@ -16,5 +16,6 @@ export const useCustomer = (slug: string | undefined) => {
     customer: data,
     error: extractErrorCode(error),
     loading: isLoading,
+    reload: mutate,
   };
 };

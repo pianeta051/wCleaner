@@ -1,95 +1,53 @@
-import {
-  Button,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Stack,
-  Typography,
-} from "@mui/material";
-import { FC, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { CircularProgress, Typography, Box, Grid } from "@mui/material";
+import { FC } from "react";
+import { useParams } from "react-router-dom";
 import { useJobCustomer } from "../../../hooks/Jobs/useJobCustomer";
-import PersonIcon from "@mui/icons-material/Person";
-import { ErrorCode } from "../../../services/error";
+import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
+import { JobInfoDisplay } from "../../../components/JobInfoDisplay/JobInfoDisplay";
+import { JobCustomer } from "../../../components/JobCustomer/JobCustomer";
 
 type JobDetailsParams = {
   jobId: string;
+  customerId: string;
 };
 
 export const JobDetailsPage: FC = () => {
-  const { jobId } = useParams<JobDetailsParams>();
-  const { job, loading, error } = useJobCustomer(jobId);
-  const [operationError, setOperationError] = useState<ErrorCode | null>(null);
+  const { jobId, customerId } = useParams<JobDetailsParams>();
 
-  // if (!jobId) {
-  //   return <ErrorMessage code={"INTERNAL_ERROR"} />;
-  // }
+  if (!jobId || !customerId) {
+    return <ErrorMessage code="INTERNAL_ERROR" />;
+  }
+
+  const { job, loading, error, reload } = useJobCustomer(customerId, jobId);
 
   if (loading) {
     return (
-      <>
+      <Box textAlign="center" mt={4}>
         <Typography variant="h3" gutterBottom>
-          Job
+          <CircularProgress />
         </Typography>
-        <CircularProgress />
-      </>
+      </Box>
     );
   }
 
-  // if (error) {
-  //   return <ErrorMessage code={error} />;
-  // }
+  if (error) {
+    return <ErrorMessage code={error} />;
+  }
 
-  // if (!job) {
-  //   return <ErrorMessage code="JOB_NOT_EXISTS" />;
-  // }
+  if (!job) {
+    return <ErrorMessage code="JOB_NOT_EXISTS" />;
+  }
 
   return (
-    <>
-      {operationError}
-      <Stack direction="row" spacing={2}>
-        <Link to={`/jobs/${jobId}/edit`}>
-          <Button variant="contained">Edit</Button>
-        </Link>
-      </Stack>
-      <List>
-        <ListItem disablePadding>
-          <ListItemIcon>
-            <CalendarTodayIcon />
-          </ListItemIcon>
-          <ListItemText primary="Date" secondary={job?.date} />
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemIcon>
-            <AccessTimeIcon />
-          </ListItemIcon>
-          <ListItemText primary="Start time" secondary={job?.startTime} />
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemIcon>
-            <AccessTimeIcon />
-          </ListItemIcon>
-          <ListItemText primary="End time" secondary={job?.endTime} />
-        </ListItem>
-        {job?.assignedTo && (
-          <ListItem disablePadding>
-            <ListItemIcon>
-              <PersonIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Assigned to"
-              secondary={[job.assignedTo.name, job.assignedTo.email]
-                .filter(Boolean)
-                .join(" - ")}
-            />
-          </ListItem>
-        )}
-      </List>
-    </>
+    <Grid container spacing={4} justifyContent="center">
+      <Grid item xs={12} md={10} lg={8}>
+        <JobInfoDisplay job={job} onEdit={reload} />
+      </Grid>
+      {job.customer && (
+        <Grid item xs={12} md={10} lg={8}>
+          <JobCustomer job={job} />
+        </Grid>
+      )}
+    </Grid>
   );
 };

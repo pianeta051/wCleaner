@@ -20,7 +20,7 @@ const get = async (
 //   });
 // };
 
-const post = async <TBody = unknown, TResponse = any>(
+const post = async <TBody = unknown, TResponse = unknown>(
   path: string,
   body: TBody
 ): Promise<TResponse> => {
@@ -38,7 +38,7 @@ const remove = async (path: string) => {
 //     body,
 //   });
 // };
-const put = async <TBody = unknown, TResponse = any>(
+const put = async <TBody = unknown, TResponse = unknown>(
   path: string,
   body: TBody
 ): Promise<TResponse> => {
@@ -58,7 +58,6 @@ export const isCustomer = (value: unknown): value is Customer => {
   return (
     typeof v.id === "string" &&
     typeof v.name === "string" &&
-    typeof v.email === "string" &&
     typeof v.slug === "string" &&
     validFileUrls
   );
@@ -173,7 +172,12 @@ export const getCustomer = async (slug: string): Promise<Customer> => {
   try {
     const response = await get(`/customers/${slug}`);
 
-    if (!("customer" in response) || typeof response.customer !== "object") {
+    if (
+      typeof response !== "object" ||
+      !response ||
+      !("customer" in response) ||
+      typeof response.customer !== "object"
+    ) {
       throw "INTERNAL_ERROR";
     }
 
@@ -254,6 +258,36 @@ export const addFile = async (file: File, path: string): Promise<string> => {
   }
 };
 
+export const replaceCustomerFiles = async (
+  customerId: string,
+  fileUrls: string[]
+): Promise<{ fileUrls: string[]; id: string }> => {
+  try {
+    const response = await put<
+      { fileUrls: string[] },
+      { customer: { fileUrls: string[]; id: string } }
+    >(`/customers/${customerId}/files`, { fileUrls });
+
+    return response.customer;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response?.status;
+      const message = error.response?.data?.error;
+
+      if (status === 400 && message === "Invalid file data") {
+        throw "INVALID_FILE_DATA";
+      }
+      if (status === 404) {
+        throw "CUSTOMER_NOT_FOUND";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+
+//CUSTOMER NOTES
+
 export const addCustomerNote = async (
   customerId: string,
   formValues: NoteFormValues
@@ -278,6 +312,50 @@ export const addCustomerNote = async (
       }
     }
 
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const editCustomerNote = async (
+  customerId: string,
+  noteId: string,
+  formValues: NoteFormValues
+): Promise<void> => {
+  try {
+    await put(`/customers/${customerId}/note/${noteId}`, formValues);
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const { status, data } = error.response;
+
+      if (status === 400) {
+        if (data?.error === "Title cannot be empty") {
+          throw "TITLE_CANNOT_BE_EMPTY";
+        }
+        if (data?.error === "Content cannot be empty") {
+          throw "CONTENT_CANNOT_BE_EMPTY";
+        }
+      }
+
+      if (status === 404) {
+        if (data?.error === "The customer does not exist") {
+          throw "CUSTOMER_NOT_FOUND";
+        }
+        if (data?.error === "The note does not exist") {
+          throw "NOTE_NOT_FOUND";
+        }
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+export const deleteCustomerNote = async (
+  customerId: string,
+  noteId: string
+): Promise<void> => {
+  try {
+    await remove(`/customers/${customerId}/note/${noteId}`);
+  } catch (error) {
     throw "INTERNAL_ERROR";
   }
 };

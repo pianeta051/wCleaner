@@ -11,9 +11,9 @@ import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 import { useCustomer } from "../../../../hooks/Customers/useCustomer";
 import { useEditCustomer } from "../../../../hooks/Customers/useEditCustomer";
 import { CustomerJobs } from "../../../../components/CustomerJobs/CustomerJobs";
-import { deleteFile } from "../../../../services/files";
 import { CustomerFiles } from "../../../../components/CustomerFiles/CustomerFiles";
 import { CustomerNotes } from "../../../../components/CustomerNotes/CustomerNotes";
+import { customerToFormValues } from "../../../../helpers/customer";
 
 type CustomerParams = {
   slug: string;
@@ -28,60 +28,28 @@ export const CustomerDetails: FC = () => {
     loading: initialLoading,
     error: initialError,
   } = useCustomer(slug);
+
   const {
     editCustomer,
     loading: editing,
     error: editError,
   } = useEditCustomer(customer?.id, customer?.slug);
 
-  const submitHandler = (formValues: CustomerFormValues) => {
-    if (customer) {
-      editCustomer(formValues)
-        .then(() => setSnackbarOpen(true))
-        .catch((error) => {
-          throw error;
-        });
-    }
-  };
-
-  const closeHandler = () => {
-    setSnackbarOpen(false);
-  };
-  const editCustomerHandler = async (
-    updatedFields: Partial<CustomerFormValues>
-  ) => {
+  const submitHandler = async (formValues: CustomerFormValues) => {
     if (!customer) return;
 
-    await editCustomer({
-      ...customer,
-      ...updatedFields,
-    });
-
-    setSnackbarOpen(true);
-  };
-
-  if (!slug) {
-    return <NotFound />;
-  }
-
-  const deleteFileHandler = async (index: number) => {
-    if (!customer || !customer.fileUrls) return;
-
-    const fileKeyToDelete = customer.fileUrls[index];
-    const newFileKeys = customer.fileUrls.filter((_, i) => i !== index);
-
     try {
-      // Delete from S3
-      await deleteFile(fileKeyToDelete);
-
-      // Update customer record
-      await editCustomerHandler({ fileUrls: newFileKeys });
-
+      await editCustomer(formValues);
       setSnackbarOpen(true);
     } catch (error) {
-      console.error("Error deleting file:", error);
+      console.error("Error updating customer:", error);
     }
   };
+
+  const closeHandler = () => setSnackbarOpen(false);
+
+  if (!slug) return <NotFound />;
+
   return (
     <Wrapper>
       <Grid container spacing={0} direction="column" alignItems="center">
@@ -92,34 +60,33 @@ export const CustomerDetails: FC = () => {
         ) : customer ? (
           <>
             {editError && <ErrorMessage code={editError} />}
+
             <Title variant="h3" align="center">
               Customer details
             </Title>
+
             <Grid container spacing={2}>
               <Grid item xs={12} md={9}>
                 <CustomerForm
                   onSubmit={submitHandler}
-                  initialValues={customer}
+                  initialValues={customerToFormValues(customer)}
                   loading={editing}
                   layout="horizontal"
                 />
               </Grid>
-
               <Grid item xs={12} md={3}>
                 <CustomerNotes customer={customer} />
               </Grid>
             </Grid>
+
             <DividerLine />
-            <Grid item xs={12} style={{ width: "100%" }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={8}>
-                  <CustomerJobs customer={customer} />
-                </Grid>
-                <CustomerFiles
-                  customer={customer}
-                  onEditUrls={(urls) => editCustomerHandler({ fileUrls: urls })}
-                  onDeleteFile={deleteFileHandler}
-                />
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={8}>
+                <CustomerJobs customer={customer} />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <CustomerFiles customer={customer} />
               </Grid>
             </Grid>
           </>

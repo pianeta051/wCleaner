@@ -20,14 +20,18 @@ const {
   getCustomerBySlug,
   getCustomerById,
   getCustomerJobs,
+  getJob,
   getJobs,
+  getJobType,
   getJobTypes,
   getOutcodes,
   deleteCustomer,
+  deleteCustomerNote,
   deleteJobType,
   editJobFromCustomer,
   deleteJobFromCustomer,
   editCustomer,
+  editCustomerNote,
   editJobType,
   addFile,
 } = require("./db");
@@ -199,6 +203,32 @@ app.get("/jobs", async function (req, res) {
   res.json({ jobs, nextToken: responseToken });
 });
 
+app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
+  const customerId = req.params.customerId;
+  const jobId = req.params.jobId;
+  const jobFromDb = await getJob(customerId, jobId);
+  let job = mapJob(jobFromDb);
+  const groups = req.authData?.groups;
+  const isAdmin = groups.includes("Admin");
+  if (isAdmin) {
+    job = (await getJobUsers([jobFromDb]))[0];
+  } else {
+    const restrictedCustomer = {
+      id: job.customer.id,
+      slug: job.customer.slug,
+      name: job.customer.name,
+      address: job.customer.address,
+      postcode: job.customer.postcode,
+      fileUrls: job.customer.fileUrls,
+      notes: job.customer.notes,
+    };
+    job.customer = restrictedCustomer;
+  }
+  const jobType = await getJobType(job.jobTypeId);
+  job.jobTypeName = mapJobType(jobType).name;
+  res.json({ job });
+});
+
 // Get a single customer's Job
 app.get("/customers/:customerId/jobs", async function (req, res) {
   const id = req.params.customerId;
@@ -253,7 +283,7 @@ app.post("/customers/:customerId/job", async function (req, res) {
         ...createdJob,
         customerId,
         assignedTo: {
-          sub: userSub,
+          sub: assignedTo,
           email,
           name,
           color,
@@ -445,6 +475,39 @@ app.post("/files", async function (req, res) {
   }
 });
 
+// Replace fileUrls on a customer
+app.put("/customers/:customerId/files", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const { fileUrls } = req.body;
+
+    if (!Array.isArray(fileUrls)) {
+      return res
+        .status(400)
+        .json({ error: "FileUrls must be an array of strings" });
+    }
+
+    // Check all elements are strings
+    if (!fileUrls.every((url) => typeof url === "string")) {
+      return res
+        .status(400)
+        .json({ error: "FileUrls must contain only strings" });
+    }
+
+    const updatedCustomer = await editCustomer(customerId, {
+      fileUrls,
+    });
+
+    res.json({ customer: updatedCustomer });
+  } catch (error) {
+    if (error === "NOT_EXISTING_CUSTOMER") {
+      res.status(404).json({ error: "Not existing customer" });
+    } else {
+      throw error;
+    }
+  }
+});
+
 // Customers Notes
 
 //Add customer note
@@ -497,6 +560,62 @@ app.post("/customers/:customerId/note", async function (req, res) {
     console.error("Internal error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+app.put("/customers/:customerId/note/:noteId", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const noteId = req.params.noteId;
+    const { title, content, isFavourite = false } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: "Title cannot be empty" });
+    }
+
+    if (!content) {
+      return res.status(400).json({ error: "Content cannot be empty" });
+    }
+
+    const note = {
+      title,
+      content,
+      isFavourite,
+    };
+
+    let updatedNote = null;
+    try {
+      updatedNote = await editCustomerNote(customerId, noteId, note);
+    } catch (e) {
+      if (e.message === "CUSTOMER_NOT_FOUND") {
+        return res.status(404).json({ error: "The customer does not exist" });
+      }
+      if (e.message === "NOTE_NOT_FOUND") {
+        return res.status(404).json({ error: "The note does not exist" });
+      }
+      throw e;
+    }
+
+    res.json({
+      note: {
+        ...updatedNote,
+        customerId,
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    console.error("Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.delete("/customers/:customerId/note/:noteId", async function (req, res) {
+  const noteId = req.params.noteId;
+  const customerId = req.params.customerId;
+  await deleteCustomerNote(customerId, noteId);
+  res.json({ message: "Note Deleted" });
 });
 
 module.exports = app;

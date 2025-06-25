@@ -6,3 +6,10 @@ export const ModalBox = styled(Box)({
   alignItems: "center",
   minHeight: "25vh",
 });
+
+export const SkeletonWrapper = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2),
+  [theme.breakpoints.up("md")]: {
+    minWidth: "550px",
+  },
+}));

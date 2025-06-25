@@ -2,29 +2,30 @@ import { FC, useState } from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 
-import { useAddFile } from "../../hooks/Customers/files/useAddFile";
+import { useUploadFile } from "../../hooks/Files/useUploadFile";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { FileInput } from "../FileInput/FileInput";
+import { Customer } from "../../types/types";
 
 type FileUploaderProps = {
-  customerId: string;
+  uploadDirectory: string;
   onSubmit: (fileKeys: string[]) => void;
 };
 
 export const FileUploader: FC<FileUploaderProps> = ({
-  customerId,
+  uploadDirectory,
   onSubmit,
 }) => {
   const [files, setFiles] = useState<File[]>([]);
 
-  const { addFile, loading, error } = useAddFile();
+  const { uploadFile, loading, error } = useUploadFile();
 
   const handleUpload = async () => {
     const newKeys: string[] = [];
 
     for (const file of files) {
-      const key = `uploads/${customerId}/${Date.now()}-${file.name}`;
-      await addFile({ file, path: key });
+      const key = `uploads/${uploadDirectory}/${Date.now()}-${file.name}`;
+      await uploadFile({ file, path: key });
 
       newKeys.push(key);
     }

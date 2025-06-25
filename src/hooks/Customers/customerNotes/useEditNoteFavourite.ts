@@ -1,10 +1,10 @@
-import useSWRMutation from "swr/mutation";
 import { useSWRConfig } from "swr";
-import { addCustomerNote } from "../../../services/customers";
+import { CustomerNote } from "../../../types/types";
+import useSWRMutation from "swr/mutation";
+import { editCustomerNote } from "../../../services/customers";
 import { extractErrorCode } from "../../../services/error";
-import { NoteFormValues } from "../../../components/NoteForm/NoteForm";
 
-export const useAddCustomerNote = (
+export const useEditNoteFavourite = (
   customerId?: string,
   customerSlug?: string,
   jobId?: string
@@ -14,13 +14,18 @@ export const useAddCustomerNote = (
   const { trigger, isMutating, error } = useSWRMutation<
     void,
     string,
-    [string, string] | null,
-    NoteFormValues,
+    [string, string, string] | null,
+    { note: CustomerNote; newValue: boolean },
     void
   >(
-    customerId && customerSlug ? ["customer", customerId] : null,
-    async ([_operation, customerId], { arg: formValues }) => {
-      await addCustomerNote(customerId, formValues);
+    customerId && customerSlug
+      ? ["customer", customerId, "favouriteEdit"]
+      : null,
+    async ([_operation, customerId], { arg: { note, newValue } }) => {
+      await editCustomerNote(customerId, note.id, {
+        ...note,
+        isFavourite: newValue,
+      });
 
       await mutate(["customer", customerSlug]);
       await mutate(["customer", customerId]);
@@ -35,7 +40,7 @@ export const useAddCustomerNote = (
   );
 
   return {
-    addCustomerNote: trigger,
+    editCustomerNoteFavourite: trigger,
     loading: isMutating,
     error: extractErrorCode(error),
   };

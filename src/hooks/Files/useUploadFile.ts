@@ -1,15 +1,15 @@
 import useSWRMutation from "swr/mutation";
-import { extractErrorCode } from "../../../services/error";
-import { uploadFile } from "../../../services/files";
+import { extractErrorCode } from "../../services/error";
+import { uploadFile } from "../../services/files";
 
-export const useAddFile = () => {
+export const useUploadFile = () => {
   const { trigger, isMutating, error } = useSWRMutation<
-    string, // return type (uploaded key/path)
+    string,
     string,
     readonly [string],
     { file: File; path: string }
   >(
-    ["add-file"],
+    ["customer"],
     async ([_operation], { arg: { file, path } }) => {
       const uploadedPath = await uploadFile(file, path);
 
@@ -22,7 +22,7 @@ export const useAddFile = () => {
   );
 
   return {
-    addFile: trigger,
+    uploadFile: trigger,
     loading: isMutating,
     error: extractErrorCode(error),
   };

@@ -1,6 +1,7 @@
 import { Factory } from "fishery";
 import { faker } from "@faker-js/faker";
 import { Customer } from "../types/types";
+import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
 const ukPostcodes = [
   "E1 6AN",
   "SW1A 1AA",
@@ -22,3 +23,15 @@ export const customerFactory = Factory.define<Customer>(() => ({
   slug: faker.phone.imei(),
   fileUrls: [],
 }));
+
+export const customerToFormValuesFactory = Factory.define<CustomerFormValues>(
+  () => ({
+    name: faker.person.fullName(),
+    address: faker.location.streetAddress(false),
+    postcode: faker.helpers.arrayElement(ukPostcodes),
+    mainTelephone: faker.number.int().toString(),
+    secondTelephone: faker.number.int().toString(),
+    email: faker.internet.email() ?? "",
+    fileUrls: [],
+  })
+);

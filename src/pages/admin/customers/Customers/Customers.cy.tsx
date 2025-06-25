@@ -5,8 +5,7 @@ import { API } from "aws-amplify";
 import { customerFactory } from "../../../../factories/customers";
 import { Customers } from "./Customers";
 import { CustomerFormValues } from "../../../../components/Customer/CustomerForm/CustomerForm";
-import { NewCustomerModal } from "../../../../components/Customer/CreateCustomer/NewCustomerModal/NewCustomerModal";
-import { contains } from "cypress/types/jquery";
+import { customerToFormValues } from "../../../../helpers/customer";
 
 const mountComponent = () => {
   cy.mount(
@@ -19,26 +18,6 @@ const mountComponent = () => {
     </ThemeProvider>
   );
 };
-// const mountNewCustomerComponent = ()=>{
-//    cy.mount(
-//      <ThemeProvider theme={theme}>
-//          <MemoryRouter initialEntries={["/customers"]}>
-//            <Routes>
-//              <Route
-//                path="customers"
-//                element={
-//                  <NewCustomerModal
-//                    onSubmit={cy.spy().as("submitHandler")}
-//                    open={true}
-//                    onClose={cy.spy().as("closeHandler")}
-//                  />
-//                }
-//              />
-//            </Routes>
-//          </MemoryRouter>
-//      </ThemeProvider>
-//    );
-// }
 
 describe("CustomersPage", () => {
   it("Display a list of existing customers", () => {
@@ -119,9 +98,7 @@ describe("CustomersPage", () => {
     cy.stub(API, "get").resolves({
       customers,
     });
-    const formValues: CustomerFormValues = {
-      ...customer,
-    };
+    const formValues: CustomerFormValues = customerToFormValues(customer);
     cy.stub(API, "post").resolves({
       customer,
     });

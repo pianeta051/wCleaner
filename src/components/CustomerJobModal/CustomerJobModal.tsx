@@ -1,7 +1,7 @@
 import { Modal } from "@mui/material";
 import { FC } from "react";
 
-import { Customer, Job } from "../../types/types";
+import { Customer } from "../../types/types";
 import { Grid } from "@mui/material";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { JobForm, JobFormValues } from "../JobForm/JobForm";

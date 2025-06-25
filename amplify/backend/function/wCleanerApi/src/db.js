@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
+const { mapCustomer } = require("./mappers");
 
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 5;
@@ -126,78 +127,177 @@ const addJobType = async (jobType) => {
   };
 };
 
-const editCustomer = async (id, editedCustomer) => {
-  const customer = await getCustomer(id);
+// const editCustomer = async (id, editedCustomer) => {
+//   const customer = await getCustomer(id);
 
-  if (customer === undefined) {
+//   if (customer === undefined) {
+//     throw "NOT_EXISTING_CUSTOMER";
+//   }
+
+//   const postcodeParts = editedCustomer.postcode.split(/\s/g);
+//   if (postcodeParts.filter((part) => !!part).length !== 2) {
+//     throw "INVALID_POSTCODE";
+//   }
+//   const outcode = postcodeParts[0];
+
+//   const params = {
+//     TableName: TABLE_NAME,
+//     ExpressionAttributeNames: {
+//       "#N": "name",
+//       "#NL": "name_lowercase",
+//       "#A": "address",
+//       "#P": "postcode",
+//       "#OC": "outcode",
+//       "#MP": "mainTelephone",
+//       "#SP": "secondTelephone",
+//       "#E": "email",
+//       "#EL": "email_lowercase",
+//       "#SL": "slug",
+//       "#F": "fileUrls",
+//     },
+//     ExpressionAttributeValues: {
+//       ":name": {
+//         S: editedCustomer.name,
+//       },
+//       ":name_lowercase": {
+//         S: editedCustomer.name?.toLowerCase(),
+//       },
+//       ":address": {
+//         S: editedCustomer.address,
+//       },
+//       ":postcode": {
+//         S: editedCustomer.postcode,
+//       },
+//       ":outcode": {
+//         S: outcode,
+//       },
+//       ":mainTelephone": {
+//         S: editedCustomer.mainTelephone,
+//       },
+//       ":secondTelephone": {
+//         S: editedCustomer.secondTelephone,
+//       },
+//       ":email": {
+//         S: editedCustomer.email,
+//       },
+//       ":email_lowercase": {
+//         S: editedCustomer.email?.toLowerCase(),
+//       },
+//       ":slug": {
+//         S: editedCustomer.slug,
+//       },
+
+//       ":fileUrls": {
+//         L: editedCustomer.fileUrls.map((url) => ({ S: url })),
+//       },
+//     },
+
+//     UpdateExpression:
+//       "SET #N = :name, #A = :address, #P = :postcode, #OC = :outcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug, #F = :fileUrls",
+//     Key: {
+//       PK: { S: `customer_${id}` },
+//       SK: { S: "profile" },
+//     },
+//   };
+//   await ddb.updateItem(params).promise();
+//   return {
+//     id,
+//     ...editedCustomer,
+//   };
+// };
+const editCustomer = async (id, editedCustomer) => {
+  const existing = await getCustomer(id);
+  if (!existing) {
     throw "NOT_EXISTING_CUSTOMER";
   }
 
-  const postcodeParts = editedCustomer.postcode.split(/\s/g);
-  if (postcodeParts.filter((part) => !!part).length !== 2) {
-    throw "INVALID_POSTCODE";
+  const updateExprParts = [];
+  const exprAttrNames = {};
+  const exprAttrValues = {};
+
+  if (editedCustomer.name !== undefined) {
+    exprAttrNames["#N"] = "name";
+    exprAttrNames["#NL"] = "name_lowercase";
+    exprAttrValues[":name"] = { S: editedCustomer.name };
+    exprAttrValues[":name_lowercase"] = {
+      S: editedCustomer.name.toLowerCase(),
+    };
+    updateExprParts.push("#N = :name", "#NL = :name_lowercase");
   }
-  const outcode = postcodeParts[0];
+
+  if (editedCustomer.address !== undefined) {
+    exprAttrNames["#A"] = "address";
+    exprAttrValues[":address"] = { S: editedCustomer.address };
+    updateExprParts.push("#A = :address");
+  }
+
+  if (editedCustomer.postcode !== undefined) {
+    const postcodeParts = editedCustomer.postcode.split(/\s/g);
+    if (postcodeParts.filter((part) => !!part).length !== 2) {
+      throw "INVALID_POSTCODE";
+    }
+    const outcode = postcodeParts[0];
+    exprAttrNames["#P"] = "postcode";
+    exprAttrNames["#OC"] = "outcode";
+    exprAttrValues[":postcode"] = { S: editedCustomer.postcode };
+    exprAttrValues[":outcode"] = { S: outcode };
+    updateExprParts.push("#P = :postcode", "#OC = :outcode");
+  }
+
+  if (editedCustomer.mainTelephone !== undefined) {
+    exprAttrNames["#MP"] = "mainTelephone";
+    exprAttrValues[":mainTelephone"] = { S: editedCustomer.mainTelephone };
+    updateExprParts.push("#MP = :mainTelephone");
+  }
+
+  if (editedCustomer.secondTelephone !== undefined) {
+    exprAttrNames["#SP"] = "secondTelephone";
+    exprAttrValues[":secondTelephone"] = { S: editedCustomer.secondTelephone };
+    updateExprParts.push("#SP = :secondTelephone");
+  }
+
+  if (editedCustomer.email !== undefined) {
+    exprAttrNames["#E"] = "email";
+    exprAttrNames["#EL"] = "email_lowercase";
+    exprAttrValues[":email"] = { S: editedCustomer.email };
+    exprAttrValues[":email_lowercase"] = {
+      S: editedCustomer.email.toLowerCase(),
+    };
+    updateExprParts.push("#E = :email", "#EL = :email_lowercase");
+  }
+
+  if (editedCustomer.slug !== undefined) {
+    exprAttrNames["#SL"] = "slug";
+    exprAttrValues[":slug"] = { S: editedCustomer.slug };
+    updateExprParts.push("#SL = :slug");
+  }
+
+  if (editedCustomer.fileUrls !== undefined) {
+    if (!Array.isArray(editedCustomer.fileUrls)) {
+      throw "FILEURLS_MUST_BE_ARRAY";
+    }
+    exprAttrNames["#F"] = "fileUrls";
+    exprAttrValues[":fileUrls"] = {
+      L: editedCustomer.fileUrls.map((url) => ({ S: url })),
+    };
+    updateExprParts.push("#F = :fileUrls");
+  }
+
+  if (updateExprParts.length === 0) {
+    throw "NO_VALID_FIELDS_TO_UPDATE";
+  }
 
   const params = {
     TableName: TABLE_NAME,
-    ExpressionAttributeNames: {
-      "#N": "name",
-      "#NL": "name_lowercase",
-      "#A": "address",
-      "#P": "postcode",
-      "#OC": "outcode",
-      "#MP": "mainTelephone",
-      "#SP": "secondTelephone",
-      "#E": "email",
-      "#EL": "email_lowercase",
-      "#SL": "slug",
-      "#F": "fileUrls",
-    },
-    ExpressionAttributeValues: {
-      ":name": {
-        S: editedCustomer.name,
-      },
-      ":name_lowercase": {
-        S: editedCustomer.name?.toLowerCase(),
-      },
-      ":address": {
-        S: editedCustomer.address,
-      },
-      ":postcode": {
-        S: editedCustomer.postcode,
-      },
-      ":outcode": {
-        S: outcode,
-      },
-      ":mainTelephone": {
-        S: editedCustomer.mainTelephone,
-      },
-      ":secondTelephone": {
-        S: editedCustomer.secondTelephone,
-      },
-      ":email": {
-        S: editedCustomer.email,
-      },
-      ":email_lowercase": {
-        S: editedCustomer.email?.toLowerCase(),
-      },
-      ":slug": {
-        S: editedCustomer.slug,
-      },
-
-      ":fileUrls": {
-        L: editedCustomer.fileUrls.map((url) => ({ S: url })),
-      },
-    },
-
-    UpdateExpression:
-      "SET #N = :name, #A = :address, #P = :postcode, #OC = :outcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug, #F = :fileUrls",
     Key: {
       PK: { S: `customer_${id}` },
       SK: { S: "profile" },
     },
+    UpdateExpression: `SET ${updateExprParts.join(", ")}`,
+    ExpressionAttributeNames: exprAttrNames,
+    ExpressionAttributeValues: exprAttrValues,
   };
+
   await ddb.updateItem(params).promise();
   return {
     id,
@@ -500,6 +600,25 @@ const addCustomerJob = async (customerId, job, assignedTo) => {
 };
 
 //GET JOBS
+
+const getJob = async (customerId, jobId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+  };
+  const job = await ddb.getItem(params).promise();
+  const customer = await getCustomerById(
+    job.Item.PK.S.replace("customer_", "")
+  );
+  const item = {
+    ...job.Item,
+    customer,
+  };
+  return item;
+};
 const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
   const { start, end, assignedTo } = filters;
   const DEFAULT_FILTER_EXPRESSION = "begins_with(#SK, :sk)";
@@ -609,6 +728,17 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
 };
 
 //GET JOB TYPES
+const getJobType = async (jobTypeId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `job_type_${jobTypeId}` },
+      SK: { S: "definition" },
+    },
+  };
+  const job = await ddb.getItem(params).promise();
+  return job.Item;
+};
 const getJobTypes = async () => {
   const params = {
     TableName: TABLE_NAME,
@@ -925,8 +1055,6 @@ const addCustomerNote = async (customerId, note) => {
     isFavourite: { BOOL: note.isFavourite },
   };
 
-  console.log("Saving note to DynamoDB:", JSON.stringify(dynamoNote, null, 2));
-
   const params = {
     TableName: TABLE_NAME,
     Key: {
@@ -949,24 +1077,110 @@ const addCustomerNote = async (customerId, note) => {
     ...note,
   };
 };
+
+const editCustomerNote = async (customerId, noteId, note) => {
+  const customer = mapCustomer(await getCustomer(customerId));
+  if (!customer.notes?.length) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+  const index = customer.notes.findIndex((note) => note.id === noteId);
+  if (index === -1) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+  const existingNote = customer.notes[index];
+  const dynamoNote = {
+    id: { S: noteId },
+    title: { S: note.title },
+    content: { S: note.content },
+    author: { S: existingNote.author },
+    timestamp: { N: existingNote.timestamp.toString() },
+    isFavourite: { BOOL: note.isFavourite },
+  };
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `profile` },
+    },
+    UpdateExpression: `SET notes[${index}] = :new_note`,
+    ExpressionAttributeValues: {
+      ":new_note": { M: dynamoNote },
+    },
+    ReturnValues: "UPDATED_NEW",
+  };
+
+  await ddb.updateItem(params).promise();
+
+  return {
+    id: noteId,
+    ...existingNote,
+    ...note,
+  };
+};
+
+const deleteCustomerNote = async (customerId, noteId) => {
+  // paramas
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "profile" },
+    },
+    ProjectionExpression: "notes",
+  };
+
+  const result = await ddb.getItem(params).promise();
+
+  if (!result.Item || !result.Item.notes || !result.Item.notes.L) {
+    throw "NOTE_NOT_FOUND";
+  }
+
+  const notes = result.Item.notes.L;
+
+  // Find the index of the note with matching id
+  const indexToRemove = notes.findIndex((n) => n.M?.id?.S === noteId);
+
+  if (indexToRemove === -1) {
+    throw "NOTE_NOT_FOUND";
+  }
+
+  // Remove the note at that index using UpdateExpression
+  console.log("INDEX :" + indexToRemove);
+  const updateParams = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "profile" },
+    },
+    UpdateExpression: `REMOVE notes[${indexToRemove}]`,
+  };
+
+  await ddb.updateItem(updateParams).promise();
+};
+
 module.exports = {
   addCustomer,
   addCustomerJob,
   addCustomerNote,
   addJobType,
   editCustomer,
+  editCustomerNote,
   editJobType,
   getCustomerBySlug,
   getCustomerById,
   getCustomers,
   getCustomer,
   getCustomerJobs,
+  getJob,
   getJobs,
+  getJobType,
   getJobTypes,
   getOutcodes,
   queryCustomersByEmail,
   deleteCustomer,
   deleteJobType,
+  deleteCustomerNote,
   editJobFromCustomer,
   deleteJobFromCustomer,
   addFile,
