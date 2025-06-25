@@ -100,27 +100,31 @@ export const TopBar: FC = () => {
           >
             <MenuIcon />
           </IconButton>
-          {isAdmin && (
-            <Menu
-              id="menu-appbar"
-              aria-labelledby="demo-positioned-button"
-              anchorEl={anchorEl}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "left",
-              }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "left",
-              }}
-              open={Boolean(anchorEl)}
-              onClose={closeMenuIconHandler}
-            >
-              <MenuItem onClick={toCustomers}>Customers</MenuItem>
-              <MenuItem onClick={toUsers}>Users</MenuItem>
-              <MenuItem onClick={toJobs}>Jobs</MenuItem>
-            </Menu>
-          )}
+
+          <Menu
+            id="menu-appbar"
+            aria-labelledby="demo-positioned-button"
+            anchorEl={anchorEl}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "left",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "left",
+            }}
+            open={Boolean(anchorEl)}
+            onClose={closeMenuIconHandler}
+          >
+            {" "}
+            {isAdmin && (
+              <>
+                <MenuItem onClick={toCustomers}>Customers</MenuItem>
+                <MenuItem onClick={toUsers}>Users</MenuItem>
+              </>
+            )}
+            <MenuItem onClick={toJobs}>Jobs</MenuItem>
+          </Menu>
 
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Window Cleaner

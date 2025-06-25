@@ -27,7 +27,7 @@ const INITIAL_VALUES: CustomerFormValues = {
 };
 
 const validationSchema = yup.object<CustomerFormValues>({
-  email: yup.string().email("Invalid email").required("Email is required"),
+  email: yup.string().email("Invalid email"),
   name: yup.string().required("Name is required"),
   address: yup.string().required("Address is required"),
   postcode: yup
@@ -70,7 +70,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   const gridSize =
     layout === "vertical" ? { xs: 12 } : { xs: 12, sm: 6, md: 4 };
 
-  const requiredFields = ["name", "address", "postcode", "email"];
+  const requiredFields = ["name", "address", "postcode"];
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
