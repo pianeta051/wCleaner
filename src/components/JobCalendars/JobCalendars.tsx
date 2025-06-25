@@ -17,6 +17,7 @@ import { Job } from "../../types/types";
 import { JobCard } from "../JobCard/JobCard";
 import { ErrorCode } from "../../services/error";
 import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
+import { useAuth } from "../../context/AuthContext";
 
 export const DEFAULT_COLOR = "#3174ad";
 const BACKGROUND_TO_TEXT: Record<string, string> = {
@@ -82,6 +83,8 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   const [eventJob, setEventJob] = useState<Job>();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const jobType = useJobTypeGetter();
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
   const handlePopoverClose = () => {
     setAnchorEl(null);
   };
@@ -220,7 +223,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
           <JobCard job={eventJob} />
         </Popover>
       )}
-      {isModalOpen && modalDate && modalStartTime && modalEndTime && (
+      {isModalOpen && modalDate && modalStartTime && modalEndTime && isAdmin && (
         <GenericJobModal
           open={isModalOpen}
           onClose={closeHandler}

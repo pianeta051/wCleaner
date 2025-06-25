@@ -219,7 +219,7 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
       name: job.customer.name,
       address: job.customer.address,
       postcode: job.customer.postcode,
-      fileUrl: job.customer.fileUrls,
+      fileUrls: job.customer.fileUrls,
       notes: job.customer.notes,
     };
     job.customer = restrictedCustomer;

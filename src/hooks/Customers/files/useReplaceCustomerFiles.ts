@@ -20,10 +20,19 @@ export const useReplaceCustomerFiles = (
     async (_key, { arg: fileUrls }) => {
       if (!customerId) throw new Error("Missing customerId");
       const response = await replaceCustomerFiles(customerId, fileUrls);
-      await mutate(["customer", slug]);
-      await mutate(["customer", customerId]);
+      await mutate(["customer", slug], undefined, {
+        revalidate: true,
+        populateCache: false,
+      });
+      await mutate(["customer", customerId], undefined, {
+        revalidate: true,
+        populateCache: false,
+      });
       if (jobId) {
-        await mutate(["job", customerId, jobId]);
+        await mutate(["job", customerId, jobId], undefined, {
+          revalidate: true,
+          populateCache: false,
+        });
       }
       return response;
     },

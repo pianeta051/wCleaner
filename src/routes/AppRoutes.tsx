@@ -67,7 +67,7 @@ export const AppRoutes: FC = () => {
             </Route>
           </Route>
         ) : (
-          <Route path="customers">
+          <Route path="customers" element={<AdminLayoutFullWidth />}>
             <Route path=":customerId">
               <Route path="jobs">
                 <Route path=":jobId">

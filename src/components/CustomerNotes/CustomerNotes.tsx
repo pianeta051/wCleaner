@@ -23,6 +23,7 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert, { AlertColor } from "@mui/material/Alert";
 import { useEditCustomerNote } from "../../hooks/Customers/customerNotes/useEditCustomerNote";
 import { useEditNoteFavourite } from "../../hooks/Customers/customerNotes/useEditNoteFavourite";
+import { useAuth } from "../../context/AuthContext";
 
 type CustomerNotesProps = {
   customer: Customer;
@@ -44,6 +45,8 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
   } = useDeleteCustomerNote(customer.id, customer.slug, jobId);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const { isInGroup, user } = useAuth();
+  const isAdmin = isInGroup("Admin");
   const [snackbarSeverity, setSnackbarSeverity] =
     useState<AlertColor>("success");
 
@@ -159,27 +162,30 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
                       ? ` - ${new Date(note.timestamp).toLocaleString()}`
                       : ""}
                   </Typography>
-                  <Box>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditNote(note);
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteNote(note.id);
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
+                  {}
+                  {isAdmin && (
+                    <Box>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditNote(note);
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteNote(note.id);
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
                 </Stack>
               </AccordionSummary>
               <AccordionDetails>
