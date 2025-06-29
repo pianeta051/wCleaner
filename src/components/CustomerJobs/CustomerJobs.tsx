@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { Button, CircularProgress, Stack } from "@mui/material";
+import { Button, CircularProgress, Stack, Box } from "@mui/material";
 import { Wrapper, Title, IconButton } from "./CustomerJobs.style";
 
 import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
@@ -8,11 +8,8 @@ import { JobsTable } from "../JobTable/JobsTable";
 import { Customer } from "../../types/types";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { useCustomerJobs } from "../../hooks/Jobs/useCustomerJobs";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
-import isoWeek from "dayjs/plugin/isoWeek";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -20,35 +17,26 @@ type CustomerJobsProps = {
   customer: Customer;
 };
 
+const PAGE_SIZE = 10;
+
 export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
-  const date = searchParams.get("date");
-  const jobId = searchParams.get("jobId");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  dayjs.extend(isoWeek);
+  const jobId = searchParams.get("jobId");
 
-  const [currentMonday, setCurrentMonday] = useState(
-    dayjs(date ?? undefined)
-      .isoWeekday(1)
-      .format("YYYY-MM-DD")
-  );
-  const currentSunday = dayjs(currentMonday).add(6, "day").format("YYYY-MM-DD");
   const { customerJobs, error, loading, reload } = useCustomerJobs(
     customer.id,
-    {
-      start: `${currentMonday} 00:00`,
-      end: `${currentSunday} 23:59`,
-    }
+    {},
+    "desc"
   );
 
   const closeHandler = () => {
-    {
-      setModalOpen(false);
-      setEditingJobId(null);
-      reload();
-    }
+    setModalOpen(false);
+    setEditingJobId(null);
+    reload();
   };
 
   const openHandler = (id?: string) => {
@@ -60,56 +48,29 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     setModalOpen(true);
   };
 
-  const nextWeekHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
-    const nextMonday = dayjs(currentMonday).add(7, "day").format("YYYY-MM-DD");
-    setCurrentMonday(nextMonday);
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set("date", nextMonday);
-      return newParams;
-    });
-  };
-
-  const currentWeekHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
-    const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
-    setCurrentMonday(lastMonday);
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set("date", lastMonday);
-      return newParams;
-    });
-  };
-
-  const previousWeekHandler: React.MouseEventHandler<
-    HTMLButtonElement
-  > = () => {
-    const previousMonday = dayjs(currentMonday)
-      .subtract(1, "week")
-      .format("YYYY-MM-DD");
-    setCurrentMonday(previousMonday);
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set("date", previousMonday);
-      return newParams;
-    });
-  };
-
-  const title = `${dayjs(currentMonday).format("MMM D")} - ${dayjs(
-    currentSunday
-  ).format("MMM D")}`;
-
   if (loading) {
     return (
       <>
-        <Title>{title}</Title>
+        <Title>Jobs</Title>
         <CircularProgress />
       </>
     );
   }
 
-  if (!customerJobs) {
-    return <ErrorMessage code={error ?? "INTERNAL_ERROR"} />;
+  if (error) {
+    return <ErrorMessage code={error} />;
   }
+
+  if (!customerJobs) {
+    return <ErrorMessage code={"INTERNAL_ERROR"} />;
+  }
+
+  const sortedJobs = [...customerJobs].sort(
+    (a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf()
+  );
+
+  const displayedJobs = sortedJobs.slice(0, visibleCount);
+  const canLoadMore = visibleCount < sortedJobs.length;
 
   const editingJob = editingJobId
     ? customerJobs.find((job) => job.id === editingJobId)
@@ -117,61 +78,56 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
 
   return (
     <Wrapper>
-      <>
-        {" "}
-        <Title>Jobs</Title>
-        <Stack
-          spacing={2}
-          direction="row"
-          mt={2}
-          sx={{ mb: "20px" }}
-          justifyContent="center"
-        >
-          <Button
-            variant="outlined"
-            onClick={previousWeekHandler}
-            startIcon={<ArrowBackIosIcon />}
+      <Title>Jobs</Title>
+
+      {customerJobs.length === 0 ? (
+        <EmptyJobs onCreateNew={() => openHandler()} />
+      ) : (
+        <>
+          <Stack
+            spacing={2}
+            direction="row"
+            mt={2}
+            sx={{ mb: "20px" }}
+            justifyContent="center"
           >
-            Previous Week
-          </Button>
-          <Button variant="outlined" onClick={currentWeekHandler}>
-            Current Week
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={nextWeekHandler}
-            endIcon={<ArrowForwardIosIcon />}
-          >
-            Next Week
-          </Button>
-        </Stack>
-        <Title>{title}</Title>
-        {error ? (
-          <ErrorMessage code={error} />
-        ) : customerJobs.length === 0 ? (
-          <EmptyJobs onCreateNew={() => openHandler()} />
-        ) : (
-          <>
             <IconButton>
-              <Button startIcon={<AddIcon />} onClick={() => openHandler()}>
+              <Button
+                startIcon={<AddIcon />}
+                onClick={() => openHandler()}
+                variant="contained"
+              >
                 New Job
               </Button>
             </IconButton>
+          </Stack>
 
-            <JobsTable
-              jobs={customerJobs}
-              jobIdSelected={jobId}
-              customer={customer}
-              onEditClick={openHandler}
-            />
-          </>
-        )}
-      </>
+          <JobsTable
+            jobs={displayedJobs}
+            jobIdSelected={jobId}
+            customer={customer}
+            onEditClick={openHandler}
+          />
+
+          {canLoadMore && (
+            <Box textAlign="center" mt={2}>
+              <Button
+                variant="outlined"
+                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+              >
+                Load more
+              </Button>
+            </Box>
+          )}
+        </>
+      )}
+
       {modalOpen && (
         <CustomerJobModal
           customer={customer}
           open={modalOpen}
           onClose={closeHandler}
+          jobId={editingJobId ?? undefined}
           initialValues={
             editingJob
               ? {
@@ -180,14 +136,13 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
                   startTime: dayjs(
                     `${editingJob.date} ${editingJob.startTime}`
                   ),
-                  endTime: dayjs(`${editingJob.date} ${editingJob?.endTime}`),
+                  endTime: dayjs(`${editingJob.date} ${editingJob.endTime}`),
                   assignedTo:
                     editingJob.assignedTo?.sub ?? user?.getUsername() ?? "",
                   jobTypeId: editingJob.jobTypeId ?? "",
                 }
               : undefined
           }
-          jobId={editingJobId ?? undefined}
         />
       )}
     </Wrapper>

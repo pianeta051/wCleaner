@@ -1,54 +1,50 @@
-import { FC } from "react";
 import {
+  Button,
   Grid,
+  Link,
   Table,
+  TableBody,
   TableCell,
   TableContainer,
-  TableRow,
-  TableBody,
   TableHead,
-  Button,
+  TableRow,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import { Customer, Job } from "../../types/types";
-import { DeleteJobButton } from "../DeleteJobButton/DeleteJobButton";
 import dayjs from "dayjs";
+import React, { FC } from "react";
+import { Link as RouterLink } from "react-router-dom";
+
+import { DeleteJobButton } from "../DeleteJobButton/DeleteJobButton";
 import { useAuth } from "../../context/AuthContext";
 import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
+import { Customer, Job } from "../../types/types";
 
-type JobsTableProps = {
+type Props = {
   jobs: Job[];
-  jobIdSelected?: string | null;
   customer: Customer;
+  jobIdSelected?: string | null;
   onEditClick: (jobId: string) => void;
 };
 
-export const JobsTable: FC<JobsTableProps> = ({
+export const JobsTable: FC<Props> = ({
   jobs,
-  jobIdSelected,
   customer,
+  jobIdSelected,
   onEditClick,
 }) => {
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
   const jobTypeGetter = useJobTypeGetter();
-  const jobText = (job: Job): string | React.ReactNode => {
-    if (job.assignedTo) {
-      const assignedTo = [job.assignedTo.name, job.assignedTo.email]
-        .filter(Boolean)
-        .join(" - ");
-      return (
-        <>
-          {assignedTo}
-          <br />
-        </>
-      );
-    }
+
+  const assignedToText = (job: Job): React.ReactNode => {
+    if (!job.assignedTo) return "Not assigned";
+    const { name, email } = job.assignedTo;
+    return [name, email].filter(Boolean).join(" - ");
   };
 
   return (
     <TableContainer component={Grid}>
-      <Table aria-label="simple table">
+      <Table>
         <TableHead>
           <TableRow>
             <TableCell align="right">Date</TableCell>
@@ -60,54 +56,54 @@ export const JobsTable: FC<JobsTableProps> = ({
             <TableCell align="right">Actions</TableCell>
           </TableRow>
         </TableHead>
+
         <TableBody>
-          {jobs &&
-            jobs.map((job) => (
-              <TableRow
-                style={
-                  job.id === jobIdSelected
-                    ? {
-                        backgroundColor: "#e3f2fd",
-                      }
-                    : {}
-                }
-                hover={true}
-                key={job.id}
-                sx={{
-                  "&:last-child td, &:last-child th": {
-                    border: 0,
-                  },
-                }}
-              >
-                <TableCell align="right">
+          {jobs.map((job) => (
+            <TableRow
+              key={job.id}
+              hover
+              sx={
+                jobIdSelected === job.id
+                  ? { backgroundColor: "#e3f2fd" }
+                  : undefined
+              }
+            >
+              {/* clickable link to job details */}
+              <TableCell align="right">
+                <Link
+                  component={RouterLink}
+                  to={`/admin/customers/${customer.id}/jobs/${job.id}`}
+                  underline="hover"
+                >
                   {dayjs(job.date).format("ddd MMM D, YYYY")}
-                </TableCell>
-                <TableCell align="right">{job.startTime}</TableCell>
-                <TableCell align="right">{job.endTime}</TableCell>
-                <TableCell align="right">{job.price}</TableCell>
-                {isAdmin && (
-                  <TableCell align="right">
-                    {jobText(job) ?? "Not assigned"}
-                  </TableCell>
-                )}
-                <TableCell align="right">
-                  {job.jobTypeId
-                    ? jobTypeGetter(job.jobTypeId)?.name ?? "None"
-                    : "None"}
-                </TableCell>
-                <TableCell align="right">
-                  <DeleteJobButton jobId={job.id} customerId={customer.id} />
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="contained"
-                    onClick={() => onEditClick(job.id)}
-                  >
-                    <EditIcon />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+                </Link>
+              </TableCell>
+
+              <TableCell align="right">{job.startTime}</TableCell>
+              <TableCell align="right">{job.endTime}</TableCell>
+              <TableCell align="right">{job.price}</TableCell>
+
+              {isAdmin && (
+                <TableCell align="right">{assignedToText(job)}</TableCell>
+              )}
+
+              <TableCell align="right">
+                {job.jobTypeId
+                  ? jobTypeGetter(job.jobTypeId)?.name ?? "None"
+                  : "None"}
+              </TableCell>
+
+              <TableCell align="right">
+                <DeleteJobButton jobId={job.id} customerId={customer.id} />
+              </TableCell>
+
+              <TableCell>
+                <Button variant="contained" onClick={() => onEditClick(job.id)}>
+                  <EditIcon />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </TableContainer>
