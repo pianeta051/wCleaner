@@ -19,109 +19,93 @@ import { Title } from "./CustomerNotes.style";
 import { CustomerNoteModal } from "../CustomerNoteModal/CustomerNoteModal";
 import { FavouriteButton } from "../FavouriteButton/FavouriteButton";
 import { useDeleteCustomerNote } from "../../hooks/Customers/customerNotes/useDeleteCustomerNote";
+import { useEditNoteFavourite } from "../../hooks/Customers/customerNotes/useEditNoteFavourite";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert, { AlertColor } from "@mui/material/Alert";
-import { useEditCustomerNote } from "../../hooks/Customers/customerNotes/useEditCustomerNote";
-import { useEditNoteFavourite } from "../../hooks/Customers/customerNotes/useEditNoteFavourite";
 import { useAuth } from "../../context/AuthContext";
 
-type CustomerNotesProps = {
+const isOwner = (note: CustomerNote, user: any): boolean => {
+  if (!note.author || !user) return false;
+
+  const author = note.author.trim().toLowerCase();
+  const sub = user.getUsername?.()?.toLowerCase?.();
+  const email = user.attributes?.email?.toLowerCase();
+  const name = user.attributes?.name?.toLowerCase();
+
+  return author === sub || author === email || author === name;
+};
+
+const canEditOrDelete = (
+  note: CustomerNote,
+  user: any,
+  isAdmin: boolean
+): boolean => isAdmin || isOwner(note, user);
+
+type Props = {
   customer: Customer;
   jobId?: string;
 };
 
-export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingNote, setEditingNote] = useState<CustomerNote | undefined>();
-  const {
-    editCustomerNoteFavourite,
-    loading: loadingNoteEdit,
-    error: errorEditNote,
-  } = useEditNoteFavourite(customer.id, customer.slug, jobId);
-  const {
-    deleteNote,
-    loading: loadingNoteDelete,
-    error: errorDeleteNote,
-  } = useDeleteCustomerNote(customer.id, customer.slug, jobId);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
+export const CustomerNotes: FC<Props> = ({ customer, jobId }) => {
   const { isInGroup, user } = useAuth();
   const isAdmin = isInGroup("Admin");
+
+  const { editCustomerNoteFavourite, loading: loadingFav } =
+    useEditNoteFavourite(customer.id, customer.slug, jobId);
+  const { deleteNote } = useDeleteCustomerNote(
+    customer.id,
+    customer.slug,
+    jobId
+  );
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<CustomerNote>();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] =
     useState<AlertColor>("success");
 
-  const openModalHandler = () => {
-    setEditingNote(undefined);
+  const openModal = (note?: CustomerNote) => {
+    setEditingNote(note);
     setModalOpen(true);
   };
-
-  const closeModalHandler = () => {
+  const closeModal = () => {
     setModalOpen(false);
     setEditingNote(undefined);
   };
 
-  const handleEditNote = (note: CustomerNote) => {
-    setEditingNote(note);
-    setModalOpen(true);
-  };
+  const toggleFavourite = (note: CustomerNote, value: boolean) =>
+    editCustomerNoteFavourite({ note, newValue: value });
 
-  const handleFavourite = (note: CustomerNote) => {
-    editCustomerNoteFavourite({
-      note,
-      newValue: true,
-    }).catch(() => {
-      // the error is managed by the hook
-    });
-  };
-
-  const handleUnfavourite = (note: CustomerNote) => {
-    editCustomerNoteFavourite({
-      note,
-      newValue: false,
-    }).catch(() => {
-      // the error is managed by the hook
-    });
-  };
-
-  const handleDeleteNote = async (noteId: string) => {
+  const handleDelete = async (id: string) => {
     try {
-      await deleteNote(noteId);
-      setSnackbarMessage("Successfully deleted");
+      await deleteNote(id);
+      setSnackbarMessage("Note deleted");
       setSnackbarSeverity("success");
-      setSnackbarOpen(true);
-    } catch (error) {
+    } catch {
       setSnackbarMessage("Failed to delete note");
       setSnackbarSeverity("error");
+    } finally {
       setSnackbarOpen(true);
     }
   };
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
-
-  const hasManyNotes = (customer.notes?.length ?? 0) > 3;
 
   const orderedNotes = useMemo(() => {
-    const notesCopy = [...(customer?.notes ?? [])];
-    return notesCopy.sort((a, b) => {
-      if (a.isFavourite && !b.isFavourite) {
-        return -1;
-      }
-      if (b.isFavourite && !a.isFavourite) {
-        return 1;
-      }
-      if (!a.timestamp || !b.timestamp) {
-        return 0;
-      }
-      return b.timestamp - a.timestamp;
+    const list = [...(customer.notes ?? [])];
+    return list.sort((a, b) => {
+      if (a.isFavourite && !b.isFavourite) return -1;
+      if (b.isFavourite && !a.isFavourite) return 1;
+      return (b.timestamp ?? 0) - (a.timestamp ?? 0);
     });
   }, [customer.notes]);
+
+  const manyNotes = (customer.notes?.length ?? 0) > 3;
 
   return (
     <>
       <Box display="flex" alignItems="center" gap={2} mb={2}>
         <Title>Notes</Title>
-        <Button variant="outlined" onClick={openModalHandler}>
+        <Button variant="outlined" onClick={() => openModal()}>
           Add note
         </Button>
       </Box>
@@ -129,70 +113,74 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
       {customer.notes?.length ? (
         <Box
           sx={{
-            maxHeight: hasManyNotes ? 400 : "auto",
-            overflowY: hasManyNotes ? "auto" : "visible",
+            maxHeight: manyNotes ? 400 : "auto",
+            overflowY: manyNotes ? "auto" : "visible",
             border: "1px solid #ccc",
             borderRadius: 2,
             pr: 1,
           }}
         >
-          {orderedNotes.map((note, index) => (
-            <Accordion key={note.id || index}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  width="100%"
-                >
-                  <FavouriteButton
-                    initialState={note.isFavourite}
-                    disabled={loadingNoteEdit}
-                    onActivate={() => {
-                      handleFavourite(note);
-                    }}
-                    onDeactivate={() => {
-                      handleUnfavourite(note);
-                    }}
-                  />
-                  <Typography fontWeight="bold">
-                    {note.title}
-                    {note.author ? ` - ${note.author}` : ""}
-                    {note.timestamp
-                      ? ` - ${new Date(note.timestamp).toLocaleString()}`
-                      : ""}
-                  </Typography>
-                  {}
-                  {isAdmin && (
-                    <Box>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditNote(note);
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteNote(note.id);
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  )}
-                </Stack>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography>{note.content}</Typography>
-              </AccordionDetails>
-            </Accordion>
-          ))}
+          {orderedNotes.map((note) => {
+            const editable = canEditOrDelete(note, user, isAdmin);
+
+            return (
+              <Accordion key={note.id}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    width="100%"
+                  >
+                    <FavouriteButton
+                      initialState={note.isFavourite}
+                      disabled={loadingFav}
+                      readOnly={!isAdmin} // non-admins = view-only
+                      onActivate={() => toggleFavourite(note, true)}
+                      onDeactivate={() => toggleFavourite(note, false)}
+                    />
+
+                    <Typography fontWeight="bold">
+                      {note.title}
+                      {note.author ? ` – ${note.author}` : ""}
+                      {note.timestamp
+                        ? ` – ${new Date(note.timestamp).toLocaleString()}`
+                        : ""}
+                    </Typography>
+
+                    {/* Edit / Delete (Admin OR owner) */}
+                    {editable && (
+                      <Box>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openModal(note);
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(note.id);
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </Stack>
+                </AccordionSummary>
+
+                <AccordionDetails>
+                  <Typography>{note.content}</Typography>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
         </Box>
       ) : (
         <Alert severity="info">No notes yet.</Alert>
@@ -201,19 +189,20 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
       <CustomerNoteModal
         open={modalOpen}
         customer={customer}
-        onClose={closeModalHandler}
+        onClose={closeModal}
         initialValues={editingNote}
         noteId={editingNote?.id}
         jobId={jobId}
       />
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
-        onClose={handleSnackbarClose}
+        onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <MuiAlert
-          onClose={handleSnackbarClose}
+          onClose={() => setSnackbarOpen(false)}
           severity={snackbarSeverity}
           sx={{ width: "100%" }}
         >
