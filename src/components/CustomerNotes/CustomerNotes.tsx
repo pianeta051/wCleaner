@@ -23,8 +23,12 @@ import { useEditNoteFavourite } from "../../hooks/Customers/customerNotes/useEdi
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert, { AlertColor } from "@mui/material/Alert";
 import { useAuth } from "../../context/AuthContext";
+import { CognitoUserWithAttributes } from "../../services/authentication";
 
-const isOwner = (note: CustomerNote, user: any): boolean => {
+const isOwner = (
+  note: CustomerNote,
+  user?: CognitoUserWithAttributes | null
+): boolean => {
   if (!note.author || !user) return false;
 
   const author = note.author.trim().toLowerCase();
@@ -37,7 +41,7 @@ const isOwner = (note: CustomerNote, user: any): boolean => {
 
 const canEditOrDelete = (
   note: CustomerNote,
-  user: any,
+  user: CognitoUserWithAttributes | null | undefined,
   isAdmin: boolean
 ): boolean => isAdmin || isOwner(note, user);
 
