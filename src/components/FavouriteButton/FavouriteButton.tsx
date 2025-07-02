@@ -5,13 +5,9 @@ import StarIcon from "@mui/icons-material/Star";
 
 export type FavouriteButtonProps = {
   initialState?: boolean;
-
   onActivate?: () => void | Promise<void>;
-
   onDeactivate?: () => void | Promise<void>;
-
   disabled?: boolean;
-
   readOnly?: boolean;
 };
 
@@ -35,6 +31,10 @@ export const FavouriteButton: FC<FavouriteButtonProps> = ({
       onActivate?.();
     }
   };
+
+  if (readOnly) {
+    return active ? <StarIcon /> : <StarBorderIcon />;
+  }
 
   return (
     <IconButton onClick={handleClick} color="primary" disabled={disabled}>
