@@ -1077,6 +1077,8 @@ const addCustomerNote = async (customerId, note) => {
     author: { S: note.author },
     timestamp: { N: note.timestamp.toString() },
     isFavourite: { BOOL: note.isFavourite },
+    updatedAt: { N: note.timestamp.toString() },
+    updatedBy: { S: note.author },
   };
 
   const params = {
@@ -1099,6 +1101,8 @@ const addCustomerNote = async (customerId, note) => {
   return {
     id: noteId,
     ...note,
+    updatedAt: note.timestamp,
+    updatedBy: note.author,
   };
 };
 
@@ -1112,6 +1116,7 @@ const editCustomerNote = async (customerId, noteId, note) => {
     throw new Error("NOTE_NOT_FOUND");
   }
   const existingNote = customer.notes[index];
+
   const dynamoNote = {
     id: { S: noteId },
     title: { S: note.title },
@@ -1119,8 +1124,11 @@ const editCustomerNote = async (customerId, noteId, note) => {
     author: { S: existingNote.author },
     timestamp: { N: existingNote.timestamp.toString() },
     isFavourite: { BOOL: note.isFavourite },
+    updatedAt: { N: Date.now().toString() },
+    updatedBy: { S: note.updatedBy },
   };
 
+  console.log(JSON.stringify({ dynamoNote }));
   const params = {
     TableName: TABLE_NAME,
     Key: {
@@ -1140,6 +1148,8 @@ const editCustomerNote = async (customerId, noteId, note) => {
     id: noteId,
     ...existingNote,
     ...note,
+    updatedAt: Date.now(),
+    updatedBy: note.author,
   };
 };
 

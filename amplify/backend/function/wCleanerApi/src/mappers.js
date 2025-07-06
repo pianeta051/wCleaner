@@ -20,6 +20,8 @@ const mapCustomer = (customerFromDb) => ({
         author: note.author?.S || "",
         timestamp: note.timestamp ? Number(note.timestamp.N) : undefined,
         isFavourite: !!note?.isFavourite?.BOOL,
+        updatedAt: note.updatedAt ? Number(note.updatedAt.N) : undefined,
+        updatedBy: note.updatedBy?.S || "",
       };
     }) || [],
 });

@@ -56,10 +56,7 @@ export const isCustomer = (value: unknown): value is Customer => {
       v.fileUrls.every((item) => typeof item === "string"));
 
   return (
-    typeof v.id === "string" &&
-    typeof v.name === "string" &&
-    typeof v.slug === "string" &&
-    validFileUrls
+    typeof v.id === "string" && typeof v.name === "string" && validFileUrls
   );
 };
 

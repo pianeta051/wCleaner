@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Modal, Grid, Paper } from "@mui/material";
+import { Modal, Grid } from "@mui/material";
 
 import { Customer } from "../../types/types";
 import { NoteForm, NoteFormValues } from "../NoteForm/NoteForm";

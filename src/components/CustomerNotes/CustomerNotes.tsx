@@ -150,6 +150,16 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
                         ? ` – ${new Date(note.timestamp).toLocaleString()}`
                         : ""}
                     </Typography>
+                    {note.updatedAt && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ ml: 1 }}
+                      >
+                        Last edited {new Date(note.updatedAt).toLocaleString()}
+                        {note.updatedBy ? ` by ${note.updatedBy}` : ""}
+                      </Typography>
+                    )}
 
                     {editable && (
                       <Box>

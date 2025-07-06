@@ -18,7 +18,10 @@ export type CustomerNote = {
   author?: string;
   timestamp?: number;
   isFavourite: boolean;
+  updatedAt?: number; // last edit
+  updatedBy?: string; // who edited
 };
+
 export type JobAssignation = {
   sub: string;
   name?: string;

@@ -17,6 +17,8 @@ export type NoteFormValues = {
   title: string;
   content: string;
   isFavourite: boolean;
+  updatedAt?: number;
+  updatedBy?: string;
 };
 
 const validationSchema = yup.object<NoteFormValues>({

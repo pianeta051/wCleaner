@@ -566,7 +566,7 @@ app.put("/customers/:customerId/note/:noteId", async function (req, res) {
   try {
     const customerId = req.params.customerId;
     const noteId = req.params.noteId;
-    const { title, content, isFavourite = false } = req.body;
+    const { title, content, isFavourite = false, updatedBy } = req.body;
 
     if (!title) {
       return res.status(400).json({ error: "Title cannot be empty" });
@@ -580,6 +580,7 @@ app.put("/customers/:customerId/note/:noteId", async function (req, res) {
       title,
       content,
       isFavourite,
+      updatedBy,
     };
 
     let updatedNote = null;
