@@ -20,7 +20,6 @@ type JobCustomerProps = {
 export const JobCustomer: FC<JobCustomerProps> = ({ job }) => {
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
-  const { reload } = useJobCustomer(job.customer?.id, job.id);
 
   if (!job.customer) {
     return null;

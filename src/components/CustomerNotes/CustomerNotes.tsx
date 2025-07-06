@@ -45,15 +45,14 @@ const canEditOrDelete = (
   isAdmin: boolean
 ): boolean => isAdmin || isOwner(note, user);
 
-type Props = {
+type CustomerNotesProps = {
   customer: Customer;
   jobId?: string;
 };
 
-export const CustomerNotes: FC<Props> = ({ customer, jobId }) => {
+export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
   const { isInGroup, user } = useAuth();
   const isAdmin = isInGroup("Admin");
-
   const { editCustomerNoteFavourite, loading: loadingFav } =
     useEditNoteFavourite(customer.id, customer.slug, jobId);
   const { deleteNote } = useDeleteCustomerNote(
@@ -109,7 +108,7 @@ export const CustomerNotes: FC<Props> = ({ customer, jobId }) => {
     <>
       <Box display="flex" alignItems="center" gap={2} mb={2}>
         <Title>Notes</Title>
-        <Button variant="outlined" onClick={() => openModal()}>
+        <Button variant="contained" onClick={() => openModal()}>
           Add note
         </Button>
       </Box>
@@ -139,7 +138,7 @@ export const CustomerNotes: FC<Props> = ({ customer, jobId }) => {
                     <FavouriteButton
                       initialState={note.isFavourite}
                       disabled={loadingFav}
-                      readOnly={!isAdmin} // non-admins = view-only
+                      readOnly={!isAdmin}
                       onActivate={() => toggleFavourite(note, true)}
                       onDeactivate={() => toggleFavourite(note, false)}
                     />
@@ -152,7 +151,6 @@ export const CustomerNotes: FC<Props> = ({ customer, jobId }) => {
                         : ""}
                     </Typography>
 
-                    {/* Edit / Delete (Admin OR owner) */}
                     {editable && (
                       <Box>
                         <IconButton
