@@ -29,7 +29,7 @@
         },
         "wCleanerApi": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/wCleanerApi-343776434f4b304a4652-build.zip",
+          "s3Key": "amplify-builds/wCleanerApi-56576345413367593535-build.zip",
           "userPoolId": "eu-west-2_nRfe1m5kq"
         },
         "wcleaner": {}

@@ -6,8 +6,14 @@ const { mapCustomer } = require("./mappers");
 
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 5;
-const generateSlug = async (email) => {
-  const baseSlug = email.split("@")[0].toLowerCase();
+const generateSlug = async (email, name) => {
+  const nameSlug = name
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "")
+    .split(" ")
+    .join("-");
+  const emailSlug = email?.split("@")[0].toLowerCase();
+  const baseSlug = emailSlug.lenght ? emailSlug : nameSlug;
   let slug = baseSlug;
   let counter = 2;
 
@@ -21,23 +27,11 @@ const generateSlug = async (email) => {
 };
 
 const slugExists = async (slug) => {
-  const params = {
-    TableName: TABLE_NAME,
-    IndexName: "customer_slug",
-    KeyConditionExpression: "slug = :slug",
-    ExpressionAttributeValues: {
-      ":slug": { S: slug },
-    },
-  };
-
-  const result = await ddb.query(params).promise();
-  return result.Items.length > 0;
+  const existingCustomer = await getCustomerBySlug(slug);
+  return !!existingCustomer;
 };
 
 const addCustomer = async (customer) => {
-  if (!customer.email?.length) {
-    throw "EMAIL_CANNOT_BE_EMPTY";
-  }
   if (!customer.name?.length) {
     throw "NAME_CANNOT_BE_EMPTY";
   }
@@ -49,13 +43,15 @@ const addCustomer = async (customer) => {
 
   const outcode = postcodeParts[0];
 
-  const emailExisting = await queryCustomersByEmail(customer.email);
-  if (emailExisting.length > 0) {
-    console.log("Customer already exist");
-    throw "EMAIL_ALREADY_EXISTS";
+  if (customer.email) {
+    const emailExisting = await queryCustomersByEmail(customer.email);
+    if (emailExisting.length > 0) {
+      throw "EMAIL_ALREADY_EXISTS";
+    }
   }
+
   const id = uuid.v1();
-  const slug = await generateSlug(customer.email);
+  const slug = await generateSlug(customer.email, customer.name);
 
   const params = {
     TableName: TABLE_NAME,
@@ -87,17 +83,20 @@ const addCustomer = async (customer) => {
       secondTelephone: {
         S: customer.secondTelephone,
       },
-      email: {
-        S: customer.email,
-      },
-      email_lowercase: {
-        S: customer.email?.toLowerCase(),
-      },
       slug: {
         S: slug,
       },
     },
   };
+
+  if (customer.email) {
+    params.Item["email"] = {
+      S: customer.email,
+    };
+    params.Item["email_lowercase"] = {
+      S: customer.email.toLowerCase(),
+    };
+  }
   await ddb.putItem(params).promise();
   return {
     ...customer,
@@ -151,84 +150,6 @@ const addJobType = async (jobType) => {
   };
 };
 
-// const editCustomer = async (id, editedCustomer) => {
-//   const customer = await getCustomer(id);
-
-//   if (customer === undefined) {
-//     throw "NOT_EXISTING_CUSTOMER";
-//   }
-
-//   const postcodeParts = editedCustomer.postcode.split(/\s/g);
-//   if (postcodeParts.filter((part) => !!part).length !== 2) {
-//     throw "INVALID_POSTCODE";
-//   }
-//   const outcode = postcodeParts[0];
-
-//   const params = {
-//     TableName: TABLE_NAME,
-//     ExpressionAttributeNames: {
-//       "#N": "name",
-//       "#NL": "name_lowercase",
-//       "#A": "address",
-//       "#P": "postcode",
-//       "#OC": "outcode",
-//       "#MP": "mainTelephone",
-//       "#SP": "secondTelephone",
-//       "#E": "email",
-//       "#EL": "email_lowercase",
-//       "#SL": "slug",
-//       "#F": "fileUrls",
-//     },
-//     ExpressionAttributeValues: {
-//       ":name": {
-//         S: editedCustomer.name,
-//       },
-//       ":name_lowercase": {
-//         S: editedCustomer.name?.toLowerCase(),
-//       },
-//       ":address": {
-//         S: editedCustomer.address,
-//       },
-//       ":postcode": {
-//         S: editedCustomer.postcode,
-//       },
-//       ":outcode": {
-//         S: outcode,
-//       },
-//       ":mainTelephone": {
-//         S: editedCustomer.mainTelephone,
-//       },
-//       ":secondTelephone": {
-//         S: editedCustomer.secondTelephone,
-//       },
-//       ":email": {
-//         S: editedCustomer.email,
-//       },
-//       ":email_lowercase": {
-//         S: editedCustomer.email?.toLowerCase(),
-//       },
-//       ":slug": {
-//         S: editedCustomer.slug,
-//       },
-
-//       ":fileUrls": {
-//         L: editedCustomer.fileUrls.map((url) => ({ S: url })),
-//       },
-//     },
-
-//     UpdateExpression:
-//       "SET #N = :name, #A = :address, #P = :postcode, #OC = :outcode, #MP = :mainTelephone, #SP = :secondTelephone, #E = :email, #NL = :name_lowercase, #EL = :email_lowercase, #SL = :slug, #F = :fileUrls",
-//     Key: {
-//       PK: { S: `customer_${id}` },
-//       SK: { S: "profile" },
-//     },
-//   };
-//   await ddb.updateItem(params).promise();
-//   return {
-//     id,
-//     ...editedCustomer,
-//   };
-// };
 const editCustomer = async (id, editedCustomer) => {
   const existing = await getCustomer(id);
   if (!existing) {
@@ -415,7 +336,6 @@ const getCustomers = async (filters, pagination) => {
 
   params.FilterExpression = filterExpressions.join(" AND ");
 
-  console.log(JSON.stringify({ params }, null, 2));
   let result = await ddb.scan(params).promise();
   const items = result.Items;
 
@@ -571,9 +491,6 @@ const queryJobTypeByColor = async (color) => {
     IndexName: "job_type_color",
   };
   const result = await ddb.query(params).promise();
-  // console.log("Result :" + JSON.stringify(result.Items));
-
-  // console.log("PK: " + JSON.stringify(result.Items[0].PK, null, 2));
 
   return result.Items;
 };
@@ -894,7 +811,6 @@ const getCustomerJobs = async (customerId, filters, order) => {
   let result = await ddb.query(params).promise();
 
   const items = [...result.Items];
-  // console.log(JSON.stringify({ items }, null, 2));
   return {
     items: items,
   };
@@ -903,8 +819,6 @@ const getCustomerJobs = async (customerId, filters, order) => {
 //EDIT JOB
 
 const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
-  console.log("Update Job :");
-  console.log(JSON.stringify({ updatedJob }, 2, null));
   const params = {
     ExpressionAttributeNames: {
       "#ST": "start",
@@ -1006,7 +920,6 @@ const deleteJobType = async (jobTypeId) => {
 const getAllRows = async (params) => {
   let result = await ddb.scan(params).promise();
   const items = result.Items;
-  console.log(`Items : ${items}`);
   while (result.LastEvaluatedKey) {
     const exclusiveStartKey = result.LastEvaluatedKey;
     params = {
@@ -1128,7 +1041,6 @@ const editCustomerNote = async (customerId, noteId, note) => {
     updatedBy: { S: note.updatedBy },
   };
 
-  console.log(JSON.stringify({ dynamoNote }));
   const params = {
     TableName: TABLE_NAME,
     Key: {
@@ -1180,7 +1092,6 @@ const deleteCustomerNote = async (customerId, noteId) => {
   }
 
   // Remove the note at that index using UpdateExpression
-  console.log("INDEX :" + indexToRemove);
   const updateParams = {
     TableName: TABLE_NAME,
     Key: {

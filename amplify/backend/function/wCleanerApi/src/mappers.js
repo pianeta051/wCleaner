@@ -5,9 +5,9 @@ const mapCustomer = (customerFromDb) => ({
   name: customerFromDb.name.S,
   address: customerFromDb.address.S,
   postcode: customerFromDb.postcode.S,
-  mainTelephone: customerFromDb.mainTelephone.S,
-  secondTelephone: customerFromDb.secondTelephone.S,
-  email: customerFromDb.email.S,
+  mainTelephone: customerFromDb.mainTelephone?.S,
+  secondTelephone: customerFromDb.secondTelephone?.S,
+  email: customerFromDb.email?.S,
   slug: customerFromDb.slug.S,
   fileUrls: customerFromDb.fileUrls?.L?.map((f) => f.S) ?? [],
   notes:
