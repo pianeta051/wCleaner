@@ -27,12 +27,6 @@ export const useEditCustomerNote = (
       // await editCustomerNote(customerId, noteId, formValues);
       await editCustomerNote(customerId, noteId, {
         ...formValues,
-        updatedAt: Date.now(),
-        updatedBy:
-          user?.attributes?.name ||
-          user?.attributes?.email ||
-          user?.getUsername?.() ||
-          "unknown",
       });
       await mutate(["customer", customerSlug]);
       await mutate(["customer", customerId]);
