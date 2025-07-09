@@ -6,8 +6,32 @@ const { mapCustomer } = require("./mappers");
 
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 5;
-const generateSlug = (email) => {
-  return email.split("@")[0];
+const generateSlug = async (email) => {
+  const baseSlug = email.split("@")[0].toLowerCase();
+  let slug = baseSlug;
+  let counter = 2;
+
+  // Check if slug already exists
+  while (await slugExists(slug)) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+
+  return slug;
+};
+
+const slugExists = async (slug) => {
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "customer_slug",
+    KeyConditionExpression: "slug = :slug",
+    ExpressionAttributeValues: {
+      ":slug": { S: slug },
+    },
+  };
+
+  const result = await ddb.query(params).promise();
+  return result.Items.length > 0;
 };
 
 const addCustomer = async (customer) => {
@@ -31,7 +55,7 @@ const addCustomer = async (customer) => {
     throw "EMAIL_ALREADY_EXISTS";
   }
   const id = uuid.v1();
-  const slug = generateSlug(customer.email);
+  const slug = await generateSlug(customer.email);
 
   const params = {
     TableName: TABLE_NAME,
@@ -1053,6 +1077,8 @@ const addCustomerNote = async (customerId, note) => {
     author: { S: note.author },
     timestamp: { N: note.timestamp.toString() },
     isFavourite: { BOOL: note.isFavourite },
+    updatedAt: { N: note.timestamp.toString() },
+    updatedBy: { S: note.author },
   };
 
   const params = {
@@ -1075,6 +1101,8 @@ const addCustomerNote = async (customerId, note) => {
   return {
     id: noteId,
     ...note,
+    updatedAt: note.timestamp,
+    updatedBy: note.author,
   };
 };
 
@@ -1088,6 +1116,7 @@ const editCustomerNote = async (customerId, noteId, note) => {
     throw new Error("NOTE_NOT_FOUND");
   }
   const existingNote = customer.notes[index];
+
   const dynamoNote = {
     id: { S: noteId },
     title: { S: note.title },
@@ -1095,8 +1124,11 @@ const editCustomerNote = async (customerId, noteId, note) => {
     author: { S: existingNote.author },
     timestamp: { N: existingNote.timestamp.toString() },
     isFavourite: { BOOL: note.isFavourite },
+    updatedAt: { N: Date.now().toString() },
+    updatedBy: { S: note.updatedBy },
   };
 
+  console.log(JSON.stringify({ dynamoNote }));
   const params = {
     TableName: TABLE_NAME,
     Key: {
@@ -1116,6 +1148,8 @@ const editCustomerNote = async (customerId, noteId, note) => {
     id: noteId,
     ...existingNote,
     ...note,
+    updatedAt: Date.now(),
+    updatedBy: note.author,
   };
 };
 

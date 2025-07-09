@@ -199,5 +199,12 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "INTERNAL_ERROR") {
+    return (
+      <Alert severity="error">
+        <Typography>Internal error</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

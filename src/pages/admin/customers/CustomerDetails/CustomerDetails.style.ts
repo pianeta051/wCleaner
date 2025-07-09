@@ -1,50 +1,32 @@
-import { styled, Grid, Typography, Button, Box } from "@mui/material";
+import { styled, Stack, IconButton, Drawer, Paper, Grid } from "@mui/material";
 
-export const Background = styled(Grid)(() => ({
-  justifyContent: "center",
-  flexDirection: "row",
-  alignItems: "center",
-  minHeight: "100vh",
-  backgroundColor: "#F0F2F5",
-}));
-
-export const CustomerAttribute = styled(Typography)(() => ({
-  fontSize: "14px",
-  marginBottom: "20px",
-}));
-export const ButtonEdit = styled(Button)(() => ({
-  float: "right",
-  marginTop: "20px",
-  marginRight: "20px",
-}));
-
-export const SubTitle = styled(Typography)(() => ({
-  fontWeight: "bold",
-  fontSize: "14px",
-}));
-
-export const Title = styled(Typography)(() => ({
-  fontWeight: "bold",
-  fontSize: "40px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  marginBottom: "20px",
-}));
 export const Wrapper = styled(Grid)(() => ({
   margin: "auto",
-  padding: "10px",
+  padding: 10,
   width: "100%",
-  alignContent: "center",
 }));
-export const DividerLine = styled(Grid)(() => ({
-  p: 0,
-  width: "100%",
-  maxWidth: "90%",
-  borderRadius: 1,
-  border: "1px solid",
-  borderColor: "divider",
-  backgroundColor: "background.paper",
-  marginBottom: "10px",
-  marginTop: "10px",
+
+export const TopBar = styled(Stack)(({ theme }) => ({
+  flexDirection: "row",
+  alignItems: "flex-start",
+  gap: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+}));
+
+export const MobileMenuButton = styled(IconButton)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+}));
+
+export const StyledDrawer = styled(Drawer)(() => ({
+  "& .MuiPaper-root": {
+    top: "64px",
+    height: "calc(100% - 64px)",
+  },
+}));
+
+export const ContentPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  [theme.breakpoints.up("sm")]: {
+    padding: theme.spacing(3),
+  },
 }));

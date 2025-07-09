@@ -1,6 +1,6 @@
 import useSWRMutation from "swr/mutation";
 import { useSWRConfig } from "swr";
-
+import { useAuth } from "../../../context/AuthContext";
 import { editCustomerNote } from "../../../services/customers";
 import { extractErrorCode } from "../../../services/error";
 import { NoteFormValues } from "../../../components/NoteForm/NoteForm";
@@ -12,7 +12,7 @@ export const useEditCustomerNote = (
   jobId?: string
 ) => {
   const { mutate } = useSWRConfig();
-
+  const { user } = useAuth();
   const { trigger, isMutating, error } = useSWRMutation<
     void,
     string,
@@ -24,8 +24,10 @@ export const useEditCustomerNote = (
       ? ["customer", customerId, noteId]
       : null,
     async ([_operation, customerId, noteId], { arg: formValues }) => {
-      await editCustomerNote(customerId, noteId, formValues);
-
+      // await editCustomerNote(customerId, noteId, formValues);
+      await editCustomerNote(customerId, noteId, {
+        ...formValues,
+      });
       await mutate(["customer", customerSlug]);
       await mutate(["customer", customerId]);
       if (jobId) {

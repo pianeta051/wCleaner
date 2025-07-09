@@ -14,13 +14,11 @@ export const useEditNoteFavourite = (
   const { trigger, isMutating, error } = useSWRMutation<
     void,
     string,
-    [string, string, string] | null,
+    [string, string] | null,
     { note: CustomerNote; newValue: boolean },
     void
   >(
-    customerId && customerSlug
-      ? ["customer", customerId, "favouriteEdit"]
-      : null,
+    customerId && customerSlug ? ["customer", customerId] : null,
     async ([_operation, customerId], { arg: { note, newValue } }) => {
       await editCustomerNote(customerId, note.id, {
         ...note,

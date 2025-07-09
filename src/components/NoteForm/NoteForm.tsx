@@ -11,6 +11,7 @@ import { useFormik } from "formik";
 import { FC } from "react";
 import * as yup from "yup";
 import { Form } from "../Form/Form";
+import { useAuth } from "../../context/AuthContext";
 
 export type NoteFormValues = {
   title: string;
@@ -44,6 +45,8 @@ export const NoteForm: FC<NoteFormProps> = ({
   loading = false,
 }) => {
   const defaultValuesForm = defaultValues ?? INITIAL_VALUES;
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
 
   const formik = useFormik<NoteFormValues>({
     initialValues: defaultValuesForm,
@@ -90,18 +93,20 @@ export const NoteForm: FC<NoteFormProps> = ({
             helperText={formik.touched.content && formik.errors.content}
           />
         </Grid>
-        <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="isFavourite"
-                onChange={formik.handleChange}
-                checked={formik.values.isFavourite}
-              />
-            }
-            label="Add to favourites"
-          />
-        </Grid>
+        {isAdmin && (
+          <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="isFavourite"
+                  onChange={formik.handleChange}
+                  checked={formik.values.isFavourite}
+                />
+              }
+              label="Add to favourites"
+            />
+          </Grid>
+        )}
 
         <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
           <Box sx={{ display: "flex", gap: 2 }}>
