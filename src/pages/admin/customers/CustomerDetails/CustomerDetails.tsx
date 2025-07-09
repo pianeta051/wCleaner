@@ -130,19 +130,23 @@ export const CustomerDetails: FC = () => {
       </TopBar>
 
       {!isMdUp && (
-        <MobileMenuButton onClick={() => setDrawerOpen(true)} aria-label="menu">
-          <MenuIcon />
-        </MobileMenuButton>
+        <>
+          <MobileMenuButton
+            onClick={() => setDrawerOpen(true)}
+            aria-label="menu"
+          >
+            <MenuIcon />
+          </MobileMenuButton>
+          <StyledDrawer
+            anchor="left"
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            ModalProps={{ keepMounted: true }}
+          >
+            {menuEl}
+          </StyledDrawer>
+        </>
       )}
-
-      <StyledDrawer
-        anchor="left"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        ModalProps={{ keepMounted: true }}
-      >
-        {menuEl}
-      </StyledDrawer>
 
       <Grid container spacing={4}>
         {isMdUp && (
