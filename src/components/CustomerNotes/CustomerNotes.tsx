@@ -136,7 +136,7 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
                     width="100%"
                   >
                     <FavouriteButton
-                      initialState={note.isFavourite}
+                      active={note.isFavourite}
                       disabled={loadingFav}
                       readOnly={!isAdmin}
                       onActivate={() => toggleFavourite(note, true)}

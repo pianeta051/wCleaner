@@ -7,7 +7,7 @@ import { customerFactory } from "../../../../factories/customers";
 import { CustomerFormValues } from "../../CustomerForm/CustomerForm";
 import { Customer } from "../../../../types/types";
 import { customerToFormValues } from "../../../../helpers/customer";
-
+const addCustomerStub = cy.stub().as("addCustomerStub");
 const mountComponent = () => {
   cy.mount(
     <ThemeProvider theme={theme}>
@@ -20,6 +20,8 @@ const mountComponent = () => {
                 onSubmit={cy.spy().as("submitHandler")}
                 open={true}
                 onClose={cy.spy().as("closeHandler")}
+                addCustomer={addCustomerStub}
+                loading={false}
               />
             }
           />
@@ -36,6 +38,8 @@ describe("NewCustomerModal", () => {
         onSubmit={cy.spy().as("submitHandler")}
         open={true}
         onClose={cy.spy().as("closeHandler")}
+        addCustomer={addCustomerStub}
+        loading={true}
       />
     );
     cy.findByText("New Customer");
@@ -48,6 +52,8 @@ describe("NewCustomerModal", () => {
         onSubmit={cy.spy().as("submitHandler")}
         open={false}
         onClose={cy.spy().as("closeHandler")}
+        addCustomer={addCustomerStub}
+        loading={true}
       />
     );
     cy.contains("button", "Save").should("not.exist");
@@ -59,6 +65,8 @@ describe("NewCustomerModal", () => {
         onSubmit={cy.spy().as("submitHandler")}
         open={true}
         onClose={cy.spy().as("closeHandler")}
+        addCustomer={addCustomerStub}
+        loading={true}
       />
     );
     cy.get("body").click(0, 0);
@@ -71,6 +79,8 @@ describe("NewCustomerModal", () => {
         onSubmit={cy.spy().as("submitHandler")}
         open={true}
         onClose={cy.spy().as("closeHandler")}
+        addCustomer={addCustomerStub}
+        loading={true}
       />
     );
     cy.findByText("Cancel").click();
@@ -130,6 +140,8 @@ describe("NewCustomerModal", () => {
         onSubmit={cy.spy().as("submitHandler")}
         open={true}
         onClose={cy.spy().as("closeHandler")}
+        addCustomer={addCustomerStub}
+        loading={true}
       />
     );
 

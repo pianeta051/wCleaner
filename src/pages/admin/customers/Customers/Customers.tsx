@@ -1,34 +1,38 @@
 import { FC, useState } from "react";
-import { Button, CircularProgress, Grid } from "@mui/material";
-import { Wrapper, Title, IconButton, OutcodeGrid } from "./Customers.style";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Button,
+  CircularProgress,
+  Grid,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { LoadingButton } from "@mui/lab";
+
+import { Wrapper, Title, IconButton, OutcodeGrid } from "./Customers.style";
 import { NewCustomerModal } from "../../../../components/Customer/CreateCustomer/NewCustomerModal/NewCustomerModal";
 import { CustomersTable } from "../../../../components/CustomersTable/CustomersTable";
 import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
-import { LoadingButton } from "@mui/lab";
 import { SearchBar } from "../../../../components/SearchBar/SearchBar";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 import { useCustomers } from "../../../../hooks/Customers/useCustomers";
 import { useOutcodes } from "../../../../hooks/Customers/useOutcodes";
 import { OutcodesSelector } from "../../../../components/OutcodesSelector/OutcodesSelector";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  useMediaQuery,
-  useTheme,
-  Typography,
-} from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuth } from "../../../../context/AuthContext";
+import { useAddCustomer } from "../../../../hooks/Customers/useAddCustomer";
 
 export const Customers: FC = () => {
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
+
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedOutcodes, setSelectedOutcodes] = useState<string[]>([]);
   const [appliedOutcodes, setAppliedOutcodes] = useState<string[]>([]);
-
   const [searchInput, setSearchInput] = useState("");
 
   const { customers, error, loading, loadMore, moreToLoad, loadingMore } =
@@ -38,16 +42,23 @@ export const Customers: FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const {
+    addCustomer,
+    loading: creating,
+    error: createError,
+  } = useAddCustomer(searchInput, appliedOutcodes);
+
   const closeNewModalHandler = () => {
     setModalOpen(false);
   };
-  const openNewMHandler = () => {
+  const openNewModalHandler = () => {
     setModalOpen(true);
   };
 
-  const searchHandler = (searchInput: string) => {
-    setSearchInput(searchInput);
+  const searchHandler = (value: string) => {
+    setSearchInput(value);
   };
+
   const applyOutcodeFilterHandler = () => {
     setAppliedOutcodes(selectedOutcodes);
   };
@@ -58,13 +69,11 @@ export const Customers: FC = () => {
     <Wrapper>
       {isAdmin && (
         <>
-          {" "}
           {isEmpty ? (
-            <EmptyCustomers onCreateNew={openNewMHandler} />
+            <EmptyCustomers onCreateNew={openNewModalHandler} />
           ) : (
             <>
               <Title>Customers</Title>
-
               <Grid container spacing={1}>
                 {isMobile ? (
                   <Grid item xs={12}>
@@ -105,16 +114,21 @@ export const Customers: FC = () => {
                   </OutcodeGrid>
                 )}
 
-                <Grid item xs={9}>
+                <Grid item xs={12} md={10}>
                   <IconButton>
-                    <Button startIcon={<AddIcon />} onClick={openNewMHandler}>
+                    <Button
+                      startIcon={<AddIcon />}
+                      onClick={openNewModalHandler}
+                    >
                       New customer
                     </Button>
                   </IconButton>
+
                   <SearchBar
                     onSearch={searchHandler}
                     initialValue={searchInput}
                   />
+
                   {loading ? (
                     <CircularProgress />
                   ) : error ? (
@@ -137,10 +151,14 @@ export const Customers: FC = () => {
               </Grid>
             </>
           )}
+
           <NewCustomerModal
             open={modalOpen}
             onClose={closeNewModalHandler}
             onSubmit={closeNewModalHandler}
+            addCustomer={addCustomer}
+            loading={creating}
+            error={createError ?? undefined}
           />
         </>
       )}
