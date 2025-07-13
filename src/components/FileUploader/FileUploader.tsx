@@ -5,7 +5,6 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import { useUploadFile } from "../../hooks/Files/useUploadFile";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { FileInput } from "../FileInput/FileInput";
-import { Customer } from "../../types/types";
 
 type FileUploaderProps = {
   uploadDirectory: string;
@@ -24,7 +23,9 @@ export const FileUploader: FC<FileUploaderProps> = ({
     const newKeys: string[] = [];
 
     for (const file of files) {
-      const key = `uploads/${uploadDirectory}/${Date.now()}-${file.name}`;
+      const key = `uploads/customers/${uploadDirectory}/${Date.now()}-${
+        file.name
+      }`;
       await uploadFile({ file, path: key });
 
       newKeys.push(key);
