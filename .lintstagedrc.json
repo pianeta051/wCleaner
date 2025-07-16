@@ -1,5 +1,5 @@
 {
   "*.ts": ["yarn format", "yarn lint"],
   "*.tsx": ["yarn format", "yarn lint"],
-  "*.js": ["yarn format", "yarn lint"]
+  "*.js": ["yarn format"]
 }

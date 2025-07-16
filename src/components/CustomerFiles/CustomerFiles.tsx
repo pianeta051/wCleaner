@@ -99,7 +99,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
     }
   }, [customer?.fileUrls]);
 
-  const uploadDirectory = `${customer.id}`;
+  const uploadDirectory = `customers/${customer.id}`;
 
   return (
     <Grid container>

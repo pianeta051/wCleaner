@@ -4,7 +4,7 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import StarIcon from "@mui/icons-material/Star";
 
 export type FavouriteButtonProps = {
-  initialState?: boolean;
+  active?: boolean;
   onActivate?: () => void | Promise<void>;
   onDeactivate?: () => void | Promise<void>;
   disabled?: boolean;
@@ -12,22 +12,18 @@ export type FavouriteButtonProps = {
 };
 
 export const FavouriteButton: FC<FavouriteButtonProps> = ({
-  initialState = false,
+  active = false,
   onActivate,
   onDeactivate,
   disabled = false,
   readOnly = false,
 }) => {
-  const [active, setActive] = useState(initialState);
-
   const handleClick = () => {
     if (disabled || readOnly) return;
 
     if (active) {
-      setActive(false);
       onDeactivate?.();
     } else {
-      setActive(true);
       onActivate?.();
     }
   };

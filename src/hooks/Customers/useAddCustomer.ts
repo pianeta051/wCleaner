@@ -1,45 +1,62 @@
 import useSWRMutation from "swr/mutation";
+import { useSWRConfig } from "swr";
+import { unstable_serialize } from "swr/infinite";
+
 import { Customer } from "../../types/types";
 import { addCustomer } from "../../services/customers";
 import { CustomerFormValues } from "../../components/Customer/CustomerForm/CustomerForm";
 import { extractErrorCode } from "../../services/error";
-import { useSWRConfig } from "swr";
-import { unstable_serialize } from "swr/infinite";
 import { keyFunctionGenerator } from "./useCustomers";
 
-export const useAddCustomer = () => {
+export const useAddCustomer = (searchInput: string, outcodes: string[]) => {
   const { mutate } = useSWRConfig();
+
   const { trigger, isMutating, error } = useSWRMutation<
     Customer,
     string,
     [string],
-    CustomerFormValues,
-    Customer | null
+    CustomerFormValues
   >(
     ["add-customer"],
-    async (_operation, { arg: formValues }) => {
+    async (_key, { arg: formValues }) => {
       const customer = await addCustomer(formValues);
-      // Mutar la cache de customer individual
-      await mutate<readonly [string, string], Customer>(
-        // Una vez que sabes el id, ya haces la mutacion de cache
-        ["customer", customer.slug],
-        customer,
-        // opciones para el mutate de un customer
-        { populateCache: true, revalidate: false }
-      );
-      // Mutar la cache de coleccion de customers
-      await mutate<
-        readonly [string, string | undefined, string | undefined],
+
+      await mutate(["customer", customer.slug], customer, {
+        populateCache: true,
+        revalidate: false,
+      });
+
+      await mutate(
+        unstable_serialize(keyFunctionGenerator(searchInput, outcodes)),
+        (
+          current:
+            | {
+                customers: Customer[];
+                nextToken?: string;
+              }[]
+            | undefined
+        ) => {
+          if (!current) return undefined;
+
+          // Optional: only update if current filter matches new customer
+          const firstPage = current[0] ?? {
+            customers: [],
+            nextToken: undefined,
+          };
+          return [
+            {
+              ...firstPage,
+              customers: [customer, ...firstPage.customers],
+            },
+            ...current.slice(1),
+          ];
+        },
         {
-          customers: Customer[];
-          nextToken?: string;
-        } | null
-      >(
-        unstable_serialize(keyFunctionGenerator("")), // claves de cache a modificar
-        () => undefined, // valor que le queremos dar
-        // opciones
-        { revalidate: true, populateCache: false }
+          populateCache: true,
+          revalidate: false,
+        }
       );
+
       return customer;
     },
     {

@@ -1,4 +1,4 @@
-import { Modal } from "@mui/material";
+import { Modal, Grid, Alert } from "@mui/material";
 import { FC } from "react";
 import { Customer } from "../../../../types/types";
 import {
@@ -10,30 +10,32 @@ import {
   Wrapper,
   Title,
 } from "../../CustomerForm/CustomerForm.style";
-import { Grid } from "@mui/material";
-import { ErrorMessage } from "../../../ErrorMessage/ErrorMessage";
-import { useAddCustomer } from "../../../../hooks/Customers/useAddCustomer";
 import { ModalBox } from "./NewCustomerModal.style";
 
 type NewCustomerModalProps = {
   open: boolean;
   onClose: () => void;
   onSubmit: (customer: Customer) => void;
+  addCustomer: (formValues: CustomerFormValues) => Promise<Customer>;
+  loading: boolean;
+  error?: string;
 };
+
 export const NewCustomerModal: FC<NewCustomerModalProps> = ({
   open,
   onClose,
   onSubmit,
+  addCustomer,
+  loading,
+  error,
 }) => {
-  const { addCustomer, error, loading } = useAddCustomer();
-
   const submitHandler = (formValues: CustomerFormValues) => {
     addCustomer(formValues)
       .then((customer) => {
         onSubmit(customer);
       })
       .catch(() => {
-        // Do nothing, the hook manages the error
+        // Error shown below
       });
   };
 
@@ -62,7 +64,12 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
             loading={loading}
           />
         </Background>
-        {error && <ErrorMessage code={error} />}
+
+        {error && (
+          <Grid item xs={12} mt={2}>
+            <Alert severity="error">{error}</Alert>
+          </Grid>
+        )}
       </ModalBox>
     </Modal>
   );

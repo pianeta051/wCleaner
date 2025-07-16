@@ -5,7 +5,6 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import { useUploadFile } from "../../hooks/Files/useUploadFile";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { FileInput } from "../FileInput/FileInput";
-import { Customer } from "../../types/types";
 
 type FileUploaderProps = {
   uploadDirectory: string;

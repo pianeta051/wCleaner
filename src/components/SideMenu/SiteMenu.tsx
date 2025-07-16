@@ -16,7 +16,9 @@ export const SideMenu: FC<SideMenuProps> = ({
   onSelect,
   dense,
 }) => (
-  <Box sx={{ position: "fixed", top: 80, width: "100%", maxWidth: 50, mt: 10 }}>
+  <Box
+    sx={{ position: "fixed", top: 80, width: "100%", maxWidth: 100, mt: 10 }}
+  >
     <List component="nav" sx={dense ? { px: 0.5 } : undefined}>
       {sections.map(({ id, label }) => (
         <ListItemButton
