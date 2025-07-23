@@ -5,7 +5,7 @@ import { theme } from "../../../../theme";
 import { API } from "aws-amplify";
 import { customerFactory } from "../../../../factories/customers";
 import { CustomerFormValues } from "../../CustomerForm/CustomerForm";
-import { Customer } from "../../../../types/types";
+
 import { customerToFormValues } from "../../../../helpers/customer";
 const addCustomerStub = cy.stub().as("addCustomerStub");
 const mountComponent = () => {

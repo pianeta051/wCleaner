@@ -2,17 +2,21 @@
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  */
 exports.handler = async (event, context) => {
-  // insert code to be executed by your lambda trigger
+  const redirectTo =
+    event.request.clientMetadata?.redirectTo ?? process.env.REDIRECT_TO;
   if (event.triggerSource === "CustomMessage_AdminCreateUser") {
     event.response.emailSubject = "Welcome to the WCleaner app";
     const email = event.request.usernameParameter;
     const password = event.request.codeParameter;
-    event.response.emailMessage = createUserTemplate(email, password);
+    event.response.emailMessage = createUserTemplate(
+      email,
+      password,
+      redirectTo
+    );
   }
   if (event.triggerSource === "CustomMessage_ForgotPassword") {
     const email = event.request.userAttributes.email;
     const code = event.request.codeParameter;
-    const redirectTo = event.request.clientMetadata.redirectTo;
     event.response.emailSubject = "Reset your password";
     event.response.emailMessage = forgotPasswordTemplate(
       email,
@@ -20,10 +24,11 @@ exports.handler = async (event, context) => {
       redirectTo
     );
   }
+
   return event;
 };
 
-const createUserTemplate = (email, password) => `
+const createUserTemplate = (email, password, redirectTo) => `
 <html style="margin: 0;padding: 0;font-family: &quot;Lucida Sans&quot;, &quot;Lucida Sans Regular&quot;, &quot;Lucida Grande&quot;,
          &quot;Lucida Sans Unicode&quot;, Geneva, Verdana, sans-serif;text-align: center;background-color: rgb(196, 240, 225);">
  <head>
@@ -49,6 +54,11 @@ const createUserTemplate = (email, password) => `
             <h2>Password:</h2>
             <p class="password">${password}</p>
         </div>
+         <div style="margin-top: 20px;">
+        <a href="${redirectTo}/log-in" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Click here to log in
+        </a>
+      </div>
     </div>
  </div>
 </html>
@@ -68,8 +78,10 @@ const forgotPasswordTemplate = (email, code, redirectTo) => `
 
    <h2 align="center" class="alignment" style="font-size: 1rem;font-weight: normal;width: 100%;">Reset your password following the link:</h2>
 
-   <div align="center" class="alignment" class="credentials" style="width: 400px;border-collapse: collapse;margin: 0 auto;margin-top: 10px;">
-        <a href="${redirectTo}/reset-password?email=${email}&code=${code}" target="_blank">Click here</a>
-    </div>
+      <div align="center" style="margin-top: 20px;">
+        <a href="${redirectTo}/reset-password?email=${email}&code=${code}" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Click here
+        </a>
+      </div>
  </div>
 </html>`;

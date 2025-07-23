@@ -64,7 +64,6 @@ export const addCustomer = async (
   formValues: CustomerFormValues
 ): Promise<Customer> => {
   try {
-    // const response = await post("/customers", formValues);
     const response = await post<CustomerFormValues, { customer: Customer }>(
       "/customers",
       formValues
@@ -92,6 +91,8 @@ export const addCustomer = async (
     throw "INTERNAL_ERROR";
   }
 };
+
+//Soft delete for a customer
 
 export const deleteCustomer = async (id: string): Promise<void> => {
   await remove("/customers/" + id);

@@ -1,5 +1,4 @@
 import useSWRMutation from "swr/mutation";
-import { useSWRConfig } from "swr";
 import { extractErrorCode } from "../../services/error";
 import { deleteFile } from "../../services/files";
 

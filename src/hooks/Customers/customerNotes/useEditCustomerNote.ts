@@ -1,6 +1,5 @@
 import useSWRMutation from "swr/mutation";
 import { useSWRConfig } from "swr";
-import { useAuth } from "../../../context/AuthContext";
 import { editCustomerNote } from "../../../services/customers";
 import { extractErrorCode } from "../../../services/error";
 import { NoteFormValues } from "../../../components/NoteForm/NoteForm";
@@ -12,7 +11,6 @@ export const useEditCustomerNote = (
   jobId?: string
 ) => {
   const { mutate } = useSWRConfig();
-  const { user } = useAuth();
   const { trigger, isMutating, error } = useSWRMutation<
     void,
     string,

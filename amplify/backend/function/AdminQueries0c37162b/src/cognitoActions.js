@@ -86,7 +86,7 @@ async function confirmUserSignUp(username) {
 
 // Operations with USER : create, update, delete Disable, enable
 
-async function createUser(user) {
+async function createUser(user, redirectTo) {
   const { email, password, color, name } = user;
 
   const params = {
@@ -98,6 +98,9 @@ async function createUser(user) {
     ],
     Username: email,
     UserPoolId: userPoolId,
+    ClientMetadata: {
+      redirectTo,
+    },
   };
 
   // Add color as a custom attribute

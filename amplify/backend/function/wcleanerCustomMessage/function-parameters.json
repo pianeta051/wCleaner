@@ -1,6 +1,8 @@
 {
   "trigger": true,
-  "modules": ["custom"],
+  "modules": [
+    "custom"
+  ],
   "parentResource": "wcleaner",
   "functionName": "wcleanerCustomMessage",
   "resourceName": "wcleanerCustomMessage",
@@ -12,5 +14,11 @@
   "roleName": "wcleanerCustomMessage",
   "skipEdit": true,
   "enableCors": false,
-  "permissions": {}
+  "permissions": {},
+  "environmentVariableList": [
+    {
+      "cloudFormationParameterName": "redirectTo",
+      "environmentVariableName": "REDIRECT_TO"
+    }
+  ]
 }

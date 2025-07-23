@@ -139,8 +139,10 @@ app.post("/createUser", async (req, res, next) => {
     return next(err);
   }
 
+  const { redirectTo, ...user } = req.body;
+
   try {
-    const response = await createUser(req.body);
+    const response = await createUser(user, redirectTo);
     res.status(200).json(response);
   } catch (err) {
     next(err);
