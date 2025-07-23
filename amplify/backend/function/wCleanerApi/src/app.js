@@ -10,7 +10,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const awsServerlessExpressMiddleware = require("aws-serverless-express/middleware");
 
-//
 const {
   addCustomer,
   addCustomerJob,
@@ -94,7 +93,7 @@ app.get("/outcodes", async function (req, res) {
 app.get("/customers/:slug", async function (req, res) {
   const slug = req.params.slug;
   const customerFromDb = await getCustomerBySlug(slug);
-  if (!customerFromDb) {
+  if (!customerFromDb || customerFromDb.status.S === "deleted") {
     res.status(404).json({ message: "This customer does not exist" });
     return;
   }
@@ -107,7 +106,7 @@ app.get("/customer-by-id/:id", async function (req, res) {
   const id = req.params.id;
   const customerFromDb = await getCustomerById(id);
 
-  if (!customerFromDb) {
+  if (!customerFromDb || customerFromDb.status.S === "deleted") {
     res.status(404).json({ message: "This customer does not exist" });
     return;
   }

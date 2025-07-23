@@ -86,6 +86,9 @@ const addCustomer = async (customer) => {
       slug: {
         S: slug,
       },
+      status: {
+        S: "active",
+      },
     },
   };
 
@@ -151,7 +154,7 @@ const addJobType = async (jobType) => {
 };
 
 const editCustomer = async (id, editedCustomer) => {
-  const existing = await getCustomer(id);
+  const existing = await getCustomerById(id);
   if (!existing) {
     throw "NOT_EXISTING_CUSTOMER";
   }
@@ -250,33 +253,26 @@ const editCustomer = async (id, editedCustomer) => {
   };
 };
 
-const getCustomer = async (id) => {
-  const params = {
-    TableName: TABLE_NAME,
-    Key: {
-      PK: { S: `customer_${id}` },
-      SK: { S: "profile" },
-    },
-  };
-  const customer = await ddb.getItem(params).promise();
-  return customer.Item;
-};
-
 const getCustomers = async (filters, pagination) => {
   const { exclusiveStartKey, limit, enabled } = pagination;
 
   const { searchInput, outcodeFilter } = filters;
-  const filterExpressions = ["begins_with(#PK, :pk) AND #SK = :sk"];
+  const filterExpressions = [
+    "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
+  ];
   let params = {
     TableName: TABLE_NAME,
     ExpressionAttributeNames: {
       "#PK": "PK",
       "#SK": "SK",
+      "#ST": "status",
     },
     ExpressionAttributeValues: {
       ":pk": { S: "customer_" },
       ":sk": { S: "profile" },
+      ":status": { S: "active" },
     },
+    IndexName: "status-index",
   };
 
   if (enabled) {
@@ -350,6 +346,7 @@ const getCustomers = async (filters, pagination) => {
         Limit: limit - items.length,
       };
       result = await ddb.scan(params).promise();
+
       items.push(...result.Items);
     }
 
@@ -366,15 +363,18 @@ const getCustomers = async (filters, pagination) => {
 const getOutcodes = async () => {
   let params = {
     TableName: TABLE_NAME,
-    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
     ExpressionAttributeNames: {
       "#PK": "PK",
       "#SK": "SK",
+      "#ST": "status",
     },
     ExpressionAttributeValues: {
       ":pk": { S: "customer_" },
       ":sk": { S: "profile" },
+      ":status": { S: "active" },
     },
+    IndexName: "status-index",
   };
 
   let result = await ddb.scan(params).promise();
@@ -502,8 +502,29 @@ const deleteCustomer = async (id) => {
       PK: { S: `customer_${id}` },
       SK: { S: "profile" },
     },
+    UpdateExpression: `
+      SET #status = :status,
+          #address = :address,
+          #mainTelephone = :mainTelephone,
+          #secondTelephone = :secondTelephone
+      REMOVE #email
+    `,
+    ExpressionAttributeNames: {
+      "#status": "status",
+      "#address": "address",
+      "#email": "email",
+      "#mainTelephone": "mainTelephone",
+      "#secondTelephone": "secondTelephone",
+    },
+    ExpressionAttributeValues: {
+      ":status": { S: "deleted" },
+      ":mainTelephone": { S: "" },
+      ":secondTelephone": { S: "" },
+      ":address": { S: "" },
+    },
   };
-  await ddb.deleteItem(params).promise();
+
+  await ddb.updateItem(params).promise();
 };
 
 /// JOBS
@@ -511,7 +532,7 @@ const deleteCustomer = async (id) => {
 //ADD JOB TO CUSTOMER
 
 const addCustomerJob = async (customerId, job, assignedTo) => {
-  if (!(await getCustomer(customerId))) {
+  if (!(await getCustomerById(customerId))) {
     throw "CUSTOMER_NOT_FOUND";
   }
   const jobId = uuid.v1();
@@ -970,7 +991,7 @@ const addFile = async (fileBuffer, path) => {
 
 //CUSTOMER NOTES
 const addCustomerNote = async (customerId, note) => {
-  const customer = await getCustomer(customerId);
+  const customer = await getCustomerById(customerId);
   if (!customer) {
     throw new Error("CUSTOMER_NOT_FOUND");
   }
@@ -1020,7 +1041,7 @@ const addCustomerNote = async (customerId, note) => {
 };
 
 const editCustomerNote = async (customerId, noteId, note) => {
-  const customer = mapCustomer(await getCustomer(customerId));
+  const customer = mapCustomer(await getCustomerById(customerId));
   if (!customer.notes?.length) {
     throw new Error("NOTE_NOT_FOUND");
   }
@@ -1115,7 +1136,6 @@ module.exports = {
   getCustomerBySlug,
   getCustomerById,
   getCustomers,
-  getCustomer,
   getCustomerJobs,
   getJob,
   getJobs,
