@@ -41,6 +41,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
   const [editingJobType, setEditingJobType] = useState<JobType | undefined>(
     undefined
   );
+
   const usersWithColors = jobs
     .filter((job) => !!job.assignedTo?.color)
     .map((job) => job.assignedTo)
@@ -107,7 +108,7 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
                   <UserColor color={user?.color as string} />
                 </ListItemIcon>
                 <ListItemText
-                  primary={user?.name ? user?.email : "User Deleted"}
+                  primary={user?.name ?? user?.email ?? "User Deleted"}
                 />
               </ListItem>
             ))}

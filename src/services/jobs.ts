@@ -65,10 +65,6 @@ const isJobAssignation = (value: unknown): value is JobAssignation => {
       return false;
     }
   }
-  if (!objectValue.email) {
-    // email is mandatory
-    return false;
-  }
   if (typeof objectValue.email !== "string") {
     // email must be of type string
     return false;
