@@ -58,14 +58,32 @@ const getUserInfo = async (userSub) => {
 const getJobUsers = async (items) => {
   const userIds = [];
   items.forEach((item) => {
-    const userId = item.assigned_to?.S;
-    if (!userIds.includes(userId)) {
-      userIds.push(userId);
+    let userId;
+    if (item.assigned_to?.S) {
+      userId = item.assigned_to?.S;
+      if (!userIds.includes(userId)) {
+        userIds.push(userId);
+      }
     }
   });
+
   const users = [];
   for (const item of userIds) {
-    users.push(await getUserInfo(item));
+    try {
+      const user = await getUserInfo(item);
+      users.push(user);
+    } catch (error) {
+      if (error.code === "UserNotFoundException") {
+        users.push({
+          sub: item,
+          name: "Deleted user",
+          email: "",
+          color: "#a8a8a8ff",
+        });
+      } else {
+        throw error;
+      }
+    }
   }
   let jobs = items.map(mapJob);
   jobs = jobs.map((job, i) => {
