@@ -470,6 +470,24 @@ const getOutcodes = async () => {
   };
 };
 
+const getCleaningAddresses = async (customerId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+    },
+    FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk",
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":sk": { S: "address_" },
+    },
+  };
+
+  const result = await ddb.scan(params).promise();
+  return result.Items;
+};
+
 const getCustomerBySlug = async (slug) => {
   const params = {
     TableName: TABLE_NAME,
@@ -1201,6 +1219,7 @@ module.exports = {
   editCustomer,
   editCustomerNote,
   editJobType,
+  getCleaningAddresses,
   getCustomerBySlug,
   getCustomerById,
   getCustomers,

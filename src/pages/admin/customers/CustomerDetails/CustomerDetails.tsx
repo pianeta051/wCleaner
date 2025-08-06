@@ -167,6 +167,7 @@ export const CustomerDetails: FC = () => {
                 initialValues={customerToFormValues(customer)}
                 loading={editing}
                 layout="horizontal"
+                enableCopyAddress={false}
               />
             </section>
 

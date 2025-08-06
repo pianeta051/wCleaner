@@ -101,6 +101,7 @@ type CustomerFormProps = {
   initialValues?: CustomerFormValues;
   loading?: boolean;
   layout?: "vertical" | "horizontal";
+  enableCopyAddress?: boolean;
 };
 
 export const CustomerForm: FC<CustomerFormProps> = ({
@@ -109,13 +110,14 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   initialValues = INITIAL_VALUES,
   loading = false,
   layout = "vertical",
+  enableCopyAddress = true,
 }) => {
   const formik = useFormik<CustomerFormValues>({
     initialValues,
     onSubmit,
     validationSchema,
   });
-  const [copyAddress, setCopyAddress] = useState(true);
+  const [copyAddress, setCopyAddress] = useState(enableCopyAddress);
   const gridSize =
     layout === "vertical" ? { xs: 12 } : { xs: 12, sm: 6, md: 4 };
 
@@ -164,11 +166,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   ];
 
   return (
-    <Wrapper
-      sx={{ overflowY: "scroll", maxHeight: "700px" }}
-      container
-      spacing={2}
-    >
+    <Wrapper container spacing={2} enableScroll={layout === "vertical"}>
       <Form onSubmit={formik.handleSubmit}>
         <Grid container spacing={3}>
           {scalarFields.map((fieldName) => (
@@ -196,17 +194,19 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           ))}
           <Grid item xs={12}>
             <Title variant="h5">Cleaning Addresses</Title>
-            <FormGroup>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={copyAddress}
-                    onChange={copyAddressChangeHandle}
-                  />
-                }
-                label="Copy billing address into cleaning address"
-              />
-            </FormGroup>
+            {enableCopyAddress && (
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={copyAddress}
+                      onChange={copyAddressChangeHandle}
+                    />
+                  }
+                  label="Copy billing address into cleaning address"
+                />
+              </FormGroup>
+            )}
           </Grid>
 
           {formik.values.cleaningAddresses.map((addr, index) => (

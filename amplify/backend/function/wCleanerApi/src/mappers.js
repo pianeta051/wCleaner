@@ -26,6 +26,13 @@ const mapCustomer = (customerFromDb) => ({
     }) || [],
 });
 
+const mapCleaningAddress = (cleaningAddressFromDb) => ({
+  id: cleaningAddressFromDb.SK.S.replace("address_", ""),
+  name: cleaningAddressFromDb.name.S,
+  address: cleaningAddressFromDb.address.S,
+  postcode: cleaningAddressFromDb.postcode.S,
+});
+
 const mapCustomerJobs = (customerJob) => ({
   id: customerJob.SK.S.replace("job_", ""),
   date: dayjs(+customerJob.start.N).format("YYYY-MM-DD"),
@@ -75,6 +82,7 @@ const mapJobTemporalFilters = (start, end) => {
 };
 
 module.exports = {
+  mapCleaningAddress,
   mapCustomer,
   mapCustomerJobs,
   mapJob,

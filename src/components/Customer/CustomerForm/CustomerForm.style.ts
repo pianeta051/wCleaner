@@ -6,15 +6,17 @@ export const Background = styled(Paper)(() => ({
   justifyContent: "center",
 }));
 
-export const Wrapper = styled(Grid)(() => ({
-  width: "100%",
-  height: "100%",
-  paddingTop: "10px",
-  paddingBottom: "10px",
-  overflowY: "scroll",
-  maxHeight: "700px",
-  paddingLeft: "20px",
-}));
+export const Wrapper = styled(Grid)<{ enableScroll?: boolean }>(
+  ({ enableScroll }) => ({
+    width: "100%",
+    height: "100%",
+    paddingTop: "10px",
+    paddingBottom: "10px",
+    overflowY: enableScroll ? "scroll" : undefined,
+    maxHeight: enableScroll ? "700px" : undefined,
+    paddingLeft: "20px",
+  })
+);
 
 export const Title = styled(Typography)(() => ({
   textAlign: "center",

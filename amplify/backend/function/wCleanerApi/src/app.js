@@ -16,6 +16,7 @@ const {
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  getCleaningAddresses,
   getCustomers,
   getCustomerBySlug,
   getCustomerById,
@@ -37,6 +38,7 @@ const {
 } = require("./db");
 
 const {
+  mapCleaningAddress,
   mapCustomer,
   mapCustomerJobs,
   mapJob,
@@ -99,6 +101,8 @@ app.get("/customers/:slug", async function (req, res) {
     return;
   }
   const customer = mapCustomer(customerFromDb);
+  const cleaningAddresses = await getCleaningAddresses(customer.id);
+  customer.cleaningAddresses = cleaningAddresses.map(mapCleaningAddress);
   res.json({ customer });
 });
 
