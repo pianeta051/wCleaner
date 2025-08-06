@@ -125,7 +125,6 @@ export const CustomerDetails: FC = () => {
           <MuiLink component={RouterLink} to="/admin/customers/">
             {customer.name}
           </MuiLink>
-          <Typography color="text.primary">Customers</Typography>
         </Breadcrumbs>
       </TopBar>
 
@@ -160,7 +159,7 @@ export const CustomerDetails: FC = () => {
             {editError && <ErrorMessage code={editError} />}
 
             <section id="details">
-              <Typography variant="h4" gutterBottom>
+              <Typography variant="h4" gutterBottom mb={5}>
                 Customer Details
               </Typography>
               <CustomerForm

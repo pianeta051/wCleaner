@@ -12,6 +12,7 @@ const awsServerlessExpressMiddleware = require("aws-serverless-express/middlewar
 
 const {
   addCustomer,
+  addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
@@ -118,6 +119,12 @@ app.get("/customer-by-id/:id", async function (req, res) {
 app.post("/customers", async function (req, res) {
   try {
     const createdCustomer = await addCustomer(req.body);
+    const cleaningAddresses = req.body.cleaningAddresses;
+    if (cleaningAddresses?.length > 0) {
+      for (const cleaningAddress of cleaningAddresses) {
+        addCustomerAddress(createdCustomer.id, cleaningAddress);
+      }
+    }
     res.json({ customer: createdCustomer });
   } catch (error) {
     if (error === "EMAIL_ALREADY_EXISTS") {
@@ -131,6 +138,10 @@ app.post("/customers", async function (req, res) {
     } else if (error === "NAME_CANNOT_BE_EMPTY") {
       res.status(400).json({
         error: "Name cannot be empty",
+      });
+    } else if (error === "INVALID_ADDRESS") {
+      res.status(400).json({
+        error: "One of the cleaning addresses is invalid",
       });
     } else {
       throw error;
@@ -166,6 +177,52 @@ app.delete("/customers/:id", async function (req, res) {
   const id = req.params.id;
   await deleteCustomer(id);
   res.json({ message: "Customer deleted" });
+});
+
+app.post("/customers/:customerId/address", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const { name, address, postcode } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: "Name cannot be empty" });
+    }
+
+    if (!address) {
+      return res.status(400).json({ error: "Address cannot be empty" });
+    }
+
+    if (!postcode) {
+      return res.status(400).json({ error: "postcode cannot be empty" });
+    }
+
+    let createdCustomerAddress = null;
+    try {
+      createdCustomerAddress = await addCustomerAddress(
+        customerId,
+        customerAddress
+      );
+    } catch (e) {
+      if (e.message === "CUSTOMER_NOT_FOUND") {
+        return res.status(404).json({ error: "The customer does not exist" });
+      }
+      throw e;
+    }
+
+    res.json({
+      customerAddress: {
+        ...createdCustomerAddress,
+        customerId,
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    console.error("Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 //JOBS

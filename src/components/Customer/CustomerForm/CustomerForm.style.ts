@@ -19,15 +19,17 @@ export const Title = styled(Typography)(() => ({
 
 export const ModalBox = styled(Box)({
   backgroundColor: "#fff",
+
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
   borderRadius: "10px",
+  width: "70%",
 });
 
 export const Field = styled(TextField)(() => ({
   marginBottom: "10px",
-  width: "100%",
-  marginLeft: "20px",
+  width: "90%",
+  marginLeft: "40px",
 }));

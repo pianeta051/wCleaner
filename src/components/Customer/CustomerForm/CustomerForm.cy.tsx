@@ -110,6 +110,7 @@ describe("CustomerForm", () => {
           mainTelephone: "",
           secondTelephone: "",
           email: "",
+          cleaningAddresses: [],
         }}
       />
     );
@@ -133,6 +134,7 @@ describe("CustomerForm", () => {
           mainTelephone: "",
           secondTelephone: "",
           email: "",
+          cleaningAddresses: [],
         }}
       />
     );

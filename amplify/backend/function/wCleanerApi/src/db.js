@@ -252,6 +252,73 @@ const editCustomer = async (id, editedCustomer) => {
     ...editedCustomer,
   };
 };
+const addCustomerAddress = async (customerId, customerAddress) => {
+  if (!customerId) {
+    throw new Error("CUSTOMER_NOT_FOUND");
+  }
+
+  if (
+    !customerAddress.name ||
+    !customerAddress.address ||
+    !customerAddress.postcode
+  ) {
+    console.error("Invalid Address:" + JSON.stringify({ customerAddress }));
+    throw new Error("INVALID_ADDRESS");
+  }
+
+  const customerAddressId = uuid.v1();
+  const postcodeParts = customerAddress.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+
+  const outcode = postcodeParts[0];
+
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${customerAddressId}` },
+      name: { S: customerAddress.name },
+      address: { S: customerAddress.address },
+      postcode: { S: customerAddress.postcode },
+      outcode: { S: outcode },
+    },
+  };
+  await ddb.putItem(params).promise();
+
+  return {
+    id: customerAddressId,
+    ...customerAddress,
+  };
+};
+
+const updateCustomerAddresses = async (customerId, cleaningAddresses) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "addresses" },
+    },
+    UpdateExpression: "SET #cleaningAddresses = :cleaning",
+    ExpressionAttributeNames: {
+      "#cleaningAddresses": "cleaningAddresses",
+    },
+    ExpressionAttributeValues: {
+      ":cleaning": {
+        L: cleaningAddresses.map((addr) => ({
+          M: {
+            name: { S: addr.name },
+            address: { S: addr.address },
+            postcode: { S: addr.postcode },
+          },
+        })),
+      },
+    },
+  };
+
+  await ddb.updateItem(params).promise();
+};
 
 const getCustomers = async (filters, pagination) => {
   const { exclusiveStartKey, limit, enabled } = pagination;
@@ -1127,6 +1194,7 @@ const deleteCustomerNote = async (customerId, noteId) => {
 
 module.exports = {
   addCustomer,
+  addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
