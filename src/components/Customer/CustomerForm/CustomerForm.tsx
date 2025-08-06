@@ -1,4 +1,4 @@
-import { FC, useEffect } from "react";
+import { FC, useEffect, useState } from "react";
 import {
   Accordion,
   AccordionSummary,
@@ -6,11 +6,14 @@ import {
   IconButton,
   Typography,
   Box,
+  FormControlLabel,
+  Checkbox,
+  FormGroup,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
 import { Button, Grid } from "@mui/material";
-import { Field, Title } from "./CustomerForm.style";
+import { Field, Title, Wrapper } from "./CustomerForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../../Form/Form";
 import { useFormik } from "formik";
@@ -112,7 +115,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     onSubmit,
     validationSchema,
   });
-
+  const [copyAddress, setCopyAddress] = useState(true);
   const gridSize =
     layout === "vertical" ? { xs: 12 } : { xs: 12, sm: 6, md: 4 };
 
@@ -133,11 +136,14 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     formik.setFieldValue("cleaningAddresses", updated);
   };
 
+  const copyAddressChangeHandle = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setCopyAddress(event.target.checked);
+  };
+
   useEffect(() => {
-    if (
-      (formik.values.address || formik.values.postcode) &&
-      !formik.touched.cleaningAddresses
-    ) {
+    if ((formik.values.address || formik.values.postcode) && copyAddress) {
       formik.setFieldValue("cleaningAddresses", [
         {
           name: "Home",
@@ -146,7 +152,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
         },
       ]);
     }
-  }, [formik.values.address, formik.values.postcode]);
+  }, [formik.values.address, formik.values.postcode, copyAddress]);
 
   const scalarFields: (keyof CustomerFormValues)[] = [
     "name",
@@ -158,7 +164,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   ];
 
   return (
-    <Grid
+    <Wrapper
       sx={{ overflowY: "scroll", maxHeight: "700px" }}
       container
       spacing={2}
@@ -190,7 +196,19 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           ))}
           <Grid item xs={12}>
             <Title variant="h5">Cleaning Addresses</Title>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={copyAddress}
+                    onChange={copyAddressChangeHandle}
+                  />
+                }
+                label="Copy billing address into cleaning address"
+              />
+            </FormGroup>
           </Grid>
+
           {formik.values.cleaningAddresses.map((addr, index) => (
             <Grid item xs={8} key={index} sx={{ pl: 5 }}>
               <Accordion defaultExpanded>
@@ -219,6 +237,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                         formik.setFieldValue("cleaningAddresses", updated);
                       }}
                       size="small"
+                      disabled={copyAddress}
                     >
                       <CloseIcon />
                     </IconButton>
@@ -231,7 +250,14 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                       addressChangeHandler(formValues, index)
                     }
                     onBlur={() => formik.setFieldTouched("cleaningAddresses")}
-                    errors={formik.errors.cleaningAddresses?.[index] as any}
+                    errors={
+                      formik.errors.cleaningAddresses?.[index] as {
+                        name?: string;
+                        address?: string;
+                        postcode?: string;
+                      }
+                    }
+                    disabled={copyAddress}
                   />
                 </AccordionDetails>
               </Accordion>
@@ -239,7 +265,9 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           ))}
 
           <Grid item xs={12} ml={5}>
-            <Button onClick={addAddressHandler}>Add Address</Button>
+            <Button onClick={addAddressHandler} disabled={copyAddress}>
+              Add Address
+            </Button>
           </Grid>
           <Grid item xs={12}>
             <Grid
@@ -277,6 +305,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           </Grid>
         </Grid>
       </Form>
-    </Grid>
+    </Wrapper>
   );
 };

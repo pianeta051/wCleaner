@@ -11,6 +11,9 @@ export const Wrapper = styled(Grid)(() => ({
   height: "100%",
   paddingTop: "10px",
   paddingBottom: "10px",
+  overflowY: "scroll",
+  maxHeight: "700px",
+  paddingLeft: "20px",
 }));
 
 export const Title = styled(Typography)(() => ({

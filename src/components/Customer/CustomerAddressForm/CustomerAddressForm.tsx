@@ -17,6 +17,7 @@ type CustomerAddressFormProps = {
     address?: string;
     postcode?: string;
   };
+  disabled?: boolean;
 };
 
 export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
@@ -24,6 +25,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
   value,
   onBlur,
   errors,
+  disabled = false,
 }) => {
   const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const fieldChanged = event.target.name;
@@ -43,6 +45,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           label="Name"
           type="text"
           fullWidth
+          disabled={disabled}
           onChange={changeHandler}
           onBlur={onBlur}
           value={value?.name}
@@ -56,6 +59,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           label="Address"
           type="text"
           fullWidth
+          disabled={disabled}
           onChange={changeHandler}
           onBlur={onBlur}
           value={value?.address}
@@ -69,6 +73,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           label="Postcode"
           type="text"
           fullWidth
+          disabled={disabled}
           onChange={changeHandler}
           onBlur={onBlur}
           value={value?.postcode}
