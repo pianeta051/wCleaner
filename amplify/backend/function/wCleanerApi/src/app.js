@@ -167,6 +167,9 @@ app.put("/customers/:id", async function (req, res) {
         await addCustomerAddress(editedCustomer.id, newAddress);
       }
     }
+    const editedCleaningAddresses = await getCleaningAddresses(customer.id);
+    editedCustomer.cleaningAddresses =
+      editedCleaningAddresses.map(mapCleaningAddress);
 
     res.json({ customer: editedCustomer });
   } catch (error) {

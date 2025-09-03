@@ -123,6 +123,10 @@ export const CustomerForm: FC<CustomerFormProps> = ({
 
   const requiredFields = ["name", "address", "postcode"];
 
+  useEffect(() => {
+    formik.setFieldValue("cleaningAddresses", initialValues.cleaningAddresses);
+  }, [initialValues.cleaningAddresses]);
+
   const addressChangeHandler = (
     formValues: CustomerAddressFormValues,
     index: number

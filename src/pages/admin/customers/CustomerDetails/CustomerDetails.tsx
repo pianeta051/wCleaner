@@ -61,6 +61,7 @@ export const CustomerDetails: FC = () => {
     customer,
     loading: initialLoading,
     error: initialError,
+    reload,
   } = useCustomer(slug);
   const {
     editCustomer,
@@ -95,7 +96,8 @@ export const CustomerDetails: FC = () => {
   const handleSubmit = async (v: CustomerFormValues) => {
     if (!customer) return;
     try {
-      await editCustomer(v);
+      const editedCustomer = await editCustomer(v);
+      reload(editedCustomer);
       setSnackbarStatus("success");
     } catch (e) {
       setSnackbarStatus("error");
