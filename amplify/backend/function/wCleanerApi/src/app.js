@@ -126,7 +126,7 @@ app.post("/customers", async function (req, res) {
     const cleaningAddresses = req.body.cleaningAddresses;
     if (cleaningAddresses?.length > 0) {
       for (const cleaningAddress of cleaningAddresses) {
-        addCustomerAddress(createdCustomer.id, cleaningAddress);
+        await addCustomerAddress(createdCustomer.id, cleaningAddress);
       }
     }
     res.json({ customer: createdCustomer });
@@ -158,8 +158,16 @@ app.post("/customers", async function (req, res) {
 app.put("/customers/:id", async function (req, res) {
   try {
     const id = req.params.id;
+    const { cleaningAddresses, ...customer } = req.body;
 
-    const editedCustomer = await editCustomer(id, req.body);
+    const editedCustomer = await editCustomer(id, customer);
+    const newAddresses = cleaningAddresses.filter((address) => !address.id);
+    if (newAddresses?.length > 0) {
+      for (const newAddress of newAddresses) {
+        await addCustomerAddress(editedCustomer.id, newAddress);
+      }
+    }
+
     res.json({ customer: editedCustomer });
   } catch (error) {
     if (error === "EMAIL_ALREADY_REGISTERED") {

@@ -204,7 +204,7 @@ const editCustomer = async (id, editedCustomer) => {
     updateExprParts.push("#SP = :secondTelephone");
   }
 
-  if (editedCustomer.email !== undefined) {
+  if (editedCustomer.email) {
     exprAttrNames["#E"] = "email";
     exprAttrNames["#EL"] = "email_lowercase";
     exprAttrValues[":email"] = { S: editedCustomer.email };
@@ -245,6 +245,8 @@ const editCustomer = async (id, editedCustomer) => {
     ExpressionAttributeNames: exprAttrNames,
     ExpressionAttributeValues: exprAttrValues,
   };
+
+  console.log(JSON.stringify(params, null, 2));
 
   await ddb.updateItem(params).promise();
   return {

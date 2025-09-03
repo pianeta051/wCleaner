@@ -48,7 +48,9 @@ type CustomerParams = { slug: string };
 
 export const CustomerDetails: FC = () => {
   const { slug } = useParams<CustomerParams>();
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarStatus, setSnackbarStatus] = useState<
+    "closed" | "success" | "error"
+  >("closed");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState("details");
 
@@ -92,8 +94,12 @@ export const CustomerDetails: FC = () => {
 
   const handleSubmit = async (v: CustomerFormValues) => {
     if (!customer) return;
-    await editCustomer(v).catch(console.error);
-    setSnackbarOpen(true);
+    try {
+      await editCustomer(v);
+      setSnackbarStatus("success");
+    } catch (e) {
+      setSnackbarStatus("error");
+    }
   };
 
   if (!slug) return <NotFound />;
@@ -193,16 +199,20 @@ export const CustomerDetails: FC = () => {
       </Grid>
 
       <Snackbar
-        open={snackbarOpen}
+        open={snackbarStatus !== "closed"}
         autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
+        onClose={() => setSnackbarStatus("closed")}
       >
         <Alert
-          severity="success"
-          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarStatus === "success" ? "success" : "error"}
+          onClose={() => setSnackbarStatus("closed")}
           sx={{ width: "100%" }}
         >
-          Customer updated!
+          {snackbarStatus === "success" ? (
+            <>Customer updated!</>
+          ) : (
+            <>Customer could not update</>
+          )}
         </Alert>
       </Snackbar>
     </Wrapper>
