@@ -116,7 +116,12 @@ export const editCustomer = async (
   } catch (error) {
     if (isErrorResponse(error)) {
       if (error.response.status === 409) {
-        throw "EMAIL_ALREADY_EXISTS";
+        if (error.response.data?.error === "Email Already Exists") {
+          throw "EMAIL_ALREADY_EXISTS";
+        }
+        if (error.response.data?.error === "Address name already exists") {
+          throw "ADDRESS_NAME_ALREADY_EXISTS";
+        }
       }
       if (error.response.status === 400) {
         throw "EMAIL_CANNOT_BE_EMPTY";

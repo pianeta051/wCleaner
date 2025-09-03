@@ -268,6 +268,15 @@ const addCustomerAddress = async (customerId, customerAddress) => {
     throw new Error("INVALID_ADDRESS");
   }
 
+  const addressWithSameName = await findAddressesByName(
+    customerId,
+    customerAddress.name
+  );
+
+  if (addressWithSameName?.length) {
+    throw new Error("DUPLICATED_ADDRESS_NAME");
+  }
+
   const customerAddressId = uuid.v1();
   const postcodeParts = customerAddress.postcode.split(/\s/g);
   if (postcodeParts.filter((part) => !!part).length !== 2) {
@@ -320,6 +329,26 @@ const updateCustomerAddresses = async (customerId, cleaningAddresses) => {
   };
 
   await ddb.updateItem(params).promise();
+};
+
+const findAddressesByName = async (customerId, addressName) => {
+  const params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#N": "name",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":sk": { S: "address" },
+      ":n": { S: addressName },
+    },
+    FilterExpression: "#PK = :pk AND begins_with(#SK, :sk) AND #N = :n",
+  };
+  let result = await ddb.scan(params).promise();
+  const items = result.Items;
+  return items;
 };
 
 const getCustomers = async (filters, pagination) => {

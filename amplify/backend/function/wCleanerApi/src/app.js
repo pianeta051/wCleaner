@@ -178,6 +178,10 @@ app.put("/customers/:id", async function (req, res) {
       res.status(404).json({
         error: "Not existing customer",
       });
+    } else if (error.message === "DUPLICATED_ADDRESS_NAME") {
+      res.status(409).json({
+        error: "Address name already exists",
+      });
     } else {
       throw error;
     }

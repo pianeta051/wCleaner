@@ -206,5 +206,12 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "ADDRESS_NAME_ALREADY_EXISTS") {
+    return (
+      <Alert severity="error">
+        <Typography>Address names must be unique</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };
