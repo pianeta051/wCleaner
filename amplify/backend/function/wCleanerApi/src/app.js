@@ -29,6 +29,7 @@ const {
   deleteCustomer,
   deleteCustomerNote,
   deleteJobType,
+  editAddress,
   editJobFromCustomer,
   deleteJobFromCustomer,
   editCustomer,
@@ -165,6 +166,14 @@ app.put("/customers/:id", async function (req, res) {
     if (newAddresses?.length > 0) {
       for (const newAddress of newAddresses) {
         await addCustomerAddress(editedCustomer.id, newAddress);
+      }
+    }
+    const addressesToBeUpdated = cleaningAddresses.filter(
+      (address) => address.id
+    );
+    if (addressesToBeUpdated?.length) {
+      for (const address of addressesToBeUpdated) {
+        await editAddress(editedCustomer.id, address);
       }
     }
     const editedCleaningAddresses = await getCleaningAddresses(customer.id);

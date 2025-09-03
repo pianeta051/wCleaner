@@ -153,6 +153,37 @@ const addJobType = async (jobType) => {
   };
 };
 
+const editAddress = async (customerId, customerAddress) => {
+  const postcodeParts = customerAddress.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+  const outcode = postcodeParts[0];
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${customerAddress.id}` },
+    },
+    ExpressionAttributeValues: {
+      ":name": { S: customerAddress.name },
+      ":address": { S: customerAddress.address },
+      ":postcode": { S: customerAddress.postcode },
+      ":outcode": { S: outcode },
+    },
+    ExpressionAttributeNames: {
+      "#name": "name",
+      "#address": "address",
+      "#postcode": "postcode",
+      "#outcode": "outcode",
+    },
+    UpdateExpression:
+      "SET #name = :name, #address = :address, #postcode = :postcode, #outcode = :outcode",
+  };
+  await ddb.updateItem(params).promise();
+  return customerAddress;
+};
+
 const editCustomer = async (id, editedCustomer) => {
   const existing = await getCustomerById(id);
   if (!existing) {
@@ -1247,6 +1278,7 @@ module.exports = {
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  editAddress,
   editCustomer,
   editCustomerNote,
   editJobType,
