@@ -16,9 +16,13 @@ import { TableCellWrap } from "./CustomerTable.style";
 
 type CustomersTableProps = {
   customers: Customer[];
+  onReload?: () => void;
 };
 
-export const CustomersTable: FC<CustomersTableProps> = ({ customers }) => {
+export const CustomersTable: FC<CustomersTableProps> = ({
+  customers,
+  onReload,
+}) => {
   if (customers.length === 0) {
     return <Alert severity="warning">No customers found</Alert>;
   }
@@ -64,7 +68,10 @@ export const CustomersTable: FC<CustomersTableProps> = ({ customers }) => {
               <TableCell align="right">{customer.secondTelephone}</TableCell>
               <TableCell align="right">{customer.email}</TableCell>
               <TableCell align="right">
-                <DeleteCustomerButton customerId={customer.id} />
+                <DeleteCustomerButton
+                  customerId={customer.id}
+                  onDelete={onReload}
+                />
               </TableCell>
             </TableRow>
           ))}

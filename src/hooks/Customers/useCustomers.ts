@@ -43,6 +43,7 @@ export const useCustomers = (
     isLoading: loading,
     isValidating: loadingMore,
     setSize,
+    mutate: reload,
   } = useSWRInfinite<
     {
       customers: Customer[];
@@ -83,5 +84,6 @@ export const useCustomers = (
     loading,
     loadMore,
     loadingMore,
+    reload,
   };
 };

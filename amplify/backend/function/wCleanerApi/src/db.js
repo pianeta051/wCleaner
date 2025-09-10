@@ -340,6 +340,7 @@ const addCustomerAddress = async (customerId, customerAddress) => {
       address: { S: customerAddress.address },
       postcode: { S: customerAddress.postcode },
       outcode: { S: outcode },
+      status: { S: "active" },
     },
   };
   await ddb.putItem(params).promise();
@@ -348,33 +349,6 @@ const addCustomerAddress = async (customerId, customerAddress) => {
     id: customerAddressId,
     ...customerAddress,
   };
-};
-
-const updateCustomerAddresses = async (customerId, cleaningAddresses) => {
-  const params = {
-    TableName: TABLE_NAME,
-    Key: {
-      PK: { S: `customer_${customerId}` },
-      SK: { S: "addresses" },
-    },
-    UpdateExpression: "SET #cleaningAddresses = :cleaning",
-    ExpressionAttributeNames: {
-      "#cleaningAddresses": "cleaningAddresses",
-    },
-    ExpressionAttributeValues: {
-      ":cleaning": {
-        L: cleaningAddresses.map((addr) => ({
-          M: {
-            name: { S: addr.name },
-            address: { S: addr.address },
-            postcode: { S: addr.postcode },
-          },
-        })),
-      },
-    },
-  };
-
-  await ddb.updateItem(params).promise();
 };
 
 const findAddressesByName = async (customerId, addressName) => {
@@ -687,6 +661,26 @@ const deleteCustomer = async (id) => {
   };
 
   await ddb.updateItem(params).promise();
+  const addresses = await getCleaningAddresses(id);
+  for (const address of addresses) {
+    const params = {
+      TableName: TABLE_NAME,
+      Key: {
+        PK: { S: `customer_${id}` },
+        SK: address.SK,
+      },
+      ExpressionAttributeNames: {
+        "#status": "status",
+        "#address": "address",
+      },
+      ExpressionAttributeValues: {
+        ":status": { S: "deleted" },
+        ":address": { S: "" },
+      },
+      UpdateExpression: "SET #status = :status, #address = :address",
+    };
+    await ddb.updateItem(params).promise();
+  }
 };
 
 /// JOBS
