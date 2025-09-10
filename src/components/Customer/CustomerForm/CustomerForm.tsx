@@ -9,6 +9,9 @@ import {
   FormControlLabel,
   Checkbox,
   FormGroup,
+  AlertColor,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
@@ -22,6 +25,8 @@ import {
   CustomerAddressForm,
   CustomerAddressFormValues,
 } from "../CustomerAddressForm/CustomerAddressForm";
+import { Customer } from "../../../types/types";
+import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
 
 export type CustomerFormValues = {
   name: string;
@@ -102,6 +107,8 @@ type CustomerFormProps = {
   loading?: boolean;
   layout?: "vertical" | "horizontal";
   enableCopyAddress?: boolean;
+  customer?: Customer;
+  onReload?: () => void;
 };
 
 export const CustomerForm: FC<CustomerFormProps> = ({
@@ -111,6 +118,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   loading = false,
   layout = "vertical",
   enableCopyAddress = true,
+  customer,
+  onReload,
 }) => {
   const formik = useFormik<CustomerFormValues>({
     initialValues,
@@ -118,6 +127,12 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     validationSchema,
   });
   const [copyAddress, setCopyAddress] = useState(enableCopyAddress);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] =
+    useState<AlertColor>("success");
+  const { deleteCustomerAddress, loading: deletingAddress } =
+    useDeleteCustomerAddress(customer?.id);
   const gridSize =
     layout === "vertical" ? { xs: 12 } : { xs: 12, sm: 6, md: 4 };
 
@@ -168,6 +183,25 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     "secondTelephone",
     "email",
   ];
+
+  const deleteAddressHandle = async (customer: Customer, index: number) => {
+    if (customer.cleaningAddresses) {
+      const addressId = customer.cleaningAddresses[index].id;
+      deleteCustomerAddress(addressId)
+        .then(() => {
+          setSnackbarMessage("Address deleted");
+          setSnackbarSeverity("success");
+        })
+        .catch(() => {
+          setSnackbarMessage("Failed to delete address");
+          setSnackbarSeverity("error");
+        })
+        .finally(() => {
+          onReload?.();
+          setSnackbarOpen(true);
+        });
+    }
+  };
 
   return (
     <Wrapper container spacing={2} enableScroll={layout === "vertical"}>
@@ -236,9 +270,9 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                       edge="end"
                       aria-label="delete"
                       onClick={() => {
-                        const updated = [...formik.values.cleaningAddresses];
-                        updated.splice(index, 1);
-                        formik.setFieldValue("cleaningAddresses", updated);
+                        if (customer) {
+                          deleteAddressHandle(customer, index);
+                        }
                       }}
                       size="small"
                       disabled={copyAddress}
@@ -261,7 +295,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                         postcode?: string;
                       }
                     }
-                    disabled={copyAddress}
+                    disabled={copyAddress || deletingAddress}
                   />
                 </AccordionDetails>
               </Accordion>
@@ -269,7 +303,10 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           ))}
 
           <Grid item xs={12} ml={5}>
-            <Button onClick={addAddressHandler} disabled={copyAddress}>
+            <Button
+              onClick={addAddressHandler}
+              disabled={copyAddress || deletingAddress}
+            >
               Add Address
             </Button>
           </Grid>
@@ -309,6 +346,20 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           </Grid>
         </Grid>
       </Form>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Wrapper>
   );
 };

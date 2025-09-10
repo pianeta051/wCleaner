@@ -98,6 +98,17 @@ export const deleteCustomer = async (id: string): Promise<void> => {
   await remove("/customers/" + id);
 };
 
+export const deleteCustomerAddress = async (
+  customerId: string,
+  addressId: string
+): Promise<void> => {
+  try {
+    await remove(`/customers/${customerId}/address/${addressId}`);
+  } catch (error) {
+    throw "INTERNAL_ERROR";
+  }
+};
+
 export const editCustomer = async (
   id: string,
   formValues: Partial<CustomerFormValues>

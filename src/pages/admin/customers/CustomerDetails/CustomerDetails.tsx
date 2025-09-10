@@ -176,6 +176,8 @@ export const CustomerDetails: FC = () => {
                 loading={editing}
                 layout="horizontal"
                 enableCopyAddress={false}
+                customer={customer}
+                onReload={reload}
               />
             </section>
 

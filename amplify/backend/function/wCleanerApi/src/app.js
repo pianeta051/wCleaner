@@ -32,6 +32,7 @@ const {
   editAddress,
   editJobFromCustomer,
   deleteJobFromCustomer,
+  deleteAddress,
   editCustomer,
   editCustomerNote,
   editJobType,
@@ -252,6 +253,20 @@ app.post("/customers/:customerId/address", async function (req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+app.delete(
+  "/customers/:customerId/address/:addressId",
+  async function (req, res) {
+    try {
+      const customerId = req.params.customerId;
+      const addressId = req.params.addressId;
+      await deleteAddress(customerId, addressId);
+      res.json({ message: "Address deleted" });
+    } catch (e) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
 
 //JOBS
 

@@ -184,6 +184,17 @@ const editAddress = async (customerId, customerAddress) => {
   return customerAddress;
 };
 
+const deleteAddress = async (customerId, addressId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${addressId}` },
+    },
+  };
+  await ddb.deleteItem(params).promise();
+};
+
 const editCustomer = async (id, editedCustomer) => {
   const existing = await getCustomerById(id);
   if (!existing) {
@@ -1278,6 +1289,7 @@ module.exports = {
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  deleteAddress,
   editAddress,
   editCustomer,
   editCustomerNote,
