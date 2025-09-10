@@ -6,6 +6,7 @@ export type CustomerAddressFormValues = {
   name: string;
   address: string;
   postcode: string;
+  id?: string;
 };
 
 type CustomerAddressFormProps = {

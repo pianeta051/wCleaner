@@ -176,7 +176,7 @@ export const CustomerDetails: FC = () => {
                 loading={editing}
                 layout="horizontal"
                 enableCopyAddress={false}
-                customer={customer}
+                customerId={customer.id}
                 onReload={reload}
               />
             </section>

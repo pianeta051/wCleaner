@@ -25,7 +25,6 @@ import {
   CustomerAddressForm,
   CustomerAddressFormValues,
 } from "../CustomerAddressForm/CustomerAddressForm";
-import { Customer } from "../../../types/types";
 import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
 
 export type CustomerFormValues = {
@@ -107,7 +106,7 @@ type CustomerFormProps = {
   loading?: boolean;
   layout?: "vertical" | "horizontal";
   enableCopyAddress?: boolean;
-  customer?: Customer;
+  customerId?: string;
   onReload?: () => void;
 };
 
@@ -118,7 +117,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   loading = false,
   layout = "vertical",
   enableCopyAddress = true,
-  customer,
+  customerId,
   onReload,
 }) => {
   const formik = useFormik<CustomerFormValues>({
@@ -132,7 +131,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   const [snackbarSeverity, setSnackbarSeverity] =
     useState<AlertColor>("success");
   const { deleteCustomerAddress, loading: deletingAddress } =
-    useDeleteCustomerAddress(customer?.id);
+    useDeleteCustomerAddress(customerId);
   const gridSize =
     layout === "vertical" ? { xs: 12 } : { xs: 12, sm: 6, md: 4 };
 
@@ -184,9 +183,9 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     "email",
   ];
 
-  const deleteAddressHandle = async (customer: Customer, index: number) => {
-    if (customer.cleaningAddresses) {
-      const addressId = customer.cleaningAddresses[index].id;
+  const deleteAddressHandle = async (index: number) => {
+    const addressId = formik.values.cleaningAddresses[index]?.id;
+    if (addressId) {
       deleteCustomerAddress(addressId)
         .then(() => {
           setSnackbarMessage("Address deleted");
@@ -201,6 +200,11 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           setSnackbarOpen(true);
         });
     }
+    const addresses = [...formik.values.cleaningAddresses];
+    addresses.splice(index, 1);
+    formik.handleChange({
+      target: { name: "cleaningAddresses", value: addresses },
+    });
   };
 
   return (
@@ -270,9 +274,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                       edge="end"
                       aria-label="delete"
                       onClick={() => {
-                        if (customer) {
-                          deleteAddressHandle(customer, index);
-                        }
+                        deleteAddressHandle(index);
                       }}
                       size="small"
                       disabled={copyAddress}
