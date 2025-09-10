@@ -274,17 +274,19 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                     <Typography variant="subtitle1">
                       {addr.address || `Address ${index + 1}`}
                     </Typography>
-                    <IconButton
-                      edge="end"
-                      aria-label="delete"
-                      onClick={() => {
-                        deleteAddressHandle(index);
-                      }}
-                      size="small"
-                      disabled={copyAddress}
-                    >
-                      <CloseIcon />
-                    </IconButton>
+                    {formik.values.cleaningAddresses.length > 1 && (
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => {
+                          deleteAddressHandle(index);
+                        }}
+                        size="small"
+                        disabled={copyAddress}
+                      >
+                        <CloseIcon />
+                      </IconButton>
+                    )}
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails>
