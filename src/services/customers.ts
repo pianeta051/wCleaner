@@ -105,6 +105,11 @@ export const deleteCustomerAddress = async (
   try {
     await remove(`/customers/${customerId}/address/${addressId}`);
   } catch (error) {
+    if (isErrorResponse(error)) {
+      if (error.response.status === 400) {
+        throw "DELETING_LAST_ADDRESS";
+      }
+    }
     throw "INTERNAL_ERROR";
   }
 };

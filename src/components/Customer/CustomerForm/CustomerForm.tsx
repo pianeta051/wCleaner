@@ -26,6 +26,7 @@ import {
   CustomerAddressFormValues,
 } from "../CustomerAddressForm/CustomerAddressForm";
 import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
+import { ErrorMessage } from "../../ErrorMessage/ErrorMessage";
 
 export type CustomerFormValues = {
   name: string;
@@ -130,8 +131,11 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] =
     useState<AlertColor>("success");
-  const { deleteCustomerAddress, loading: deletingAddress } =
-    useDeleteCustomerAddress(customerId);
+  const {
+    deleteCustomerAddress,
+    loading: deletingAddress,
+    error: errorDeletingAddress,
+  } = useDeleteCustomerAddress(customerId);
   const gridSize =
     layout === "vertical" ? { xs: 12 } : { xs: 12, sm: 6, md: 4 };
 
@@ -190,21 +194,21 @@ export const CustomerForm: FC<CustomerFormProps> = ({
         .then(() => {
           setSnackbarMessage("Address deleted");
           setSnackbarSeverity("success");
+          setSnackbarOpen(true);
         })
         .catch(() => {
-          setSnackbarMessage("Failed to delete address");
-          setSnackbarSeverity("error");
+          // the hook manages the error state
         })
         .finally(() => {
           onReload?.();
-          setSnackbarOpen(true);
         });
+    } else {
+      const addresses = [...formik.values.cleaningAddresses];
+      addresses.splice(index, 1);
+      formik.handleChange({
+        target: { name: "cleaningAddresses", value: addresses },
+      });
     }
-    const addresses = [...formik.values.cleaningAddresses];
-    addresses.splice(index, 1);
-    formik.handleChange({
-      target: { name: "cleaningAddresses", value: addresses },
-    });
   };
 
   return (
@@ -303,6 +307,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               </Accordion>
             </Grid>
           ))}
+          {errorDeletingAddress && <ErrorMessage code={errorDeletingAddress} />}
 
           <Grid item xs={12} ml={5}>
             <Button

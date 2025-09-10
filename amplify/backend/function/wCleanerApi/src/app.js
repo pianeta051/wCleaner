@@ -263,7 +263,11 @@ app.delete(
       await deleteAddress(customerId, addressId);
       res.json({ message: "Address deleted" });
     } catch (e) {
-      res.status(500).json({ error: "Internal server error" });
+      if (e === "Deleting last address") {
+        res.status(400).json({ error: "The last address cannot be deleted" });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
     }
   }
 );

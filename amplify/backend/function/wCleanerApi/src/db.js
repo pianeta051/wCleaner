@@ -185,6 +185,10 @@ const editAddress = async (customerId, customerAddress) => {
 };
 
 const deleteAddress = async (customerId, addressId) => {
+  const addresses = await getCleaningAddresses(customerId);
+  if (addresses.length === 1) {
+    throw "Deleting last address";
+  }
   const params = {
     TableName: TABLE_NAME,
     Key: {

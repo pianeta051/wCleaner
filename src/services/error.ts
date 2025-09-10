@@ -30,6 +30,7 @@ export const ERROR_CODES = [
   "CONTENT_CANNOT_BE_EMPTY",
   "FILEURLS_MUST_BE_ARRAY",
   "ADDRESS_NAME_ALREADY_EXISTS",
+  "DELETING_LAST_ADDRESS",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>
