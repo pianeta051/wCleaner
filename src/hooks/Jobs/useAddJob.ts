@@ -6,18 +6,18 @@ import { useSWRConfig } from "swr";
 import { addJob } from "../../services/jobs";
 import { JobFormValues } from "../../components/JobForm/JobForm";
 
-export const useAddJob = (customerId?: string, addressId?: string) => {
+export const useAddJob = (customerId?: string) => {
   const { mutate } = useSWRConfig();
   const { trigger, isMutating, error } = useSWRMutation<
     Job,
     string,
-    [string, string, string] | null,
+    [string, string] | null,
     JobFormValues,
     Job | null
   >(
-    customerId && addressId ? ["add-Job", customerId, addressId] : null,
-    async ([_operation, customerId, addressId], { arg: formValues }) => {
-      const job = await addJob(customerId, addressId, formValues);
+    customerId ? ["add-Job", customerId] : null,
+    async ([_operation, customerId], { arg: formValues }) => {
+      const job = await addJob(customerId, formValues);
 
       // modificar cache de solo un job
       await mutate<readonly [string, string], Job>(

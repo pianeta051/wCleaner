@@ -1,10 +1,10 @@
-import { AddressSelector } from "./AddressSelector";
+import { CustomerSelector } from "./CustomerSelector";
 import { customerFactory } from "../../factories/customers";
 import { ThemeProvider } from "@mui/material";
 import { theme } from "../../theme";
 import * as mockCustomersHook from "../../hooks/Customers/useCustomers";
 
-describe("AddressSelector", () => {
+describe("CustomerSelector", () => {
   const customers = [
     customerFactory.build({
       name: "John Doe",
@@ -21,20 +21,20 @@ describe("AddressSelector", () => {
   beforeEach(() => {
     cy.stub(mockCustomersHook, "useCustomers").returns({ customers });
   });
-  const mountAddressSelector = () => {
-    const onSelectAddress = cy.stub().as("onSelectAddress");
+  const mountCustomerSelector = () => {
+    const onSelectCustomer = cy.stub().as("onSelectCustomer");
 
     cy.mount(
       <ThemeProvider theme={theme}>
-        <AddressSelector onSelectAddress={onSelectAddress} />
+        <CustomerSelector onSelectCustomer={onSelectCustomer} />
       </ThemeProvider>
     );
 
-    return { onSelectAddress };
+    return { onSelectCustomer };
   };
 
   it("renders the Autocomplete and attempts to fetch customers", () => {
-    mountAddressSelector();
+    mountCustomerSelector();
 
     cy.findByLabelText(/select customer/i).click();
     cy.get('[role="option"]').should("have.length", 2);
@@ -47,7 +47,7 @@ describe("AddressSelector", () => {
   //     body: { data: [customer], total: 1 },
   //   }).as("fetchCustomers");
 
-  //   mountAddressSelector();
+  //   mountCustomerSelector();
   //   cy.wait("@fetchCustomers");
 
   //   cy.findByLabelText(/select customer/i).click();
@@ -57,9 +57,9 @@ describe("AddressSelector", () => {
   //   cy.findByLabelText(/postcode/i).should("have.value", customer.postcode);
   // });
 
-  // it("calls onSelectAddress with the selected customer when Next is clicked", () => {
+  // it("calls onSelectCustomer with the selected customer when Next is clicked", () => {
   //   const customer = customerFactory.build();
-  //   const { onSelectAddress } = mountAddressSelector();
+  //   const { onSelectCustomer } = mountCustomerSelector();
   //   cy.intercept("/api/customers?take=10&skip=0", {
   //     body: { data: [customer], total: 1 },
   //   }).as("fetchCustomers");
@@ -70,11 +70,11 @@ describe("AddressSelector", () => {
   //   cy.findByRole("button", { name: /next/i }).should("not.be.disabled");
   //   cy.findByRole("button", { name: /next/i }).click();
 
-  //   cy.get("@onSelectAddress").should("have.been.calledOnceWith", customer);
+  //   cy.get("@onSelectCustomer").should("have.been.calledOnceWith", customer);
   // });
 
   // it("disables the Next button initially", () => {
-  //   mountAddressSelector();
+  //   mountCustomerSelector();
   //   cy.findByRole("button", { name: /next/i }).should("be.disabled");
   // });
 
@@ -84,7 +84,7 @@ describe("AddressSelector", () => {
   //     body: { data: [customer], total: 1 },
   //   }).as("fetchCustomers");
 
-  //   mountAddressSelector();
+  //   mountCustomerSelector();
   //   cy.wait("@fetchCustomers");
 
   //   cy.findByLabelText(/select customer/i).click();
@@ -98,7 +98,7 @@ describe("AddressSelector", () => {
   //     body: { data: [customer], total: 1 },
   //   }).as("fetchCustomers");
 
-  //   mountAddressSelector();
+  //   mountCustomerSelector();
   //   cy.wait("@fetchCustomers");
 
   //   cy.findByLabelText(/select customer/i).click();
@@ -123,7 +123,7 @@ describe("AddressSelector", () => {
   //     body: { data: [customer1, customer2], total: 2 },
   //   }).as("fetchCustomers");
 
-  //   mountAddressSelector();
+  //   mountCustomerSelector();
   //   cy.wait("@fetchCustomers");
 
   //   cy.findByLabelText(/select customer/i).type("John");
@@ -140,7 +140,7 @@ describe("AddressSelector", () => {
   // });
 
   // it("displays empty address and postcode when no customer is selected", () => {
-  //   mountAddressSelector();
+  //   mountCustomerSelector();
   //   cy.findByLabelText(/address/i).should("have.value", "");
   //   cy.findByLabelText(/postcode/i).should("have.value", "");
   // });
