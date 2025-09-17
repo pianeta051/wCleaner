@@ -183,6 +183,7 @@ const isJob = (value: unknown): value is Job => {
 
 export const addJob = async (
   customerId: string,
+  addressId: string,
   formValues: JobFormValues
 ): Promise<Job> => {
   try {
@@ -191,6 +192,7 @@ export const addJob = async (
       date: formValues.date.format("YYYY-MM-DD"),
       startTime: formValues.startTime.format("HH:mm"),
       endTime: formValues.endTime.format("HH:mm"),
+      addressId,
     });
     if (!isJob(response.job)) {
       throw "INTERNAL_ERROR";

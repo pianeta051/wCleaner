@@ -159,7 +159,8 @@ export const getCustomers = async (
   pagination: {
     nextToken?: string;
     disabled?: boolean;
-  }
+  },
+  includeAddresses?: boolean
 ): Promise<{
   customers: Customer[];
   nextToken?: string;
@@ -171,6 +172,7 @@ export const getCustomers = async (
     search: searchInput,
     outcodeFilter: outcodeFilter?.join(","),
     paginationDisabled: disabled,
+    includeAddresses,
   });
 
   const customers = response.customers as Customer[];

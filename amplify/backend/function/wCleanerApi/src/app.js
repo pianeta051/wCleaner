@@ -75,6 +75,7 @@ app.get("/customers", async function (req, res) {
   const outcodeFilter = req.query?.outcodeFilter
     ? req.query.outcodeFilter.split(",")
     : undefined;
+  const includeAddresses = req.query?.includeAddresses === "true";
 
   const paginationEnabled = req.query?.paginationDisabled !== "true";
   const exclusiveStartKey = parseToken(nextToken);
@@ -84,6 +85,16 @@ app.get("/customers", async function (req, res) {
   );
 
   const customers = items.map(mapCustomer);
+  if (includeAddresses) {
+    for (let i = 0; i < customers.length; i++) {
+      const customer = customers[i];
+      const addresses = await getCleaningAddresses(customer.id);
+      customers[i] = {
+        ...customers[i],
+        cleaningAddresses: addresses.map(mapCleaningAddress),
+      };
+    }
+  }
   const responseToken = generateToken(lastEvaluatedKey);
   res.json({ customers, nextToken: responseToken });
 });

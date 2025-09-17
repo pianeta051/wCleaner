@@ -1,12 +1,12 @@
 import { FC, useState } from "react";
-import { Customer, Job } from "../../types/types";
+import { Customer, CustomerCleaningAddress, Job } from "../../types/types";
 import { JobForm, JobFormValues } from "../JobForm/JobForm";
 import { useAddJob } from "../../hooks/Jobs/useAddJob";
 import { useCustomerEditJob } from "../../hooks/Jobs/useEditJob";
 import { Modal, Grid, Stepper, Step, StepLabel, Stack } from "@mui/material";
 
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { CustomerSelector } from "../CustomerSelector/CustomerSelector";
+import { AddressSelector } from "../AddressSelector/AddressSelector";
 import { Background, ModalBox, Title, Wrapper } from "./GenericJobModal.style";
 
 type GenericJobModalProps = {
@@ -24,17 +24,17 @@ export const GenericJobModal: FC<GenericJobModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [address, setAddress] = useState<CustomerCleaningAddress | null>(null);
   const {
     addJob,
     loading: creating,
     error: creationError,
-  } = useAddJob(customer?.id);
+  } = useAddJob(address?.customerId, address?.id);
   const {
     editCustomerJob,
     loading: editing,
     error: editionError,
-  } = useCustomerEditJob(customer?.id, jobId);
+  } = useCustomerEditJob(address?.customerId, jobId);
   const [activeStep, setActiveStep] = useState(0);
 
   const submitHandler = (formValues: JobFormValues) => {
@@ -64,8 +64,8 @@ export const GenericJobModal: FC<GenericJobModalProps> = ({
     onClose();
   };
 
-  const selectCustomerHandler = (customer: Customer) => {
-    setCustomer(customer);
+  const selectAddressHandler = (address: CustomerCleaningAddress) => {
+    setAddress(address);
     setActiveStep(1);
   };
 
@@ -94,7 +94,7 @@ export const GenericJobModal: FC<GenericJobModalProps> = ({
               </Step>
             </Stepper>
             {activeStep === 0 && (
-              <CustomerSelector onSelectCustomer={selectCustomerHandler} />
+              <AddressSelector onSelectAddress={selectAddressHandler} />
             )}
             {activeStep === 1 && (
               <JobForm

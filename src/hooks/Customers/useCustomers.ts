@@ -32,11 +32,19 @@ export const keyFunctionGenerator: (
       !!disablePagination,
     ];
 
-export const useCustomers = (
-  searchInput?: string,
-  outcodeFilter?: string[],
-  disablePagination?: boolean
-) => {
+type UseCustomersParams = {
+  searchInput?: string;
+  outcodeFilter?: string[];
+  disablePagination?: boolean;
+  includeAddresses?: boolean;
+};
+
+export const useCustomers = ({
+  searchInput,
+  outcodeFilter,
+  disablePagination,
+  includeAddresses,
+}: UseCustomersParams) => {
   const {
     data,
     error,
@@ -62,7 +70,8 @@ export const useCustomers = (
     ]) => {
       return getCustomers(
         { searchInput, outcodeFilter },
-        { nextToken, disabled: disablePagination }
+        { nextToken, disabled: disablePagination },
+        includeAddresses
       );
     }
   );

@@ -17,6 +17,7 @@ export type CustomerCleaningAddress = {
   name: string;
   address: string;
   postcode: string;
+  customerId?: string;
 };
 
 export type CustomerNote = {

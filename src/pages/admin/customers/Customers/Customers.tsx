@@ -43,7 +43,7 @@ export const Customers: FC = () => {
     moreToLoad,
     loadingMore,
     reload,
-  } = useCustomers(searchInput, appliedOutcodes);
+  } = useCustomers({ searchInput, outcodeFilter: appliedOutcodes });
 
   const { outcodes, loading: loadingOutcodes } = useOutcodes();
   const theme = useTheme();
