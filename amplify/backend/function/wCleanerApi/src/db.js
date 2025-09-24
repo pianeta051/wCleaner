@@ -1011,6 +1011,7 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       "#P": "price",
       "#A": "assigned_to",
       "#JT": "job_type_id",
+      "#AD": "address_id",
     },
     ExpressionAttributeValues: {
       ":start": {
@@ -1028,6 +1029,9 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       ":job_type_id": {
         S: updatedJob.jobTypeId,
       },
+      ":address_id": {
+        S: updatedJob.addressId,
+      },
     },
     Key: {
       PK: {
@@ -1039,7 +1043,7 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
     },
     TableName: TABLE_NAME,
     UpdateExpression:
-      "SET #ST = :start, #ET = :end, #P = :price, #A=:assigned_to, #JT=:job_type_id",
+      "SET #ST = :start, #ET = :end, #P = :price, #A = :assigned_to, #JT = :job_type_id, #AD = :address_id",
   };
   await ddb.updateItem(params).promise();
   return updatedJob;
