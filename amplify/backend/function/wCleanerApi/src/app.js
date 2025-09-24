@@ -16,6 +16,7 @@ const {
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  getAddressesForJobs,
   getCleaningAddresses,
   getCustomers,
   getCustomerBySlug,
@@ -352,6 +353,7 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   if (isAdmin) {
     jobs = await getJobUsers(items);
   }
+  jobs = await getAddressesForJobs(jobs);
 
   try {
     res.json({ jobs });

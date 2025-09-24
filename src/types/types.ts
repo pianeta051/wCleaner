@@ -49,6 +49,7 @@ export type Job = {
   jobTypeId?: string;
   jobTypeName?: string;
   addressId?: string;
+  address?: string;
 };
 
 export type JobFilters = {

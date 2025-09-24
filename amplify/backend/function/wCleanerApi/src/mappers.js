@@ -41,8 +41,10 @@ const mapCustomerJobs = (customerJob) => ({
   price: +customerJob.price.N,
   jobTypeId: customerJob.job_type_id?.S,
   addressId: customerJob.address_id?.S,
+  customerId: customerJob.PK.S.replace("customer_", ""),
 });
 
+// map a single standalone job
 const mapJob = (jobFromDb) => {
   const start = dayjs(+jobFromDb.start.N);
   const end = dayjs(+jobFromDb.end.N);
@@ -53,6 +55,7 @@ const mapJob = (jobFromDb) => {
     endTime: end.format("HH:mm"),
     price: +jobFromDb.price.N,
     customer: jobFromDb.customer ? mapCustomer(jobFromDb.customer) : undefined,
+    customerId: jobFromDb.PK.S.replace("customer_", ""),
     jobTypeId: jobFromDb.job_type_id?.S,
     addressId: jobFromDb.address_id?.S,
   };

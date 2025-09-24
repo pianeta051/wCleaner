@@ -521,6 +521,18 @@ const getOutcodes = async () => {
   };
 };
 
+const getCleaningAddress = async (customerId, addressId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${addressId}` },
+    },
+  };
+  const address = await ddb.getItem(params).promise();
+  return address.Item;
+};
+
 const getCleaningAddresses = async (customerId) => {
   let items = [];
   let ExclusiveStartKey;
@@ -887,6 +899,18 @@ const getJobTypes = async () => {
   };
 };
 
+const getAddressesForJobs = async (jobs) => {
+  for (let i = 0; i < jobs.length; i++) {
+    const job = jobs[i];
+    const address = await getCleaningAddress(job.customerId, job.addressId);
+    jobs[i] = {
+      ...job,
+      address: address.address?.S ?? address.name?.S ?? "Unknown",
+    };
+  }
+  return jobs;
+};
+
 //EDIT JOB TYPE
 const editJobType = async (jobTypeId, updatedJobType) => {
   if (!updatedJobType.name?.length) {
@@ -1106,21 +1130,6 @@ const deleteJobType = async (jobTypeId) => {
   }
 };
 
-const getAllRows = async (params) => {
-  let result = await ddb.scan(params).promise();
-  const items = result.Items;
-  while (result.LastEvaluatedKey) {
-    const exclusiveStartKey = result.LastEvaluatedKey;
-    params = {
-      ...params,
-      ExclusiveStartKey: exclusiveStartKey,
-    };
-    result = await ddb.scan(params).promise();
-    items.push(...result.Items);
-  }
-  return items;
-};
-
 //FILES
 //ADD FILE
 
@@ -1304,6 +1313,7 @@ module.exports = {
   editCustomer,
   editCustomerNote,
   editJobType,
+  getAddressesForJobs,
   getCleaningAddresses,
   getCustomerBySlug,
   getCustomerById,
