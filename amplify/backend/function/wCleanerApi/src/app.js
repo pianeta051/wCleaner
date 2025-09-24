@@ -330,7 +330,8 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
   }
   const jobType = await getJobType(job.jobTypeId);
   job.jobTypeName = mapJobType(jobType).name;
-  res.json({ job });
+  const jobsWithAddress = await getAddressesForJobs([job]);
+  res.json({ job: jobsWithAddress[0] });
 });
 
 // Get a single customer's Job

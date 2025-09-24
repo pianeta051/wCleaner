@@ -84,7 +84,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <HomeIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Address:</Typography>
-                  <Typography>{job.customer?.address}</Typography>
+                  <Typography>{job.address}</Typography>
                 </Stack>
               </Grid>
 

@@ -905,7 +905,7 @@ const getAddressesForJobs = async (jobs) => {
     const address = await getCleaningAddress(job.customerId, job.addressId);
     jobs[i] = {
       ...job,
-      address: address.address?.S ?? address.name?.S ?? "Unknown",
+      address: address?.address?.S ?? address?.name?.S ?? "Unknown",
     };
   }
   return jobs;
