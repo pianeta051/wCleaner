@@ -48,6 +48,7 @@ export type Job = {
   assignedTo?: JobAssignation;
   jobTypeId?: string;
   jobTypeName?: string;
+  addressId?: string;
 };
 
 export type JobFilters = {

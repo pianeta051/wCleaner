@@ -96,12 +96,13 @@ export const GenericJobModal: FC<GenericJobModalProps> = ({
             {activeStep === 0 && (
               <CustomerSelector onSelectCustomer={selectCustomerHandler} />
             )}
-            {activeStep === 1 && (
+            {activeStep === 1 && customer && (
               <JobForm
                 onSubmit={submitHandler}
                 onCancel={closeHandler}
                 loading={loading}
                 defaultValues={initialValues}
+                customerId={customer.id}
               />
             )}
           </Stack>

@@ -522,21 +522,28 @@ const getOutcodes = async () => {
 };
 
 const getCleaningAddresses = async (customerId) => {
-  const params = {
-    TableName: TABLE_NAME,
-    ExpressionAttributeNames: {
-      "#PK": "PK",
-      "#SK": "SK",
-    },
-    FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk",
-    ExpressionAttributeValues: {
-      ":pk": { S: `customer_${customerId}` },
-      ":sk": { S: "address_" },
-    },
-  };
+  let items = [];
+  let ExclusiveStartKey;
+  do {
+    const params = {
+      TableName: TABLE_NAME,
+      ExpressionAttributeNames: {
+        "#PK": "PK",
+        "#SK": "SK",
+      },
+      FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk",
+      ExpressionAttributeValues: {
+        ":pk": { S: `customer_${customerId}` },
+        ":sk": { S: "address_" },
+      },
+      ExclusiveStartKey,
+    };
 
-  const result = await ddb.scan(params).promise();
-  return result.Items;
+    const result = await ddb.scan(params).promise();
+    ExclusiveStartKey = result.LastEvaluatedKey;
+    items = [...items, ...result.Items];
+  } while (ExclusiveStartKey);
+  return items;
 };
 
 const getCustomerBySlug = async (slug) => {
@@ -711,6 +718,7 @@ const addCustomerJob = async (customerId, job, assignedTo) => {
         N: "1",
       },
       job_type_id: { S: job.jobTypeId },
+      address_id: { S: job.addressId },
     },
   };
   await ddb.putItem(params).promise();

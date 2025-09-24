@@ -235,6 +235,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             price: 0,
             assignedTo: "",
             jobTypeId: "",
+            addressId: "",
           }}
         />
       )}

@@ -415,7 +415,7 @@ app.put("/customers/:customerId/job/:jobId", async function (req, res) {
       jobId,
       mapJobFromRequestBody(updatedJob)
     );
-    res.json({ job: { ...jobUpdated, assignedTo: undefined } });
+    res.json({ job: { ...jobUpdated, assignedTo: undefined, id: jobId } });
   } catch (error) {
     if (error.message === "CUSTOMER_NOT_FOUND") {
       res.status(404).json({
@@ -724,6 +724,14 @@ app.delete("/customers/:customerId/note/:noteId", async function (req, res) {
   const customerId = req.params.customerId;
   await deleteCustomerNote(customerId, noteId);
   res.json({ message: "Note Deleted" });
+});
+
+app.get("/customers/:customerId/addresses", async function (req, res) {
+  const id = req.params.customerId;
+  const items = await getCleaningAddresses(id);
+  const addresses = items.map(mapCleaningAddress);
+
+  res.json({ addresses });
 });
 
 module.exports = app;

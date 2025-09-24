@@ -1,6 +1,6 @@
 import { API } from "aws-amplify";
 import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
-import { Customer } from "../types/types";
+import { Customer, CustomerCleaningAddress } from "../types/types";
 import { isErrorResponse } from "./error";
 import { uploadFile } from "./files";
 import { NoteFormValues } from "../components/NoteForm/NoteForm";
@@ -58,6 +58,25 @@ export const isCustomer = (value: unknown): value is Customer => {
   return (
     typeof v.id === "string" && typeof v.name === "string" && validFileUrls
   );
+};
+
+export const isCustomerAddress = (
+  value: unknown
+): value is CustomerCleaningAddress => {
+  const typedValue = value as CustomerCleaningAddress;
+  if (!typedValue.id || typeof typedValue.id !== "string") {
+    return false;
+  }
+  if (!typedValue.name || typeof typedValue.name !== "string") {
+    return false;
+  }
+  if (!typedValue.address || typeof typedValue.address !== "string") {
+    return false;
+  }
+  if (!typedValue.postcode || typeof typedValue.postcode !== "string") {
+    return false;
+  }
+  return true;
 };
 
 export const addCustomer = async (
@@ -212,6 +231,28 @@ export const getCustomer = async (slug: string): Promise<Customer> => {
       }
     }
 
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const getCustomerAddressses = async (
+  customerId: string
+): Promise<CustomerCleaningAddress[]> => {
+  try {
+    const response = await get(`/customers/${customerId}/addresses`);
+    if (
+      typeof response !== "object" ||
+      !response ||
+      !("addresses" in response) ||
+      !Array.isArray(response.addresses)
+    ) {
+      throw "INTERNAL_ERROR";
+    }
+    if (!response.addresses.every(isCustomerAddress)) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.addresses;
+  } catch (e) {
     throw "INTERNAL_ERROR";
   }
 };
