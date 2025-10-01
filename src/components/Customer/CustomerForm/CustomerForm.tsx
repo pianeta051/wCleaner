@@ -16,7 +16,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
 import { Button, Grid } from "@mui/material";
-import { Field, Title, Wrapper } from "./CustomerForm.style";
+import { ActionBar, Field, Title, Wrapper } from "./CustomerForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../../Form/Form";
 import { useFormik } from "formik";
@@ -215,8 +215,14 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     <Wrapper container spacing={2} enableScroll={layout === "vertical"}>
       <Form onSubmit={formik.handleSubmit}>
         <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom>
+              Customer Info
+            </Typography>
+          </Grid>
+
           {scalarFields.map((fieldName) => (
-            <Grid item {...gridSize} key={fieldName}>
+            <Grid item xs={12} sm={6} md={4} key={fieldName}>
               <Field
                 name={fieldName}
                 id={fieldName}
@@ -231,128 +237,120 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                   !!(formik.touched[fieldName] && formik.errors[fieldName])
                 }
                 helperText={
-                  (formik.touched[fieldName] as boolean)
+                  formik.touched[fieldName]
                     ? (formik.errors[fieldName] as string)
                     : ""
                 }
               />
             </Grid>
           ))}
-          <Grid item xs={12}>
-            <Title variant="h5">Cleaning Addresses</Title>
-            {enableCopyAddress && (
-              <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={copyAddress}
-                      onChange={copyAddressChangeHandle}
-                    />
-                  }
-                  label="Copy billing address into cleaning address"
-                />
-              </FormGroup>
-            )}
-          </Grid>
 
-          {formik.values.cleaningAddresses.map((addr, index) => (
-            <Grid item xs={8} key={index} sx={{ pl: 5 }}>
-              <Accordion defaultExpanded>
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  sx={{ display: "flex", alignItems: "center" }}
+          <Grid item xs={12}>
+            <Box
+              sx={{
+                mt: 4,
+                p: 2,
+                borderRadius: 2,
+                bgcolor: "background.paper",
+                boxShadow: 1,
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                Cleaning Addresses
+              </Typography>
+
+              {enableCopyAddress && (
+                <FormGroup sx={{ mb: 2 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={copyAddress}
+                        onChange={copyAddressChangeHandle}
+                      />
+                    }
+                    label="Use billing address as cleaning address"
+                  />
+                </FormGroup>
+              )}
+
+              {formik.values.cleaningAddresses.map((addr, index) => (
+                <Accordion
+                  key={index}
+                  defaultExpanded
+                  sx={{
+                    mb: 2,
+                    borderRadius: 2,
+                    "&:before": { display: "none" },
+                  }}
                 >
-                  <Box
-                    sx={{
-                      flexGrow: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      pr: 2,
-                    }}
-                  >
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant="subtitle1">
                       {addr.address || `Address ${index + 1}`}
                     </Typography>
                     {formik.values.cleaningAddresses.length > 1 && (
                       <IconButton
-                        edge="end"
-                        aria-label="delete"
-                        onClick={() => {
-                          deleteAddressHandle(index);
-                        }}
+                        onClick={() => deleteAddressHandle(index)}
                         size="small"
+                        sx={{ ml: "auto" }}
                         disabled={copyAddress}
                       >
                         <CloseIcon />
                       </IconButton>
                     )}
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <CustomerAddressForm
-                    value={addr}
-                    onChange={(formValues) =>
-                      addressChangeHandler(formValues, index)
-                    }
-                    onBlur={() => formik.setFieldTouched("cleaningAddresses")}
-                    errors={
-                      formik.errors.cleaningAddresses?.[index] as {
-                        name?: string;
-                        address?: string;
-                        postcode?: string;
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <CustomerAddressForm
+                      value={addr}
+                      onChange={(formValues) =>
+                        addressChangeHandler(formValues, index)
                       }
-                    }
-                    disabled={copyAddress || deletingAddress}
-                  />
-                </AccordionDetails>
-              </Accordion>
-            </Grid>
-          ))}
-          {errorDeletingAddress && <ErrorMessage code={errorDeletingAddress} />}
+                      onBlur={() => formik.setFieldTouched("cleaningAddresses")}
+                      errors={
+                        formik.errors.cleaningAddresses?.[index] as {
+                          name?: string;
+                          address?: string;
+                          postcode?: string;
+                        }
+                      }
+                      disabled={copyAddress || deletingAddress}
+                    />
+                  </AccordionDetails>
+                </Accordion>
+              ))}
 
-          <Grid item xs={12} ml={5}>
-            <Button
-              onClick={addAddressHandler}
-              disabled={copyAddress || deletingAddress}
-            >
-              Add Address
-            </Button>
+              <Button
+                onClick={addAddressHandler}
+                disabled={copyAddress || deletingAddress}
+                sx={{ mt: 1 }}
+              >
+                + Add Address
+              </Button>
+            </Box>
           </Grid>
-          <Grid item xs={12}>
-            <Grid
-              container
-              spacing={2}
-              justifyContent="center"
-              alignItems="center"
-              mb={10}
-            >
-              <Grid item>
-                <LoadingButton
-                  variant="contained"
-                  color="primary"
-                  type="submit"
-                  loading={loading}
-                  sx={{ minWidth: 120, textTransform: "none" }}
-                >
-                  Save
-                </LoadingButton>
-              </Grid>
 
-              {onCancel && (
-                <Grid item>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={onCancel}
-                    sx={{ minWidth: 120, textTransform: "none" }}
-                  >
-                    Cancel
-                  </Button>
-                </Grid>
-              )}
-            </Grid>
-          </Grid>
+          {/* Action Bar */}
+          <ActionBar>
+            <LoadingButton
+              variant="contained"
+              color="primary"
+              type="submit"
+              loading={loading}
+              sx={{ minWidth: 120, textTransform: "none" }}
+            >
+              Save
+            </LoadingButton>
+
+            {onCancel && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={onCancel}
+                sx={{ minWidth: 120, textTransform: "none" }}
+              >
+                Cancel
+              </Button>
+            )}
+          </ActionBar>
         </Grid>
       </Form>
       <Snackbar

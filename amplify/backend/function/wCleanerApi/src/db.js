@@ -854,11 +854,6 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
     }
   }
 
-  for (let i = 0; i < items.length; i++) {
-    const job = items[i];
-    const customer = await getCustomerById(job.PK.S.replace("customer_", ""));
-    items[i].customer = customer;
-  }
   return {
     items,
     lastEvaluatedKey,
@@ -906,6 +901,7 @@ const getAddressesForJobs = async (jobs) => {
     jobs[i] = {
       ...job,
       address: address?.address?.S ?? address?.name?.S ?? "Unknown",
+      postcode: address?.postcode?.S,
     };
   }
   return jobs;

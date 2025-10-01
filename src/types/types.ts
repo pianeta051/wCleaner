@@ -50,6 +50,7 @@ export type Job = {
   jobTypeName?: string;
   addressId?: string;
   address?: string;
+  postcode?: string;
 };
 
 export type JobFilters = {

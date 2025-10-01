@@ -92,7 +92,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <MailOutlineIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Postcode:</Typography>
-                  <Typography>{job.customer?.postcode}</Typography>
+                  <Typography>{job.postcode}</Typography>
                 </Stack>
               </Grid>
 

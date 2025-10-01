@@ -57,9 +57,7 @@ export const JobCard: FC<JobCardProps> = ({ job }) => {
               <ListItemIcon>
                 <HomeIcon color="primary" />
               </ListItemIcon>
-              <ListItemText
-                primary={`${job.customer?.address}  ${job.customer?.postcode}`}
-              />
+              <ListItemText primary={`${job?.address}  ${job?.postcode}`} />
             </ListItem>
             <ListItem disablePadding>
               <ListItemIcon>

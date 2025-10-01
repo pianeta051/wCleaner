@@ -82,7 +82,9 @@ export const JobsTable: FC<Props> = ({
 
               <TableCell align="right">{job.startTime}</TableCell>
               <TableCell align="right">{job.endTime}</TableCell>
-              <TableCell align="right">{job.address}</TableCell>
+              <TableCell align="right">
+                {job.address} {job.postcode}
+              </TableCell>
               <TableCell align="right">{job.price}</TableCell>
 
               {isAdmin && (

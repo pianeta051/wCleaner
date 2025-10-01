@@ -89,13 +89,13 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
             direction="row"
             mt={2}
             sx={{ mb: "20px" }}
-            justifyContent="center"
+            justifyContent="flex-start"
           >
             <IconButton>
               <Button
                 startIcon={<AddIcon />}
                 onClick={() => openHandler()}
-                variant="contained"
+                variant="outlined"
               >
                 New Job
               </Button>

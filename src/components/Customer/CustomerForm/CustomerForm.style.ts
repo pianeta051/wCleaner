@@ -1,5 +1,26 @@
 import { styled, Box, Grid, Paper, Typography, TextField } from "@mui/material";
 
+export const ActionBar = styled(Box)(({ theme }) => ({
+  position: "fixed",
+  bottom: 0,
+  left: 0,
+  width: "100%",
+  backgroundColor: theme.palette.background.paper,
+  borderTop: `1px solid ${theme.palette.divider}`,
+  paddingTop: theme.spacing(2),
+  paddingBottom: theme.spacing(2),
+  paddingLeft: theme.spacing(2),
+  paddingRight: theme.spacing(2),
+  display: "flex",
+  justifyContent: "center",
+  gap: theme.spacing(2),
+  boxShadow: theme.shadows[3],
+  zIndex: 1200,
+  [theme.breakpoints.up("sm")]: {
+    paddingLeft: theme.spacing(4),
+    paddingRight: theme.spacing(4),
+  },
+}));
 export const Background = styled(Paper)(() => ({
   display: "flex",
   alignItems: "center",

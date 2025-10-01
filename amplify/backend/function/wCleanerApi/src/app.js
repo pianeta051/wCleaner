@@ -301,9 +301,12 @@ app.get("/jobs", async function (req, res) {
 
   const responseToken = generateToken(lastEvaluatedKey);
   let jobs = items.map(mapJob);
+
   if (isAdmin) {
     jobs = await getJobUsers(items);
   }
+
+  jobs = await getAddressesForJobs(jobs);
   res.json({ jobs, nextToken: responseToken });
 });
 

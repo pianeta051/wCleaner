@@ -17,7 +17,9 @@ export const MenuFilterJob = styled(Grid)(() => ({
 
 export const Title = styled(Typography)(() => ({
   fontWeight: "bold",
-  fontSize: "40px",
+  fontSize: "30px",
+  justifyContent: "left",
+  textAlign: "left",
 }));
 export const Wrapper = styled(Grid)(() => ({
   margin: "auto",
