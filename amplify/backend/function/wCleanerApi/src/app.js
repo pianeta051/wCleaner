@@ -204,9 +204,17 @@ app.put("/customers/:id", async function (req, res) {
 
 // Delete a Customer
 app.delete("/customers/:id", async function (req, res) {
-  const id = req.params.id;
-  await deleteCustomer(id);
-  res.json({ message: "Customer deleted" });
+  try {
+    const id = req.params.id;
+    await deleteCustomer(id);
+    res.json({ message: "Customer deleted" });
+  } catch (e) {
+    if (e === "There are pending jobs") {
+      res.status(400).json({ error: "This customer has pending jobs" });
+      return;
+    }
+    throw e;
+  }
 });
 
 app.post("/customers/:customerId/address", async function (req, res) {
@@ -266,9 +274,14 @@ app.delete(
     } catch (e) {
       if (e === "Deleting last address") {
         res.status(400).json({ error: "The last address cannot be deleted" });
-      } else {
-        res.status(500).json({ error: "Internal server error" });
+        return;
       }
+      if (e === "There are pending jobs") {
+        res.status(400).json({ error: "This address has pending jobs" });
+        return;
+      }
+      // throw so we can see it on cloudwatch
+      throw e;
     }
   }
 );

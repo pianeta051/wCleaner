@@ -29,7 +29,7 @@ const mapCustomer = (customerFromDb) => ({
 const mapCleaningAddress = (cleaningAddressFromDb) => ({
   id: cleaningAddressFromDb.SK.S.replace("address_", ""),
   name: cleaningAddressFromDb.name.S,
-  address: cleaningAddressFromDb.address.S,
+  address: cleaningAddressFromDb.address?.S,
   postcode: cleaningAddressFromDb.postcode.S,
 });
 

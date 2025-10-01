@@ -145,6 +145,14 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     formik.setFieldValue("cleaningAddresses", initialValues.cleaningAddresses);
   }, [initialValues.cleaningAddresses]);
 
+  useEffect(() => {
+    if (errorDeletingAddress) {
+      setSnackbarMessage("Error deleting address");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
+  }, [errorDeletingAddress]);
+
   const addressChangeHandler = (
     formValues: CustomerAddressFormValues,
     index: number

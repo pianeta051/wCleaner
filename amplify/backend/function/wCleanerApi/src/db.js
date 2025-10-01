@@ -189,14 +189,29 @@ const deleteAddress = async (customerId, addressId) => {
   if (addresses.length === 1) {
     throw "Deleting last address";
   }
+  const futureJobs = await getFutureJobsFromAddress(addressId);
+  if (futureJobs.length) {
+    throw "There are pending jobs";
+  }
+
   const params = {
     TableName: TABLE_NAME,
     Key: {
       PK: { S: `customer_${customerId}` },
       SK: { S: `address_${addressId}` },
     },
+    ExpressionAttributeNames: {
+      "#A": "address",
+      "#S": "status",
+    },
+    UpdateExpression: "SET #S = :status REMOVE #A",
+    ExpressionAttributeValues: {
+      ":status": {
+        S: "deleted",
+      },
+    },
   };
-  await ddb.deleteItem(params).promise();
+  await ddb.updateItem(params).promise();
 };
 
 const editCustomer = async (id, editedCustomer) => {
@@ -542,11 +557,13 @@ const getCleaningAddresses = async (customerId) => {
       ExpressionAttributeNames: {
         "#PK": "PK",
         "#SK": "SK",
+        "#S": "status",
       },
-      FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk",
+      FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk AND #S = :status",
       ExpressionAttributeValues: {
         ":pk": { S: `customer_${customerId}` },
         ":sk": { S: "address_" },
+        ":status": { S: "active" },
       },
       ExclusiveStartKey,
     };
@@ -682,23 +699,8 @@ const deleteCustomer = async (id) => {
   await ddb.updateItem(params).promise();
   const addresses = await getCleaningAddresses(id);
   for (const address of addresses) {
-    const params = {
-      TableName: TABLE_NAME,
-      Key: {
-        PK: { S: `customer_${id}` },
-        SK: address.SK,
-      },
-      ExpressionAttributeNames: {
-        "#status": "status",
-        "#address": "address",
-      },
-      ExpressionAttributeValues: {
-        ":status": { S: "deleted" },
-        ":address": { S: "" },
-      },
-      UpdateExpression: "SET #status = :status, #address = :address",
-    };
-    await ddb.updateItem(params).promise();
+    const addressId = address.SK.replace("address_", "");
+    await deleteAddress(id, addressId);
   }
 };
 
@@ -862,6 +864,36 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
     items,
     lastEvaluatedKey,
   };
+};
+
+const getFutureJobsFromAddress = async (addressId) => {
+  let items = [];
+  let ExclusiveStartKey;
+  const currentDate = `${+new Date()}`;
+  do {
+    const params = {
+      TableName: TABLE_NAME,
+      ExpressionAttributeNames: {
+        "#SK": "SK",
+        "#AID": "address_id",
+        "#S": "start",
+      },
+      ExpressionAttributeValues: {
+        ":sk": { S: "job_" },
+        ":address_id": { S: addressId },
+        ":current_timestamp": { N: currentDate },
+      },
+
+      FilterExpression:
+        "#AID = :address_id AND begins_with(#SK, :sk) AND #S > :current_timestamp",
+      ExclusiveStartKey,
+    };
+
+    const result = await ddb.scan(params).promise();
+    ExclusiveStartKey = result.LastEvaluatedKey;
+    items = [...items, ...result.Items];
+  } while (ExclusiveStartKey);
+  return items;
 };
 
 //GET JOB TYPES
