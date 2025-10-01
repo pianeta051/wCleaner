@@ -748,9 +748,7 @@ const getJob = async (customerId, jobId) => {
     },
   };
   const job = await ddb.getItem(params).promise();
-  const customer = await getCustomerById(
-    job.Item.PK.S.replace("customer_", "")
-  );
+  const customer = await getCustomerById(customerId);
   const item = {
     ...job.Item,
     customer,
@@ -852,6 +850,12 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
         .promise();
       items.push(...result.Items);
     }
+  }
+  for (let i = 0; i < items.length; i++) {
+    const job = items[i];
+    const customerId = job.PK.S.replace("customer_", "");
+    const customer = await getCustomerById(customerId);
+    items[i].customer = customer;
   }
 
   return {
