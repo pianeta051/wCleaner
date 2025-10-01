@@ -18,6 +18,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import HomeIcon from "@mui/icons-material/Home";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import { Job } from "../../types/types";
+import { useAuth } from "../../context/AuthContext";
 
 type JobInfoDisplayProps = {
   job: Job;
@@ -26,6 +27,8 @@ type JobInfoDisplayProps = {
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
 
   const assignedTo = job?.assignedTo?.name ?? job?.assignedTo?.email;
 
@@ -43,13 +46,15 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
             <Typography variant="h5" fontWeight="bold">
               Job Details
             </Typography>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => setModalOpen(true)}
-            >
-              Edit Job
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => setModalOpen(true)}
+              >
+                Edit Job
+              </Button>
+            )}
           </Stack>
 
           <Divider sx={{ mb: 3 }} />
