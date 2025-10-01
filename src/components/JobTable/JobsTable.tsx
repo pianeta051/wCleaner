@@ -24,6 +24,7 @@ type Props = {
   customer: Customer;
   jobIdSelected?: string | null;
   onEditClick: (jobId: string) => void;
+  onDelete: () => void;
 };
 
 export const JobsTable: FC<Props> = ({
@@ -31,6 +32,7 @@ export const JobsTable: FC<Props> = ({
   customer,
   jobIdSelected,
   onEditClick,
+  onDelete,
 }) => {
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
@@ -98,7 +100,11 @@ export const JobsTable: FC<Props> = ({
               </TableCell>
 
               <TableCell align="right">
-                <DeleteJobButton jobId={job.id} customerId={customer.id} />
+                <DeleteJobButton
+                  jobId={job.id}
+                  customerId={customer.id}
+                  onDelete={onDelete}
+                />
               </TableCell>
 
               <TableCell>

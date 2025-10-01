@@ -16,11 +16,13 @@ import { useDeleteJob } from "../../hooks/Jobs/useDeleteJob";
 type DeleteJobButtonProps = {
   jobId: string;
   customerId: string;
+  onDelete: () => void;
 };
 
 export const DeleteJobButton: FC<DeleteJobButtonProps> = ({
   jobId,
   customerId,
+  onDelete,
 }) => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
   const { deleteCustomerJob, loading, error } = useDeleteJob(customerId);
@@ -28,6 +30,7 @@ export const DeleteJobButton: FC<DeleteJobButtonProps> = ({
     deleteCustomerJob(jobId)
       .then(() => {
         setOpenDeleteAlert(false);
+        onDelete();
       })
       .catch(() => {
         // Do nothing, the hook manages the error

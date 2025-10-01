@@ -107,6 +107,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
             jobIdSelected={jobId}
             customer={customer}
             onEditClick={openHandler}
+            onDelete={reload}
           />
 
           {canLoadMore && (
