@@ -12,6 +12,7 @@ import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { transformToFormValues } from "../../helpers/job";
 
 type CustomerJobsProps = {
   customer: Customer;
@@ -132,16 +133,9 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
           initialValues={
             editingJob
               ? {
-                  ...editingJob,
-                  date: dayjs(editingJob.date),
-                  startTime: dayjs(
-                    `${editingJob.date} ${editingJob.startTime}`
-                  ),
-                  endTime: dayjs(`${editingJob.date} ${editingJob.endTime}`),
+                  ...transformToFormValues(editingJob),
                   assignedTo:
                     editingJob.assignedTo?.sub ?? user?.getUsername() ?? "",
-                  jobTypeId: editingJob.jobTypeId ?? "",
-                  addressId: editingJob?.addressId ?? "",
                 }
               : undefined
           }

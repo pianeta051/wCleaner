@@ -19,6 +19,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import { Job } from "../../types/types";
 import { useAuth } from "../../context/AuthContext";
+import { transformToFormValues } from "../../helpers/job";
 
 type JobInfoDisplayProps = {
   job: Job;
@@ -137,15 +138,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
         <CustomerJobModal
           open={modalOpen}
           customer={job.customer}
-          initialValues={{
-            date: dayjs(job.date),
-            startTime: dayjs(`${job.date} ${job.startTime}`),
-            endTime: dayjs(`${job.date} ${job.endTime}`),
-            price: job.price,
-            jobTypeId: job.jobTypeId ?? "",
-            assignedTo: job.assignedTo?.sub ?? "",
-            addressId: job.addressId ?? "",
-          }}
+          initialValues={transformToFormValues(job)}
           jobId={job.id}
           onClose={() => {
             setModalOpen(false);

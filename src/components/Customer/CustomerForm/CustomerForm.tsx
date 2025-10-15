@@ -12,21 +12,31 @@ import {
   AlertColor,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Grid,
 } from "@mui/material";
+
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
-import { Button, Grid } from "@mui/material";
-import { ActionBar, Field, Title, Wrapper } from "./CustomerForm.style";
+
+import { ActionBar, Field, Wrapper } from "./CustomerForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../../Form/Form";
 import { useFormik } from "formik";
 import * as yup from "yup";
+
 import {
   CustomerAddressForm,
   CustomerAddressFormValues,
 } from "../CustomerAddressForm/CustomerAddressForm";
 import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
-import { ErrorMessage } from "../../ErrorMessage/ErrorMessage";
+import { JobForm } from "../../JobForm/JobForm";
+import { AddressSelector } from "../../AddressSelector/AddressSelector";
 
 export type CustomerFormValues = {
   name: string;
@@ -107,7 +117,7 @@ type CustomerFormProps = {
   loading?: boolean;
   layout?: "vertical" | "horizontal";
   enableCopyAddress?: boolean;
-  customerId?: string;
+  customerId?: string; // 👈 opcional
   onReload?: () => void;
 };
 
@@ -126,18 +136,25 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     onSubmit,
     validationSchema,
   });
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [openJobForm, setOpenJobForm] = useState(false);
+  const [addressSelectorOpen, setAddressSelectorOpen] = useState(false);
+  const [addressIdDeleting, setAddressIdDeleting] = useState<string | null>(
+    null
+  );
+
   const [copyAddress, setCopyAddress] = useState(enableCopyAddress);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] =
     useState<AlertColor>("success");
+
   const {
     deleteCustomerAddress,
     loading: deletingAddress,
     error: errorDeletingAddress,
   } = useDeleteCustomerAddress(customerId);
-  const gridSize =
-    layout === "vertical" ? { xs: 12 } : { xs: 12, sm: 6, md: 4 };
 
   const requiredFields = ["name", "address", "postcode"];
 
@@ -204,8 +221,15 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           setSnackbarSeverity("success");
           setSnackbarOpen(true);
         })
-        .catch(() => {
-          // the hook manages the error state
+        .catch((error) => {
+          if (error === "THIS_CUSTOMER_HAS_PENDING_JOBS") {
+            setAddressIdDeleting(addressId);
+            setDialogOpen(true);
+          } else {
+            setSnackbarMessage("Unexpected error");
+            setSnackbarSeverity("error");
+            setSnackbarOpen(true);
+          }
         })
         .finally(() => {
           onReload?.();
@@ -284,7 +308,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               {formik.values.cleaningAddresses.map((addr, index) => (
                 <Accordion
                   key={index}
-                  defaultExpanded
                   sx={{
                     mb: 2,
                     borderRadius: 2,
@@ -336,7 +359,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             </Box>
           </Grid>
 
-          {/* Action Bar */}
           <ActionBar>
             <LoadingButton
               variant="contained"
@@ -361,6 +383,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           </ActionBar>
         </Grid>
       </Form>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
@@ -375,6 +398,67 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogTitle>Cannot delete address</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This address cannot be deleted because there are{" "}
+            <strong>pending jobs</strong> assigned to it. You can{" "}
+            <Button
+              variant="text"
+              onClick={() => {
+                setDialogOpen(false);
+                setAddressSelectorOpen(true);
+              }}
+            >
+              modify address
+            </Button>{" "}
+            for those jobs.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* JobForm only if customerId exists */}
+      {openJobForm && customerId && (
+        <Dialog
+          open={openJobForm}
+          onClose={() => setOpenJobForm(false)}
+          fullWidth
+          maxWidth="md"
+        >
+          <DialogTitle>Modify Job Address</DialogTitle>
+          <DialogContent dividers>
+            <JobForm
+              customerId={customerId}
+              onSubmit={(job) => {
+                console.log("Updated job:", job);
+                setOpenJobForm(false);
+              }}
+              onCancel={() => setOpenJobForm(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {customerId && addressIdDeleting && (
+        <AddressSelector
+          open={addressSelectorOpen}
+          onClose={() => setAddressSelectorOpen(false)}
+          customerId={customerId}
+          oldAddressId={addressIdDeleting}
+          onUpdated={() => {
+            setSnackbarMessage("Job address updated successfully");
+            setSnackbarSeverity("success");
+            setSnackbarOpen(true);
+            setAddressSelectorOpen(false);
+            onReload?.();
+          }}
+        />
+      )}
     </Wrapper>
   );
 };
