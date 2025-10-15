@@ -81,6 +81,7 @@ export const CustomerJobModal: FC<CustomerJobModalProps> = ({
             onCancel={closeHandler}
             loading={loading}
             defaultValues={initialValues}
+            customerId={customer.id}
           />
         </Background>
         {error && <ErrorMessage code={error} />}

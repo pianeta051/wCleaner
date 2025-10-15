@@ -48,7 +48,9 @@ type CustomerParams = { slug: string };
 
 export const CustomerDetails: FC = () => {
   const { slug } = useParams<CustomerParams>();
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarStatus, setSnackbarStatus] = useState<
+    "closed" | "success" | "error"
+  >("closed");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState("details");
 
@@ -59,6 +61,7 @@ export const CustomerDetails: FC = () => {
     customer,
     loading: initialLoading,
     error: initialError,
+    reload,
   } = useCustomer(slug);
   const {
     editCustomer,
@@ -92,8 +95,13 @@ export const CustomerDetails: FC = () => {
 
   const handleSubmit = async (v: CustomerFormValues) => {
     if (!customer) return;
-    await editCustomer(v).catch(console.error);
-    setSnackbarOpen(true);
+    try {
+      const editedCustomer = await editCustomer(v);
+      reload(editedCustomer);
+      setSnackbarStatus("success");
+    } catch (e) {
+      setSnackbarStatus("error");
+    }
   };
 
   if (!slug) return <NotFound />;
@@ -125,7 +133,6 @@ export const CustomerDetails: FC = () => {
           <MuiLink component={RouterLink} to="/admin/customers/">
             {customer.name}
           </MuiLink>
-          <Typography color="text.primary">Customers</Typography>
         </Breadcrumbs>
       </TopBar>
 
@@ -160,7 +167,7 @@ export const CustomerDetails: FC = () => {
             {editError && <ErrorMessage code={editError} />}
 
             <section id="details">
-              <Typography variant="h4" gutterBottom>
+              <Typography variant="h4" gutterBottom mb={5}>
                 Customer Details
               </Typography>
               <CustomerForm
@@ -168,6 +175,9 @@ export const CustomerDetails: FC = () => {
                 initialValues={customerToFormValues(customer)}
                 loading={editing}
                 layout="horizontal"
+                enableCopyAddress={false}
+                customerId={customer.id}
+                onReload={reload}
               />
             </section>
 
@@ -193,16 +203,20 @@ export const CustomerDetails: FC = () => {
       </Grid>
 
       <Snackbar
-        open={snackbarOpen}
+        open={snackbarStatus !== "closed"}
         autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
+        onClose={() => setSnackbarStatus("closed")}
       >
         <Alert
-          severity="success"
-          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarStatus === "success" ? "success" : "error"}
+          onClose={() => setSnackbarStatus("closed")}
           sx={{ width: "100%" }}
         >
-          Customer updated!
+          {snackbarStatus === "success" ? (
+            <>Customer updated!</>
+          ) : (
+            <>Customer could not update</>
+          )}
         </Alert>
       </Snackbar>
     </Wrapper>

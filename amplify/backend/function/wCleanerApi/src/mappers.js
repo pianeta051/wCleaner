@@ -26,6 +26,13 @@ const mapCustomer = (customerFromDb) => ({
     }) || [],
 });
 
+const mapCleaningAddress = (cleaningAddressFromDb) => ({
+  id: cleaningAddressFromDb.SK.S.replace("address_", ""),
+  name: cleaningAddressFromDb.name.S,
+  address: cleaningAddressFromDb.address.S,
+  postcode: cleaningAddressFromDb.postcode.S,
+});
+
 const mapCustomerJobs = (customerJob) => ({
   id: customerJob.SK.S.replace("job_", ""),
   date: dayjs(+customerJob.start.N).format("YYYY-MM-DD"),
@@ -33,8 +40,11 @@ const mapCustomerJobs = (customerJob) => ({
   endTime: dayjs(+customerJob.end.N).format("HH:mm"),
   price: +customerJob.price.N,
   jobTypeId: customerJob.job_type_id?.S,
+  addressId: customerJob.address_id?.S,
+  customerId: customerJob.PK.S.replace("customer_", ""),
 });
 
+// map a single standalone job
 const mapJob = (jobFromDb) => {
   const start = dayjs(+jobFromDb.start.N);
   const end = dayjs(+jobFromDb.end.N);
@@ -45,7 +55,9 @@ const mapJob = (jobFromDb) => {
     endTime: end.format("HH:mm"),
     price: +jobFromDb.price.N,
     customer: jobFromDb.customer ? mapCustomer(jobFromDb.customer) : undefined,
+    customerId: jobFromDb.PK.S.replace("customer_", ""),
     jobTypeId: jobFromDb.job_type_id?.S,
+    addressId: jobFromDb.address_id?.S,
   };
 };
 
@@ -75,6 +87,7 @@ const mapJobTemporalFilters = (start, end) => {
 };
 
 module.exports = {
+  mapCleaningAddress,
   mapCustomer,
   mapCustomerJobs,
   mapJob,

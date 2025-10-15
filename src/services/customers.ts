@@ -1,6 +1,6 @@
 import { API } from "aws-amplify";
 import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
-import { Customer } from "../types/types";
+import { Customer, CustomerCleaningAddress } from "../types/types";
 import { isErrorResponse } from "./error";
 import { uploadFile } from "./files";
 import { NoteFormValues } from "../components/NoteForm/NoteForm";
@@ -60,6 +60,25 @@ export const isCustomer = (value: unknown): value is Customer => {
   );
 };
 
+export const isCustomerAddress = (
+  value: unknown
+): value is CustomerCleaningAddress => {
+  const typedValue = value as CustomerCleaningAddress;
+  if (!typedValue.id || typeof typedValue.id !== "string") {
+    return false;
+  }
+  if (!typedValue.name || typeof typedValue.name !== "string") {
+    return false;
+  }
+  if (!typedValue.address || typeof typedValue.address !== "string") {
+    return false;
+  }
+  if (!typedValue.postcode || typeof typedValue.postcode !== "string") {
+    return false;
+  }
+  return true;
+};
+
 export const addCustomer = async (
   formValues: CustomerFormValues
 ): Promise<Customer> => {
@@ -98,6 +117,22 @@ export const deleteCustomer = async (id: string): Promise<void> => {
   await remove("/customers/" + id);
 };
 
+export const deleteCustomerAddress = async (
+  customerId: string,
+  addressId: string
+): Promise<void> => {
+  try {
+    await remove(`/customers/${customerId}/address/${addressId}`);
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      if (error.response.status === 400) {
+        throw "DELETING_LAST_ADDRESS";
+      }
+    }
+    throw "INTERNAL_ERROR";
+  }
+};
+
 export const editCustomer = async (
   id: string,
   formValues: Partial<CustomerFormValues>
@@ -116,7 +151,12 @@ export const editCustomer = async (
   } catch (error) {
     if (isErrorResponse(error)) {
       if (error.response.status === 409) {
-        throw "EMAIL_ALREADY_EXISTS";
+        if (error.response.data?.error === "Email Already Exists") {
+          throw "EMAIL_ALREADY_EXISTS";
+        }
+        if (error.response.data?.error === "Address name already exists") {
+          throw "ADDRESS_NAME_ALREADY_EXISTS";
+        }
       }
       if (error.response.status === 400) {
         throw "EMAIL_CANNOT_BE_EMPTY";
@@ -191,6 +231,28 @@ export const getCustomer = async (slug: string): Promise<Customer> => {
       }
     }
 
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const getCustomerAddressses = async (
+  customerId: string
+): Promise<CustomerCleaningAddress[]> => {
+  try {
+    const response = await get(`/customers/${customerId}/addresses`);
+    if (
+      typeof response !== "object" ||
+      !response ||
+      !("addresses" in response) ||
+      !Array.isArray(response.addresses)
+    ) {
+      throw "INTERNAL_ERROR";
+    }
+    if (!response.addresses.every(isCustomerAddress)) {
+      throw "INTERNAL_ERROR";
+    }
+    return response.addresses;
+  } catch (e) {
     throw "INTERNAL_ERROR";
   }
 };

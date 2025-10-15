@@ -140,6 +140,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
                   assignedTo:
                     editingJob.assignedTo?.sub ?? user?.getUsername() ?? "",
                   jobTypeId: editingJob.jobTypeId ?? "",
+                  addressId: editingJob?.addressId ?? "",
                 }
               : undefined
           }

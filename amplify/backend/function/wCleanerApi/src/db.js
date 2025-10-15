@@ -153,6 +153,52 @@ const addJobType = async (jobType) => {
   };
 };
 
+const editAddress = async (customerId, customerAddress) => {
+  const postcodeParts = customerAddress.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+  const outcode = postcodeParts[0];
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${customerAddress.id}` },
+    },
+    ExpressionAttributeValues: {
+      ":name": { S: customerAddress.name },
+      ":address": { S: customerAddress.address },
+      ":postcode": { S: customerAddress.postcode },
+      ":outcode": { S: outcode },
+    },
+    ExpressionAttributeNames: {
+      "#name": "name",
+      "#address": "address",
+      "#postcode": "postcode",
+      "#outcode": "outcode",
+    },
+    UpdateExpression:
+      "SET #name = :name, #address = :address, #postcode = :postcode, #outcode = :outcode",
+  };
+  await ddb.updateItem(params).promise();
+  return customerAddress;
+};
+
+const deleteAddress = async (customerId, addressId) => {
+  const addresses = await getCleaningAddresses(customerId);
+  if (addresses.length === 1) {
+    throw "Deleting last address";
+  }
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${addressId}` },
+    },
+  };
+  await ddb.deleteItem(params).promise();
+};
+
 const editCustomer = async (id, editedCustomer) => {
   const existing = await getCustomerById(id);
   if (!existing) {
@@ -204,7 +250,7 @@ const editCustomer = async (id, editedCustomer) => {
     updateExprParts.push("#SP = :secondTelephone");
   }
 
-  if (editedCustomer.email !== undefined) {
+  if (editedCustomer.email) {
     exprAttrNames["#E"] = "email";
     exprAttrNames["#EL"] = "email_lowercase";
     exprAttrValues[":email"] = { S: editedCustomer.email };
@@ -246,11 +292,83 @@ const editCustomer = async (id, editedCustomer) => {
     ExpressionAttributeValues: exprAttrValues,
   };
 
+  console.log(JSON.stringify(params, null, 2));
+
   await ddb.updateItem(params).promise();
   return {
     id,
     ...editedCustomer,
   };
+};
+const addCustomerAddress = async (customerId, customerAddress) => {
+  if (!customerId) {
+    throw new Error("CUSTOMER_NOT_FOUND");
+  }
+
+  if (
+    !customerAddress.name ||
+    !customerAddress.address ||
+    !customerAddress.postcode
+  ) {
+    console.error("Invalid Address:" + JSON.stringify({ customerAddress }));
+    throw new Error("INVALID_ADDRESS");
+  }
+
+  const addressWithSameName = await findAddressesByName(
+    customerId,
+    customerAddress.name
+  );
+
+  if (addressWithSameName?.length) {
+    throw new Error("DUPLICATED_ADDRESS_NAME");
+  }
+
+  const customerAddressId = uuid.v1();
+  const postcodeParts = customerAddress.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+
+  const outcode = postcodeParts[0];
+
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${customerAddressId}` },
+      name: { S: customerAddress.name },
+      address: { S: customerAddress.address },
+      postcode: { S: customerAddress.postcode },
+      outcode: { S: outcode },
+      status: { S: "active" },
+    },
+  };
+  await ddb.putItem(params).promise();
+
+  return {
+    id: customerAddressId,
+    ...customerAddress,
+  };
+};
+
+const findAddressesByName = async (customerId, addressName) => {
+  const params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#N": "name",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":sk": { S: "address" },
+      ":n": { S: addressName },
+    },
+    FilterExpression: "#PK = :pk AND begins_with(#SK, :sk) AND #N = :n",
+  };
+  let result = await ddb.scan(params).promise();
+  const items = result.Items;
+  return items;
 };
 
 const getCustomers = async (filters, pagination) => {
@@ -403,6 +521,43 @@ const getOutcodes = async () => {
   };
 };
 
+const getCleaningAddress = async (customerId, addressId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${addressId}` },
+    },
+  };
+  const address = await ddb.getItem(params).promise();
+  return address.Item;
+};
+
+const getCleaningAddresses = async (customerId) => {
+  let items = [];
+  let ExclusiveStartKey;
+  do {
+    const params = {
+      TableName: TABLE_NAME,
+      ExpressionAttributeNames: {
+        "#PK": "PK",
+        "#SK": "SK",
+      },
+      FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk",
+      ExpressionAttributeValues: {
+        ":pk": { S: `customer_${customerId}` },
+        ":sk": { S: "address_" },
+      },
+      ExclusiveStartKey,
+    };
+
+    const result = await ddb.scan(params).promise();
+    ExclusiveStartKey = result.LastEvaluatedKey;
+    items = [...items, ...result.Items];
+  } while (ExclusiveStartKey);
+  return items;
+};
+
 const getCustomerBySlug = async (slug) => {
   const params = {
     TableName: TABLE_NAME,
@@ -525,6 +680,26 @@ const deleteCustomer = async (id) => {
   };
 
   await ddb.updateItem(params).promise();
+  const addresses = await getCleaningAddresses(id);
+  for (const address of addresses) {
+    const params = {
+      TableName: TABLE_NAME,
+      Key: {
+        PK: { S: `customer_${id}` },
+        SK: address.SK,
+      },
+      ExpressionAttributeNames: {
+        "#status": "status",
+        "#address": "address",
+      },
+      ExpressionAttributeValues: {
+        ":status": { S: "deleted" },
+        ":address": { S: "" },
+      },
+      UpdateExpression: "SET #status = :status, #address = :address",
+    };
+    await ddb.updateItem(params).promise();
+  }
 };
 
 /// JOBS
@@ -555,6 +730,7 @@ const addCustomerJob = async (customerId, job, assignedTo) => {
         N: "1",
       },
       job_type_id: { S: job.jobTypeId },
+      address_id: { S: job.addressId },
     },
   };
   await ddb.putItem(params).promise();
@@ -723,6 +899,18 @@ const getJobTypes = async () => {
   };
 };
 
+const getAddressesForJobs = async (jobs) => {
+  for (let i = 0; i < jobs.length; i++) {
+    const job = jobs[i];
+    const address = await getCleaningAddress(job.customerId, job.addressId);
+    jobs[i] = {
+      ...job,
+      address: address.address?.S ?? address.name?.S ?? "Unknown",
+    };
+  }
+  return jobs;
+};
+
 //EDIT JOB TYPE
 const editJobType = async (jobTypeId, updatedJobType) => {
   if (!updatedJobType.name?.length) {
@@ -847,6 +1035,7 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       "#P": "price",
       "#A": "assigned_to",
       "#JT": "job_type_id",
+      "#AD": "address_id",
     },
     ExpressionAttributeValues: {
       ":start": {
@@ -864,6 +1053,9 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       ":job_type_id": {
         S: updatedJob.jobTypeId,
       },
+      ":address_id": {
+        S: updatedJob.addressId,
+      },
     },
     Key: {
       PK: {
@@ -875,7 +1067,7 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
     },
     TableName: TABLE_NAME,
     UpdateExpression:
-      "SET #ST = :start, #ET = :end, #P = :price, #A=:assigned_to, #JT=:job_type_id",
+      "SET #ST = :start, #ET = :end, #P = :price, #A = :assigned_to, #JT = :job_type_id, #AD = :address_id",
   };
   await ddb.updateItem(params).promise();
   return updatedJob;
@@ -936,21 +1128,6 @@ const deleteJobType = async (jobTypeId) => {
       await ddb.updateItem(updateParams).promise();
     }
   }
-};
-
-const getAllRows = async (params) => {
-  let result = await ddb.scan(params).promise();
-  const items = result.Items;
-  while (result.LastEvaluatedKey) {
-    const exclusiveStartKey = result.LastEvaluatedKey;
-    params = {
-      ...params,
-      ExclusiveStartKey: exclusiveStartKey,
-    };
-    result = await ddb.scan(params).promise();
-    items.push(...result.Items);
-  }
-  return items;
 };
 
 //FILES
@@ -1127,12 +1304,17 @@ const deleteCustomerNote = async (customerId, noteId) => {
 
 module.exports = {
   addCustomer,
+  addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  deleteAddress,
+  editAddress,
   editCustomer,
   editCustomerNote,
   editJobType,
+  getAddressesForJobs,
+  getCleaningAddresses,
   getCustomerBySlug,
   getCustomerById,
   getCustomers,

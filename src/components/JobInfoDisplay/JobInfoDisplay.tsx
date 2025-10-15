@@ -139,6 +139,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
             price: job.price,
             jobTypeId: job.jobTypeId ?? "",
             assignedTo: job.assignedTo?.sub ?? "",
+            addressId: job.addressId ?? "",
           }}
           jobId={job.id}
           onClose={() => {

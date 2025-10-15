@@ -11,4 +11,5 @@ export const customerToFormValues = (
   secondTelephone: customer.secondTelephone ?? "",
   email: customer.email ?? "",
   fileUrls: customer.fileUrls ?? [],
+  cleaningAddresses: customer.cleaningAddresses ?? [],
 });

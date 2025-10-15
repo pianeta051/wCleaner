@@ -35,8 +35,15 @@ export const Customers: FC = () => {
   const [appliedOutcodes, setAppliedOutcodes] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState("");
 
-  const { customers, error, loading, loadMore, moreToLoad, loadingMore } =
-    useCustomers(searchInput, appliedOutcodes);
+  const {
+    customers,
+    error,
+    loading,
+    loadMore,
+    moreToLoad,
+    loadingMore,
+    reload,
+  } = useCustomers(searchInput, appliedOutcodes);
 
   const { outcodes, loading: loadingOutcodes } = useOutcodes();
   const theme = useTheme();
@@ -135,7 +142,7 @@ export const Customers: FC = () => {
                     <ErrorMessage code={error} />
                   ) : (
                     <>
-                      <CustomersTable customers={customers} />
+                      <CustomersTable customers={customers} onReload={reload} />
                       {moreToLoad && (
                         <LoadingButton
                           variant="text"

@@ -33,5 +33,6 @@ export const customerToFormValuesFactory = Factory.define<CustomerFormValues>(
     secondTelephone: faker.number.int().toString(),
     email: faker.internet.email() ?? "",
     fileUrls: [],
+    cleaningAddresses: [],
   })
 );

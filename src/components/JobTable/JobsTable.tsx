@@ -50,6 +50,7 @@ export const JobsTable: FC<Props> = ({
             <TableCell align="right">Date</TableCell>
             <TableCell align="right">Start Time</TableCell>
             <TableCell align="right">End Time</TableCell>
+            <TableCell align="right">Address</TableCell>
             <TableCell align="right">Price</TableCell>
             {isAdmin && <TableCell align="right">Assigned to</TableCell>}
             <TableCell align="right">Type</TableCell>
@@ -81,6 +82,7 @@ export const JobsTable: FC<Props> = ({
 
               <TableCell align="right">{job.startTime}</TableCell>
               <TableCell align="right">{job.endTime}</TableCell>
+              <TableCell align="right">{job.address}</TableCell>
               <TableCell align="right">{job.price}</TableCell>
 
               {isAdmin && (

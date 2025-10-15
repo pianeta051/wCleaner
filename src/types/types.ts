@@ -9,6 +9,14 @@ export type Customer = {
   slug: string;
   fileUrls?: string[];
   notes?: CustomerNote[];
+  cleaningAddresses?: CustomerCleaningAddress[];
+};
+
+export type CustomerCleaningAddress = {
+  id: string;
+  name: string;
+  address: string;
+  postcode: string;
 };
 
 export type CustomerNote = {
@@ -40,6 +48,8 @@ export type Job = {
   assignedTo?: JobAssignation;
   jobTypeId?: string;
   jobTypeName?: string;
+  addressId?: string;
+  address?: string;
 };
 
 export type JobFilters = {

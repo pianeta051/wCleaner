@@ -12,9 +12,12 @@ const awsServerlessExpressMiddleware = require("aws-serverless-express/middlewar
 
 const {
   addCustomer,
+  addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  getAddressesForJobs,
+  getCleaningAddresses,
   getCustomers,
   getCustomerBySlug,
   getCustomerById,
@@ -27,8 +30,10 @@ const {
   deleteCustomer,
   deleteCustomerNote,
   deleteJobType,
+  editAddress,
   editJobFromCustomer,
   deleteJobFromCustomer,
+  deleteAddress,
   editCustomer,
   editCustomerNote,
   editJobType,
@@ -36,6 +41,7 @@ const {
 } = require("./db");
 
 const {
+  mapCleaningAddress,
   mapCustomer,
   mapCustomerJobs,
   mapJob,
@@ -98,6 +104,8 @@ app.get("/customers/:slug", async function (req, res) {
     return;
   }
   const customer = mapCustomer(customerFromDb);
+  const cleaningAddresses = await getCleaningAddresses(customer.id);
+  customer.cleaningAddresses = cleaningAddresses.map(mapCleaningAddress);
   res.json({ customer });
 });
 
@@ -118,6 +126,12 @@ app.get("/customer-by-id/:id", async function (req, res) {
 app.post("/customers", async function (req, res) {
   try {
     const createdCustomer = await addCustomer(req.body);
+    const cleaningAddresses = req.body.cleaningAddresses;
+    if (cleaningAddresses?.length > 0) {
+      for (const cleaningAddress of cleaningAddresses) {
+        await addCustomerAddress(createdCustomer.id, cleaningAddress);
+      }
+    }
     res.json({ customer: createdCustomer });
   } catch (error) {
     if (error === "EMAIL_ALREADY_EXISTS") {
@@ -132,6 +146,10 @@ app.post("/customers", async function (req, res) {
       res.status(400).json({
         error: "Name cannot be empty",
       });
+    } else if (error === "INVALID_ADDRESS") {
+      res.status(400).json({
+        error: "One of the cleaning addresses is invalid",
+      });
     } else {
       throw error;
     }
@@ -143,8 +161,27 @@ app.post("/customers", async function (req, res) {
 app.put("/customers/:id", async function (req, res) {
   try {
     const id = req.params.id;
+    const { cleaningAddresses, ...customer } = req.body;
 
-    const editedCustomer = await editCustomer(id, req.body);
+    const editedCustomer = await editCustomer(id, customer);
+    const newAddresses = cleaningAddresses.filter((address) => !address.id);
+    if (newAddresses?.length > 0) {
+      for (const newAddress of newAddresses) {
+        await addCustomerAddress(editedCustomer.id, newAddress);
+      }
+    }
+    const addressesToBeUpdated = cleaningAddresses.filter(
+      (address) => address.id
+    );
+    if (addressesToBeUpdated?.length) {
+      for (const address of addressesToBeUpdated) {
+        await editAddress(editedCustomer.id, address);
+      }
+    }
+    const editedCleaningAddresses = await getCleaningAddresses(customer.id);
+    editedCustomer.cleaningAddresses =
+      editedCleaningAddresses.map(mapCleaningAddress);
+
     res.json({ customer: editedCustomer });
   } catch (error) {
     if (error === "EMAIL_ALREADY_REGISTERED") {
@@ -154,6 +191,10 @@ app.put("/customers/:id", async function (req, res) {
     } else if (error === "NOT_EXISTING_CUSTOMER") {
       res.status(404).json({
         error: "Not existing customer",
+      });
+    } else if (error.message === "DUPLICATED_ADDRESS_NAME") {
+      res.status(409).json({
+        error: "Address name already exists",
       });
     } else {
       throw error;
@@ -167,6 +208,70 @@ app.delete("/customers/:id", async function (req, res) {
   await deleteCustomer(id);
   res.json({ message: "Customer deleted" });
 });
+
+app.post("/customers/:customerId/address", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const { name, address, postcode } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: "Name cannot be empty" });
+    }
+
+    if (!address) {
+      return res.status(400).json({ error: "Address cannot be empty" });
+    }
+
+    if (!postcode) {
+      return res.status(400).json({ error: "postcode cannot be empty" });
+    }
+
+    let createdCustomerAddress = null;
+    try {
+      createdCustomerAddress = await addCustomerAddress(
+        customerId,
+        customerAddress
+      );
+    } catch (e) {
+      if (e.message === "CUSTOMER_NOT_FOUND") {
+        return res.status(404).json({ error: "The customer does not exist" });
+      }
+      throw e;
+    }
+
+    res.json({
+      customerAddress: {
+        ...createdCustomerAddress,
+        customerId,
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    console.error("Internal error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.delete(
+  "/customers/:customerId/address/:addressId",
+  async function (req, res) {
+    try {
+      const customerId = req.params.customerId;
+      const addressId = req.params.addressId;
+      await deleteAddress(customerId, addressId);
+      res.json({ message: "Address deleted" });
+    } catch (e) {
+      if (e === "Deleting last address") {
+        res.status(400).json({ error: "The last address cannot be deleted" });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
+);
 
 //JOBS
 
@@ -248,6 +353,7 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   if (isAdmin) {
     jobs = await getJobUsers(items);
   }
+  jobs = await getAddressesForJobs(jobs);
 
   try {
     res.json({ jobs });
@@ -311,7 +417,7 @@ app.put("/customers/:customerId/job/:jobId", async function (req, res) {
       jobId,
       mapJobFromRequestBody(updatedJob)
     );
-    res.json({ job: { ...jobUpdated, assignedTo: undefined } });
+    res.json({ job: { ...jobUpdated, assignedTo: undefined, id: jobId } });
   } catch (error) {
     if (error.message === "CUSTOMER_NOT_FOUND") {
       res.status(404).json({
@@ -620,6 +726,14 @@ app.delete("/customers/:customerId/note/:noteId", async function (req, res) {
   const customerId = req.params.customerId;
   await deleteCustomerNote(customerId, noteId);
   res.json({ message: "Note Deleted" });
+});
+
+app.get("/customers/:customerId/addresses", async function (req, res) {
+  const id = req.params.customerId;
+  const items = await getCleaningAddresses(id);
+  const addresses = items.map(mapCleaningAddress);
+
+  res.json({ addresses });
 });
 
 module.exports = app;

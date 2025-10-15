@@ -206,5 +206,19 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "ADDRESS_NAME_ALREADY_EXISTS") {
+    return (
+      <Alert severity="error">
+        <Typography>Address names must be unique</Typography>
+      </Alert>
+    );
+  }
+  if (code === "DELETING_LAST_ADDRESS") {
+    return (
+      <Alert severity="error">
+        <Typography>The last address cannot be deleted</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

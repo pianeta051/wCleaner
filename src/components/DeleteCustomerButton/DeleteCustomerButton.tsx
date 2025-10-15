@@ -17,10 +17,12 @@ import { ErrorCode } from "../../services/error";
 
 type DeleteCustomerButtonProps = {
   customerId: string;
+  onDelete?: () => void;
 };
 
 export const DeleteCustomerButton: FC<DeleteCustomerButtonProps> = ({
   customerId,
+  onDelete,
 }) => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState<ErrorCode | null>(null);
@@ -35,6 +37,7 @@ export const DeleteCustomerButton: FC<DeleteCustomerButtonProps> = ({
     deleteCustomer()
       .then(() => {
         setOpenDeleteAlert(false);
+        onDelete?.();
         navigate("/admin/customers");
       })
       .catch(() => {

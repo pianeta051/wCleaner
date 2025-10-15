@@ -1,5 +1,14 @@
 import { FC } from "react";
-import { Button, Grid } from "@mui/material";
+import {
+  Alert,
+  Button,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  Typography,
+} from "@mui/material";
 import { DateField, Field, TimeField } from "./JobForm.style";
 import { LoadingButton } from "@mui/lab";
 import { Form } from "../Form/Form";
@@ -11,6 +20,7 @@ import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import { useAuth } from "../../context/AuthContext";
 import { UserSelector } from "../UserSelector/UserSelector";
 import { JobTypeSelector } from "../JobTypeSelector/JobTypeSelector";
+import { useCustomerAddresses } from "../../hooks/Customers/addresses/useCustomerAddresses";
 
 export type JobFormValues = {
   date: Dayjs;
@@ -20,6 +30,7 @@ export type JobFormValues = {
   assignedTo: string;
   jobTypeId: string;
   fileUrl?: string;
+  addressId: string;
 };
 
 const INITIAL_VALUES: JobFormValues = {
@@ -30,6 +41,7 @@ const INITIAL_VALUES: JobFormValues = {
   assignedTo: "",
   jobTypeId: "",
   fileUrl: "",
+  addressId: "",
 };
 
 const validationSchema = yup.object({
@@ -61,6 +73,7 @@ const validationSchema = yup.object({
   assignedTo: yup.string(),
   jobTypeId: yup.string(),
   fileUrl: yup.string(),
+  addressId: yup.string().required(),
 });
 
 type JobFormProps = {
@@ -70,6 +83,7 @@ type JobFormProps = {
   defaultValues?: JobFormValues;
   loading?: boolean;
   layout?: "vertical" | "horizontal";
+  customerId: string;
 };
 
 export const JobForm: FC<JobFormProps> = ({
@@ -78,8 +92,15 @@ export const JobForm: FC<JobFormProps> = ({
   defaultValues,
   loading = false,
   layout = "vertical",
+  customerId,
 }) => {
   const { isInGroup } = useAuth();
+  const {
+    addresses,
+    loading: loadingAddresses,
+    error: errorLoadingAddresses,
+  } = useCustomerAddresses(customerId);
+
   const defaultValuesForm = !defaultValues ? INITIAL_VALUES : defaultValues;
 
   const formik = useFormik<JobFormValues>({
@@ -113,6 +134,46 @@ export const JobForm: FC<JobFormProps> = ({
   return (
     <Form onSubmit={formik.handleSubmit}>
       <Grid container spacing={3} sx={{ px: { xs: 2, md: 4 } }}>
+        <Grid item xs={12} md={columns}>
+          {loadingAddresses ? (
+            <Typography>Addresses loading...</Typography>
+          ) : addresses?.length ? (
+            <FormControl
+              fullWidth
+              error={Boolean(
+                formik.touched.addressId && formik.errors.addressId
+              )}
+            >
+              <InputLabel>Address</InputLabel>
+              <Select
+                value={formik.values.addressId}
+                label="Address"
+                name="addressId"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              >
+                {addresses.map((address) => (
+                  <MenuItem value={address.id} key={address.id}>
+                    {`${address.address} ${address.postcode}`}
+                  </MenuItem>
+                ))}
+              </Select>
+              {formik.touched.addressId && formik.errors.addressId && (
+                <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                  {formik.errors.addressId}
+                </Typography>
+              )}
+            </FormControl>
+          ) : (
+            <Alert severity="error">
+              <Typography>No addresses available for this customer</Typography>
+              {errorLoadingAddresses && (
+                <Typography>{errorLoadingAddresses}</Typography>
+              )}
+            </Alert>
+          )}
+        </Grid>
+
         <Grid item xs={12} md={columns}>
           <DateField
             name="date"
@@ -155,39 +216,40 @@ export const JobForm: FC<JobFormProps> = ({
               />
             </Grid>
           </Grid>
-        </Grid>
 
-        <Grid item xs={12} md={columns}>
-          <Field
-            name="price"
-            label="Price"
-            type="number"
-            onChange={formik.handleChange}
-            value={formik.values.price}
-            error={!!(formik.touched.price && formik.errors.price)}
-            helperText={formik.touched.price ? formik.errors.price : undefined}
-          />
-        </Grid>
+          <Grid item xs={12} md={columns}>
+            <Field
+              name="price"
+              label="Price"
+              type="number"
+              onChange={formik.handleChange}
+              value={formik.values.price}
+              error={!!(formik.touched.price && formik.errors.price)}
+              helperText={
+                formik.touched.price ? formik.errors.price : undefined
+              }
+            />
+          </Grid>
 
-        <Grid item xs={12}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <JobTypeSelector
-                value={formik.values.jobTypeId}
-                onChange={changeJobTypeHandler}
-              />
-            </Grid>
-            {isInGroup("Admin") && (
+          <Grid item xs={12}>
+            <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <UserSelector
-                  value={formik.values.assignedTo}
-                  onChange={changeUserHandler}
+                <JobTypeSelector
+                  value={formik.values.jobTypeId}
+                  onChange={changeJobTypeHandler}
                 />
               </Grid>
-            )}
+              {isInGroup("Admin") && (
+                <Grid item xs={12} md={6}>
+                  <UserSelector
+                    value={formik.values.assignedTo}
+                    onChange={changeUserHandler}
+                  />
+                </Grid>
+              )}
+            </Grid>
           </Grid>
         </Grid>
-
         <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "right" }}>
           <LoadingButton
             variant="contained"
@@ -196,6 +258,7 @@ export const JobForm: FC<JobFormProps> = ({
             type="submit"
             sx={{ width: { xs: "100%", md: "50%" } }}
             loading={loading}
+            disabled={loadingAddresses}
           >
             Save
           </LoadingButton>
