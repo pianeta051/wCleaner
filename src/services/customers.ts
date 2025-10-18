@@ -126,7 +126,12 @@ export const deleteCustomerAddress = async (
   } catch (error) {
     if (isErrorResponse(error)) {
       if (error.response.status === 400) {
-        throw "DELETING_LAST_ADDRESS";
+        if (error.response.data?.error === "DELETING LAST ADDRESS") {
+          throw "DELETING_LAST_ADDRESS";
+        }
+        if (error.response.data?.error === "This address has pending jobs") {
+          throw "THIS_CUSTOMER_HAS_PENDING_JOBS";
+        }
       }
     }
     throw "INTERNAL_ERROR";

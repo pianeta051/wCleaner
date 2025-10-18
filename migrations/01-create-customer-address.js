@@ -5,7 +5,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import * as uuid from "uuid";
 
-const TABLE_NAME = "wcleaner-dev";
+const TABLE_NAME = "wcleaner-prod";
 
 const client = new DynamoDBClient({ region: "eu-west-2" });
 

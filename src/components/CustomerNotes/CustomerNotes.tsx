@@ -108,7 +108,7 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
     <>
       <Box display="flex" alignItems="center" gap={2} mb={2}>
         <Title>Notes</Title>
-        <Button variant="contained" onClick={() => openModal()}>
+        <Button variant="outlined" onClick={() => openModal()}>
           Add note
         </Button>
       </Box>

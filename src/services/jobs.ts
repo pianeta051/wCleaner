@@ -266,7 +266,7 @@ export const editCustomerJob = async (
   formValues: JobFormValues
 ): Promise<Job> => {
   try {
-    const response = await put(`/customers/${customerId}/job/${jobId}`, {
+    const response = await put(`/customers/${customerId}/jobs/${jobId}`, {
       ...formValues,
       price: +formValues.price,
       date: formValues.date.format("YYYY-MM-DD"),

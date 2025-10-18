@@ -25,6 +25,7 @@ const {
   getJob,
   getJobs,
   getJobType,
+
   getJobTypes,
   getOutcodes,
   deleteCustomer,
@@ -204,9 +205,17 @@ app.put("/customers/:id", async function (req, res) {
 
 // Delete a Customer
 app.delete("/customers/:id", async function (req, res) {
-  const id = req.params.id;
-  await deleteCustomer(id);
-  res.json({ message: "Customer deleted" });
+  try {
+    const id = req.params.id;
+    await deleteCustomer(id);
+    res.json({ message: "Customer deleted" });
+  } catch (e) {
+    if (e === "There are pending jobs") {
+      res.status(400).json({ error: "This customer has pending jobs" });
+      return;
+    }
+    throw e;
+  }
 });
 
 app.post("/customers/:customerId/address", async function (req, res) {
@@ -266,9 +275,14 @@ app.delete(
     } catch (e) {
       if (e === "Deleting last address") {
         res.status(400).json({ error: "The last address cannot be deleted" });
-      } else {
-        res.status(500).json({ error: "Internal server error" });
+        return;
       }
+      if (e === "There are pending jobs") {
+        res.status(400).json({ error: "This address has pending jobs" });
+        return;
+      }
+      // throw so we can see it on cloudwatch
+      throw e;
     }
   }
 );
@@ -301,36 +315,46 @@ app.get("/jobs", async function (req, res) {
 
   const responseToken = generateToken(lastEvaluatedKey);
   let jobs = items.map(mapJob);
+
   if (isAdmin) {
     jobs = await getJobUsers(items);
   }
+
+  jobs = await getAddressesForJobs(jobs);
   res.json({ jobs, nextToken: responseToken });
 });
 
 app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
   const customerId = req.params.customerId;
   const jobId = req.params.jobId;
-  const jobFromDb = await getJob(customerId, jobId);
-  let job = mapJob(jobFromDb);
-  const groups = req.authData?.groups;
-  const isAdmin = groups.includes("Admin");
-  if (isAdmin) {
-    job = (await getJobUsers([jobFromDb]))[0];
-  } else {
-    const restrictedCustomer = {
-      id: job.customer.id,
-      slug: job.customer.slug,
-      name: job.customer.name,
-      address: job.customer.address,
-      postcode: job.customer.postcode,
-      fileUrls: job.customer.fileUrls,
-      notes: job.customer.notes,
-    };
-    job.customer = restrictedCustomer;
+  try {
+    const jobFromDb = await getJob(customerId, jobId);
+    let job = mapJob(jobFromDb);
+    const groups = req.authData?.groups;
+    const isAdmin = groups.includes("Admin");
+    if (isAdmin) {
+      job = (await getJobUsers([jobFromDb]))[0];
+    } else {
+      const restrictedCustomer = {
+        id: job.customer.id,
+        slug: job.customer.slug,
+        name: job.customer.name,
+        address: job.customer.address,
+        postcode: job.customer.postcode,
+        fileUrls: job.customer.fileUrls,
+        notes: job.customer.notes,
+      };
+      job.customer = restrictedCustomer;
+    }
+    const jobType = await getJobType(job.jobTypeId);
+    job.jobTypeName = mapJobType(jobType).name;
+    const jobsWithAddress = await getAddressesForJobs([job]);
+    res.json({ job: jobsWithAddress[0] });
+  } catch (e) {
+    if (e === "JOB_NOT_FOUND") {
+      res.status(404).json({ message: "The job doesn't exist" });
+    }
   }
-  const jobType = await getJobType(job.jobTypeId);
-  job.jobTypeName = mapJobType(jobType).name;
-  res.json({ job });
 });
 
 // Get a single customer's Job
@@ -406,17 +430,15 @@ app.post("/customers/:customerId/job", async function (req, res) {
   }
 });
 
-app.put("/customers/:customerId/job/:jobId", async function (req, res) {
+app.put("/customers/:customerId/jobs/:jobId", async function (req, res) {
   try {
-    const customerId = req.params.customerId;
-    const jobId = req.params.jobId;
-    const updatedJob = req.body;
+    const { customerId, jobId } = req.params;
+    console.log("JOB UPDATED" + JSON.stringify(req.body));
+    let updatedJob = req.body;
+    updatedJob = mapJobFromRequestBody(req.body);
 
-    const jobUpdated = await editJobFromCustomer(
-      customerId,
-      jobId,
-      mapJobFromRequestBody(updatedJob)
-    );
+    const jobUpdated = await editJobFromCustomer(customerId, jobId, updatedJob);
+
     res.json({ job: { ...jobUpdated, assignedTo: undefined, id: jobId } });
   } catch (error) {
     if (error.message === "CUSTOMER_NOT_FOUND") {

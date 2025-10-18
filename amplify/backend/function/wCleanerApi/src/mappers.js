@@ -29,7 +29,7 @@ const mapCustomer = (customerFromDb) => ({
 const mapCleaningAddress = (cleaningAddressFromDb) => ({
   id: cleaningAddressFromDb.SK.S.replace("address_", ""),
   name: cleaningAddressFromDb.name.S,
-  address: cleaningAddressFromDb.address.S,
+  address: cleaningAddressFromDb.address?.S,
   postcode: cleaningAddressFromDb.postcode.S,
 });
 
@@ -46,26 +46,45 @@ const mapCustomerJobs = (customerJob) => ({
 
 // map a single standalone job
 const mapJob = (jobFromDb) => {
-  const start = dayjs(+jobFromDb.start.N);
-  const end = dayjs(+jobFromDb.end.N);
+  const startValue = jobFromDb.start?.N ? +jobFromDb.start.N : Date.now();
+  const endValue = jobFromDb.end?.N ? +jobFromDb.end.N : startValue + 3600000;
+
+  const start = dayjs(startValue);
+  const end = dayjs(endValue);
+
   return {
-    id: jobFromDb.SK.S.replace("job_", ""),
+    id: jobFromDb.SK?.S?.replace("job_", ""),
+    customerId: jobFromDb.PK?.S?.replace("customer_", ""),
     date: start.format("YYYY-MM-DD"),
     startTime: start.format("HH:mm"),
     endTime: end.format("HH:mm"),
-    price: +jobFromDb.price.N,
+    price: jobFromDb.price?.N ? +jobFromDb.price.N : 0,
+    jobTypeId: jobFromDb.job_type_id?.S || "",
+    addressId: jobFromDb.address_id?.S || "",
     customer: jobFromDb.customer ? mapCustomer(jobFromDb.customer) : undefined,
-    customerId: jobFromDb.PK.S.replace("customer_", ""),
-    jobTypeId: jobFromDb.job_type_id?.S,
-    addressId: jobFromDb.address_id?.S,
   };
 };
 
+const mapJobAddressUpdate = (jobFromDb, newAddress) => ({
+  id: jobFromDb.SK.S.replace("job_", ""),
+  customerId: jobFromDb.PK.S.replace("customer_", ""),
+  addressId: newAddress.id,
+  address: newAddress.address,
+  postcode: newAddress.postcode,
+});
 const mapJobType = (jobTypeFromDb) => {
+  if (!jobTypeFromDb || !jobTypeFromDb.PK || !jobTypeFromDb.name) {
+    return {
+      id: "",
+      name: "Unknown",
+      color: "#999999",
+    };
+  }
+
   return {
     id: jobTypeFromDb.PK.S.replace("job_type_", ""),
     name: jobTypeFromDb.name.S,
-    color: jobTypeFromDb.color.S,
+    color: jobTypeFromDb.color?.S || "#999999",
   };
 };
 
@@ -91,6 +110,7 @@ module.exports = {
   mapCustomer,
   mapCustomerJobs,
   mapJob,
+  mapJobAddressUpdate,
   mapJobFromRequestBody,
   mapJobTypeFromRequestBody,
   mapJobTemporalFilters,

@@ -18,6 +18,8 @@ import CategoryIcon from "@mui/icons-material/Category";
 import HomeIcon from "@mui/icons-material/Home";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import { Job } from "../../types/types";
+import { useAuth } from "../../context/AuthContext";
+import { transformToFormValues } from "../../helpers/job";
 
 type JobInfoDisplayProps = {
   job: Job;
@@ -26,6 +28,8 @@ type JobInfoDisplayProps = {
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const { isInGroup } = useAuth();
+  const isAdmin = isInGroup("Admin");
 
   const assignedTo = job?.assignedTo?.name ?? job?.assignedTo?.email;
 
@@ -43,13 +47,15 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
             <Typography variant="h5" fontWeight="bold">
               Job Details
             </Typography>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => setModalOpen(true)}
-            >
-              Edit Job
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => setModalOpen(true)}
+              >
+                Edit Job
+              </Button>
+            )}
           </Stack>
 
           <Divider sx={{ mb: 3 }} />
@@ -84,7 +90,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <HomeIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Address:</Typography>
-                  <Typography>{job.customer?.address}</Typography>
+                  <Typography>{job.address}</Typography>
                 </Stack>
               </Grid>
 
@@ -92,7 +98,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <MailOutlineIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Postcode:</Typography>
-                  <Typography>{job.customer?.postcode}</Typography>
+                  <Typography>{job.postcode}</Typography>
                 </Stack>
               </Grid>
 
@@ -132,15 +138,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
         <CustomerJobModal
           open={modalOpen}
           customer={job.customer}
-          initialValues={{
-            date: dayjs(job.date),
-            startTime: dayjs(`${job.date} ${job.startTime}`),
-            endTime: dayjs(`${job.date} ${job.endTime}`),
-            price: job.price,
-            jobTypeId: job.jobTypeId ?? "",
-            assignedTo: job.assignedTo?.sub ?? "",
-            addressId: job.addressId ?? "",
-          }}
+          initialValues={transformToFormValues(job)}
           jobId={job.id}
           onClose={() => {
             setModalOpen(false);

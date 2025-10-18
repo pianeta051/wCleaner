@@ -220,5 +220,12 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "THIS_CUSTOMER_HAS_PENDING_JOBS") {
+    return (
+      <Alert severity="error">
+        <Typography>There are future jobs pending for this Address</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };
