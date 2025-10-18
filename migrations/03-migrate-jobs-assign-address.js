@@ -5,7 +5,7 @@ import {
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
-const TABLE_NAME = "wcleaner-dev";
+const TABLE_NAME = "wcleaner-prod";
 
 const client = new DynamoDBClient({ region: "eu-west-2" });
 

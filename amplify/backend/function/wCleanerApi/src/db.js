@@ -977,16 +977,44 @@ const getJobTypes = async () => {
   };
 };
 
+// const getAddressesForJobs = async (jobs) => {
+//   for (let i = 0; i < jobs.length; i++) {
+//     const job = jobs[i];
+//     const address = await getCleaningAddress(job.customerId, job.addressId);
+//     jobs[i] = {
+//       ...job,
+//       address: address?.address?.S ?? address?.name?.S ?? "Unknown",
+//       postcode: address?.postcode?.S,
+//     };
+//   }
+//   return jobs;
+// };
+
 const getAddressesForJobs = async (jobs) => {
   for (let i = 0; i < jobs.length; i++) {
     const job = jobs[i];
-    const address = await getCleaningAddress(job.customerId, job.addressId);
+    let address;
+
+    try {
+      address = await getCleaningAddress(job.customerId, job.addressId);
+    } catch (err) {
+      console.error(
+        `Error getting address for job ${job.PK?.S || job.id}:`,
+        err
+      );
+    }
+
+    const isDeleted = address?.status?.S === "deleted";
     jobs[i] = {
       ...job,
-      address: address?.address?.S ?? address?.name?.S ?? "Unknown",
-      postcode: address?.postcode?.S,
+      address:
+        !address || isDeleted
+          ? "Unknown"
+          : address.address?.S ?? address.name?.S ?? "Unknown",
+      postcode: !address || isDeleted ? "" : address.postcode?.S ?? "",
     };
   }
+
   return jobs;
 };
 
