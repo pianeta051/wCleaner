@@ -41,7 +41,7 @@ export const JobsTable: FC<Props> = ({
   const assignedToText = (job: Job): React.ReactNode => {
     if (!job.assignedTo) return "Not assigned";
     const { name, email } = job.assignedTo;
-    return [name, email].filter(Boolean).join(" - ");
+    return name ? name : email;
   };
 
   return (

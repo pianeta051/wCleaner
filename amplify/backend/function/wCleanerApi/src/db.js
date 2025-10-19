@@ -185,47 +185,6 @@ const editAddress = async (customerId, customerAddress) => {
   return customerAddress;
 };
 
-// const updateJobAddress = async (customerId, jobId, newAddressId) => {
-//   const job = await getJob(customerId, jobId);
-//   if (!job) {
-//     throw new Error("JOB_NOT_FOUND");
-//   }
-
-//   const newAddress = await getCleaningAddress(customerId, newAddressId);
-//   if (!newAddress || newAddress.status?.S === "deleted") {
-//     throw new Error("ADDRESS_NOT_FOUND");
-//   }
-
-//   const result = await ddb
-//     .updateItem({
-//       TableName: TABLE_NAME,
-//       Key: {
-//         PK: { S: `customer_${customerId}` },
-//         SK: { S: `job_${jobId}` },
-//       },
-//       ExpressionAttributeNames: {
-//         "#AD": "address_id",
-//       },
-//       ExpressionAttributeValues: {
-//         ":address_id": { S: newAddressId },
-//       },
-//       UpdateExpression: "SET #AD = :address_id",
-//       ReturnValues: "ALL_NEW",
-//     })
-//     .promise();
-
-//   const mappedJob = mapJob({
-//     ...result.Attributes,
-//     customer: await getCustomerById(customerId),
-//   });
-
-//   return {
-//     ...mappedJob,
-//     address: newAddress.address?.S || newAddress.name?.S || "Unknown",
-//     postcode: newAddress.postcode?.S || "",
-//   };
-// };
-
 const deleteAddress = async (customerId, addressId) => {
   const addresses = await getCleaningAddresses(customerId);
   if (addresses.length === 1) {
@@ -577,11 +536,12 @@ const getOutcodes = async () => {
 };
 
 const getCleaningAddress = async (customerId, addressId) => {
+  const cleanAddressId = addressId.replace(/^address_/, "");
   const params = {
     TableName: TABLE_NAME,
     Key: {
       PK: { S: `customer_${customerId}` },
-      SK: { S: `address_${addressId}` },
+      SK: { S: `address_${cleanAddressId}` },
     },
   };
   const address = await ddb.getItem(params).promise();
@@ -989,34 +949,6 @@ const getAddressesForJobs = async (jobs) => {
   }
   return jobs;
 };
-
-// const getAddressesForJobs = async (jobs) => {
-//   for (let i = 0; i < jobs.length; i++) {
-//     const job = jobs[i];
-//     let address;
-
-//     try {
-//       address = await getCleaningAddress(job.customerId, job.addressId);
-//     } catch (err) {
-//       console.error(
-//         `Error getting address for job ${job.PK?.S || job.id}:`,
-//         err
-//       );
-//     }
-
-//     const isDeleted = address?.status?.S === "deleted";
-//     jobs[i] = {
-//       ...job,
-//       address:
-//         !address || isDeleted
-//           ? "Unknown"
-//           : address.address?.S ?? address.name?.S ?? "Unknown",
-//       postcode: !address || isDeleted ? "" : address.postcode?.S ?? "",
-//     };
-//   }
-
-//   return jobs;
-// };
 
 //EDIT JOB TYPE
 const editJobType = async (jobTypeId, updatedJobType) => {
