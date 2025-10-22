@@ -20,7 +20,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { MAX_JOB_TYPES } from "../JobTypeForm/JobTypeForm";
 import { DeleteJobTypeButton } from "../DeleteJobTypeButton/DeleteJobTypeButton";
-import { DEFAULT_COLOR } from "../JobCalendars/JobCalendars";
+import { CANCELED_COLOR, DEFAULT_COLOR } from "../JobCalendars/JobCalendars";
 
 type JobCalendarColorLegendProps = {
   jobs: Job[];
@@ -102,6 +102,12 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
         </Typography>
         {legendView === USER && usersWithColors.length ? (
           <LegendList>
+            <ListItem disablePadding>
+              <ListItemIcon>
+                <UserColor color={CANCELED_COLOR} />
+              </ListItemIcon>
+              <ListItemText primary="Job Canceled" />
+            </ListItem>
             {usersWithColors.map((user) => (
               <ListItem alignItems="flex-start" disablePadding key={user?.sub}>
                 <ListItemIcon>
@@ -132,6 +138,12 @@ export const JobCalendarColorLegend: FC<JobCalendarColorLegendProps> = ({
                       <UserColor color={DEFAULT_COLOR} />
                     </ListItemIcon>
                     <ListItemText primary="No job type" />
+                  </ListItem>
+                  <ListItem disablePadding>
+                    <ListItemIcon>
+                      <UserColor color={CANCELED_COLOR} />
+                    </ListItemIcon>
+                    <ListItemText primary="Job Canceled" />
                   </ListItem>
                   <>
                     {jobTypes?.map((jobType) => (

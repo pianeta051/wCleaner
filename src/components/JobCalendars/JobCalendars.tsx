@@ -20,6 +20,7 @@ import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
 import { useAuth } from "../../context/AuthContext";
 
 export const DEFAULT_COLOR = "#3174ad";
+export const CANCELED_COLOR = "#979da0ff";
 const BACKGROUND_TO_TEXT: Record<string, string> = {
   [DEFAULT_COLOR]: "white",
   "#f44336": "white",
@@ -39,7 +40,7 @@ const BACKGROUND_TO_TEXT: Record<string, string> = {
   "#ff9800": "white",
   "#ff5722": "white",
   "#795548": "white",
-  "#607d8b": "white",
+  [CANCELED_COLOR]: "white",
 };
 
 type JobCalendarsProps = {
@@ -90,6 +91,9 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   };
 
   const getColor = (job: Job) => {
+    if (job.status === "canceled") {
+      return CANCELED_COLOR;
+    }
     if (colorLegendView === "users") {
       if (job.assignedTo?.color) {
         return job.assignedTo?.color;

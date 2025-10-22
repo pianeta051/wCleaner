@@ -35,7 +35,6 @@ const DEFAULT_COLORS = [
   "#ff9800",
   "#ff5722",
   "#795548",
-  "#607d8b",
 ];
 
 export const MAX_JOB_TYPES = DEFAULT_COLORS.length;
