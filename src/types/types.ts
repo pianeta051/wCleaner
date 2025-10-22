@@ -51,6 +51,8 @@ export type Job = {
   addressId?: string;
   address?: string;
   postcode?: string;
+  status?: "pending" | "completed" | "canceled";
+  paymentMethod?: "cash" | "bank_transfer" | "paypal" | "cheque" | "none";
 };
 
 export type JobFilters = {

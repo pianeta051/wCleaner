@@ -536,12 +536,11 @@ const getOutcodes = async () => {
 };
 
 const getCleaningAddress = async (customerId, addressId) => {
-  const cleanAddressId = addressId.replace(/^address_/, "");
   const params = {
     TableName: TABLE_NAME,
     Key: {
       PK: { S: `customer_${customerId}` },
-      SK: { S: `address_${cleanAddressId}` },
+      SK: { S: `address_${addressId}` },
     },
   };
   const address = await ddb.getItem(params).promise();
@@ -712,6 +711,7 @@ const addCustomerJob = async (customerId, job, assignedTo) => {
   if (!(await getCustomerById(customerId))) {
     throw "CUSTOMER_NOT_FOUND";
   }
+
   const jobId = uuid.v1();
   const params = {
     TableName: TABLE_NAME,
@@ -733,6 +733,9 @@ const addCustomerJob = async (customerId, job, assignedTo) => {
       },
       job_type_id: { S: job.jobTypeId },
       address_id: { S: job.addressId },
+
+      status: { S: job.status || "pending" },
+      payment_method: { S: job.paymentMethod || "none" },
     },
   };
   await ddb.putItem(params).promise();
@@ -754,10 +757,9 @@ const getJob = async (customerId, jobId) => {
     throw "JOB_NOT_FOUND";
   }
   const customer = await getCustomerById(customerId);
+
   const item = {
     ...job.Item,
-    PK: { S: `customer_${customerId}` },
-    SK: { S: `job_${jobId}` },
     customer,
   };
   return item;
@@ -862,7 +864,10 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
     const job = items[i];
     const customerId = job.PK.S.replace("customer_", "");
     const customer = await getCustomerById(customerId);
-    items[i].customer = customer;
+    items[i] = {
+      ...job,
+      customer,
+    };
   }
 
   return {
@@ -944,7 +949,7 @@ const getAddressesForJobs = async (jobs) => {
     jobs[i] = {
       ...job,
       address: address?.address?.S ?? address?.name?.S ?? "Unknown",
-      postcode: address?.postcode?.S,
+      postcode: address?.postcode?.S ?? "",
     };
   }
   return jobs;
@@ -1060,11 +1065,15 @@ const getCustomerJobs = async (customerId, filters, order) => {
   let items = [];
   let ExclusiveStartKey;
   do {
-    console.log(JSON.stringify({ ...params, ExclusiveStartKey }, null, 2));
     let result = await ddb.query({ ...params, ExclusiveStartKey }).promise();
     ExclusiveStartKey = result.LastEvaluatedKey;
-    console.log(JSON.stringify(result, null, 2));
-    items = [...items, ...result.Items];
+    const normalized = result.Items.map((job) => ({
+      ...job,
+      status: job.status ?? { S: "pending" },
+      payment_method: job.payment_method ?? { S: "none" },
+    }));
+
+    items = [...items, ...normalized];
   } while (ExclusiveStartKey);
   return { items };
 };
@@ -1080,6 +1089,8 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       "#A": "assigned_to",
       "#JT": "job_type_id",
       "#AD": "address_id",
+      "#STT": "status",
+      "#PM": "payment_method",
     },
     ExpressionAttributeValues: {},
     Key: {
@@ -1122,6 +1133,19 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       (params.ExpressionAttributeValues[":address_id"] = {
         S: updatedJob.addressId,
       });
+  if (updatedJob.status)
+    updates.push("#STT = :status"),
+      (params.ExpressionAttributeValues[":status"] = {
+        S: updatedJob.status,
+      }),
+      (params.ExpressionAttributeNames["#STT"] = "status");
+
+  if (updatedJob.paymentMethod)
+    updates.push("#PM = :payment_method"),
+      (params.ExpressionAttributeValues[":payment_method"] = {
+        S: updatedJob.paymentMethod,
+      }),
+      (params.ExpressionAttributeNames["#PM"] = "payment_method");
 
   params.UpdateExpression += " " + updates.join(", ");
 

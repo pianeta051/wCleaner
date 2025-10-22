@@ -42,6 +42,8 @@ const mapCustomerJobs = (customerJob) => ({
   jobTypeId: customerJob.job_type_id?.S,
   addressId: customerJob.address_id?.S,
   customerId: customerJob.PK.S.replace("customer_", ""),
+  status: customerJob.status?.S || "pending",
+  paymentMethod: customerJob.payment_method?.S || "none",
 });
 
 // map a single standalone job
@@ -62,6 +64,8 @@ const mapJob = (jobFromDb) => {
     jobTypeId: jobFromDb.job_type_id?.S || "",
     addressId: jobFromDb.address_id?.S || "",
     customer: jobFromDb.customer ? mapCustomer(jobFromDb.customer) : undefined,
+    status: jobFromDb.status?.S || "pending",
+    paymentMethod: jobFromDb.payment_method?.S || "none",
   };
 };
 

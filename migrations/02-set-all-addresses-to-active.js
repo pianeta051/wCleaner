@@ -4,7 +4,7 @@ import {
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
-const TABLE_NAME = "wcleaner-prod";
+const TABLE_NAME = process.env.TABLE_NAME;
 
 const client = new DynamoDBClient({ region: "eu-west-2" });
 
@@ -34,12 +34,14 @@ const listAddresses = async () => {
     ExpressionAttributeNames: {
       "#PK": "PK",
       "#SK": "SK",
+      "#ST": "status",
     },
     ExpressionAttributeValues: {
       ":pk": { S: "customer_" },
       ":sk": { S: "address_" },
     },
-    FilterExpression: "begins_with(#PK, :pk) AND begins_with(#SK, :sk)",
+    FilterExpression:
+      "begins_with(#PK, :pk) AND begins_with(#SK, :sk) AND attribute_not_exists(#ST)",
   });
   const data = await client.send(command);
   return data.Items;
