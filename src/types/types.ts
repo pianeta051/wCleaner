@@ -37,6 +37,8 @@ export type JobAssignation = {
   color?: string;
 };
 
+export type JobStatus = "pending" | "completed" | "canceled";
+
 export type Job = {
   customerId?: string;
   id: string;
@@ -51,6 +53,8 @@ export type Job = {
   addressId?: string;
   address?: string;
   postcode?: string;
+  status?: JobStatus;
+  paymentMethod?: "cash" | "bank_transfer" | "paypal" | "cheque" | "none";
 };
 
 export type JobFilters = {

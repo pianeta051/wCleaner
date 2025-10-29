@@ -4,5 +4,9 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.856.0",
     "uuid": "^11.1.0"
+  },
+  "scripts": {
+    "run-dev": "TABLE_NAME=wcleaner-dev node",
+    "run-prod": "TABLE_NAME=wcleaner-prod node"
   }
 }

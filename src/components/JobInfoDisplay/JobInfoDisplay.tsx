@@ -7,23 +7,33 @@ import {
   Button,
   Stack,
   Divider,
+  Chip,
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
-import dayjs from "dayjs";
 import CategoryIcon from "@mui/icons-material/Category";
 import HomeIcon from "@mui/icons-material/Home";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import { Job } from "../../types/types";
+import { Job, JobStatus } from "../../types/types";
 import { useAuth } from "../../context/AuthContext";
 import { transformToFormValues } from "../../helpers/job";
+import { capitalize } from "lodash";
 
 type JobInfoDisplayProps = {
   job: Job;
   onEdit: () => void;
+};
+
+const STATUS_COLORS: Record<
+  JobStatus,
+  "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"
+> = {
+  completed: "success",
+  pending: "warning",
+  canceled: "error",
 };
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
@@ -47,6 +57,16 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
             <Typography variant="h5" fontWeight="bold">
               Job Details
             </Typography>
+            <Chip
+              label={capitalize(job.status ?? "pending")}
+              color={STATUS_COLORS[job.status ?? "pending"]}
+              sx={{
+                "& .MuiChip-label": {
+                  fontWeight: "bold",
+                  fontSize: "15px",
+                },
+              }}
+            />
             {isAdmin && (
               <Button
                 variant="contained"

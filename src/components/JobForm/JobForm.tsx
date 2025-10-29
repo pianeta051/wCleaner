@@ -31,6 +31,8 @@ export type JobFormValues = {
   jobTypeId: string;
   fileUrl?: string;
   addressId: string;
+  status: "pending" | "completed" | "canceled";
+  paymentMethod: "cash" | "bank_transfer" | "paypal" | "cheque" | "none";
 };
 
 const INITIAL_VALUES: JobFormValues = {
@@ -42,6 +44,8 @@ const INITIAL_VALUES: JobFormValues = {
   jobTypeId: "",
   fileUrl: "",
   addressId: "",
+  status: "pending",
+  paymentMethod: "none",
 };
 
 const validationSchema = yup.object({
@@ -74,6 +78,11 @@ const validationSchema = yup.object({
   jobTypeId: yup.string(),
   fileUrl: yup.string(),
   addressId: yup.string().required(),
+  status: yup.string().oneOf(["pending", "completed", "canceled"]).required(),
+  paymentMethod: yup
+    .string()
+    .oneOf(["cash", "bank_transfer", "paypal", "cheque", "none"])
+    .required(),
 });
 
 type JobFormProps = {
@@ -233,7 +242,7 @@ export const JobForm: FC<JobFormProps> = ({
 
           <Grid item xs={12}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={6} md={6}>
                 <JobTypeSelector
                   value={formik.values.jobTypeId}
                   onChange={changeJobTypeHandler}
@@ -250,6 +259,44 @@ export const JobForm: FC<JobFormProps> = ({
             </Grid>
           </Grid>
         </Grid>
+        <Grid item xs={12}>
+          <Grid container spacing={2}>
+            <Grid item xs={6} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={formik.values.status}
+                  label="Status"
+                  name="status"
+                  onChange={formik.handleChange}
+                >
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="canceled">Canceled</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={6} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Payment Method</InputLabel>
+                <Select
+                  value={formik.values.paymentMethod}
+                  label="Payment Method"
+                  name="paymentMethod"
+                  onChange={formik.handleChange}
+                >
+                  <MenuItem value="none">None</MenuItem>
+                  <MenuItem value="cash">Cash</MenuItem>
+                  <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
+                  <MenuItem value="paypal">PayPal</MenuItem>
+                  <MenuItem value="cheque">Cheque</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </Grid>
+
         <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "right" }}>
           <LoadingButton
             variant="contained"

@@ -23,6 +23,8 @@ const defaultInitialValues: JobFormValues = {
   assignedTo: "mock-user-id-123",
   jobTypeId: "mock-job-type-id-456",
   addressId: "mock-address-id-789",
+  status: "pending",
+  paymentMethod: "none",
 };
 
 beforeEach(() => {

@@ -238,6 +238,8 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             assignedTo: "",
             jobTypeId: "",
             addressId: "",
+            status: "pending",
+            paymentMethod: "none",
           }}
         />
       )}

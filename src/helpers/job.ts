@@ -11,5 +11,7 @@ export const transformToFormValues = (job: Job): JobFormValues => {
     jobTypeId: job.jobTypeId ?? "",
     assignedTo: job.assignedTo?.sub ?? "",
     addressId: job.addressId ?? "",
+    status: job.status ?? "pending",
+    paymentMethod: job.paymentMethod ?? "none",
   };
 };

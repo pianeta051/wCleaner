@@ -433,7 +433,6 @@ app.post("/customers/:customerId/job", async function (req, res) {
 app.put("/customers/:customerId/jobs/:jobId", async function (req, res) {
   try {
     const { customerId, jobId } = req.params;
-    console.log("JOB UPDATED" + JSON.stringify(req.body));
     let updatedJob = req.body;
     updatedJob = mapJobFromRequestBody(req.body);
 

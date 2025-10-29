@@ -5,7 +5,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import * as uuid from "uuid";
 
-const TABLE_NAME = "wcleaner-prod";
+const TABLE_NAME = process.env.TABLE_NAME;
 
 const client = new DynamoDBClient({ region: "eu-west-2" });
 
@@ -32,12 +32,14 @@ async function listAddresses(customerId) {
     ExpressionAttributeNames: {
       "#PK": "PK",
       "#SK": "SK",
+      "#ST": "status",
     },
     ExpressionAttributeValues: {
       ":pk": { S: "customer_" + customerId },
       ":sk": { S: "address_" },
+      ":status": { S: "active" },
     },
-    FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk",
+    FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk AND #ST = :status",
   });
   const data = await client.send(command);
   return data.Items;
@@ -83,6 +85,8 @@ async function createHomeAddress(customer) {
       console.log("Creando home address para " + customerId);
       await createHomeAddress(customer);
       console.log("Creada");
+    } else {
+      console.log(`Customer ${customerId} tiene ${addresses.length} addresses`);
     }
   }
 })();
