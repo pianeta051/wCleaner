@@ -12,6 +12,15 @@ import {
   useTheme,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import PeopleIcon from "@mui/icons-material/People";
+import PersonIcon from "@mui/icons-material/Person";
+import {
+  BreadcrumbContainer,
+  StyledBreadcrumbs,
+  BreadcrumbLink,
+  CurrentPage,
+} from "./CustomerDetails.style";
+
 import { useParams, Link as RouterLink } from "react-router-dom";
 
 import {
@@ -126,14 +135,17 @@ export const CustomerDetails: FC = () => {
   return (
     <Wrapper>
       <TopBar>
-        <Breadcrumbs aria-label="breadcrumb">
-          <MuiLink component={RouterLink} to="/admin/customers">
-            Customers
-          </MuiLink>
-          <MuiLink component={RouterLink} to="/admin/customers/">
-            {customer.name}
-          </MuiLink>
-        </Breadcrumbs>
+        <BreadcrumbContainer>
+          <StyledBreadcrumbs aria-label="breadcrumb" separator="›">
+            <BreadcrumbLink to="/admin/customers">
+              <PeopleIcon fontSize="small" /> Customers
+            </BreadcrumbLink>
+
+            <CurrentPage>
+              <PersonIcon fontSize="small" /> {customer.name}
+            </CurrentPage>
+          </StyledBreadcrumbs>
+        </BreadcrumbContainer>
       </TopBar>
 
       {!isMdUp && (

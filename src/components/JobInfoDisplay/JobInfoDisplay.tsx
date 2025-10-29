@@ -10,6 +10,7 @@ import {
   Chip,
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import PaymentsIcon from "@mui/icons-material/Payments";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
@@ -21,6 +22,7 @@ import { Job, JobStatus } from "../../types/types";
 import { useAuth } from "../../context/AuthContext";
 import { transformToFormValues } from "../../helpers/job";
 import { capitalize } from "lodash";
+import { JobToggleStatusButton } from "../JobToggleStatusButton/JobToggleStatusButton";
 
 type JobInfoDisplayProps = {
   job: Job;
@@ -33,7 +35,7 @@ const STATUS_COLORS: Record<
 > = {
   completed: "success",
   pending: "warning",
-  canceled: "error",
+  cancelled: "error",
 };
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
@@ -67,7 +69,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 },
               }}
             />
-            {isAdmin && (
+            {isAdmin ? (
               <Button
                 variant="contained"
                 size="small"
@@ -75,6 +77,8 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
               >
                 Edit Job
               </Button>
+            ) : (
+              <JobToggleStatusButton currentJob={job} onChange={onEdit} />
             )}
           </Stack>
 
@@ -142,11 +146,18 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </Grid>
               )}
 
-              <Grid item xs={12}>
+              <Grid item xs={6}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <PointOfSaleIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Price:</Typography>
                   <Typography fontWeight="bold">£{job.price}</Typography>
+                </Stack>
+              </Grid>
+              <Grid item xs={6}>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <PaymentsIcon fontSize="small" color="primary" />
+                  <Typography fontWeight="bold">Payment Method:</Typography>
+                  <Typography fontWeight="bold">{job.paymentMethod}</Typography>
                 </Stack>
               </Grid>
             </Grid>

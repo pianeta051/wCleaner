@@ -33,6 +33,7 @@ const {
   deleteJobType,
   editAddress,
   editJobFromCustomer,
+  updateJobStatus,
   deleteJobFromCustomer,
   deleteAddress,
   editCustomer,
@@ -431,11 +432,17 @@ app.post("/customers/:customerId/job", async function (req, res) {
 });
 
 app.put("/customers/:customerId/jobs/:jobId", async function (req, res) {
+  const groups = req.authData?.groups;
+  const isAdmin = groups.includes("Admin");
+  if (!isAdmin) {
+    res.status(401).json({ error: "User unauthorized" });
+    return;
+  }
+
   try {
     const { customerId, jobId } = req.params;
     let updatedJob = req.body;
     updatedJob = mapJobFromRequestBody(req.body);
-
     const jobUpdated = await editJobFromCustomer(customerId, jobId, updatedJob);
 
     res.json({ job: { ...jobUpdated, assignedTo: undefined, id: jobId } });
@@ -447,6 +454,54 @@ app.put("/customers/:customerId/jobs/:jobId", async function (req, res) {
     } else {
       throw error;
     }
+  }
+});
+
+//Edit job status
+
+app.put("/customers/:customerId/jobs/:jobId/status", async function (req, res) {
+  const { customerId, jobId } = req.params;
+  const { status } = req.body;
+
+  if (!status) {
+    res.status(400).json({ error: "Missing status value" });
+    return;
+  }
+
+  try {
+    const groups = req.authData?.groups || [];
+    const userSub = req.authData?.userSub;
+    const isAdmin = groups.includes("Admin");
+
+    const jobFromDb = await getJob(customerId, jobId);
+    const assignedTo = jobFromDb?.assigned_to?.S;
+
+    if (!jobFromDb) {
+      res.status(404).json({ error: "Job not found" });
+      return;
+    }
+
+    if (!isAdmin && assignedTo !== userSub) {
+      res.status(403).json({ error: "User unauthorized" });
+      return;
+    }
+
+    if (status === "cancelled") {
+      res.status(400).json({
+        error: "Status 'cancelled' cannot be updated via this endpoint",
+      });
+      return;
+    }
+
+    await updateJobStatus(customerId, jobId, status);
+
+    res.json({ status });
+  } catch (error) {
+    if (error === "JOB_NOT_FOUND") {
+      res.status(404).json({ error: "Job not found" });
+      return;
+    }
+    throw error;
   }
 });
 
@@ -513,6 +568,7 @@ app.get("/job-types", async function (req, res) {
 // Update Job Type
 app.put("/job-type/:jobTypeId", async function (req, res) {
   const groups = req.authData?.groups;
+
   const isAdmin = groups?.includes("Admin");
   try {
     const jobTypeId = req.params.jobTypeId;

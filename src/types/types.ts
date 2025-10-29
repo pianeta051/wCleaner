@@ -37,7 +37,7 @@ export type JobAssignation = {
   color?: string;
 };
 
-export type JobStatus = "pending" | "completed" | "canceled";
+export type JobStatus = "pending" | "completed" | "cancelled";
 
 export type Job = {
   customerId?: string;

@@ -3,8 +3,6 @@ AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 const { mapCustomer } = require("./mappers");
-const { mapJob } = require("./mappers");
-
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 5;
 const generateSlug = async (email, name) => {
@@ -1118,10 +1116,10 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
       (params.ExpressionAttributeValues[":price"] = {
         N: updatedJob.price.toString(),
       });
-  if (updatedJob.assigned_to)
+  if (updatedJob.assignedTo)
     updates.push("#A = :assigned_to"),
       (params.ExpressionAttributeValues[":assigned_to"] = {
-        S: updatedJob.assigned_to,
+        S: updatedJob.assignedTo,
       });
   if (updatedJob.jobTypeId)
     updates.push("#JT = :job_type_id"),
@@ -1151,6 +1149,44 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
 
   await ddb.updateItem(params).promise();
   return updatedJob;
+};
+
+// EDITTING STATUS FROM JOB
+
+const updateJobStatus = async (customerId, jobId, status) => {
+  if (!customerId || !jobId) {
+    throw "INVALID_JOB";
+  }
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+  };
+
+  const job = await ddb.getItem(params).promise();
+  if (!job.Item) {
+    throw "JOB_NOT_FOUND";
+  }
+
+  const updateParams = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+    UpdateExpression: "SET #ST = :status",
+    ExpressionAttributeNames: {
+      "#ST": "status",
+    },
+    ExpressionAttributeValues: {
+      ":status": { S: status },
+    },
+  };
+
+  await ddb.updateItem(updateParams).promise();
 };
 
 //DELETE JOB
@@ -1409,6 +1445,7 @@ module.exports = {
   deleteJobType,
   deleteCustomerNote,
   editJobFromCustomer,
+  updateJobStatus,
   deleteJobFromCustomer,
   addFile,
 };

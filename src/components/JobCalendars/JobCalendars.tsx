@@ -91,7 +91,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   };
 
   const getColor = (job: Job) => {
-    if (job.status === "canceled") {
+    if (job.status === "cancelled") {
       return CANCELED_COLOR;
     }
     if (colorLegendView === "users") {

@@ -5,6 +5,7 @@ import {
   JobAssignation,
   JobFilters,
   JobsPaginationArguments,
+  JobStatus,
   JobType,
 } from "../types/types";
 import { isErrorResponse } from "./error";
@@ -265,6 +266,7 @@ export const editCustomerJob = async (
   jobId: string,
   formValues: JobFormValues
 ): Promise<Job> => {
+  console.log(JSON.stringify({ formValues }, null, 2));
   try {
     const response = await put(`/customers/${customerId}/jobs/${jobId}`, {
       ...formValues,
@@ -274,6 +276,7 @@ export const editCustomerJob = async (
       endTime: formValues.endTime.format("HH:mm"),
       assigned_to: formValues.assignedTo,
     });
+
     if (!isJob(response.job)) {
       throw "INTERNAL_ERROR";
     }
@@ -283,6 +286,32 @@ export const editCustomerJob = async (
       const status = error.response.status;
       if (status === 404) {
         throw "CUSTOMER_NOT_FOUND";
+      }
+      if (status === 401) {
+        throw "UNAUTHORIZED";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+
+//EDITING STATUS FROM JOB
+export const updateJobStatus = async (
+  customerId: string,
+  jobId: string,
+  status: JobStatus
+): Promise<void> => {
+  try {
+    await put(`/customers/${customerId}/jobs/${jobId}/status`, { status });
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const statusCode = error.response.status;
+      if (statusCode === 404) {
+        throw "JOB_NOT_FOUND";
+      }
+      if (statusCode === 403 || statusCode === 400) {
+        throw "UNAUTHORIZED";
       }
     }
     throw "INTERNAL_ERROR";

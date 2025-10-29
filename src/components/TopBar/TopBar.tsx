@@ -1,18 +1,27 @@
-import { FC, useState } from "react";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
+import { FC, useMemo, useState } from "react";
+import {
+  AppBar,
+  Box,
+  MenuItem,
+  Menu,
+  Tooltip,
+  Divider,
+  ListItemText,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import FormGroup from "@mui/material/FormGroup";
-import MenuItem from "@mui/material/MenuItem";
-import Menu from "@mui/material/Menu";
-import { useNavigate } from "react-router-dom";
-import { MenuButton } from "./TopBar.style";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
-import { Divider, ListItemText, Tooltip } from "@mui/material";
+
+import {
+  Bar,
+  Brand,
+  DesktopNav,
+  BurgerButton,
+  Spacer,
+  NavButton,
+  RightZone,
+} from "./TopBar.style";
 
 type Page = {
   label: string;
@@ -22,150 +31,138 @@ type Page = {
 
 export const TopBar: FC = () => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [anchorElMenu, setAnchorElMenu] = useState<null | HTMLElement>(null);
+
   const { logOut, isInGroup, user } = useAuth();
   const isAdmin = isInGroup("Admin");
+
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const openUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
-  };
-  const openIconMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const pages: Page[] = [
-    { label: "customers", url: "/admin/customers", exclusiveFor: "Admin" },
-    { label: "users", url: "/admin/users", exclusiveFor: "Admin" },
-    { label: "jobs  ", url: "/admin/jobs" },
-  ];
-  const open = Boolean(anchorEl);
-  const closeUserMenu = () => {
-    setAnchorElUser(null);
-  };
-  const closeMenuIconHandler = () => {
-    setAnchorEl(null);
+  const pages: Page[] = useMemo(
+    () =>
+      [
+        { label: "Customers", url: "/admin/customers", exclusiveFor: "Admin" },
+        { label: "Users", url: "/admin/users", exclusiveFor: "Admin" },
+        { label: "Jobs", url: "/admin/jobs" },
+      ].filter((p) => (p.exclusiveFor ? isInGroup(p.exclusiveFor) : true)),
+    [isAdmin]
+  );
+
+  const openUserMenu = (e: React.MouseEvent<HTMLElement>) =>
+    setAnchorElUser(e.currentTarget);
+  const closeUserMenu = () => setAnchorElUser(null);
+
+  const openMainMenu = (e: React.MouseEvent<HTMLElement>) =>
+    setAnchorElMenu(e.currentTarget);
+  const closeMainMenu = () => setAnchorElMenu(null);
+
+  const go = (url: string) => {
+    navigate(url);
+    closeMainMenu();
   };
 
-  const toProfile = () => navigate("/admin/profile");
-  const toCustomers = () => navigate("/admin/customers");
-
-  const toUsers = () => navigate("/admin/users");
-  const toJobs = () => navigate("/admin/jobs");
+  const toProfile = () => {
+    navigate("/admin/profile");
+    closeUserMenu();
+  };
 
   const logOutHandler = async () => {
-    if (logOut) {
-      await logOut();
-    }
+    if (logOut) await logOut();
     closeUserMenu();
     navigate("/");
   };
 
-  const menuClickHandler: React.MouseEventHandler<HTMLButtonElement> = (
-    event
-  ) => {
-    const url = pages.find(
-      (page) => page.label === (event.target as HTMLElement).textContent
-    )?.url;
-    if (url) {
-      navigate(url);
-    }
-  };
-
-  const menuItems = pages.map((page) => {
-    if (page.exclusiveFor && !isInGroup(page.exclusiveFor)) {
-      return null;
-    }
-    return (
-      <MenuButton key={page.url} onClick={menuClickHandler}>
-        {page.label}
-      </MenuButton>
-    );
-  });
+  const isActive = (url: string) =>
+    location.pathname === url || location.pathname.startsWith(url + "/");
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <FormGroup></FormGroup>
-      <AppBar position="fixed">
-        <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-            aria-controls={open ? "demo-positioned-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? "true" : undefined}
-            onClick={openIconMenu}
-          >
-            <MenuIcon />
-          </IconButton>
+    <AppBar position="fixed" elevation={2}>
+      <Bar disableGutters>
+        <BurgerButton
+          color="inherit"
+          aria-label="open main menu"
+          onClick={openMainMenu}
+          edge="start"
+        >
+          <MenuIcon />
+        </BurgerButton>
 
-          <Menu
-            id="menu-appbar"
-            aria-labelledby="demo-positioned-button"
-            anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: "top",
-              horizontal: "left",
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "left",
-            }}
-            open={Boolean(anchorEl)}
-            onClose={closeMenuIconHandler}
-          >
-            {" "}
-            {isAdmin && (
-              <>
-                <MenuItem onClick={toCustomers}>Customers</MenuItem>
-                <MenuItem onClick={toUsers}>Users</MenuItem>
-              </>
-            )}
-            <MenuItem onClick={toJobs}>Jobs</MenuItem>
-          </Menu>
+        <Brand
+          variant="h6"
+          onClick={() => navigate("/")}
+          role="link"
+          aria-label="Go home"
+        >
+          Window Cleaner
+        </Brand>
 
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Window Cleaner
-          </Typography>
-          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-            {menuItems}
-          </Box>
-          <div>
-            <Tooltip title="Open settings">
-              <IconButton onClick={openUserMenu} sx={{ p: 0 }}>
-                <ProfileIcon />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={closeUserMenu}
+        <DesktopNav>
+          {pages.map((p) => (
+            <NavButton
+              key={p.url}
+              onClick={() => go(p.url)}
+              $active={isActive(p.url)}
             >
-              {user?.attributes?.email && (
-                <MenuItem>
-                  <ListItemText>{user?.attributes?.email}</ListItemText>
-                </MenuItem>
-              )}
-              {user?.attributes?.email && <Divider />}
-              <MenuItem onClick={toProfile}>Profile</MenuItem>
-              <MenuItem onClick={logOutHandler}>Log out</MenuItem>
-            </Menu>
-          </div>
-        </Toolbar>
-      </AppBar>
-      <Toolbar />
-    </Box>
+              {p.label}
+            </NavButton>
+          ))}
+        </DesktopNav>
+
+        <Spacer />
+
+        <RightZone>
+          <Tooltip title="Open settings">
+            <Box component="span">
+              <NavButton onClick={openUserMenu}>
+                <ProfileIcon />
+              </NavButton>
+            </Box>
+          </Tooltip>
+        </RightZone>
+      </Bar>
+
+      <Menu
+        id="main-menu"
+        anchorEl={anchorElMenu}
+        open={Boolean(anchorElMenu)}
+        onClose={closeMainMenu}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        keepMounted
+      >
+        {pages.map((p) => (
+          <MenuItem
+            key={p.url}
+            onClick={() => go(p.url)}
+            selected={isActive(p.url)}
+            dense
+          >
+            {p.label}
+          </MenuItem>
+        ))}
+      </Menu>
+
+      <Menu
+        id="user-menu"
+        anchorEl={anchorElUser}
+        open={Boolean(anchorElUser)}
+        onClose={closeUserMenu}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        keepMounted
+      >
+        {user?.attributes?.email && (
+          <>
+            <MenuItem disableRipple>
+              <ListItemText primary={user.attributes.email} />
+            </MenuItem>
+            <Divider />
+          </>
+        )}
+        <MenuItem onClick={toProfile}>Profile</MenuItem>
+        <MenuItem onClick={logOutHandler}>Log out</MenuItem>
+      </Menu>
+    </AppBar>
   );
 };

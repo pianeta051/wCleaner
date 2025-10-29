@@ -31,7 +31,7 @@ export type JobFormValues = {
   jobTypeId: string;
   fileUrl?: string;
   addressId: string;
-  status: "pending" | "completed" | "canceled";
+  status: "pending" | "completed" | "cancelled";
   paymentMethod: "cash" | "bank_transfer" | "paypal" | "cheque" | "none";
 };
 
@@ -78,7 +78,7 @@ const validationSchema = yup.object({
   jobTypeId: yup.string(),
   fileUrl: yup.string(),
   addressId: yup.string().required(),
-  status: yup.string().oneOf(["pending", "completed", "canceled"]).required(),
+  status: yup.string().oneOf(["pending", "completed", "cancelled"]).required(),
   paymentMethod: yup
     .string()
     .oneOf(["cash", "bank_transfer", "paypal", "cheque", "none"])
@@ -272,7 +272,7 @@ export const JobForm: FC<JobFormProps> = ({
                 >
                   <MenuItem value="pending">Pending</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="canceled">Canceled</MenuItem>
+                  <MenuItem value="cancelled">Cancelled</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
