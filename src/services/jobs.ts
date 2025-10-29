@@ -408,6 +408,9 @@ export const getJob = async (
       if (error.response.status === 404) {
         throw "NOT_FOUND";
       }
+      if (error.response.status === 401) {
+        throw "UNAUTHORIZED";
+      }
     }
 
     throw "INTERNAL_ERROR";

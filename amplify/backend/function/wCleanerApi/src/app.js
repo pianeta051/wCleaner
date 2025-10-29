@@ -336,6 +336,13 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
     if (isAdmin) {
       job = (await getJobUsers([jobFromDb]))[0];
     } else {
+      const userSub = req.authData?.userSub;
+      const assignedTo = jobFromDb.assigned_to?.S;
+      if (assignedTo !== userSub) {
+        res.status(401).json({ message: "User not allowed to visit this job" });
+        return;
+      }
+
       const restrictedCustomer = {
         id: job.customer.id,
         slug: job.customer.slug,
