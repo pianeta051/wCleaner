@@ -4,10 +4,6 @@ import { Job, JobStatus } from "../../types/types";
 import { LoadingButton } from "@mui/lab";
 import { useUpdateJobStatus } from "../../hooks/Jobs/useUpdateJobStatus";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { useAuth } from "../../context/AuthContext";
-import { CognitoUserWithAttributes } from "../../services/authentication";
-import { useCustomerEditJob } from "../../hooks/Jobs/useEditJob";
-import { transformToFormValues } from "../../helpers/job";
 type JobToggleStatusButtonProps = {
   currentJob: Job;
   onChange: (status: JobStatus) => void;

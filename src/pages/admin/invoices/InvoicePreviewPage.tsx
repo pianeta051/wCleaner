@@ -10,9 +10,7 @@ import {
   TopBar,
   PdfContainer,
   ButtonDownload,
-  CloseButton,
 } from "./InvoicePreviewPage.style";
-import { Invoice } from "../../../types/types";
 import { useJobInvoice } from "../../../hooks/Jobs/useJobInvoice";
 
 type Params = {

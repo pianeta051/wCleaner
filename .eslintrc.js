@@ -17,7 +17,7 @@ module.exports = {
     sourceType: "module",
     project: "./tsconfig.json",
   },
-  plugins: ["react", "@typescript-eslint"],
+  plugins: ["react", "@typescript-eslint", "unused-imports"],
   settings: {
     react: {
       version: "detect",
@@ -25,10 +25,17 @@ module.exports = {
   },
   rules: {
     "react/react-in-jsx-scope": "off",
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      { args: "all", argsIgnorePattern: "^_" },
-    ],
     "@typescript-eslint/triple-slash-reference": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+      "warn",
+      {
+        vars: "all",
+        varsIgnorePattern: "^_",
+        args: "after-used",
+        argsIgnorePattern: "^_",
+      },
+    ],
   },
 };

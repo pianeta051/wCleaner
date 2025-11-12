@@ -16,7 +16,7 @@ import moment from "moment";
 import dayjs, { Dayjs } from "dayjs";
 import { GenericJobModal } from "../GenericJobModal/GenericJobModal";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { Avatar, Popover } from "@mui/material";
+import { Popover } from "@mui/material";
 import { Job } from "../../types/types";
 import { JobCard } from "../JobCard/JobCard";
 import { ErrorCode } from "../../services/error";

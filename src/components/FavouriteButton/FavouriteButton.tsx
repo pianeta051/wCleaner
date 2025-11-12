@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import IconButton from "@mui/material/IconButton";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import StarIcon from "@mui/icons-material/Star";

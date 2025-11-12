@@ -1,11 +1,9 @@
 import { FC, useEffect, useState } from "react";
 import {
   Alert,
-  Breadcrumbs,
   CircularProgress,
   Divider,
   Grid,
-  Link as MuiLink,
   Snackbar,
   Typography,
   useMediaQuery,
@@ -21,7 +19,7 @@ import {
   CurrentPage,
 } from "./CustomerDetails.style";
 
-import { useParams, Link as RouterLink } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import {
   Wrapper,

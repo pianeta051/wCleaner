@@ -1,13 +1,6 @@
 import { FC } from "react";
-import { useParams, Link as RouterLink } from "react-router-dom";
-import {
-  CircularProgress,
-  Typography,
-  Box,
-  Grid,
-  Breadcrumbs,
-  Link as MuiLink,
-} from "@mui/material";
+import { useParams } from "react-router-dom";
+import { CircularProgress, Box, Grid } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";
 import AssignmentIcon from "@mui/icons-material/Assignment";

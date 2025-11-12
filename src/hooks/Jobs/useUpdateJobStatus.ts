@@ -1,6 +1,6 @@
 import { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
-import { Job, JobFilters, JobStatus } from "../../types/types";
+import { JobFilters, JobStatus } from "../../types/types";
 import { updateJobStatus } from "../../services/jobs";
 import { extractErrorCode } from "../../services/error";
 import { unstable_serialize } from "swr/infinite";

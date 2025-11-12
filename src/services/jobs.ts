@@ -13,7 +13,6 @@ import { isErrorResponse } from "./error";
 import { JobFormValues } from "../components/JobForm/JobForm";
 import { isCustomer } from "./customers";
 import { JobTypeFormValues } from "../components/JobTypeForm/JobTypeForm";
-import dayjs from "dayjs";
 import { InvoiceFormValues } from "../components/InvoiceForm/InvoiceForm";
 
 // GENERAL FUNCTIONS
