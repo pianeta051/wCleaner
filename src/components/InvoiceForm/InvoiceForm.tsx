@@ -5,17 +5,18 @@ import * as yup from "yup";
 import { Form } from "../Form/Form";
 import { Button, DialogActions, DialogContent, TextField } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { AddressSelector } from "../AddressSelector/AddressSelector";
 
 export type InvoiceFormValues = {
   description: string;
   date: Dayjs;
-  address: string;
+  addressId: string;
 };
 
 const INITIAL_VALUES: InvoiceFormValues = {
   date: dayjs(),
   description: "",
-  address: "",
+  addressId: "",
 };
 
 const validationSchema = yup.object({
@@ -27,7 +28,7 @@ const validationSchema = yup.object({
       (value) => dayjs.isDayjs(value) && value.isValid()
     ),
   description: yup.string().required("Description is required"),
-  address: yup.string().nullable(),
+  addressId: yup.string().required("Address is required"),
 });
 
 type InvoiceFormProps = {
@@ -35,6 +36,7 @@ type InvoiceFormProps = {
   defaultValues?: InvoiceFormValues;
   loading?: boolean;
   onCancel?: () => void;
+  customerId: string;
 };
 
 export const InvoiceForm: FC<InvoiceFormProps> = ({
@@ -42,6 +44,7 @@ export const InvoiceForm: FC<InvoiceFormProps> = ({
   defaultValues = INITIAL_VALUES,
   loading,
   onCancel,
+  customerId,
 }) => {
   const formik = useFormik<InvoiceFormValues>({
     initialValues: defaultValues,
@@ -56,6 +59,15 @@ export const InvoiceForm: FC<InvoiceFormProps> = ({
   return (
     <Form onSubmit={formik.handleSubmit}>
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <AddressSelector
+          value={formik.values.addressId}
+          onChange={(value) =>
+            formik.handleChange({ target: { value, name: "addressId" } })
+          }
+          onBlur={formik.handleBlur}
+          error={formik.touched.addressId ? formik.errors.addressId : undefined}
+          customerId={customerId}
+        />
         <DatePicker
           name="date"
           onChange={dateChangeHandler}

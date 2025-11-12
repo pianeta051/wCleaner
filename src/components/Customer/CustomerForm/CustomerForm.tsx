@@ -36,7 +36,7 @@ import {
 } from "../CustomerAddressForm/CustomerAddressForm";
 import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
 import { JobForm } from "../../JobForm/JobForm";
-import { AddressSelector } from "../../AddressSelector/AddressSelector";
+import { AddressModal } from "../../AddressModal/AddressModal";
 
 export type CustomerFormValues = {
   name: string;
@@ -445,7 +445,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
       )}
 
       {customerId && addressIdDeleting && (
-        <AddressSelector
+        <AddressModal
           open={addressSelectorOpen}
           onClose={() => setAddressSelectorOpen(false)}
           customerId={customerId}

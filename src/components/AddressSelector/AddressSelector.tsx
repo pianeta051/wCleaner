@@ -1,24 +1,16 @@
-import { FC, useEffect, useState } from "react";
+import { FC } from "react";
+import { useCustomerAddresses } from "../../hooks/Customers/addresses/useCustomerAddresses";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
+  Box,
+  CircularProgress,
   FormControl,
   InputLabel,
-  Select,
   MenuItem,
-  CircularProgress,
+  Select,
   Typography,
-  Box,
 } from "@mui/material";
-import { getCustomerAddressses } from "../../services/customers";
-import { useUpdateJobAddress } from "../../hooks/Jobs/useUpdateJobAddress";
-import { useDeleteCustomerAddress } from "../../hooks/Customers/addresses/useDeleteCustomerAddress";
-import { useCustomerJobs } from "../../hooks/Jobs/useCustomerJobs";
 
-type Address = {
+export type Address = {
   id: string;
   name: string;
   address: string;
@@ -26,134 +18,78 @@ type Address = {
 };
 
 type AddressSelectorProps = {
-  open: boolean;
-  onClose: () => void;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  excludeValues?: string[];
   customerId: string;
-  onUpdated: () => void;
-  oldAddressId: string;
+  onBlur?: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
 };
 
 export const AddressSelector: FC<AddressSelectorProps> = ({
-  open,
-  onClose,
+  value,
+  onChange,
+  excludeValues,
   customerId,
-  onUpdated,
-  oldAddressId,
+  onBlur,
+  error,
 }) => {
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selected, setSelected] = useState<string>("");
-  const [loadingAddresses, setLoadingAddresses] = useState<boolean>(true);
-
   const {
-    updateJobAddress,
-    loading: saving,
-    error: errorUpdate,
-  } = useUpdateJobAddress(customerId, oldAddressId);
+    addresses,
+    loading,
+    error: errorLoadingAddresses,
+  } = useCustomerAddresses(customerId);
 
-  const {
-    deleteCustomerAddress,
-    loading: deleting,
-    error: errorDelete,
-  } = useDeleteCustomerAddress(customerId);
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" py={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-  const { reload: reloadJobs } = useCustomerJobs(customerId, {}, "desc");
+  const addressOptions =
+    addresses?.filter((address) => !excludeValues?.includes(address.id)) ?? [];
 
-  const error = errorUpdate ?? errorDelete;
-
-  useEffect(() => {
-    if (!open) return;
-
-    setLoadingAddresses(true);
-    getCustomerAddressses(customerId)
-      .then((res: Address[]) => {
-        setAddresses(res);
-        if (res.length) setSelected(res[0].id);
-      })
-      .catch((err) => {
-        console.error("Failed to load addresses:", err);
-        setAddresses([]);
-      })
-      .finally(() => setLoadingAddresses(false));
-  }, [open, customerId]);
-
-  const handleSave = async () => {
-    if (!selected) return;
-    try {
-      await updateJobAddress(selected);
-      await deleteCustomerAddress(oldAddressId);
-      onUpdated();
-      reloadJobs();
-      onClose();
-    } catch (err) {
-      console.error("Error updating job address:", err);
-    }
-  };
-
-  const loading = saving || deleting;
-  const addressOptions = addresses.filter(
-    (address) => address.id !== oldAddressId
-  );
+  if (!addressOptions.length) {
+    return (
+      <>
+        <Typography color="error" sx={{ py: 2 }}>
+          No addresses available for this customer.
+        </Typography>
+        {errorLoadingAddresses && (
+          <Typography>{errorLoadingAddresses}</Typography>
+        )}
+      </>
+    );
+  }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-      aria-labelledby="reassign-job-address"
-    >
-      <DialogTitle id="reassign-job-address">Reassign Job Address</DialogTitle>
-      <DialogContent dividers>
-        {loadingAddresses ? (
-          <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress />
-          </Box>
-        ) : addressOptions.length > 0 ? (
-          <FormControl fullWidth>
-            <InputLabel id="address-select-label">Select Address</InputLabel>
-            <Select
-              labelId="address-select-label"
-              value={selected}
-              label="Select Address"
-              onChange={(e) => setSelected(e.target.value)}
-            >
-              {addressOptions.map((a) => (
-                <MenuItem key={a.id} value={a.id}>
-                  <Box display="flex" flexDirection="column">
-                    <Typography fontWeight="500">{a.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {a.address}, {a.postcode}
-                    </Typography>
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        ) : (
-          <Typography color="error" sx={{ py: 2 }}>
-            No addresses available for this customer.
-          </Typography>
-        )}
-
-        {error && (
-          <Typography color="error" sx={{ mt: 2 }}>
-            Failed to update job address. Please try again.
-          </Typography>
-        )}
-      </DialogContent>
-
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} disabled={loading}>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={!selected || loading}
-        >
-          {loading ? "Saving..." : "Save"}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <FormControl fullWidth>
+      <InputLabel id="address-select-label">Select Address</InputLabel>
+      <Select
+        labelId="address-select-label"
+        value={value}
+        label="Select Address"
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+      >
+        {addressOptions.map((a) => (
+          <MenuItem key={a.id} value={a.id}>
+            <Box display="flex" flexDirection="column">
+              <Typography fontWeight="500">{a.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {a.address}, {a.postcode}
+              </Typography>
+            </Box>
+          </MenuItem>
+        ))}
+      </Select>
+      {error && (
+        <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+          {error}
+        </Typography>
+      )}
+    </FormControl>
   );
 };

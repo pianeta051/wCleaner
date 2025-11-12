@@ -1,6 +1,5 @@
 import { FC } from "react";
 import {
-  Alert,
   Button,
   FormControl,
   Grid,
@@ -8,7 +7,6 @@ import {
   MenuItem,
   Select,
   TextField,
-  Typography,
 } from "@mui/material";
 import { DateField, Field, TimeField } from "./JobForm.style";
 import { LoadingButton } from "@mui/lab";
@@ -21,7 +19,7 @@ import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import { useAuth } from "../../context/AuthContext";
 import { UserSelector } from "../UserSelector/UserSelector";
 import { JobTypeSelector } from "../JobTypeSelector/JobTypeSelector";
-import { useCustomerAddresses } from "../../hooks/Customers/addresses/useCustomerAddresses";
+import { AddressSelector } from "../AddressSelector/AddressSelector";
 
 export type JobFormValues = {
   date: Dayjs;
@@ -107,11 +105,6 @@ export const JobForm: FC<JobFormProps> = ({
   customerId,
 }) => {
   const { isInGroup } = useAuth();
-  const {
-    addresses,
-    loading: loadingAddresses,
-    error: errorLoadingAddresses,
-  } = useCustomerAddresses(customerId);
 
   const defaultValuesForm = !defaultValues ? INITIAL_VALUES : defaultValues;
 
@@ -147,43 +140,17 @@ export const JobForm: FC<JobFormProps> = ({
     <Form onSubmit={formik.handleSubmit}>
       <Grid container spacing={3} sx={{ px: { xs: 2, md: 4 } }}>
         <Grid item xs={12} md={columns}>
-          {loadingAddresses ? (
-            <Typography>Addresses loading...</Typography>
-          ) : addresses?.length ? (
-            <FormControl
-              fullWidth
-              error={Boolean(
-                formik.touched.addressId && formik.errors.addressId
-              )}
-            >
-              <InputLabel>Address</InputLabel>
-              <Select
-                value={formik.values.addressId}
-                label="Address"
-                name="addressId"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              >
-                {addresses.map((address) => (
-                  <MenuItem value={address.id} key={address.id}>
-                    {`${address.address} ${address.postcode}`}
-                  </MenuItem>
-                ))}
-              </Select>
-              {formik.touched.addressId && formik.errors.addressId && (
-                <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                  {formik.errors.addressId}
-                </Typography>
-              )}
-            </FormControl>
-          ) : (
-            <Alert severity="error">
-              <Typography>No addresses available for this customer</Typography>
-              {errorLoadingAddresses && (
-                <Typography>{errorLoadingAddresses}</Typography>
-              )}
-            </Alert>
-          )}
+          <AddressSelector
+            value={formik.values.addressId}
+            onChange={(value) =>
+              formik.handleChange({ target: { value, name: "addressId" } })
+            }
+            onBlur={formik.handleBlur}
+            error={
+              formik.touched.addressId ? formik.errors.addressId : undefined
+            }
+            customerId={customerId}
+          />
         </Grid>
 
         <Grid item xs={12} md={columns}>
@@ -325,7 +292,7 @@ export const JobForm: FC<JobFormProps> = ({
             type="submit"
             sx={{ width: { xs: "100%", md: "50%" } }}
             loading={loading}
-            disabled={loadingAddresses}
+            disabled={loading}
           >
             Save
           </LoadingButton>

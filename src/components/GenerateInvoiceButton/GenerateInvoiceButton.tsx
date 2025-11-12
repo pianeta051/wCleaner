@@ -34,7 +34,7 @@ export const GenerateInvoiceButton: FC<GenerateInvoiceButtonProps> = ({
         open={open}
         onClose={closeModal}
         customerId={job.customerId as string}
-        jobId={job.id}
+        job={job}
         onGenerated={() => {
           closeModal();
           onGenerated();

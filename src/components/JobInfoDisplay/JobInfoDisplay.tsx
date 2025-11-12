@@ -43,11 +43,19 @@ const STATUS_COLORS: Record<
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const { invoice } = useJobInvoice(job.customerId, job.id);
+  const { invoice, loading, error, reload } = useJobInvoice(
+    job.customerId,
+    job.id
+  );
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
   const assignedTo = job?.assignedTo?.name ?? job?.assignedTo?.email;
+
+  const handleGenerated = () => {
+    reload();
+    onEdit();
+  };
 
   return (
     <>
@@ -74,7 +82,13 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
               }}
             />
             <Stack direction="row" spacing={1}>
-              <InvoiceActionButtons job={job} onGenerated={onEdit} />
+              <InvoiceActionButtons
+                job={job}
+                onGenerated={handleGenerated}
+                loading={loading}
+                error={error}
+                existing={!!invoice}
+              />
 
               {isAdmin ? (
                 <Button

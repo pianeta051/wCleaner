@@ -3,12 +3,14 @@ import { Dialog, DialogTitle } from "@mui/material";
 import { useGenerateInvoice } from "../../hooks/Jobs/useGenerateInvoice";
 import { InvoiceForm, InvoiceFormValues } from "../InvoiceForm/InvoiceForm";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
+import { Job } from "../../types/types";
+import dayjs from "dayjs";
 
 type GenerateInvoiceModalProps = {
   open: boolean;
   onClose: () => void;
   customerId: string;
-  jobId: string;
+  job: Job;
   onGenerated: () => void;
 };
 
@@ -16,10 +18,10 @@ export const GenerateInvoiceModal: FC<GenerateInvoiceModalProps> = ({
   open,
   onClose,
   customerId,
-  jobId,
+  job,
   onGenerated,
 }) => {
-  const { generate, loading, error } = useGenerateInvoice(customerId, jobId);
+  const { generate, loading, error } = useGenerateInvoice(customerId, job.id);
 
   const handleSubmit = async (formValues: InvoiceFormValues) => {
     try {
@@ -39,6 +41,12 @@ export const GenerateInvoiceModal: FC<GenerateInvoiceModalProps> = ({
         loading={loading}
         onSubmit={handleSubmit}
         onCancel={onClose}
+        defaultValues={{
+          date: dayjs(job.date),
+          description: "",
+          addressId: job.addressId as string,
+        }}
+        customerId={customerId}
       />
     </Dialog>
   );

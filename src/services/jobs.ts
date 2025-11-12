@@ -327,6 +327,7 @@ export const generateJobInvoice = async (
   formValues: InvoiceFormValues
 ): Promise<Job> => {
   const payload = {
+    ...formValues,
     date: formValues.date?.valueOf(),
     description: formValues.description.trim(),
   };
