@@ -43,7 +43,7 @@ export const InvoiceActionButtons: FC<InvoiceActionButtonsProps> = ({
       {!invoice ? (
         <GenerateInvoiceButton job={job} onGenerated={generatedHandler} />
       ) : (
-        <DownloadInvoiceButton job={job} invoice={invoice} />
+        <DownloadInvoiceButton job={job} />
       )}
     </Stack>
   );

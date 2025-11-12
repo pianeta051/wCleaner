@@ -43,7 +43,7 @@ const STATUS_COLORS: Record<
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const { invoice, loading, error } = useJobInvoice(job.customerId, job.id);
+  const { invoice } = useJobInvoice(job.customerId, job.id);
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 

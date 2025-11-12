@@ -15,7 +15,7 @@ export const Bar = styled(Toolbar)(({ theme }) => ({
 }));
 
 /** --- Marca / Logo clickable --- */
-export const Brand = styled(Typography)(({ theme }) => ({
+export const Brand = styled(Typography)(() => ({
   fontWeight: 700,
   fontSize: "1.25rem",
   letterSpacing: ".15rem",

@@ -35,7 +35,6 @@ type InvoiceFormProps = {
   defaultValues?: InvoiceFormValues;
   loading?: boolean;
   onCancel?: () => void;
-  addresses?: string[];
 };
 
 export const InvoiceForm: FC<InvoiceFormProps> = ({
@@ -43,7 +42,6 @@ export const InvoiceForm: FC<InvoiceFormProps> = ({
   defaultValues = INITIAL_VALUES,
   loading,
   onCancel,
-  addresses = [],
 }) => {
   const formik = useFormik<InvoiceFormValues>({
     initialValues: defaultValues,

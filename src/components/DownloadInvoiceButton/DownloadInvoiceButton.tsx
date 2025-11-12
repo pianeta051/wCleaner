@@ -2,16 +2,14 @@ import { FC } from "react";
 import { Button } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 
-import { Invoice, Job } from "../../types/types";
+import { Job } from "../../types/types";
 
 type DownloadInvoiceButtonProps = {
   job: Job;
-  invoice: Invoice;
 };
 
 export const DownloadInvoiceButton: FC<DownloadInvoiceButtonProps> = ({
   job,
-  invoice,
 }) => {
   const url = `/admin/customers/${job.customerId}/jobs/${job.id}/invoice`;
 

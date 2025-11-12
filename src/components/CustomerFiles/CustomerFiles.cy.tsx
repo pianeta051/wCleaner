@@ -3,15 +3,9 @@ import { ThemeProvider } from "@mui/material";
 import { theme } from "../../theme";
 import { Storage } from "aws-amplify";
 import "cypress-file-upload";
+import { Customer } from "../../types/types";
 let fileUrls: string[] = [];
-const remountCustomerFiles = () => {
-  const customer = {
-    id: "customer-123",
-    get fileUrls() {
-      return fileUrls;
-    },
-  } as any;
-};
+
 const mountCustomerFiles = (initialFileUrls: string[] = []) => {
   fileUrls = [...initialFileUrls];
 
@@ -20,11 +14,11 @@ const mountCustomerFiles = (initialFileUrls: string[] = []) => {
     get fileUrls() {
       return fileUrls;
     },
-  } as any;
+  };
 
   cy.mount(
     <ThemeProvider theme={theme}>
-      <CustomerFiles customer={customer} />
+      <CustomerFiles customer={customer as unknown as Customer} />
     </ThemeProvider>
   );
 
