@@ -11,7 +11,6 @@ import {
 import { CustomerFiles } from "../CustomerFiles/CustomerFiles";
 import { CustomerNotes } from "../CustomerNotes/CustomerNotes";
 import { useAuth } from "../../context/AuthContext";
-import { useJobCustomer } from "../../hooks/Jobs/useJobCustomer";
 
 type JobCustomerProps = {
   job: Job;

@@ -16,6 +16,7 @@ const {
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  addInvoice,
   getAddressesForJobs,
   getCleaningAddresses,
   getCustomers,
@@ -27,6 +28,8 @@ const {
   getJobType,
 
   getJobTypes,
+  getInvoiceByJobId,
+  getNextInvoiceNumber,
   getOutcodes,
   deleteCustomer,
   deleteCustomerNote,
@@ -694,6 +697,74 @@ app.put("/customers/:customerId/files", async function (req, res) {
     } else {
       throw error;
     }
+  }
+});
+
+//JOB INVOICE
+
+//ADDING
+
+app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
+  const { jobId } = req.params;
+  const { date, description } = req.body;
+
+  try {
+    const groups = req.authData?.groups || [];
+    const isAdmin = groups.includes("Admin");
+
+    if (!isAdmin) {
+      res.status(403).json({ error: "User unauthorized" });
+      return;
+    }
+
+    if (!date) {
+      res.status(400).json({ error: "MISSING_INVOICE_DATE" });
+      return;
+    }
+    if (!description) {
+      res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
+      return;
+    }
+
+    const existingInvoice = await getInvoiceByJobId(jobId);
+    if (existingInvoice) {
+      res.status(400).json({ error: "INVOICE_ALREADY_EXISTS" });
+      return;
+    }
+
+    const nextInvoiceNumber = await getNextInvoiceNumber();
+
+    const invoice = await addInvoice(jobId, nextInvoiceNumber, {
+      date,
+      description,
+    });
+    console.log(JSON.stringify({ invoice }, null, 2));
+    res.json({ invoice });
+
+    return;
+  } catch (err) {
+    console.error("Invoice generation error", err);
+    res.status(500).json({ error: "INTERNAL_ERROR" });
+    return;
+  }
+});
+
+//GET INVOICE
+app.get("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
+  const { jobId } = req.params;
+
+  try {
+    const invoice = await getInvoiceByJobId(jobId);
+
+    if (!invoice) {
+      res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+      return;
+    }
+
+    res.json({ invoice });
+  } catch (err) {
+    console.error("Error fetching invoice", err);
+    res.status(500).json({ error: "INTERNAL_ERROR" });
   }
 });
 

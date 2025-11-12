@@ -13,5 +13,6 @@ export const transformToFormValues = (job: Job): JobFormValues => {
     addressId: job.addressId ?? "",
     status: job.status ?? "pending",
     paymentMethod: job.paymentMethod ?? "none",
+    invoiceDescription: job.invoiceDescription?.trim() || undefined,
   };
 };

@@ -2,9 +2,10 @@ const AWS = require("aws-sdk");
 AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
-const { mapCustomer } = require("./mappers");
+const { mapCustomer, mapInvoice } = require("./mappers");
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 5;
+const INVOICE_PREFIX = "CWC";
 const generateSlug = async (email, name) => {
   const nameSlug = name
     .toLowerCase()
@@ -1080,16 +1081,7 @@ const getCustomerJobs = async (customerId, filters, order) => {
 
 const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
   const params = {
-    ExpressionAttributeNames: {
-      "#ST": "start",
-      "#ET": "end",
-      "#P": "price",
-      "#A": "assigned_to",
-      "#JT": "job_type_id",
-      "#AD": "address_id",
-      "#STT": "status",
-      "#PM": "payment_method",
-    },
+    ExpressionAttributeNames: {},
     ExpressionAttributeValues: {},
     Key: {
       PK: { S: `customer_${customerId}` },
@@ -1101,49 +1093,63 @@ const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
 
   const updates = [];
 
-  if (updatedJob.start)
-    updates.push("#ST = :start"),
-      (params.ExpressionAttributeValues[":start"] = {
-        N: updatedJob.start.toString(),
-      });
-  if (updatedJob.end)
-    updates.push("#ET = :end"),
-      (params.ExpressionAttributeValues[":end"] = {
-        N: updatedJob.end.toString(),
-      });
-  if (updatedJob.price)
-    updates.push("#P = :price"),
-      (params.ExpressionAttributeValues[":price"] = {
-        N: updatedJob.price.toString(),
-      });
-  if (updatedJob.assignedTo)
-    updates.push("#A = :assigned_to"),
-      (params.ExpressionAttributeValues[":assigned_to"] = {
-        S: updatedJob.assignedTo,
-      });
-  if (updatedJob.jobTypeId)
-    updates.push("#JT = :job_type_id"),
-      (params.ExpressionAttributeValues[":job_type_id"] = {
-        S: updatedJob.jobTypeId,
-      });
-  if (updatedJob.addressId)
-    updates.push("#AD = :address_id"),
-      (params.ExpressionAttributeValues[":address_id"] = {
-        S: updatedJob.addressId,
-      });
-  if (updatedJob.status)
-    updates.push("#STT = :status"),
-      (params.ExpressionAttributeValues[":status"] = {
-        S: updatedJob.status,
-      }),
-      (params.ExpressionAttributeNames["#STT"] = "status");
+  if (updatedJob.start) {
+    updates.push("#ST = :start");
+    params.ExpressionAttributeValues[":start"] = {
+      N: updatedJob.start.toString(),
+    };
+    params.ExpressionAttributeNames["#ST"] = "start";
+  }
+  if (updatedJob.end) {
+    updates.push("#ET = :end");
+    params.ExpressionAttributeValues[":end"] = {
+      N: updatedJob.end.toString(),
+    };
+    params.ExpressionAttributeNames["#ET"] = "end";
+  }
+  if (updatedJob.price) {
+    updates.push("#P = :price");
+    params.ExpressionAttributeValues[":price"] = {
+      N: updatedJob.price.toString(),
+    };
+    params.ExpressionAttributeNames["#P"] = "price";
+  }
+  if (updatedJob.assignedTo) {
+    updates.push("#A = :assigned_to");
+    params.ExpressionAttributeValues[":assigned_to"] = {
+      S: updatedJob.assignedTo,
+    };
+    params.ExpressionAttributeNames["#A"] = "assigned_to";
+  }
+  if (updatedJob.jobTypeId) {
+    updates.push("#JT = :job_type_id");
+    params.ExpressionAttributeValues[":job_type_id"] = {
+      S: updatedJob.jobTypeId,
+    };
+    params.ExpressionAttributeNames["#JT"] = "job_type_id";
+  }
+  if (updatedJob.addressId) {
+    updates.push("#AD = :address_id");
+    params.ExpressionAttributeValues[":address_id"] = {
+      S: updatedJob.addressId,
+    };
+    params.ExpressionAttributeNames["#AD"] = "address_id";
+  }
+  if (updatedJob.status) {
+    updates.push("#STT = :status");
+    params.ExpressionAttributeValues[":status"] = {
+      S: updatedJob.status,
+    };
+    params.ExpressionAttributeNames["#STT"] = "status";
+  }
 
-  if (updatedJob.paymentMethod)
-    updates.push("#PM = :payment_method"),
-      (params.ExpressionAttributeValues[":payment_method"] = {
-        S: updatedJob.paymentMethod,
-      }),
-      (params.ExpressionAttributeNames["#PM"] = "payment_method");
+  if (updatedJob.paymentMethod) {
+    updates.push("#PM = :payment_method");
+    params.ExpressionAttributeValues[":payment_method"] = {
+      S: updatedJob.paymentMethod,
+    };
+    params.ExpressionAttributeNames["#PM"] = "payment_method";
+  }
 
   params.UpdateExpression += " " + updates.join(", ");
 
@@ -1418,12 +1424,108 @@ const deleteCustomerNote = async (customerId, noteId) => {
   await ddb.updateItem(updateParams).promise();
 };
 
+//INVOICES
+const getNextInvoiceNumber = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "invoice_number",
+    KeyConditionExpression: "#SK = :invoice",
+    ExpressionAttributeNames: {
+      "#SK": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":invoice": { S: "invoice" },
+    },
+    Limit: 1,
+    ScanIndexForward: false,
+  };
+
+  const result = await ddb.query(params).promise();
+
+  if (!result.Items || result.Items.length === 0) {
+    return 1;
+  }
+
+  return Number(result.Items[0].invoice_number.N) + 1;
+};
+
+// const getInvoiceByJobId = async (jobId) => {
+//   const params = {
+//     TableName: TABLE_NAME,
+//     Key: {
+//       PK: { S: `job_id_${jobId}` },
+//       SK: { S: "invoice" },
+//     },
+//   };
+
+//   const result = await ddb.getItem(params).promise();
+
+//   if (!result.Item) {
+//     return null;
+//   }
+
+//   return mapInvoice(result.Item);
+// };
+const getInvoiceByJobId = async (jobId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    FilterExpression: "#pk = :pk AND #sk = :sk",
+    ExpressionAttributeNames: {
+      "#pk": "PK",
+      "#sk": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: `job_id_${jobId}` },
+      ":sk": { S: "invoice" },
+    },
+  };
+
+  let lastEvaluatedKey = undefined;
+  let result;
+
+  do {
+    result = await ddb
+      .scan({ ...params, ExclusiveStartKey: lastEvaluatedKey })
+      .promise();
+    lastEvaluatedKey = result.LastEvaluatedKey;
+  } while (lastEvaluatedKey && (!result.Items || result.Items.length === 0));
+
+  return result.Items[0] ? mapInvoice(result.Items[0]) : null;
+};
+
+const addInvoice = async (jobId, invoiceNumber, invoiceData) => {
+  const generatedAt = new Date().toISOString();
+
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: `job_id_${jobId}` },
+      SK: { S: "invoice" },
+      invoice_number: { N: "" + invoiceNumber },
+      generated_at: { S: generatedAt },
+      date: { S: "" + invoiceData.date },
+      description: { S: invoiceData.description },
+    },
+  };
+
+  await ddb.putItem(params).promise();
+
+  return {
+    jobId,
+    invoiceNumber,
+    date: invoiceData.date,
+    description: invoiceData.description,
+    generatedAt,
+  };
+};
+
 module.exports = {
   addCustomer,
   addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  addInvoice,
   deleteAddress,
   editAddress,
   editCustomer,
@@ -1439,6 +1541,8 @@ module.exports = {
   getJobs,
   getJobType,
   getJobTypes,
+  getInvoiceByJobId,
+  getNextInvoiceNumber,
   getOutcodes,
   queryCustomersByEmail,
   deleteCustomer,

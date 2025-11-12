@@ -46,6 +46,16 @@ const mapCustomerJobs = (customerJob) => ({
   paymentMethod: customerJob.payment_method?.S || "none",
 });
 
+const mapInvoice = (item) => ({
+  jobId: item.PK.S.replace("job_id_", ""),
+  invoiceNumber: item.invoice_number
+    ? Number(item.invoice_number.N)
+    : undefined,
+  date: item.date ? Number(item.date.S) : undefined,
+  description: item.description?.S ?? "",
+  generatedAt: item.generated_at?.S,
+});
+
 // map a single standalone job
 const mapJob = (jobFromDb) => {
   const startValue = jobFromDb.start?.N ? +jobFromDb.start.N : Date.now();
@@ -113,6 +123,7 @@ module.exports = {
   mapCleaningAddress,
   mapCustomer,
   mapCustomerJobs,
+  mapInvoice,
   mapJob,
   mapJobAddressUpdate,
   mapJobFromRequestBody,

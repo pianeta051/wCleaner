@@ -18,6 +18,7 @@ import { JobsPage } from "../pages/admin/Jobs/Jobs";
 import { JobDetailsPage } from "../pages/admin/JobDetails/JobDetails";
 import { AdminLayoutFullWidth } from "../components/AdminLayout/AdminLayoutFullWidth";
 import { useAuth } from "../context/AuthContext";
+import { InvoicePreviewPage } from "../pages/admin/invoices/InvoicePreviewPage";
 
 export const AppRoutes: FC = () => {
   const { isInGroup } = useAuth();
@@ -58,6 +59,10 @@ export const AppRoutes: FC = () => {
           <Route path="customers" element={<AdminLayoutFullWidth />}>
             <Route index element={<Customers />} />
             <Route path=":slug" element={<CustomerDetails />} />
+            <Route
+              path=":customerId/jobs/:jobId/invoice"
+              element={<InvoicePreviewPage />}
+            />
             <Route path=":customerId">
               <Route path="jobs">
                 <Route path=":jobId">
@@ -72,6 +77,7 @@ export const AppRoutes: FC = () => {
               <Route path="jobs">
                 <Route path=":jobId">
                   <Route index element={<JobDetailsPage />} />
+                  <Route path="invoice" element={<InvoicePreviewPage />} />
                 </Route>
               </Route>
             </Route>

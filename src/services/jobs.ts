@@ -1,6 +1,7 @@
 import { API } from "aws-amplify";
 
 import {
+  Invoice,
   Job,
   JobAssignation,
   JobFilters,
@@ -12,6 +13,8 @@ import { isErrorResponse } from "./error";
 import { JobFormValues } from "../components/JobForm/JobForm";
 import { isCustomer } from "./customers";
 import { JobTypeFormValues } from "../components/JobTypeForm/JobTypeForm";
+import dayjs from "dayjs";
+import { InvoiceFormValues } from "../components/InvoiceForm/InvoiceForm";
 
 // GENERAL FUNCTIONS
 const get = async (
@@ -266,7 +269,6 @@ export const editCustomerJob = async (
   jobId: string,
   formValues: JobFormValues
 ): Promise<Job> => {
-  console.log(JSON.stringify({ formValues }, null, 2));
   try {
     const response = await put(`/customers/${customerId}/jobs/${jobId}`, {
       ...formValues,
@@ -275,6 +277,7 @@ export const editCustomerJob = async (
       startTime: formValues.startTime.format("HH:mm"),
       endTime: formValues.endTime.format("HH:mm"),
       assigned_to: formValues.assignedTo,
+      invoiceDescription: formValues.invoiceDescription ?? "",
     });
 
     if (!isJob(response.job)) {
@@ -316,6 +319,61 @@ export const updateJobStatus = async (
     }
     throw "INTERNAL_ERROR";
   }
+};
+
+//INVOICES
+export const generateJobInvoice = async (
+  customerId: string,
+  jobId: string,
+  formValues: InvoiceFormValues
+): Promise<Job> => {
+  const payload = {
+    date: formValues.date?.valueOf(),
+    description: formValues.description.trim(),
+  };
+  const response = await post(
+    `/customers/${customerId}/jobs/${jobId}/invoice`,
+    payload
+  );
+
+  return response.invoice;
+
+  // await new Promise((res) => setTimeout(res, 1000));
+
+  // const fakeJob: Job = {
+  //   id: jobId,
+  //   customerId,
+  //   date: dayjs().format("YYYY-MM-DD"),
+  //   startTime: "09:00",
+  //   endTime: "10:00",
+  //   price: 80,
+  //   jobTypeId: "jt-test",
+  //   addressId: "addr-1",
+  //   address: "123 Test Street",
+  //   postcode: "AB12 3CD",
+  //   status: "pending",
+  //   paymentMethod: "none",
+  //   invoiceNumber: "CWC00025",
+  //   invoiceDate: dayjs().format("YYYY-MM-DD"),
+  // };
+
+  // return fakeJob;
+};
+
+export const getJobInvoice = async (
+  customerId: string,
+  jobId: string
+): Promise<Invoice> => {
+  const response = await get(`/customers/${customerId}/jobs/${jobId}/invoice`);
+  const invoice = response.invoice;
+
+  return {
+    jobId,
+    invoiceNumber: invoice.invoiceNumber,
+    date: invoice.date,
+    description: invoice.description,
+    generatedAt: invoice.generatedAt,
+  };
 };
 
 export const editJobType = async (
@@ -415,6 +473,38 @@ export const getJob = async (
 
     throw "INTERNAL_ERROR";
   }
+
+  // return {
+  //   id: jobId,
+  //   customerId,
+  //   date: dayjs().format("YYYY-MM-DD"),
+  //   startTime: "09:00",
+  //   endTime: "10:30",
+  //   price: 120,
+  //   jobTypeName: "Gutter Cleaning",
+  //   address: "24 High Street",
+  //   postcode: "SW1A 1AA",
+  //   status: "completed",
+  //   paymentMethod: "bank_transfer",
+  //   invoiceNumber: "CWC00999",
+  //   assignedTo: {
+  //     sub: "1111111-444444-777777",
+  //     name: "James Doe",
+  //     email: "james@company.com",
+  //   },
+  //   customer: {
+  //     id: customerId,
+  //     name: "Test Customer Ltd",
+  //     address: "24 High Street",
+  //     postcode: "SW1A 1AA",
+  //     email: "billing@testcustomer.com",
+  //     mainTelephone: "020 3344 5566",
+  //     slug: "test-customer-ltd",
+  //     fileUrls: [],
+  //     notes: [],
+  //     cleaningAddresses: [],
+  //   },
+  // };
 };
 
 export const getJobs = async (

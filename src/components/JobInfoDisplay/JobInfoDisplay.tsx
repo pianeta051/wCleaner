@@ -23,6 +23,9 @@ import { useAuth } from "../../context/AuthContext";
 import { transformToFormValues } from "../../helpers/job";
 import { capitalize } from "lodash";
 import { JobToggleStatusButton } from "../JobToggleStatusButton/JobToggleStatusButton";
+import ReceiptIcon from "@mui/icons-material/ReceiptLong";
+import { useJobInvoice } from "../../hooks/Jobs/useJobInvoice";
+import { InvoiceActionButtons } from "../InvoiceActionButtons/InvoiceActionButtons";
 
 type JobInfoDisplayProps = {
   job: Job;
@@ -40,6 +43,7 @@ const STATUS_COLORS: Record<
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const { invoice, loading, error } = useJobInvoice(job.customerId, job.id);
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
@@ -69,17 +73,21 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 },
               }}
             />
-            {isAdmin ? (
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => setModalOpen(true)}
-              >
-                Edit Job
-              </Button>
-            ) : (
-              <JobToggleStatusButton currentJob={job} onChange={onEdit} />
-            )}
+            <Stack direction="row" spacing={1}>
+              <InvoiceActionButtons job={job} onGenerated={onEdit} />
+
+              {isAdmin ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setModalOpen(true)}
+                >
+                  Edit Job
+                </Button>
+              ) : (
+                <JobToggleStatusButton currentJob={job} onChange={onEdit} />
+              )}
+            </Stack>
           </Stack>
 
           <Divider sx={{ mb: 3 }} />
@@ -137,13 +145,26 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
               )}
 
               {assignedTo && (
-                <Grid item xs={12} sm={6}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <PersonIcon fontSize="small" color="primary" />
-                    <Typography fontWeight="bold">Assigned To:</Typography>
-                    <Typography>{assignedTo}</Typography>
-                  </Stack>
-                </Grid>
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <PersonIcon fontSize="small" color="primary" />
+                      <Typography fontWeight="bold">Assigned To:</Typography>
+                      <Typography>{assignedTo}</Typography>
+                    </Stack>
+                  </Grid>
+                  {invoice?.invoiceNumber && (
+                    <Grid item xs={12} sm={6}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <ReceiptIcon fontSize="small" color="primary" />
+                        <Typography fontWeight="bold">
+                          Invoice Number:
+                        </Typography>
+                        <Typography>{invoice?.invoiceNumber}</Typography>
+                      </Stack>
+                    </Grid>
+                  )}
+                </>
               )}
 
               <Grid item xs={6}>
@@ -164,7 +185,6 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
           </Stack>
         </CardContent>
       </Card>
-
       {job.customer && (
         <CustomerJobModal
           open={modalOpen}

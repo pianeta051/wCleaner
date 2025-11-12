@@ -7,6 +7,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  TextField,
   Typography,
 } from "@mui/material";
 import { DateField, Field, TimeField } from "./JobForm.style";
@@ -33,6 +34,8 @@ export type JobFormValues = {
   addressId: string;
   status: "pending" | "completed" | "cancelled";
   paymentMethod: "cash" | "bank_transfer" | "paypal" | "cheque" | "none";
+  invoiceDescription?: string;
+  invoiceNumber?: string;
 };
 
 const INITIAL_VALUES: JobFormValues = {
@@ -239,7 +242,24 @@ export const JobForm: FC<JobFormProps> = ({
               }
             />
           </Grid>
-
+          <Grid item xs={12}>
+            <TextField
+              name="invoiceDescription"
+              label="Work description"
+              multiline
+              minRows={4}
+              fullWidth
+              value={formik.values.invoiceDescription ?? ""}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              disabled={Boolean(defaultValues?.invoiceNumber)}
+              helperText={
+                defaultValues?.invoiceNumber
+                  ? "Invoice already generated — description is read-only."
+                  : "This text will appear on the invoice."
+              }
+            />
+          </Grid>
           <Grid item xs={12}>
             <Grid container spacing={2}>
               <Grid item xs={6} md={6}>
