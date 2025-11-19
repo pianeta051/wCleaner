@@ -6,8 +6,12 @@ import {
   SlotInfo,
   Event,
 } from "react-big-calendar";
-import { CalendarWrapper } from "./JobCalendar.style";
-import { FC, useState } from "react";
+import {
+  CalendarWrapper,
+  CheckCircle,
+  CheckWrapper,
+} from "./JobCalendar.style";
+import { FC, useMemo, useState } from "react";
 import moment from "moment";
 import dayjs, { Dayjs } from "dayjs";
 import { GenericJobModal } from "../GenericJobModal/GenericJobModal";
@@ -18,8 +22,10 @@ import { JobCard } from "../JobCard/JobCard";
 import { ErrorCode } from "../../services/error";
 import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
 import { useAuth } from "../../context/AuthContext";
+import CheckIcon from "@mui/icons-material/Check";
 
 export const DEFAULT_COLOR = "#3174ad";
+export const CANCELED_COLOR = "#979da0ff";
 const BACKGROUND_TO_TEXT: Record<string, string> = {
   [DEFAULT_COLOR]: "white",
   "#f44336": "white",
@@ -39,7 +45,7 @@ const BACKGROUND_TO_TEXT: Record<string, string> = {
   "#ff9800": "white",
   "#ff5722": "white",
   "#795548": "white",
-  "#607d8b": "white",
+  [CANCELED_COLOR]: "white",
 };
 
 type JobCalendarsProps = {
@@ -82,6 +88,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   const [modalDate, setModalDate] = useState<Dayjs | null>(null);
   const [eventJob, setEventJob] = useState<Job>();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [calendarView, setCalendarView] = useState<View>(view);
   const jobType = useJobTypeGetter();
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
@@ -90,6 +97,9 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   };
 
   const getColor = (job: Job) => {
+    if (job.status === "cancelled") {
+      return CANCELED_COLOR;
+    }
     if (colorLegendView === "users") {
       if (job.assignedTo?.color) {
         return job.assignedTo?.color;
@@ -117,6 +127,8 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
       date: job.date,
       address: job.address,
       postcode: job.postcode,
+      status: job.status,
+      calendarView,
     },
     title: `${job.customer?.name} - ${job?.address}`,
     start: new Date(`${job.date} ${job.startTime}`),
@@ -137,6 +149,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     viewParam?: View
   ) => {
     const currentView = viewParam ?? view;
+    setCalendarView(currentView);
     if (currentView === Views.DAY) {
       const currentDate = (range as Date[])[0];
       onStartDayChange(dayjs(currentDate).format("YYYY-MM-DD"));
@@ -203,6 +216,9 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             min={new Date(`${startDay} 6:00`)}
             max={new Date(`${endDay} 17:00`)}
             eventPropGetter={eventProps}
+            components={{
+              event: CustomEvent,
+            }}
           />
         ) : (
           <ErrorMessage code={error} />
@@ -244,5 +260,26 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
         />
       )}
     </>
+  );
+};
+
+type CustomEventProps = {
+  event: Event;
+};
+const CustomEvent: FC<CustomEventProps> = ({ event }) => {
+  const isCompleted = useMemo(() => event.resource?.status === "completed", []);
+  return (
+    <div>
+      {isCompleted && (
+        <CheckWrapper
+          isMonthlyView={event.resource?.calendarView === Views.MONTH}
+        >
+          <CheckCircle>
+            <CheckIcon sx={{ height: "inherit", width: "inherit" }} />
+          </CheckCircle>
+        </CheckWrapper>
+      )}
+      {event.title}
+    </div>
   );
 };

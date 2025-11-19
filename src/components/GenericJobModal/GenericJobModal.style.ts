@@ -1,4 +1,4 @@
-import { styled, Box, Grid, Paper, Typography, TextField } from "@mui/material";
+import { styled, Box, Grid, Paper, Typography } from "@mui/material";
 
 export const Background = styled(Paper)(() => ({
   display: "flex",

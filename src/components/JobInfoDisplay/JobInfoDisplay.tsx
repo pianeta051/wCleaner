@@ -10,6 +10,7 @@ import {
   Chip,
 } from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import PaymentsIcon from "@mui/icons-material/Payments";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
@@ -21,6 +22,10 @@ import { Job, JobStatus } from "../../types/types";
 import { useAuth } from "../../context/AuthContext";
 import { transformToFormValues } from "../../helpers/job";
 import { capitalize } from "lodash";
+import { JobToggleStatusButton } from "../JobToggleStatusButton/JobToggleStatusButton";
+import ReceiptIcon from "@mui/icons-material/ReceiptLong";
+import { useJobInvoice } from "../../hooks/Jobs/useJobInvoice";
+import { InvoiceActionButtons } from "../InvoiceActionButtons/InvoiceActionButtons";
 
 type JobInfoDisplayProps = {
   job: Job;
@@ -33,15 +38,24 @@ const STATUS_COLORS: Record<
 > = {
   completed: "success",
   pending: "warning",
-  canceled: "error",
+  cancelled: "error",
 };
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const { invoice, loading, error, reload } = useJobInvoice(
+    job.customerId,
+    job.id
+  );
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
   const assignedTo = job?.assignedTo?.name ?? job?.assignedTo?.email;
+
+  const handleGenerated = () => {
+    reload();
+    onEdit();
+  };
 
   return (
     <>
@@ -67,15 +81,27 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 },
               }}
             />
-            {isAdmin && (
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => setModalOpen(true)}
-              >
-                Edit Job
-              </Button>
-            )}
+            <Stack direction="row" spacing={1}>
+              <InvoiceActionButtons
+                job={job}
+                onGenerated={handleGenerated}
+                loading={loading}
+                error={error}
+                existing={!!invoice}
+              />
+
+              {isAdmin ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setModalOpen(true)}
+                >
+                  Edit Job
+                </Button>
+              ) : (
+                <JobToggleStatusButton currentJob={job} onChange={onEdit} />
+              )}
+            </Stack>
           </Stack>
 
           <Divider sx={{ mb: 3 }} />
@@ -133,27 +159,46 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
               )}
 
               {assignedTo && (
-                <Grid item xs={12} sm={6}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <PersonIcon fontSize="small" color="primary" />
-                    <Typography fontWeight="bold">Assigned To:</Typography>
-                    <Typography>{assignedTo}</Typography>
-                  </Stack>
-                </Grid>
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <PersonIcon fontSize="small" color="primary" />
+                      <Typography fontWeight="bold">Assigned To:</Typography>
+                      <Typography>{assignedTo}</Typography>
+                    </Stack>
+                  </Grid>
+                  {invoice?.invoiceNumber && (
+                    <Grid item xs={12} sm={6}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <ReceiptIcon fontSize="small" color="primary" />
+                        <Typography fontWeight="bold">
+                          Invoice Number:
+                        </Typography>
+                        <Typography>{invoice?.invoiceNumber}</Typography>
+                      </Stack>
+                    </Grid>
+                  )}
+                </>
               )}
 
-              <Grid item xs={12}>
+              <Grid item xs={6}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <PointOfSaleIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Price:</Typography>
                   <Typography fontWeight="bold">£{job.price}</Typography>
                 </Stack>
               </Grid>
+              <Grid item xs={6}>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <PaymentsIcon fontSize="small" color="primary" />
+                  <Typography fontWeight="bold">Payment Method:</Typography>
+                  <Typography fontWeight="bold">{job.paymentMethod}</Typography>
+                </Stack>
+              </Grid>
             </Grid>
           </Stack>
         </CardContent>
       </Card>
-
       {job.customer && (
         <CustomerJobModal
           open={modalOpen}

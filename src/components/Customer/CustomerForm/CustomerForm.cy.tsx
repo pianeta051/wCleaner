@@ -1,4 +1,4 @@
-import { CustomerForm, CustomerFormValues } from "./CustomerForm";
+import { CustomerForm } from "./CustomerForm";
 import {
   customerFactory,
   customerToFormValuesFactory,

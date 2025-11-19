@@ -1,4 +1,4 @@
-import { UserForm, UserFormValues } from "./UserForm";
+import { UserForm } from "./UserForm";
 
 describe("UserForm", () => {
   it("calls onSubmit when clicking a Create button", () => {
@@ -26,7 +26,7 @@ describe("UserForm", () => {
     cy.mount(
       <UserForm
         loading={true}
-        onSubmit={function (values: UserFormValues): void {
+        onSubmit={function (): void {
           throw new Error("Function not implemented.");
         }}
       />
@@ -38,7 +38,7 @@ describe("UserForm", () => {
     cy.mount(
       <UserForm
         loading={false}
-        onSubmit={function (values: UserFormValues): void {
+        onSubmit={function (): void {
           throw new Error("Function not implemented.");
         }}
       />
@@ -49,7 +49,7 @@ describe("UserForm", () => {
   it("shows a create button when loading is undefined", () => {
     cy.mount(
       <UserForm
-        onSubmit={function (values: UserFormValues): void {
+        onSubmit={function (): void {
           throw new Error("Function not implemented.");
         }}
       />
@@ -66,7 +66,7 @@ describe("UserForm", () => {
           color: "#f44336",
           name: "carlos",
         }}
-        onSubmit={function (values: UserFormValues): void {
+        onSubmit={function (): void {
           throw new Error("Function not implemented.");
         }}
       />
@@ -79,7 +79,7 @@ describe("UserForm", () => {
     cy.mount(
       <UserForm
         initialValues={undefined}
-        onSubmit={function (values: UserFormValues): void {
+        onSubmit={function (): void {
           throw new Error("Function not implemented.");
         }}
       />

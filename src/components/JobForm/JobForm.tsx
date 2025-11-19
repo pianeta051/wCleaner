@@ -1,13 +1,12 @@
 import { FC } from "react";
 import {
-  Alert,
   Button,
   FormControl,
   Grid,
   InputLabel,
   MenuItem,
   Select,
-  Typography,
+  TextField,
 } from "@mui/material";
 import { DateField, Field, TimeField } from "./JobForm.style";
 import { LoadingButton } from "@mui/lab";
@@ -20,7 +19,7 @@ import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import { useAuth } from "../../context/AuthContext";
 import { UserSelector } from "../UserSelector/UserSelector";
 import { JobTypeSelector } from "../JobTypeSelector/JobTypeSelector";
-import { useCustomerAddresses } from "../../hooks/Customers/addresses/useCustomerAddresses";
+import { AddressSelector } from "../AddressSelector/AddressSelector";
 
 export type JobFormValues = {
   date: Dayjs;
@@ -31,8 +30,10 @@ export type JobFormValues = {
   jobTypeId: string;
   fileUrl?: string;
   addressId: string;
-  status: "pending" | "completed" | "canceled";
+  status: "pending" | "completed" | "cancelled";
   paymentMethod: "cash" | "bank_transfer" | "paypal" | "cheque" | "none";
+  invoiceDescription?: string;
+  invoiceNumber?: string;
 };
 
 const INITIAL_VALUES: JobFormValues = {
@@ -78,7 +79,7 @@ const validationSchema = yup.object({
   jobTypeId: yup.string(),
   fileUrl: yup.string(),
   addressId: yup.string().required(),
-  status: yup.string().oneOf(["pending", "completed", "canceled"]).required(),
+  status: yup.string().oneOf(["pending", "completed", "cancelled"]).required(),
   paymentMethod: yup
     .string()
     .oneOf(["cash", "bank_transfer", "paypal", "cheque", "none"])
@@ -104,11 +105,6 @@ export const JobForm: FC<JobFormProps> = ({
   customerId,
 }) => {
   const { isInGroup } = useAuth();
-  const {
-    addresses,
-    loading: loadingAddresses,
-    error: errorLoadingAddresses,
-  } = useCustomerAddresses(customerId);
 
   const defaultValuesForm = !defaultValues ? INITIAL_VALUES : defaultValues;
 
@@ -144,43 +140,17 @@ export const JobForm: FC<JobFormProps> = ({
     <Form onSubmit={formik.handleSubmit}>
       <Grid container spacing={3} sx={{ px: { xs: 2, md: 4 } }}>
         <Grid item xs={12} md={columns}>
-          {loadingAddresses ? (
-            <Typography>Addresses loading...</Typography>
-          ) : addresses?.length ? (
-            <FormControl
-              fullWidth
-              error={Boolean(
-                formik.touched.addressId && formik.errors.addressId
-              )}
-            >
-              <InputLabel>Address</InputLabel>
-              <Select
-                value={formik.values.addressId}
-                label="Address"
-                name="addressId"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              >
-                {addresses.map((address) => (
-                  <MenuItem value={address.id} key={address.id}>
-                    {`${address.address} ${address.postcode}`}
-                  </MenuItem>
-                ))}
-              </Select>
-              {formik.touched.addressId && formik.errors.addressId && (
-                <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                  {formik.errors.addressId}
-                </Typography>
-              )}
-            </FormControl>
-          ) : (
-            <Alert severity="error">
-              <Typography>No addresses available for this customer</Typography>
-              {errorLoadingAddresses && (
-                <Typography>{errorLoadingAddresses}</Typography>
-              )}
-            </Alert>
-          )}
+          <AddressSelector
+            value={formik.values.addressId}
+            onChange={(value) =>
+              formik.handleChange({ target: { value, name: "addressId" } })
+            }
+            onBlur={formik.handleBlur}
+            error={
+              formik.touched.addressId ? formik.errors.addressId : undefined
+            }
+            customerId={customerId}
+          />
         </Grid>
 
         <Grid item xs={12} md={columns}>
@@ -239,7 +209,24 @@ export const JobForm: FC<JobFormProps> = ({
               }
             />
           </Grid>
-
+          <Grid item xs={12}>
+            <TextField
+              name="invoiceDescription"
+              label="Work description"
+              multiline
+              minRows={4}
+              fullWidth
+              value={formik.values.invoiceDescription ?? ""}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              disabled={Boolean(defaultValues?.invoiceNumber)}
+              helperText={
+                defaultValues?.invoiceNumber
+                  ? "Invoice already generated — description is read-only."
+                  : "This text will appear on the invoice."
+              }
+            />
+          </Grid>
           <Grid item xs={12}>
             <Grid container spacing={2}>
               <Grid item xs={6} md={6}>
@@ -272,7 +259,7 @@ export const JobForm: FC<JobFormProps> = ({
                 >
                   <MenuItem value="pending">Pending</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="canceled">Canceled</MenuItem>
+                  <MenuItem value="cancelled">Cancelled</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -305,7 +292,7 @@ export const JobForm: FC<JobFormProps> = ({
             type="submit"
             sx={{ width: { xs: "100%", md: "50%" } }}
             loading={loading}
-            disabled={loadingAddresses}
+            disabled={loading}
           >
             Save
           </LoadingButton>

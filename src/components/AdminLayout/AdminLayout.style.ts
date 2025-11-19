@@ -8,7 +8,7 @@ export const Wrapper = styled(Grid)(({ theme }) => ({
   },
 
   padding: theme.spacing(0),
-  marginTop: theme.spacing(1),
+  marginTop: theme.spacing(5),
   display: "flex",
   flexDirection: "column",
   justifyContent: "flex-start",

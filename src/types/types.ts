@@ -1,3 +1,17 @@
+export type CompanySettings = {
+  name: string;
+  address: string;
+  postalCode: string;
+  phone: string;
+  website: string;
+  registrationNumber: string;
+  bankDetails?: {
+    accountName: string;
+    sortCode: string;
+    accountNumber: string;
+  };
+};
+
 export type Customer = {
   name: string;
   address: string;
@@ -30,6 +44,23 @@ export type CustomerNote = {
   updatedBy?: string; // who edited
 };
 
+export type Invoice = {
+  invoiceNumber: number;
+  date: number;
+  description: string;
+  generatedAt: string;
+  jobId: string;
+  addressId: string;
+  address: CustomerCleaningAddress;
+};
+export type RawInvoiceResponse = {
+  invoice: {
+    invoice_number: { N: string };
+    date: { S: string };
+    description: { S: string };
+    generated_at: { S: string };
+  };
+};
 export type JobAssignation = {
   sub: string;
   name?: string;
@@ -37,7 +68,7 @@ export type JobAssignation = {
   color?: string;
 };
 
-export type JobStatus = "pending" | "completed" | "canceled";
+export type JobStatus = "pending" | "completed" | "cancelled";
 
 export type Job = {
   customerId?: string;
@@ -55,6 +86,11 @@ export type Job = {
   postcode?: string;
   status?: JobStatus;
   paymentMethod?: "cash" | "bank_transfer" | "paypal" | "cheque" | "none";
+
+  invoiceNumber?: string;
+  invoiceGeneratedAt?: number;
+  invoiceDate?: number;
+  invoiceDescription?: string;
 };
 
 export type JobFilters = {

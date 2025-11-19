@@ -14,12 +14,6 @@ const get = async (
   });
 };
 
-// const post = async (path: string, body: { [param: string]: string } = {}) => {
-//   return API.post("wCleanerApi", path, {
-//     body,
-//   });
-// };
-
 const post = async <TBody = unknown, TResponse = unknown>(
   path: string,
   body: TBody
@@ -33,11 +27,6 @@ const remove = async (path: string) => {
   return API.del("wCleanerApi", path, {});
 };
 
-// const put = async (path: string, body: { [param: string]: string } = {}) => {
-//   return API.put("wCleanerApi", path, {
-//     body,
-//   });
-// };
 const put = async <TBody = unknown, TResponse = unknown>(
   path: string,
   body: TBody

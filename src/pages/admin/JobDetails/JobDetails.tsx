@@ -1,19 +1,21 @@
 import { FC } from "react";
-import { useParams, Link as RouterLink } from "react-router-dom";
-import {
-  CircularProgress,
-  Typography,
-  Box,
-  Grid,
-  Breadcrumbs,
-  Link as MuiLink,
-} from "@mui/material";
+import { useParams } from "react-router-dom";
+import { CircularProgress, Box, Grid } from "@mui/material";
+import HomeIcon from "@mui/icons-material/Home";
+import PeopleIcon from "@mui/icons-material/People";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 
 import { useJobCustomer } from "../../../hooks/Jobs/useJobCustomer";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
 import { JobInfoDisplay } from "../../../components/JobInfoDisplay/JobInfoDisplay";
 import { JobCustomer } from "../../../components/JobCustomer/JobCustomer";
 import { useAuth } from "../../../context/AuthContext";
+import {
+  BreadcrumbsContainer,
+  StyledBreadcrumbs,
+  BreadcrumbLink,
+  CurrentPageText,
+} from "./JobDetails.style";
 
 type JobDetailsParams = {
   jobId: string;
@@ -42,18 +44,21 @@ export const JobDetailsPage: FC = () => {
   return (
     <>
       {isAdmin && job.customer && (
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-          <MuiLink component={RouterLink} to="/admin/customers">
-            Customers
-          </MuiLink>
-          <MuiLink
-            component={RouterLink}
-            to={`/admin/customers/${job.customer.slug}`}
-          >
-            {job.customer.name}
-          </MuiLink>
-          <Typography color="text.primary">Job Details</Typography>
-        </Breadcrumbs>
+        <BreadcrumbsContainer>
+          <StyledBreadcrumbs aria-label="breadcrumb" separator="›">
+            <BreadcrumbLink to="/admin/customers">
+              <PeopleIcon fontSize="small" /> Customers
+            </BreadcrumbLink>
+
+            <BreadcrumbLink to={`/admin/customers/${job.customer.slug}`}>
+              <HomeIcon fontSize="small" /> {job.customer.name}
+            </BreadcrumbLink>
+
+            <CurrentPageText>
+              <AssignmentIcon fontSize="small" /> Job Details
+            </CurrentPageText>
+          </StyledBreadcrumbs>
+        </BreadcrumbsContainer>
       )}
 
       <Grid container spacing={4} justifyContent="center">

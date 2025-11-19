@@ -1,10 +1,9 @@
 import { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
 import { unstable_serialize } from "swr/infinite";
-import dayjs from "dayjs";
 
-import { editCustomerJob, getCustomerJobs, getJob } from "../../services/jobs";
-import { Job, JobFilters } from "../../types/types";
+import { editCustomerJob, getCustomerJobs } from "../../services/jobs";
+import { JobFilters } from "../../types/types";
 import { extractErrorCode } from "../../services/error";
 import { keyFunctionGenerator } from "./useCustomerJobs";
 import { JobFormValues } from "../../components/JobForm/JobForm";

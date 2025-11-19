@@ -55,6 +55,17 @@
         "fieldName": "job_type_id",
         "fieldType": "string"
       }
+    },
+    {
+      "name": "invoice_number",
+      "partitionKey": {
+        "fieldName": "SK",
+        "fieldType": "string"
+      },
+      "sortKey": {
+        "fieldName": "invoice_number",
+        "fieldType": "number"
+      }
     }
   ],
   "triggerFunctions": []

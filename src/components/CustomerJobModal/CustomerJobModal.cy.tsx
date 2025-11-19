@@ -10,7 +10,6 @@ import * as userHooks from "../../hooks/Users/useUsers";
 import * as jobTypeHooks from "../../hooks/Jobs/useJobTypes";
 import dayjs from "dayjs";
 import { JobFormValues } from "../JobForm/JobForm";
-import { Job } from "../../types/types";
 
 const customer = customerFactory.build();
 const baseDate = dayjs("2024-10-10");
