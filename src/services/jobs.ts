@@ -369,10 +369,7 @@ export const getJobInvoice = async (
 
   return {
     jobId,
-    invoiceNumber: invoice.invoiceNumber,
-    date: invoice.date,
-    description: invoice.description,
-    generatedAt: invoice.generatedAt,
+    ...invoice,
   };
 };
 

@@ -54,6 +54,7 @@ const mapInvoice = (item) => ({
   date: item.date ? Number(item.date.S) : undefined,
   description: item.description?.S ?? "",
   generatedAt: item.generated_at?.S,
+  addressId: item.address_id?.S,
 });
 
 // map a single standalone job

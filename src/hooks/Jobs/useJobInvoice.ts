@@ -12,7 +12,6 @@ export const useJobInvoice = (customerId?: string, jobId?: string) => {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      revalidateOnMount: true,
       revalidateIfStale: false,
     }
   );

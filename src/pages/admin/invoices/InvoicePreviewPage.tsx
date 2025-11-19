@@ -50,7 +50,7 @@ export const InvoicePreviewPage: FC = () => {
       </FullScreenWrapper>
     );
   }
-  if (error || !job || !job.customer) {
+  if (error || !job || !job.customer || !invoice) {
     return <ErrorMessage code={error ?? "INTERNAL_ERROR"} />;
   }
 

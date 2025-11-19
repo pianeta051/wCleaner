@@ -14,7 +14,7 @@ import {
 
 export type JobInvoiceProps = {
   job: Job;
-  invoice?: Invoice;
+  invoice: Invoice;
   customer: Customer;
   addresses?: string;
   discount?: number;
@@ -61,11 +61,15 @@ export const JobInvoice: FC<JobInvoiceProps> = ({ job, invoice, customer }) => {
         <View style={billToStyles.container}>
           <Text style={billToStyles.label}>Bill To:</Text>
           <Text style={billToStyles.customerLine}>{customer.name}</Text>
-          {customer.address && (
-            <Text style={billToStyles.customerLine}>{customer.address}</Text>
+          {invoice.address.address && (
+            <Text style={billToStyles.customerLine}>
+              {invoice.address.address}
+            </Text>
           )}
-          {customer.postcode && (
-            <Text style={billToStyles.customerLine}>{customer.postcode}</Text>
+          {invoice.address.postcode && (
+            <Text style={billToStyles.customerLine}>
+              {invoice.address.postcode}
+            </Text>
           )}
           {customer.email && (
             <Text style={billToStyles.customerLine}>{customer.email}</Text>

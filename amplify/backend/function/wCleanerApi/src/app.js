@@ -18,6 +18,7 @@ const {
   addJobType,
   addInvoice,
   getAddressesForJobs,
+  getCleaningAddress,
   getCleaningAddresses,
   getCustomers,
   getCustomerBySlug,
@@ -26,7 +27,6 @@ const {
   getJob,
   getJobs,
   getJobType,
-
   getJobTypes,
   getInvoiceByJobId,
   getNextInvoiceNumber,
@@ -706,7 +706,7 @@ app.put("/customers/:customerId/files", async function (req, res) {
 
 app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   const { jobId } = req.params;
-  const { date, description } = req.body;
+  const { date, description, addressId } = req.body;
 
   try {
     const groups = req.authData?.groups || [];
@@ -725,6 +725,10 @@ app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
       res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
       return;
     }
+    if (!addressId) {
+      res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
+      return;
+    }
 
     const existingInvoice = await getInvoiceByJobId(jobId);
     if (existingInvoice) {
@@ -734,11 +738,8 @@ app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
 
     const nextInvoiceNumber = await getNextInvoiceNumber();
 
-    const invoice = await addInvoice(jobId, nextInvoiceNumber, {
-      date,
-      description,
-    });
-    console.log(JSON.stringify({ invoice }, null, 2));
+    const invoice = await addInvoice(jobId, nextInvoiceNumber, req.body);
+
     res.json({ invoice });
 
     return;
@@ -751,7 +752,7 @@ app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
 
 //GET INVOICE
 app.get("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-  const { jobId } = req.params;
+  const { jobId, customerId } = req.params;
 
   try {
     const invoice = await getInvoiceByJobId(jobId);
@@ -760,6 +761,11 @@ app.get("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
       res.status(404).json({ error: "INVOICE_NOT_FOUND" });
       return;
     }
+    const addressFromDB = await getCleaningAddress(
+      customerId,
+      invoice.addressId
+    );
+    invoice.address = mapCleaningAddress(addressFromDB);
 
     res.json({ invoice });
   } catch (err) {

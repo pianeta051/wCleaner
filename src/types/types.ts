@@ -50,6 +50,8 @@ export type Invoice = {
   description: string;
   generatedAt: string;
   jobId: string;
+  addressId: string;
+  address: CustomerCleaningAddress;
 };
 export type RawInvoiceResponse = {
   invoice: {

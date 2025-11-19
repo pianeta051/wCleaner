@@ -1505,6 +1505,7 @@ const addInvoice = async (jobId, invoiceNumber, invoiceData) => {
       generated_at: { S: generatedAt },
       date: { S: "" + invoiceData.date },
       description: { S: invoiceData.description },
+      address_id: { S: invoiceData.addressId },
     },
   };
 
@@ -1532,6 +1533,7 @@ module.exports = {
   editCustomerNote,
   editJobType,
   getAddressesForJobs,
+  getCleaningAddress,
   getCleaningAddresses,
   getCustomerBySlug,
   getCustomerById,
