@@ -48,6 +48,9 @@
       "storage": {
         "wcleaner": {},
         "wcleanerstorage": {}
+      },
+      "custom": {
+        "sesEmail": {}
       }
     }
   },
