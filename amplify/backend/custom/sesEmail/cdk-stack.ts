@@ -7,7 +7,7 @@ export class cdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     /* Do not remove - Amplify CLI automatically injects the current deployment environment in this input parameter */
-    new cdk.CfnParameter(this, "env", {
+    const envParameter = new cdk.CfnParameter(this, "env", {
       type: "String",
       description: "Current Amplify CLI env name",
     });
@@ -18,6 +18,10 @@ export class cdkStack extends cdk.Stack {
       type: "String",
     });
 
+    const isDevCondition = new cdk.CfnCondition(this, "IsDevEnvironment", {
+      expression: cdk.Fn.conditionEquals(envParameter, "dev"),
+    });
+
     const domain: string = domainParam.valueAsString;
     const hostedZoneId: string = hostedZoneIdParam.valueAsString;
 
@@ -25,27 +29,31 @@ export class cdkStack extends cdk.Stack {
       emailIdentity: domain,
       dkimAttributes: { signingEnabled: true },
     });
+    identity.cfnOptions.condition = isDevCondition;
 
-    new route53.CfnRecordSet(this, "Dkim1", {
+    const recordset1 = new route53.CfnRecordSet(this, "Dkim1", {
       hostedZoneId,
       name: identity.attrDkimDnsTokenName1,
       type: "CNAME",
       ttl: "300",
       resourceRecords: [identity.attrDkimDnsTokenValue1],
     });
-    new route53.CfnRecordSet(this, "Dkim2", {
+    recordset1.cfnOptions.condition = isDevCondition;
+    const recordset2 = new route53.CfnRecordSet(this, "Dkim2", {
       hostedZoneId,
       name: identity.attrDkimDnsTokenName2,
       type: "CNAME",
       ttl: "300",
       resourceRecords: [identity.attrDkimDnsTokenValue2],
     });
-    new route53.CfnRecordSet(this, "Dkim3", {
+    recordset2.cfnOptions.condition = isDevCondition;
+    const recordset3 = new route53.CfnRecordSet(this, "Dkim3", {
       hostedZoneId,
       name: identity.attrDkimDnsTokenName3,
       type: "CNAME",
       ttl: "300",
       resourceRecords: [identity.attrDkimDnsTokenValue3],
     });
+    recordset3.cfnOptions.condition = isDevCondition;
   }
 }
