@@ -14,7 +14,7 @@ frontend:
     build:
       commands:
         - nvm use 20
-        - yarn build
+        - yarn build:cd
   artifacts:
     baseDirectory: build
     files:
