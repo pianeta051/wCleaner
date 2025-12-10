@@ -3,8 +3,6 @@ backend:
   phases:
     build:
       commands:
-        - export NO_COLOR=1
-        - amplify -v
         - amplify pull --appId $AMPLIFY_BACKEND_APP_ID --envName $USER_BRANCH -y
         - amplify push -y
 frontend:
