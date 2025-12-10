@@ -3,6 +3,7 @@ backend:
   phases:
     build:
       commands:
+        - amplify -v
         - amplify pull --appId $AMPLIFY_BACKEND_APP_ID --envName $USER_BRANCH -y
         - amplify push -y
 frontend:
