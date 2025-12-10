@@ -3,7 +3,7 @@ backend:
   phases:
     build:
       commands:
-        - "# Execute Amplify CLI with the helper script"
+        - amplify pull --appId $AMPLIFY_BACKEND_APP_ID --envName $USER_BRANCH
         - amplify push -y
 frontend:
   phases:
