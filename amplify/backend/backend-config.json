@@ -110,6 +110,12 @@
       "service": "Cognito"
     }
   },
+  "custom": {
+    "sesEmail": {
+      "providerPlugin": "awscloudformation",
+      "service": "customCDK"
+    }
+  },
   "function": {
     "AdminQueries0c37162b": {
       "build": true,

@@ -50,11 +50,12 @@ export const BreadcrumbContainer = styledComponents.div`
   display: flex;
   align-items: center;
   width: fit-content;
+  margin-top: 50px;
 `;
 
 export const StyledBreadcrumbs = styled(Breadcrumbs)`
   & .MuiBreadcrumbs-separator {
-    margin: 0 8px;
+    margin: 0 5px;
     color: #999;
     font-size: 1.2rem;
   }
