@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import {
   Accordion,
   AccordionSummary,
@@ -19,6 +19,7 @@ import {
   DialogActions,
   Button,
   Grid,
+  Divider,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -26,7 +27,6 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import { ActionBar, Field, Wrapper } from "./CustomerForm.style";
 import { LoadingButton } from "@mui/lab";
-import { Form } from "../../Form/Form";
 import { useFormik } from "formik";
 import * as yup from "yup";
 
@@ -35,7 +35,7 @@ import {
   CustomerAddressFormValues,
 } from "../CustomerAddressForm/CustomerAddressForm";
 import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
-import { JobForm } from "../../JobForm/JobForm";
+
 import { AddressModal } from "../../AddressModal/AddressModal";
 
 export type CustomerFormValues = {
@@ -47,6 +47,23 @@ export type CustomerFormValues = {
   email: string;
   fileUrls?: string[];
   cleaningAddresses: CustomerAddressFormValues[];
+};
+
+type CustomerFormProps = {
+  onSubmit: (customer: CustomerFormValues) => void;
+  onCancel?: () => void;
+  initialValues?: CustomerFormValues;
+  loading?: boolean;
+  layout?: "vertical" | "horizontal";
+  enableCopyAddress?: boolean;
+  customerId?: string;
+  onReload?: () => void;
+
+  showActions?: boolean;
+  formId?: string;
+};
+type CustomerAddressWithId = CustomerAddressFormValues & {
+  id?: string;
 };
 
 const INITIAL_VALUES: CustomerFormValues = {
@@ -61,6 +78,16 @@ const INITIAL_VALUES: CustomerFormValues = {
 };
 
 const ukPostcodeRegex = /^[A-Z]{1,2}[0-9R][0-9A-Z]?\s?[0-9][A-Z]{2}$/i;
+
+const labels: { [x in keyof CustomerFormValues]: string } = {
+  email: "Email",
+  address: "Billing address",
+  name: "Full name",
+  postcode: "Postcode",
+  mainTelephone: "Main Telephone",
+  secondTelephone: "Second Telephone",
+  cleaningAddresses: "Cleaning Addresses",
+};
 
 const validationSchema = yup.object<CustomerFormValues>({
   email: yup.string().email("Invalid email"),
@@ -100,27 +127,6 @@ const validationSchema = yup.object<CustomerFormValues>({
   ),
 });
 
-const labels: { [x in keyof CustomerFormValues]: string } = {
-  email: "Email",
-  address: "Billing address",
-  name: "Full name",
-  postcode: "Postcode",
-  mainTelephone: "Main Telephone",
-  secondTelephone: "Second Telephone",
-  cleaningAddresses: "Cleaning Addresses",
-};
-
-type CustomerFormProps = {
-  onSubmit: (customer: CustomerFormValues) => void;
-  onCancel?: () => void;
-  initialValues?: CustomerFormValues;
-  loading?: boolean;
-  layout?: "vertical" | "horizontal";
-  enableCopyAddress?: boolean;
-  customerId?: string; // 👈 opcional
-  onReload?: () => void;
-};
-
 export const CustomerForm: FC<CustomerFormProps> = ({
   onSubmit,
   onCancel,
@@ -130,19 +136,15 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   enableCopyAddress = true,
   customerId,
   onReload,
+  showActions = true,
+  formId = "customer-form",
 }) => {
   const formik = useFormik<CustomerFormValues>({
     initialValues,
-    onSubmit,
     validationSchema,
+    enableReinitialize: true,
+    onSubmit,
   });
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [openJobForm, setOpenJobForm] = useState(false);
-  const [addressSelectorOpen, setAddressSelectorOpen] = useState(false);
-  const [addressIdDeleting, setAddressIdDeleting] = useState<string | null>(
-    null
-  );
 
   const [copyAddress, setCopyAddress] = useState(enableCopyAddress);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -150,17 +152,20 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   const [snackbarSeverity, setSnackbarSeverity] =
     useState<AlertColor>("success");
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [addressSelectorOpen, setAddressSelectorOpen] = useState(false);
+  const [addressIdDeleting, setAddressIdDeleting] = useState<string | null>(
+    null
+  );
+
   const {
     deleteCustomerAddress,
     loading: deletingAddress,
     error: errorDeletingAddress,
   } = useDeleteCustomerAddress(customerId);
 
-  const requiredFields = ["name", "address", "postcode"];
-
-  useEffect(() => {
-    formik.setFieldValue("cleaningAddresses", initialValues.cleaningAddresses);
-  }, [initialValues.cleaningAddresses]);
+  const requiredFields = useMemo(() => ["name", "address", "postcode"], []);
+  const actionBarVariant = layout === "vertical" ? "sticky" : "inline";
 
   useEffect(() => {
     if (errorDeletingAddress) {
@@ -170,37 +175,20 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     }
   }, [errorDeletingAddress]);
 
-  const addressChangeHandler = (
-    formValues: CustomerAddressFormValues,
-    index: number
-  ) => {
-    const updated = [...formik.values.cleaningAddresses];
-    updated[index] = formValues;
-    formik.setFieldValue("cleaningAddresses", updated);
-  };
-
-  const addAddressHandler = () => {
-    const updated = [...formik.values.cleaningAddresses];
-    updated.push({ name: "", address: "", postcode: "" });
-    formik.setFieldValue("cleaningAddresses", updated);
-  };
-
-  const copyAddressChangeHandle = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setCopyAddress(event.target.checked);
-  };
-
   useEffect(() => {
-    if ((formik.values.address || formik.values.postcode) && copyAddress) {
-      formik.setFieldValue("cleaningAddresses", [
-        {
-          name: "Home",
-          address: formik.values.address,
-          postcode: formik.values.postcode,
-        },
-      ]);
+    if (!copyAddress) return;
+
+    const address = (formik.values.address ?? "").trim();
+    const postcode = (formik.values.postcode ?? "").trim();
+
+    if (!address && !postcode) {
+      formik.setFieldValue("cleaningAddresses", []);
+      return;
     }
+
+    formik.setFieldValue("cleaningAddresses", [
+      { name: "Home", address, postcode },
+    ]);
   }, [formik.values.address, formik.values.postcode, copyAddress]);
 
   const scalarFields: (keyof CustomerFormValues)[] = [
@@ -212,66 +200,67 @@ export const CustomerForm: FC<CustomerFormProps> = ({
     "email",
   ];
 
+  const addAddressHandler = () => {
+    formik.setFieldValue("cleaningAddresses", [
+      ...formik.values.cleaningAddresses,
+      { name: "", address: "", postcode: "" },
+    ]);
+  };
+
   const deleteAddressHandle = async (index: number) => {
-    const addressId = formik.values.cleaningAddresses[index]?.id;
-    if (addressId) {
-      deleteCustomerAddress(addressId)
-        .then(() => {
-          setSnackbarMessage("Address deleted");
-          setSnackbarSeverity("success");
-          setSnackbarOpen(true);
-        })
-        .catch((error) => {
-          if (error === "THIS_CUSTOMER_HAS_PENDING_JOBS") {
-            setAddressIdDeleting(addressId);
-            setDialogOpen(true);
-          } else {
-            setSnackbarMessage("Unexpected error");
-            setSnackbarSeverity("error");
-            setSnackbarOpen(true);
-          }
-        })
-        .finally(() => {
-          onReload?.();
-        });
-    } else {
-      const addresses = [...formik.values.cleaningAddresses];
-      addresses.splice(index, 1);
-      formik.handleChange({
-        target: { name: "cleaningAddresses", value: addresses },
-      });
+    const addressId = (
+      formik.values.cleaningAddresses[index] as CustomerAddressWithId
+    )?.id;
+
+    if (!addressId) {
+      const copy = [...formik.values.cleaningAddresses];
+      copy.splice(index, 1);
+      formik.setFieldValue("cleaningAddresses", copy);
+      return;
+    }
+
+    try {
+      await deleteCustomerAddress(addressId);
+      setSnackbarMessage("Address deleted");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      onReload?.();
+    } catch (e) {
+      setAddressIdDeleting(addressId);
+      setDialogOpen(true);
     }
   };
 
   return (
     <Wrapper container spacing={2} enableScroll={layout === "vertical"}>
-      <Form onSubmit={formik.handleSubmit}>
-        <Grid container spacing={3}>
+      <Box
+        component="form"
+        id={formId}
+        onSubmit={formik.handleSubmit}
+        noValidate
+      >
+        <Grid container spacing={3} sx={{ overflowX: "hidden" }}>
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" fontWeight={800}>
               Customer Info
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Update the customer details and manage cleaning addresses.
             </Typography>
           </Grid>
 
-          {scalarFields.map((fieldName) => (
-            <Grid item xs={12} sm={6} md={4} key={fieldName}>
+          {scalarFields.map((field) => (
+            <Grid item xs={12} md={6} key={field}>
               <Field
-                name={fieldName}
-                id={fieldName}
-                label={labels[fieldName]}
-                type={fieldName === "email" ? "email" : "text"}
-                fullWidth
-                required={requiredFields.includes(fieldName)}
+                name={field}
+                label={labels[field]}
+                value={formik.values[field]}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                value={formik.values[fieldName]}
-                error={
-                  !!(formik.touched[fieldName] && formik.errors[fieldName])
-                }
+                required={requiredFields.includes(field)}
+                error={!!(formik.touched[field] && formik.errors[field])}
                 helperText={
-                  formik.touched[fieldName]
-                    ? (formik.errors[fieldName] as string)
-                    : ""
+                  formik.touched[field] ? (formik.errors[field] as string) : ""
                 }
               />
             </Grid>
@@ -280,24 +269,24 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           <Grid item xs={12}>
             <Box
               sx={{
-                mt: 4,
                 p: 2,
+                border: "1px solid",
+                borderColor: "divider",
                 borderRadius: 2,
-                bgcolor: "background.paper",
-                boxShadow: 1,
+                overflowX: "hidden",
               }}
             >
-              <Typography variant="h6" gutterBottom>
+              <Typography fontWeight={800} mb={1}>
                 Cleaning Addresses
               </Typography>
 
               {enableCopyAddress && (
-                <FormGroup sx={{ mb: 2 }}>
+                <FormGroup>
                   <FormControlLabel
                     control={
                       <Checkbox
                         checked={copyAddress}
-                        onChange={copyAddressChangeHandle}
+                        onChange={(e) => setCopyAddress(e.target.checked)}
                       />
                     }
                     label="Use billing address as cleaning address"
@@ -306,24 +295,19 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               )}
 
               {formik.values.cleaningAddresses.map((addr, index) => (
-                <Accordion
-                  key={index}
-                  sx={{
-                    mb: 2,
-                    borderRadius: 2,
-                    "&:before": { display: "none" },
-                  }}
-                >
+                <Accordion key={index} sx={{ mt: 1 }}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant="subtitle1">
+                    <Typography>
                       {addr.address || `Address ${index + 1}`}
                     </Typography>
                     {formik.values.cleaningAddresses.length > 1 && (
                       <IconButton
-                        onClick={() => deleteAddressHandle(index)}
                         size="small"
                         sx={{ ml: "auto" }}
-                        disabled={copyAddress}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteAddressHandle(index);
+                        }}
                       >
                         <CloseIcon />
                       </IconButton>
@@ -332,18 +316,11 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                   <AccordionDetails>
                     <CustomerAddressForm
                       value={addr}
-                      onChange={(formValues) =>
-                        addressChangeHandler(formValues, index)
-                      }
-                      onBlur={() => formik.setFieldTouched("cleaningAddresses")}
-                      errors={
-                        formik.errors.cleaningAddresses?.[index] as {
-                          name?: string;
-                          address?: string;
-                          postcode?: string;
-                        }
-                      }
-                      disabled={copyAddress || deletingAddress}
+                      onChange={(v) => {
+                        const copy = [...formik.values.cleaningAddresses];
+                        copy[index] = v;
+                        formik.setFieldValue("cleaningAddresses", copy);
+                      }}
                     />
                   </AccordionDetails>
                 </Accordion>
@@ -359,90 +336,49 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             </Box>
           </Grid>
 
-          <ActionBar>
-            <LoadingButton
-              variant="contained"
-              color="primary"
-              type="submit"
-              loading={loading}
-              sx={{ minWidth: 120, textTransform: "none" }}
-            >
-              Save
-            </LoadingButton>
-
-            {onCancel && (
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={onCancel}
-                sx={{ minWidth: 120, textTransform: "none" }}
-              >
-                Cancel
-              </Button>
-            )}
-          </ActionBar>
+          {showActions && (
+            <Grid item xs={12}>
+              <Divider sx={{ mt: 1 }} />
+              <ActionBar variant={actionBarVariant}>
+                {onCancel && (
+                  <Button variant="outlined" onClick={onCancel}>
+                    Cancel
+                  </Button>
+                )}
+                <LoadingButton
+                  type="submit"
+                  variant="contained"
+                  loading={loading}
+                >
+                  Save
+                </LoadingButton>
+              </ActionBar>
+            </Grid>
+          )}
         </Grid>
-      </Form>
+      </Box>
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
+        <Alert severity={snackbarSeverity}>{snackbarMessage}</Alert>
       </Snackbar>
 
+      {/* Pending jobs dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Cannot delete address</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This address cannot be deleted because there are{" "}
-            <strong>pending jobs</strong> assigned to it. You can{" "}
-            <Button
-              variant="text"
-              onClick={() => {
-                setDialogOpen(false);
-                setAddressSelectorOpen(true);
-              }}
-            >
-              modify address
-            </Button>{" "}
-            for those jobs.
+            This address has pending jobs and cannot be deleted.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
-
-      {/* JobForm only if customerId exists */}
-      {openJobForm && customerId && (
-        <Dialog
-          open={openJobForm}
-          onClose={() => setOpenJobForm(false)}
-          fullWidth
-          maxWidth="md"
-        >
-          <DialogTitle>Modify Job Address</DialogTitle>
-          <DialogContent dividers>
-            <JobForm
-              customerId={customerId}
-              onSubmit={(job) => {
-                console.log("Updated job:", job);
-                setOpenJobForm(false);
-              }}
-              onCancel={() => setOpenJobForm(false)}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
 
       {customerId && addressIdDeleting && (
         <AddressModal
@@ -451,11 +387,8 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           customerId={customerId}
           oldAddressId={addressIdDeleting}
           onUpdated={() => {
-            setSnackbarMessage("Job address updated successfully");
-            setSnackbarSeverity("success");
-            setSnackbarOpen(true);
-            setAddressSelectorOpen(false);
             onReload?.();
+            setAddressSelectorOpen(false);
           }}
         />
       )}

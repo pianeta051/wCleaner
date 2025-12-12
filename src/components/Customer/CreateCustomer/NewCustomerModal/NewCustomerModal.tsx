@@ -1,16 +1,30 @@
-import { Modal, Grid, Alert } from "@mui/material";
 import { FC } from "react";
+import {
+  Modal,
+  Alert,
+  Typography,
+  IconButton,
+  Divider,
+  Button,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { LoadingButton } from "@mui/lab";
+
 import { Customer } from "../../../../types/types";
 import {
   CustomerForm,
   CustomerFormValues,
 } from "../../CustomerForm/CustomerForm";
+
 import {
-  Background,
-  Wrapper,
-  Title,
-} from "../../CustomerForm/CustomerForm.style";
-import { ModalBox } from "./NewCustomerModal.style";
+  Overlay,
+  ModalBox,
+  Header,
+  HeaderText,
+  Content,
+  Footer,
+  ErrorWrap,
+} from "./NewCustomerModal.style";
 
 type NewCustomerModalProps = {
   open: boolean;
@@ -31,46 +45,81 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
 }) => {
   const submitHandler = (formValues: CustomerFormValues) => {
     addCustomer(formValues)
-      .then((customer) => {
-        onSubmit(customer);
-      })
+      .then((customer) => onSubmit(customer))
       .catch(() => {
         // Error shown below
       });
   };
 
-  const closeHandler = () => {
-    onClose();
-  };
-
   return (
     <Modal
       open={open}
-      onClose={closeHandler}
+      onClose={onClose}
       aria-labelledby="New Customer"
       aria-describedby="Create a new customer"
+      disableScrollLock
     >
-      <ModalBox>
-        <Wrapper container>
-          <Grid item xs={12}>
-            <Title variant="h4">New Customer</Title>
-          </Grid>
-        </Wrapper>
+      <Overlay>
+        <ModalBox>
+          <Header>
+            <HeaderText>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 800, lineHeight: 1.1 }}
+              >
+                New Customer
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Create a new customer
+              </Typography>
+            </HeaderText>
 
-        <Background>
-          <CustomerForm
-            onSubmit={submitHandler}
-            onCancel={onClose}
-            loading={loading}
-          />
-        </Background>
+            <IconButton onClick={onClose} aria-label="close">
+              <CloseIcon />
+            </IconButton>
+          </Header>
 
-        {error && (
-          <Grid item xs={12} mt={2}>
-            <Alert severity="error">{error}</Alert>
-          </Grid>
-        )}
-      </ModalBox>
+          <Divider />
+
+          <Content>
+            {error && (
+              <ErrorWrap>
+                <Alert severity="error">{error}</Alert>
+              </ErrorWrap>
+            )}
+
+            <CustomerForm
+              formId="new-customer-form"
+              onSubmit={submitHandler}
+              onCancel={onClose}
+              loading={loading}
+              layout="vertical"
+              enableCopyAddress
+              showActions={false}
+            />
+          </Content>
+
+          <Footer>
+            <Button
+              variant="outlined"
+              onClick={onClose}
+              sx={{ textTransform: "none" }}
+            >
+              Cancel
+            </Button>
+
+            <LoadingButton
+              variant="contained"
+              type="submit"
+              form="new-customer-form"
+              loading={loading}
+              sx={{ textTransform: "none" }}
+            >
+              Save
+            </LoadingButton>
+          </Footer>
+        </ModalBox>
+      </Overlay>
     </Modal>
   );
 };

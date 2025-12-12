@@ -1,26 +1,36 @@
 import { styled, Box, Grid, Paper, Typography, TextField } from "@mui/material";
 
-export const ActionBar = styled(Box)(({ theme }) => ({
-  position: "fixed",
-  bottom: 0,
-  left: 0,
-  width: "100%",
-  backgroundColor: theme.palette.background.paper,
-  borderTop: `1px solid ${theme.palette.divider}`,
-  paddingTop: theme.spacing(2),
-  paddingBottom: theme.spacing(2),
-  paddingLeft: theme.spacing(2),
-  paddingRight: theme.spacing(2),
+export const ActionBar = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "variant",
+})<{ variant?: "sticky" | "inline" }>(({ theme, variant = "inline" }) => ({
   display: "flex",
-  justifyContent: "center",
-  gap: theme.spacing(2),
-  boxShadow: theme.shadows[3],
-  zIndex: 1200,
-  [theme.breakpoints.up("sm")]: {
-    paddingLeft: theme.spacing(4),
-    paddingRight: theme.spacing(4),
+  gap: theme.spacing(1.5),
+
+  ...(variant === "sticky"
+    ? {
+        position: "sticky",
+        bottom: 0,
+        zIndex: 2,
+        backgroundColor: theme.palette.background.paper,
+        borderTop: `1px solid ${theme.palette.divider}`,
+        padding: theme.spacing(2),
+        boxShadow: theme.shadows[4],
+        justifyContent: "flex-end",
+      }
+    : {
+        paddingTop: theme.spacing(2),
+        justifyContent: "flex-end",
+      }),
+
+  [theme.breakpoints.down("sm")]: {
+    justifyContent: "center",
+    "& > *": {
+      flex: 1,
+      minWidth: 0,
+    },
   },
 }));
+
 export const Background = styled(Paper)(() => ({
   display: "flex",
   alignItems: "center",
@@ -28,14 +38,19 @@ export const Background = styled(Paper)(() => ({
 }));
 
 export const Wrapper = styled(Grid)<{ enableScroll?: boolean }>(
-  ({ enableScroll }) => ({
+  ({ theme, enableScroll }) => ({
     width: "100%",
-    height: "100%",
-    paddingTop: "10px",
-    paddingBottom: "10px",
-    overflowY: enableScroll ? "scroll" : undefined,
-    maxHeight: enableScroll ? "700px" : undefined,
-    paddingLeft: "20px",
+    margin: 0,
+    padding: theme.spacing(2),
+    boxSizing: "border-box",
+    overflowX: "hidden",
+
+    overflowY: enableScroll ? "auto" : "visible",
+    maxHeight: enableScroll ? "calc(100vh - 200px)" : "none",
+
+    [theme.breakpoints.up("sm")]: {
+      padding: theme.spacing(3),
+    },
   })
 );
 
@@ -43,19 +58,22 @@ export const Title = styled(Typography)(() => ({
   textAlign: "center",
 }));
 
-export const ModalBox = styled(Box)({
+export const ModalBox = styled(Box)(({ theme }) => ({
   backgroundColor: "#fff",
-
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  borderRadius: "10px",
-  width: "70%",
-});
+  borderRadius: theme.shape.borderRadius * 2,
+  width: "min(720px, 92vw)",
+  maxHeight: "90vh",
+  overflow: "auto",
+  boxShadow: theme.shadows[8],
+}));
 
-export const Field = styled(TextField)(() => ({
-  marginBottom: "10px",
-  width: "90%",
-  marginLeft: "40px",
+export const Field = styled(TextField)(({ theme }) => ({
+  width: "100%",
+  "& .MuiInputBase-root": {
+    borderRadius: theme.shape.borderRadius * 2,
+  },
 }));
