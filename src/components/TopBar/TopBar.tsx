@@ -2,13 +2,24 @@ import { FC, useMemo, useState } from "react";
 import {
   AppBar,
   Box,
-  MenuItem,
-  Menu,
   Tooltip,
   Divider,
+  Paper,
+  List,
   ListItemText,
+  Avatar,
+  Typography,
 } from "@mui/material";
+
 import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import PeopleIcon from "@mui/icons-material/People";
+import GroupIcon from "@mui/icons-material/Group";
+import WorkIcon from "@mui/icons-material/Work";
+import PersonIcon from "@mui/icons-material/Person";
+import LogoutIcon from "@mui/icons-material/Logout";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
@@ -21,60 +32,92 @@ import {
   Spacer,
   NavButton,
   RightZone,
+  MobileDrawer,
+  DrawerHeader,
+  DrawerBrand,
+  DrawerClose,
+  DrawerBody,
+  DrawerItemButton,
+  DrawerItemIcon,
+  DrawerItemText,
+  DrawerFooter,
+  UserButton,
+  UserPopover,
+  UserPopoverHeader,
+  UserPopoverHeaderText,
+  UserPopoverTitle,
+  UserPopoverEmailRow,
+  UserPopoverEmailText,
+  UserPopoverList,
+  UserActionButton,
+  UserActionIcon,
 } from "./TopBar.style";
 
 type Page = {
   label: string;
   url: string;
   exclusiveFor?: string;
+  icon?: React.ReactNode;
 };
 
 export const TopBar: FC = () => {
-  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const [anchorElMenu, setAnchorElMenu] = useState<null | HTMLElement>(null);
+  const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const { logOut, isInGroup, user } = useAuth();
-  const isAdmin = isInGroup("Admin");
-
   const navigate = useNavigate();
   const location = useLocation();
 
   const pages: Page[] = useMemo(
     () =>
       [
-        { label: "Customers", url: "/admin/customers", exclusiveFor: "Admin" },
-        { label: "Users", url: "/admin/users", exclusiveFor: "Admin" },
-        { label: "Jobs", url: "/admin/jobs" },
+        {
+          label: "Customers",
+          url: "/admin/customers",
+          exclusiveFor: "Admin",
+          icon: <PeopleIcon fontSize="small" />,
+        },
+        {
+          label: "Users",
+          url: "/admin/users",
+          exclusiveFor: "Admin",
+          icon: <GroupIcon fontSize="small" />,
+        },
+        {
+          label: "Jobs",
+          url: "/admin/jobs",
+          icon: <WorkIcon fontSize="small" />,
+        },
       ].filter((p) => (p.exclusiveFor ? isInGroup(p.exclusiveFor) : true)),
-    [isAdmin]
+    [isInGroup]
   );
 
   const openUserMenu = (e: React.MouseEvent<HTMLElement>) =>
     setAnchorElUser(e.currentTarget);
   const closeUserMenu = () => setAnchorElUser(null);
 
-  const openMainMenu = (e: React.MouseEvent<HTMLElement>) =>
-    setAnchorElMenu(e.currentTarget);
-  const closeMainMenu = () => setAnchorElMenu(null);
-
   const go = (url: string) => {
     navigate(url);
-    closeMainMenu();
+    setMobileOpen(false);
   };
 
   const toProfile = () => {
     navigate("/admin/profile");
     closeUserMenu();
+    setMobileOpen(false);
   };
 
   const logOutHandler = async () => {
     if (logOut) await logOut();
     closeUserMenu();
+    setMobileOpen(false);
     navigate("/");
   };
 
   const isActive = (url: string) =>
     location.pathname === url || location.pathname.startsWith(url + "/");
+
+  const userMenuOpen = Boolean(anchorElUser);
 
   return (
     <AppBar position="fixed" elevation={2}>
@@ -82,18 +125,13 @@ export const TopBar: FC = () => {
         <BurgerButton
           color="inherit"
           aria-label="open main menu"
-          onClick={openMainMenu}
+          onClick={() => setMobileOpen(true)}
           edge="start"
         >
           <MenuIcon />
         </BurgerButton>
 
-        <Brand
-          variant="h6"
-          onClick={() => navigate("/")}
-          role="link"
-          aria-label="Go home"
-        >
+        <Brand variant="h6" onClick={() => navigate("/")} role="link">
           Window Cleaner
         </Brand>
 
@@ -112,57 +150,148 @@ export const TopBar: FC = () => {
         <Spacer />
 
         <RightZone>
-          <Tooltip title="Open settings">
-            <Box component="span">
-              <NavButton onClick={openUserMenu}>
-                <ProfileIcon />
-              </NavButton>
-            </Box>
+          <Tooltip title="Account">
+            <UserButton onClick={openUserMenu}>
+              <ProfileIcon />
+            </UserButton>
           </Tooltip>
         </RightZone>
       </Bar>
 
-      <Menu
-        id="main-menu"
-        anchorEl={anchorElMenu}
-        open={Boolean(anchorElMenu)}
-        onClose={closeMainMenu}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        keepMounted
+      {/* LEFT MOBILE DRAWER  */}
+      <MobileDrawer
+        anchor="left"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        ModalProps={{ keepMounted: true, disableScrollLock: true }}
       >
-        {pages.map((p) => (
-          <MenuItem
-            key={p.url}
-            onClick={() => go(p.url)}
-            selected={isActive(p.url)}
-            dense
-          >
-            {p.label}
-          </MenuItem>
-        ))}
-      </Menu>
+        <DrawerHeader>
+          <DrawerBrand>
+            <Box sx={{ fontWeight: 900, letterSpacing: ".08em" }}>
+              Window Cleaner
+            </Box>
+            <Box sx={{ fontSize: 12, opacity: 0.7 }}>Admin</Box>
+          </DrawerBrand>
 
-      <Menu
-        id="user-menu"
+          <DrawerClose
+            aria-label="close menu"
+            onClick={() => setMobileOpen(false)}
+          >
+            <CloseIcon />
+          </DrawerClose>
+        </DrawerHeader>
+
+        <Divider />
+
+        <DrawerBody>
+          {pages.map((p) => (
+            <DrawerItemButton
+              key={p.url}
+              onClick={() => go(p.url)}
+              $active={isActive(p.url)}
+            >
+              <DrawerItemIcon>{p.icon}</DrawerItemIcon>
+              <DrawerItemText>{p.label}</DrawerItemText>
+            </DrawerItemButton>
+          ))}
+        </DrawerBody>
+
+        <Divider />
+
+        <DrawerFooter>
+          <DrawerItemButton
+            onClick={toProfile}
+            $active={isActive("/admin/profile")}
+          >
+            <DrawerItemIcon>
+              <PersonIcon fontSize="small" />
+            </DrawerItemIcon>
+            <DrawerItemText>Profile</DrawerItemText>
+          </DrawerItemButton>
+
+          <DrawerItemButton onClick={logOutHandler}>
+            <DrawerItemIcon>
+              <LogoutIcon fontSize="small" />
+            </DrawerItemIcon>
+            <DrawerItemText>Log out</DrawerItemText>
+          </DrawerItemButton>
+
+          {user?.attributes?.email && (
+            <>
+              <Divider />
+              <Typography
+                variant="caption"
+                sx={{ opacity: 0.75, px: 1, mt: 1 }}
+              >
+                Signed in as
+              </Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 700, px: 1 }} noWrap>
+                {user.attributes.email}
+              </Typography>
+            </>
+          )}
+        </DrawerFooter>
+      </MobileDrawer>
+
+      {/* RIGHT USER POPOVER */}
+      <UserPopover
+        open={userMenuOpen}
         anchorEl={anchorElUser}
-        open={Boolean(anchorElUser)}
         onClose={closeUserMenu}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
-        keepMounted
       >
-        {user?.attributes?.email && (
-          <>
-            <MenuItem disableRipple>
-              <ListItemText primary={user.attributes.email} />
-            </MenuItem>
-            <Divider />
-          </>
-        )}
-        <MenuItem onClick={toProfile}>Profile</MenuItem>
-        <MenuItem onClick={logOutHandler}>Log out</MenuItem>
-      </Menu>
+        <Paper elevation={0}>
+          <UserPopoverHeader>
+            <Avatar sx={{ width: 36, height: 36 }}>
+              {user?.attributes?.email?.[0]?.toUpperCase() ?? "U"}
+            </Avatar>
+
+            <UserPopoverHeaderText>
+              <UserPopoverTitle>Account</UserPopoverTitle>
+
+              {user?.attributes?.email && (
+                <UserPopoverEmailRow>
+                  <MailOutlineIcon fontSize="small" />
+                  <UserPopoverEmailText
+                    variant="body2"
+                    color="text.secondary"
+                    noWrap
+                  >
+                    {user.attributes.email}
+                  </UserPopoverEmailText>
+                </UserPopoverEmailRow>
+              )}
+            </UserPopoverHeaderText>
+          </UserPopoverHeader>
+
+          <Divider />
+
+          <UserPopoverList>
+            <List dense disablePadding>
+              <UserActionButton onClick={toProfile}>
+                <UserActionIcon>
+                  <PersonIcon fontSize="small" />
+                </UserActionIcon>
+                <ListItemText
+                  primary="Profile"
+                  primaryTypographyProps={{ fontWeight: 700 }}
+                />
+              </UserActionButton>
+
+              <UserActionButton onClick={logOutHandler}>
+                <UserActionIcon>
+                  <LogoutIcon fontSize="small" />
+                </UserActionIcon>
+                <ListItemText
+                  primary="Log out"
+                  primaryTypographyProps={{ fontWeight: 700 }}
+                />
+              </UserActionButton>
+            </List>
+          </UserPopoverList>
+        </Paper>
+      </UserPopover>
     </AppBar>
   );
 };
