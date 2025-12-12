@@ -50,9 +50,11 @@ export const BreadcrumbContainer = styledComponents.div`
   display: flex;
   align-items: center;
   width: fit-content;
-  margin-top: 50px;
+  
+   @media (max-width: 600px) {
+    margin-top: 50px;
+  }
 `;
-
 export const StyledBreadcrumbs = styled(Breadcrumbs)`
   & .MuiBreadcrumbs-separator {
     margin: 0 5px;
