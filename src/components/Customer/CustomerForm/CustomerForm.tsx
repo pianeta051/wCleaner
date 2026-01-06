@@ -1,31 +1,41 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import {
-  Accordion,
-  AccordionSummary,
   AccordionDetails,
-  IconButton,
-  Typography,
-  Box,
-  FormControlLabel,
-  Checkbox,
-  FormGroup,
   AlertColor,
-  Snackbar,
-  Alert,
+  Box,
+  Button,
+  Checkbox,
   Dialog,
-  DialogTitle,
+  DialogActions,
   DialogContent,
   DialogContentText,
-  DialogActions,
-  Button,
-  Grid,
+  DialogTitle,
   Divider,
+  FormControlLabel,
+  FormGroup,
+  Grid,
+  IconButton,
+  Snackbar,
+  Typography,
+  Alert,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
 
-import { ActionBar, Field, Wrapper } from "./CustomerForm.style";
+import {
+  ActionBar,
+  Field,
+  Wrapper,
+  AddressesBox,
+  AddressAccordion,
+  AddressAccordionSummary,
+  AddressAccordionDetails,
+  AddressSummaryRow,
+  AddressSummaryTitle,
+  AddressDeleteButton,
+} from "./CustomerForm.style";
+
 import { LoadingButton } from "@mui/lab";
 import { useFormik } from "formik";
 import * as yup from "yup";
@@ -34,8 +44,8 @@ import {
   CustomerAddressForm,
   CustomerAddressFormValues,
 } from "../CustomerAddressForm/CustomerAddressForm";
-import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
 
+import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
 import { AddressModal } from "../../AddressModal/AddressModal";
 
 export type CustomerFormValues = {
@@ -62,6 +72,7 @@ type CustomerFormProps = {
   showActions?: boolean;
   formId?: string;
 };
+
 type CustomerAddressWithId = CustomerAddressFormValues & {
   id?: string;
 };
@@ -265,80 +276,74 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               />
             </Grid>
           ))}
+          <Grid item xs={12}>
+            <Divider sx={{ my: 2 }} />
+          </Grid>
 
           <Grid item xs={12}>
-            <Box
-              sx={{
-                p: 2,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-                overflowX: "hidden",
-              }}
-            >
-              <Typography fontWeight={800} mb={1}>
-                Cleaning Addresses
-              </Typography>
+            <Typography variant="h6" fontWeight={800} mb={1}>
+              Cleaning Addresses
+            </Typography>
 
-              {enableCopyAddress && (
-                <FormGroup>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={copyAddress}
-                        onChange={(e) => setCopyAddress(e.target.checked)}
-                      />
-                    }
-                    label="Use billing address as cleaning address"
-                  />
-                </FormGroup>
-              )}
+            {enableCopyAddress && (
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={copyAddress}
+                      onChange={(e) => setCopyAddress(e.target.checked)}
+                    />
+                  }
+                  label="Use billing address as cleaning address"
+                />
+              </FormGroup>
+            )}
 
-              {formik.values.cleaningAddresses.map((addr, index) => (
-                <Accordion key={index} sx={{ mt: 1 }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography>
+            {formik.values.cleaningAddresses.map((addr, index) => (
+              <AddressAccordion key={index}>
+                <AddressAccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <AddressSummaryRow>
+                    <AddressSummaryTitle>
                       {addr.address || `Address ${index + 1}`}
-                    </Typography>
+                    </AddressSummaryTitle>
+
                     {formik.values.cleaningAddresses.length > 1 && (
-                      <IconButton
+                      <AddressDeleteButton
                         size="small"
-                        sx={{ ml: "auto" }}
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteAddressHandle(index);
                         }}
                       >
                         <CloseIcon />
-                      </IconButton>
+                      </AddressDeleteButton>
                     )}
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <CustomerAddressForm
-                      value={addr}
-                      onChange={(v) => {
-                        const copy = [...formik.values.cleaningAddresses];
-                        copy[index] = v;
-                        formik.setFieldValue("cleaningAddresses", copy);
-                      }}
-                    />
-                  </AccordionDetails>
-                </Accordion>
-              ))}
+                  </AddressSummaryRow>
+                </AddressAccordionSummary>
 
-              <Button
-                onClick={addAddressHandler}
-                disabled={copyAddress || deletingAddress}
-                sx={{ mt: 1 }}
-              >
-                + Add Address
-              </Button>
-            </Box>
+                <AddressAccordionDetails>
+                  <CustomerAddressForm
+                    value={addr}
+                    onChange={(v) => {
+                      const copy = [...formik.values.cleaningAddresses];
+                      copy[index] = v;
+                      formik.setFieldValue("cleaningAddresses", copy);
+                    }}
+                  />
+                </AddressAccordionDetails>
+              </AddressAccordion>
+            ))}
+
+            <Button
+              onClick={addAddressHandler}
+              disabled={copyAddress || deletingAddress}
+            >
+              + Add Address
+            </Button>
           </Grid>
 
           {showActions && (
             <Grid item xs={12}>
-              <Divider sx={{ mt: 1 }} />
               <ActionBar variant={actionBarVariant}>
                 {onCancel && (
                   <Button variant="outlined" onClick={onCancel}>
@@ -358,7 +363,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
         </Grid>
       </Box>
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
@@ -367,7 +371,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
         <Alert severity={snackbarSeverity}>{snackbarMessage}</Alert>
       </Snackbar>
 
-      {/* Pending jobs dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Cannot delete address</DialogTitle>
         <DialogContent>

@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   CircularProgress,
@@ -6,30 +6,34 @@ import {
   Grid,
   Snackbar,
   Typography,
-  useMediaQuery,
-  useTheme,
+  Toolbar,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
+
 import PeopleIcon from "@mui/icons-material/People";
 import PersonIcon from "@mui/icons-material/Person";
-import {
-  BreadcrumbContainer,
-  StyledBreadcrumbs,
-  BreadcrumbLink,
-  CurrentPage,
-} from "./CustomerDetails.style";
 
 import { useParams } from "react-router-dom";
 
 import {
   Wrapper,
-  TopBar,
-  MobileMenuButton,
-  StyledDrawer,
+  SubHeaderBar,
+  SubHeaderInner,
   ContentPaper,
+  BreadcrumbContainer,
+  StyledBreadcrumbs,
+  BreadcrumbLink,
+  CurrentPage,
+  SectionNav,
+  SectionNavButton,
+  MobileSectionSelect,
 } from "./CustomerDetails.style";
+
 import { NotFound } from "../../../NotFound/NotFound";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
+
 import {
   CustomerForm,
   CustomerFormValues,
@@ -42,24 +46,26 @@ import { customerToFormValues } from "../../../../helpers/customer";
 import { useCustomer } from "../../../../hooks/Customers/useCustomer";
 import { useEditCustomer } from "../../../../hooks/Customers/useEditCustomer";
 
-import { Section, SideMenu } from "../../../../components/SideMenu/SiteMenu";
+import { useTheme } from "@mui/material/styles";
+import { useMediaQuery } from "@mui/material";
 
-const sections: Section[] = [
+const sections = [
   { id: "details", label: "Details" },
   { id: "notes", label: "Notes" },
   { id: "jobs", label: "Jobs" },
   { id: "files", label: "Files" },
-];
+] as const;
 
+type SectionId = typeof sections[number]["id"];
 type CustomerParams = { slug: string };
 
 export const CustomerDetails: FC = () => {
   const { slug } = useParams<CustomerParams>();
+
   const [snackbarStatus, setSnackbarStatus] = useState<
     "closed" | "success" | "error"
   >("closed");
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentSection, setCurrentSection] = useState("details");
+  const [currentSection, setCurrentSection] = useState<SectionId>("details");
 
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
@@ -70,113 +76,151 @@ export const CustomerDetails: FC = () => {
     error: initialError,
     reload,
   } = useCustomer(slug);
+
   const {
     editCustomer,
     loading: editing,
     error: editError,
   } = useEditCustomer(customer?.id, customer?.slug);
+  const TOP_GAP = 20;
+
+  const stickyTop = useMemo(() => {
+    const mh = theme.mixins.toolbar.minHeight;
+    const appBarHeight = typeof mh === "number" ? mh : isMdUp ? 64 : 56;
+    return appBarHeight + TOP_GAP;
+  }, [theme, isMdUp]);
+
+  const SUB_HEADER_HEIGHT = 56;
+  const scrollOffset = stickyTop + SUB_HEADER_HEIGHT + 12;
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.find((e) => e.isIntersecting);
-        if (visible?.target.id) setCurrentSection(visible.target.id);
-      },
-      { rootMargin: "-50% 0px -49% 0px" }
-    );
+    const els = sections
+      .map(({ id }) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
 
-    sections.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
+    if (!els.length) return;
 
-  const scrollTo = (id: string) => {
-    document
-      .getElementById(id)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    let raf = 0;
+
+    const update = () => {
+      raf = 0;
+      const y = scrollOffset + 1;
+
+      let active: SectionId = sections[0].id;
+      for (const el of els) {
+        if (el.getBoundingClientRect().top <= y) active = el.id as SectionId;
+      }
+      setCurrentSection(active);
+    };
+
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [scrollOffset]);
+
+  const scrollToSection = (id: SectionId) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
     setCurrentSection(id);
-    setDrawerOpen(false);
   };
 
-  const handleSubmit = async (v: CustomerFormValues) => {
+  const handleSubmit = async (values: CustomerFormValues) => {
     if (!customer) return;
+
     try {
-      const editedCustomer = await editCustomer(v);
+      const editedCustomer = await editCustomer(values);
       reload(editedCustomer);
       setSnackbarStatus("success");
-    } catch (e) {
+    } catch {
       setSnackbarStatus("error");
     }
   };
 
   if (!slug) return <NotFound />;
-  if (initialLoading)
+
+  if (initialLoading) {
     return (
       <Grid container justifyContent="center" mt={4}>
         <CircularProgress />
       </Grid>
     );
+  }
+
   if (initialError) return <ErrorMessage code={initialError} />;
   if (!customer) return <NotFound />;
-
-  const menuEl = (
-    <SideMenu
-      sections={sections}
-      currentSection={currentSection}
-      onSelect={scrollTo}
-      dense
-    />
-  );
-
   return (
     <Wrapper>
-      <TopBar>
-        <BreadcrumbContainer>
-          <StyledBreadcrumbs aria-label="breadcrumb" separator="›">
-            <BreadcrumbLink to="/admin/customers">
-              <PeopleIcon fontSize="small" /> Customers
-            </BreadcrumbLink>
+      <Toolbar />
 
-            <CurrentPage>
-              <PersonIcon fontSize="small" /> {customer.name}
-            </CurrentPage>
-          </StyledBreadcrumbs>
-        </BreadcrumbContainer>
-      </TopBar>
+      <SubHeaderBar $top={stickyTop}>
+        <SubHeaderInner>
+          <BreadcrumbContainer>
+            <StyledBreadcrumbs aria-label="breadcrumb" separator="›">
+              <BreadcrumbLink to="/admin/customers">
+                <PeopleIcon fontSize="small" /> Customers
+              </BreadcrumbLink>
 
-      {!isMdUp && (
-        <>
-          <MobileMenuButton
-            onClick={() => setDrawerOpen(true)}
-            aria-label="menu"
-          >
-            <MenuIcon />
-          </MobileMenuButton>
-          <StyledDrawer
-            anchor="left"
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            ModalProps={{ keepMounted: true }}
-          >
-            {menuEl}
-          </StyledDrawer>
-        </>
-      )}
+              <CurrentPage>
+                <PersonIcon fontSize="small" /> {customer.name}
+              </CurrentPage>
+            </StyledBreadcrumbs>
+          </BreadcrumbContainer>
+          {!isMdUp ? (
+            <MobileSectionSelect size="small" variant="outlined">
+              <InputLabel id="section-label">Section</InputLabel>
+              <Select
+                labelId="section-label"
+                label="Section"
+                value={currentSection}
+                onChange={(e) => scrollToSection(e.target.value as SectionId)}
+              >
+                {sections.map((s) => (
+                  <MenuItem key={s.id} value={s.id}>
+                    {s.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </MobileSectionSelect>
+          ) : (
+            <SectionNav>
+              {sections.map((s) => {
+                const active = currentSection === s.id;
+
+                return (
+                  <SectionNavButton
+                    key={s.id}
+                    $active={active}
+                    onClick={() => scrollToSection(s.id)}
+                    size="small"
+                  >
+                    {s.label}
+                  </SectionNavButton>
+                );
+              })}
+            </SectionNav>
+          )}
+        </SubHeaderInner>
+      </SubHeaderBar>
 
       <Grid container spacing={4}>
-        {isMdUp && (
-          <Grid item md={2}>
-            {menuEl}
-          </Grid>
-        )}
-
-        <Grid item xs={12} md={10}>
+        <Grid item xs={12}>
           <ContentPaper elevation={3}>
             {editError && <ErrorMessage code={editError} />}
 
-            <section id="details">
+            <section id="details" style={{ scrollMarginTop: scrollOffset }}>
               <Typography variant="h4" gutterBottom mb={5}>
                 Customer Details
               </Typography>
@@ -193,19 +237,19 @@ export const CustomerDetails: FC = () => {
 
             <Divider sx={{ my: 4 }} />
 
-            <section id="notes">
+            <section id="notes" style={{ scrollMarginTop: scrollOffset }}>
               <CustomerNotes customer={customer} />
             </section>
 
             <Divider sx={{ my: 4 }} />
 
-            <section id="jobs">
+            <section id="jobs" style={{ scrollMarginTop: scrollOffset }}>
               <CustomerJobs customer={customer} />
             </section>
 
             <Divider sx={{ my: 4 }} />
 
-            <section id="files">
+            <section id="files" style={{ scrollMarginTop: scrollOffset }}>
               <CustomerFiles customer={customer} />
             </section>
           </ContentPaper>
@@ -222,11 +266,9 @@ export const CustomerDetails: FC = () => {
           onClose={() => setSnackbarStatus("closed")}
           sx={{ width: "100%" }}
         >
-          {snackbarStatus === "success" ? (
-            <>Customer updated!</>
-          ) : (
-            <>Customer could not update</>
-          )}
+          {snackbarStatus === "success"
+            ? "Customer updated!"
+            : "Customer could not update"}
         </Alert>
       </Snackbar>
     </Wrapper>

@@ -29,17 +29,17 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
   disabled = false,
 }) => {
   const changeHandler: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    const fieldChanged = event.target.name;
+    const fieldChanged = event.target.name as keyof CustomerAddressFormValues;
     const newValue = event.target.value;
-    const updatedValues = {
-      ...value,
+
+    onChange?.({
+      ...(value ?? { name: "", address: "", postcode: "" }),
       [fieldChanged]: newValue,
-    };
-    onChange?.(updatedValues as CustomerAddressFormValues);
+    });
   };
 
   return (
-    <>
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <Field
           name="name"
@@ -49,11 +49,12 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           disabled={disabled}
           onChange={changeHandler}
           onBlur={onBlur}
-          value={value?.name}
+          value={value?.name ?? ""}
           error={!!errors?.name}
           helperText={errors?.name}
         />
       </Grid>
+
       <Grid item xs={12}>
         <Field
           name="address"
@@ -63,11 +64,12 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           disabled={disabled}
           onChange={changeHandler}
           onBlur={onBlur}
-          value={value?.address}
+          value={value?.address ?? ""}
           error={!!errors?.address}
           helperText={errors?.address}
         />
       </Grid>
+
       <Grid item xs={12}>
         <Field
           name="postcode"
@@ -77,11 +79,11 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           disabled={disabled}
           onChange={changeHandler}
           onBlur={onBlur}
-          value={value?.postcode}
+          value={value?.postcode ?? ""}
           error={!!errors?.postcode}
           helperText={errors?.postcode}
         />
       </Grid>
-    </>
+    </Grid>
   );
 };

@@ -1,4 +1,8 @@
 import { styled, Box, Grid, Paper, Typography, TextField } from "@mui/material";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import IconButton from "@mui/material/IconButton";
 
 export const ActionBar = styled(Box, {
   shouldForwardProp: (prop) => prop !== "variant",
@@ -77,3 +81,71 @@ export const Field = styled(TextField)(({ theme }) => ({
     borderRadius: theme.shape.borderRadius * 2,
   },
 }));
+
+/* =========================
+   Cleaning Addresses styles
+========================= */
+
+export const AddressesBox = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2),
+  border: "1px solid",
+  borderColor: theme.palette.divider,
+  borderRadius: theme.shape.borderRadius * 2,
+  overflowX: "hidden",
+}));
+
+export const AddressAccordion = styled(Accordion)(({ theme }) => ({
+  marginTop: theme.spacing(1),
+  borderRadius: theme.shape.borderRadius * 2,
+  border: `1px solid ${theme.palette.divider}`,
+  overflow: "hidden",
+  boxShadow: "none",
+
+  "&:before": {
+    display: "none",
+  },
+}));
+
+export const AddressAccordionSummary = styled(AccordionSummary)(
+  ({ theme }) => ({
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingTop: theme.spacing(1.25),
+    paddingBottom: theme.spacing(1.25),
+
+    "& .MuiAccordionSummary-content": {
+      margin: 0,
+    },
+  })
+);
+
+export const AddressSummaryRow = styled(Box)(({ theme }) => ({
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: theme.spacing(2),
+  minWidth: 0,
+}));
+
+export const AddressSummaryTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 700,
+  flex: 1,
+  minWidth: 0,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+}));
+
+export const AddressDeleteButton = styled(IconButton)(() => ({
+  flexShrink: 0,
+}));
+
+export const AddressAccordionDetails = styled(AccordionDetails)(
+  ({ theme }) => ({
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingTop: theme.spacing(1.5),
+    paddingBottom: theme.spacing(2),
+  })
+);
