@@ -238,7 +238,11 @@ export const CustomerDetails: FC = () => {
             <Divider sx={{ my: 4 }} />
 
             <section id="notes" style={{ scrollMarginTop: scrollOffset }}>
-              <CustomerNotes customer={customer} />
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <CustomerNotes customer={customer} />
+                </Grid>
+              </Grid>
             </section>
 
             <Divider sx={{ my: 4 }} />

@@ -11,10 +11,13 @@ import {
 import { Link as RouterLink } from "react-router-dom";
 import styledComponents from "styled-components";
 
-export const Wrapper = styled(Grid)(() => ({
-  margin: "auto",
-  padding: 10,
+export const Wrapper = styled(Grid)(({ theme }) => ({
   width: "100%",
+  margin: "0 auto",
+
+  [theme.breakpoints.up("md")]: {
+    width: "80%",
+  },
 }));
 
 export const SubHeaderBar = styled(Box)<{ $top: number }>(
