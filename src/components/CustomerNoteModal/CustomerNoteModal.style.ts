@@ -1,6 +1,7 @@
 import { styled, Box, Paper, Grid, Typography } from "@mui/material";
 
 export const ModalBox = styled(Box)(({ theme }) => ({
+  width: "30%",
   backgroundColor: "#fff",
   position: "absolute",
   top: "50%",
@@ -10,7 +11,7 @@ export const ModalBox = styled(Box)(({ theme }) => ({
   borderRadius: "8px",
   boxShadow: theme.shadows[5],
   [theme.breakpoints.down("md")]: {
-    width: "100%",
+    width: "90%",
     overflowY: "auto",
     maxHeight: "100%",
   },

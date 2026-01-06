@@ -2,28 +2,33 @@ import { FC, useMemo, useState } from "react";
 import {
   Button,
   Box,
-  Accordion,
   AccordionSummary,
   AccordionDetails,
   Typography,
   Alert,
   IconButton,
-  Stack,
+  Snackbar,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import MuiAlert, { AlertColor } from "@mui/material/Alert";
 
 import { Customer, CustomerNote } from "../../types/types";
-import { Title } from "./CustomerNotes.style";
 import { CustomerNoteModal } from "../CustomerNoteModal/CustomerNoteModal";
 import { FavouriteButton } from "../FavouriteButton/FavouriteButton";
 import { useDeleteCustomerNote } from "../../hooks/Customers/customerNotes/useDeleteCustomerNote";
 import { useEditNoteFavourite } from "../../hooks/Customers/customerNotes/useEditNoteFavourite";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert, { AlertColor } from "@mui/material/Alert";
 import { useAuth } from "../../context/AuthContext";
 import { CognitoUserWithAttributes } from "../../services/authentication";
+
+import {
+  NotesSection,
+  SectionHeader,
+  SectionTitle,
+  NotesContainer,
+  NoteAccordion,
+} from "./CustomerNotes.style";
 
 const isOwner = (
   note: CustomerNote,
@@ -53,8 +58,10 @@ type CustomerNotesProps = {
 export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
   const { isInGroup, user } = useAuth();
   const isAdmin = isInGroup("Admin");
+
   const { editCustomerNoteFavourite, loading: loadingFav } =
     useEditNoteFavourite(customer.id, customer.slug, jobId);
+
   const { deleteNote } = useDeleteCustomerNote(
     customer.id,
     customer.slug,
@@ -63,6 +70,7 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<CustomerNote>();
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] =
@@ -72,6 +80,7 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
     setEditingNote(note);
     setModalOpen(true);
   };
+
   const closeModal = () => {
     setModalOpen(false);
     setEditingNote(undefined);
@@ -106,97 +115,104 @@ export const CustomerNotes: FC<CustomerNotesProps> = ({ customer, jobId }) => {
 
   return (
     <>
-      <Box display="flex" alignItems="center" gap={2} mb={2}>
-        <Title>Notes</Title>
-        <Button variant="outlined" onClick={() => openModal()}>
-          Add note
-        </Button>
-      </Box>
+      <NotesSection>
+        <SectionHeader>
+          <SectionTitle variant="h6">Notes</SectionTitle>
 
-      {customer.notes?.length ? (
-        <Box
-          sx={{
-            maxHeight: manyNotes ? 400 : "auto",
-            overflowY: manyNotes ? "auto" : "visible",
-            border: "1px solid #ccc",
-            borderRadius: 2,
-            pr: 1,
-          }}
-        >
-          {orderedNotes.map((note) => {
-            const editable = canEditOrDelete(note, user, isAdmin);
+          <Button variant="outlined" onClick={() => openModal()}>
+            Add note
+          </Button>
+        </SectionHeader>
 
-            return (
-              <Accordion key={note.id}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    width="100%"
-                  >
-                    <FavouriteButton
-                      active={note.isFavourite}
-                      disabled={loadingFav}
-                      readOnly={!isAdmin}
-                      onActivate={() => toggleFavourite(note, true)}
-                      onDeactivate={() => toggleFavourite(note, false)}
-                    />
+        {customer.notes?.length ? (
+          <NotesContainer scrollable={manyNotes}>
+            {orderedNotes.map((note) => {
+              const editable = canEditOrDelete(note, user, isAdmin);
 
-                    <Typography fontWeight="bold">
-                      {note.title}
-                      {note.author ? ` – ${note.author}` : ""}
-                      {note.timestamp
-                        ? ` – ${new Date(note.timestamp).toLocaleString()}`
-                        : ""}
-                    </Typography>
-                    {note.updatedAt && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ ml: 1 }}
-                      >
-                        Last edited {new Date(note.updatedAt).toLocaleString()}
-                        {note.updatedBy ? ` by ${note.updatedBy}` : ""}
-                      </Typography>
-                    )}
+              return (
+                <NoteAccordion key={note.id}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box
+                      sx={{
+                        width: "100%",
+                        display: "grid",
+                        gridTemplateRows: "auto auto auto",
+                        rowGap: 0.5,
+                      }}
+                    >
+                      {/* LINEA 1: Favourite + Title */}
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <FavouriteButton
+                          active={note.isFavourite}
+                          disabled={loadingFav}
+                          readOnly={!isAdmin}
+                          onActivate={() => toggleFavourite(note, true)}
+                          onDeactivate={() => toggleFavourite(note, false)}
+                        />
 
-                    {editable && (
-                      <Box>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openModal(note);
-                          }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(note.id);
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        <Typography fontWeight={700}>
+                          {note.title}
+                          {note.author ? ` – ${note.author}` : ""}
+                        </Typography>
                       </Box>
-                    )}
-                  </Stack>
-                </AccordionSummary>
 
-                <AccordionDetails>
-                  <Typography>{note.content}</Typography>
-                </AccordionDetails>
-              </Accordion>
-            );
-          })}
-        </Box>
-      ) : (
-        <Alert severity="info">No notes yet.</Alert>
-      )}
+                      {/* LINEA 2: Timestamp */}
+                      <Typography variant="caption" color="text.secondary">
+                        {note.timestamp
+                          ? new Date(note.timestamp).toLocaleString()
+                          : ""}
+                        {note.updatedAt && (
+                          <>
+                            {" • edited "}
+                            {new Date(note.updatedAt).toLocaleString()}
+                            {note.updatedBy ? ` by ${note.updatedBy}` : ""}
+                          </>
+                        )}
+                      </Typography>
+
+                      {/* LINEA 3: Actions */}
+                      {editable && (
+                        <Box
+                          display="flex"
+                          justifyContent="flex-start"
+                          gap={0.5}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openModal(note);
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(note.id);
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
+                    </Box>
+                  </AccordionSummary>
+
+                  <AccordionDetails>
+                    <Typography>{note.content}</Typography>
+                  </AccordionDetails>
+                </NoteAccordion>
+              );
+            })}
+          </NotesContainer>
+        ) : (
+          <Alert severity="info">No notes yet.</Alert>
+        )}
+      </NotesSection>
 
       <CustomerNoteModal
         open={modalOpen}

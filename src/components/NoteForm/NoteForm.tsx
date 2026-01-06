@@ -1,17 +1,18 @@
+import { FC } from "react";
 import { LoadingButton } from "@mui/lab";
 import {
   Button,
+  Checkbox,
+  FormControlLabel,
   Grid,
   TextField,
-  Box,
-  FormControlLabel,
-  Checkbox,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { FC } from "react";
 import * as yup from "yup";
+
 import { Form } from "../Form/Form";
 import { useAuth } from "../../context/AuthContext";
+import { Field } from "./NoteForm.style";
 
 export type NoteFormValues = {
   title: string;
@@ -44,57 +45,55 @@ export const NoteForm: FC<NoteFormProps> = ({
   defaultValues,
   loading = false,
 }) => {
-  const defaultValuesForm = defaultValues ?? INITIAL_VALUES;
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
   const formik = useFormik<NoteFormValues>({
-    initialValues: defaultValuesForm,
+    initialValues: defaultValues ?? INITIAL_VALUES,
     onSubmit,
     validationSchema,
+    enableReinitialize: true,
   });
 
   return (
     <Form onSubmit={formik.handleSubmit}>
-      <Grid
-        container
-        spacing={3}
-        sx={{ px: { xs: 2, md: 4 } }}
-        justifyContent="center"
-      >
-        <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
-          <TextField
+      <Grid container spacing={2} sx={{ px: { xs: 2, md: 4 } }}>
+        <Grid item xs={12}>
+          <Field
             label="Title"
             name="title"
-            variant="outlined"
-            margin="normal"
             onChange={formik.handleChange}
             value={formik.values.title}
             onBlur={formik.handleBlur}
-            sx={{ width: "90%" }}
             error={formik.touched.title && Boolean(formik.errors.title)}
             helperText={formik.touched.title && formik.errors.title}
+            size="small"
           />
         </Grid>
 
-        <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
+        <Grid item xs={12}>
           <TextField
             label="Content"
             name="content"
             variant="outlined"
-            margin="normal"
             onChange={formik.handleChange}
             value={formik.values.content}
             onBlur={formik.handleBlur}
             multiline
-            rows={4}
-            sx={{ width: "90%" }}
+            minRows={5}
+            fullWidth
             error={formik.touched.content && Boolean(formik.errors.content)}
             helperText={formik.touched.content && formik.errors.content}
+            sx={{
+              "& .MuiInputBase-root": {
+                borderRadius: 2,
+              },
+            }}
           />
         </Grid>
+
         {isAdmin && (
-          <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
+          <Grid item xs={12}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -108,31 +107,29 @@ export const NoteForm: FC<NoteFormProps> = ({
           </Grid>
         )}
 
-        <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <LoadingButton
-              variant="contained"
-              color="primary"
-              type="submit"
-              size="small"
-              sx={{ textTransform: "none" }}
-              loading={loading}
-            >
-              Save
-            </LoadingButton>
+        <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "right" }}>
+          <LoadingButton
+            variant="contained"
+            type="submit"
+            loading={loading}
+            disabled={loading}
+            sx={{ width: { xs: "100%", md: "60%" }, textTransform: "none" }}
+          >
+            Save
+          </LoadingButton>
+        </Grid>
 
-            {onCancel && (
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={onCancel}
-                size="small"
-                sx={{ textTransform: "none" }}
-              >
-                Cancel
-              </Button>
-            )}
-          </Box>
+        <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "left" }}>
+          {onCancel && (
+            <Button
+              variant="outlined"
+              onClick={onCancel}
+              disabled={loading}
+              sx={{ width: { xs: "100%", md: "60%" }, textTransform: "none" }}
+            >
+              Cancel
+            </Button>
+          )}
         </Grid>
       </Grid>
     </Form>

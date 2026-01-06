@@ -229,7 +229,7 @@ export const JobForm: FC<JobFormProps> = ({
           </Grid>
           <Grid item xs={12}>
             <Grid container spacing={2}>
-              <Grid item xs={6} md={6}>
+              <Grid item xs={12} md={6}>
                 <JobTypeSelector
                   value={formik.values.jobTypeId}
                   onChange={changeJobTypeHandler}

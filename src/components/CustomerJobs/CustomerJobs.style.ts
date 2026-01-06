@@ -17,13 +17,13 @@ export const MenuFilterJob = styled(Grid)(() => ({
 
 export const Title = styled(Typography)(() => ({
   fontWeight: "bold",
-  fontSize: "30px",
+  fontSize: "22px",
   justifyContent: "left",
   textAlign: "left",
 }));
 export const Wrapper = styled(Grid)(() => ({
   margin: "auto",
-  padding: "10px",
+  padding: "20px",
   justifyContent: "center",
   textAlign: "center",
   width: "100%",

@@ -2,36 +2,51 @@ import {
   styled,
   Breadcrumbs,
   Typography,
-  Stack,
-  IconButton,
-  Drawer,
   Paper,
   Grid,
+  Box,
+  FormControl,
+  Button,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import styledComponents from "styled-components";
 
-export const Wrapper = styled(Grid)(() => ({
-  margin: "auto",
-  padding: 10,
+export const Wrapper = styled(Grid)(({ theme }) => ({
   width: "100%",
+  margin: "0 auto",
+
+  [theme.breakpoints.up("md")]: {
+    width: "80%",
+  },
 }));
 
-export const TopBar = styled(Stack)(({ theme }) => ({
-  flexDirection: "row",
-  alignItems: "flex-start",
+export const SubHeaderBar = styled(Box)<{ $top: number }>(
+  ({ theme, $top }) => ({
+    position: "sticky",
+    top: $top,
+    zIndex: theme.zIndex.appBar,
+    width: "100%",
+    backgroundColor: theme.palette.background.paper,
+    marginBottom: theme.spacing(2),
+    transform: "translateZ(0)",
+    willChange: "transform",
+  })
+);
+
+export const SubHeaderInner = styled(Box)(({ theme }) => ({
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   gap: theme.spacing(2),
-  marginBottom: theme.spacing(2),
-}));
+  paddingLeft: theme.spacing(2),
+  paddingRight: theme.spacing(2),
+  paddingTop: theme.spacing(1),
+  paddingBottom: theme.spacing(1),
 
-export const MobileMenuButton = styled(IconButton)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
-}));
-
-export const StyledDrawer = styled(Drawer)(() => ({
-  "& .MuiPaper-root": {
-    top: "64px",
-    height: "calc(100% - 64px)",
+  [theme.breakpoints.down("md")]: {
+    flexDirection: "column",
+    alignItems: "stretch",
   },
 }));
 
@@ -42,19 +57,75 @@ export const ContentPaper = styled(Paper)(({ theme }) => ({
   },
 }));
 
+export const SectionNav = styled(Box)(({ theme }) => ({
+  display: "flex",
+  gap: theme.spacing(1),
+  marginLeft: "200px",
+
+  [theme.breakpoints.down("md")]: {
+    display: "none",
+  },
+}));
+
+export const SectionNavButton = styled(Button, {
+  shouldForwardProp: (prop) => prop !== "$active",
+})<{ $active?: boolean }>(({ theme, $active }) => ({
+  fontWeight: $active ? 800 : 600,
+  textTransform: "none",
+  minWidth: "auto",
+  borderRadius: 0,
+
+  paddingLeft: theme.spacing(1.5),
+  paddingRight: theme.spacing(1.5),
+  paddingBottom: theme.spacing(0.5),
+
+  color: $active ? theme.palette.primary.main : theme.palette.text.secondary,
+
+  borderBottom: $active
+    ? `3px solid ${theme.palette.primary.main}`
+    : "3px solid transparent",
+
+  transition: "all 150ms ease",
+
+  "&:hover": {
+    backgroundColor: "transparent",
+    color: theme.palette.primary.main,
+    borderBottom: `3px solid ${theme.palette.primary.main}`,
+  },
+}));
+
+export const MobileSectionSelect = styled(FormControl)(({ theme }) => ({
+  marginTop: theme.spacing(1),
+
+  width: "80%",
+  maxWidth: 520,
+  marginLeft: 20,
+  marginRight: "auto",
+  paddingLeft: theme.spacing(1),
+  paddingRight: theme.spacing(1),
+  boxSizing: "border-box",
+
+  "& .MuiInputBase-root": {
+    height: 56,
+  },
+
+  "& .MuiInputLabel-root": {
+    top: -2,
+  },
+
+  [theme.breakpoints.down("sm")]: {
+    maxWidth: "100%",
+    paddingLeft: 0,
+    paddingRight: 0,
+  },
+}));
+
 export const BreadcrumbContainer = styledComponents.div`
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 10px 16px;
-  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   width: fit-content;
-  
-   @media (max-width: 600px) {
-    margin-top: 50px;
-  }
 `;
+
 export const StyledBreadcrumbs = styled(Breadcrumbs)`
   & .MuiBreadcrumbs-separator {
     margin: 0 5px;
