@@ -217,7 +217,8 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             max={new Date(`${endDay} 17:00`)}
             eventPropGetter={eventProps}
             components={{
-              event: CustomEvent,
+              // eslint-disable-next-line
+              event: CustomEvent as unknown as any,
             }}
           />
         ) : (
