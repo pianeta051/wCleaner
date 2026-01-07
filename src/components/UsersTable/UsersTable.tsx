@@ -1,15 +1,7 @@
 import { FC, useState } from "react";
 import { User } from "../../services/authentication";
-import {
-  GridActionsCellItem,
-  GridActionsColDef,
-  GridColDef,
-} from "@mui/x-data-grid";
-import {
-  AdminManagementContainer,
-  StyledDataGrid,
-  Wrapper,
-} from "./UsersTable.style";
+import { GridActionsColDef, GridColDef, DataGrid } from "@mui/x-data-grid";
+import { AdminManagementContainer, Wrapper } from "./UsersTable.style";
 import { UserColor } from "../UserColor/UserColor";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -18,7 +10,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { MakeAdminButton } from "../MakeAdminButton/MakeAdminButton";
 import { ErrorCode } from "../../services/error";
 import { useUsers } from "../../hooks/Users/useUsers";
-import { Snackbar } from "@mui/material";
+import { IconButton, Snackbar } from "@mui/material";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { RemoveAdminButton } from "../RemoveAdminButton/RemoveAdminButton";
 import { theme } from "../../theme";
@@ -84,18 +76,20 @@ export const UsersTable: FC<UsersTableProps> = ({
 
     getActions: (params) => {
       return [
-        <GridActionsCellItem
-          icon={<EditIcon />}
-          label="Edit"
-          key="edit"
+        <IconButton
+          aria-label="edit"
           onClick={() => onUserEditClick?.(params.row.id)}
-        />,
-        <GridActionsCellItem
-          icon={<DeleteIcon />}
-          label="Delete"
-          key="delete"
+          key="edit"
+        >
+          <EditIcon />
+        </IconButton>,
+        <IconButton
+          aria-label="delete"
           onClick={() => onUserDeleteClick?.(params.row.id)}
-        />,
+          key="delete"
+        >
+          <DeleteIcon />
+        </IconButton>,
         <AdminManagementContainer key="admin management">
           {params.row.isAdmin ? (
             <RemoveAdminButton
@@ -117,7 +111,7 @@ export const UsersTable: FC<UsersTableProps> = ({
 
   return (
     <Wrapper elements={users.length}>
-      <StyledDataGrid columns={[...columns, actionsColumn]} rows={users} />
+      <DataGrid columns={[...columns, actionsColumn]} rows={users} />
       <Snackbar
         open={errorCode !== null}
         autoHideDuration={6000}
