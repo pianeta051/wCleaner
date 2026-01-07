@@ -4,7 +4,6 @@ import { Grid, Button, Typography } from "@mui/material";
 import { FormWrapper, Title, Wrapper, Background } from "./SetPassword.style";
 import { Link, useNavigate } from "react-router-dom";
 import { ErrorCode, isErrorCode } from "../../../services/error";
-import { LoadingButton } from "@mui/lab";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
 import { setPassword } from "../../../services/authentication";
 import { Form } from "../../../components/Form/Form";
@@ -94,7 +93,7 @@ export const SetPassword: FC<SetPasswordProps> = ({
                 </Grid>
 
                 <Grid item xs={12}>
-                  <LoadingButton
+                  <Button
                     type="submit"
                     fullWidth
                     variant="contained"
@@ -102,7 +101,7 @@ export const SetPassword: FC<SetPasswordProps> = ({
                     loading={loading}
                   >
                     Reset
-                  </LoadingButton>
+                  </Button>
                 </Grid>
 
                 <Grid item xs={12}>

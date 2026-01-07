@@ -1,12 +1,19 @@
-import { styled, Grid, Typography, List } from "@mui/material";
+import { styled, Grid, Typography, List, Box } from "@mui/material";
 import { Link } from "react-router-dom";
 import styledComponents from "styled-components";
 
-export const IconButton = styledComponents.div`
-  float: right;
-  margin-top: 20px;
-  margin-right: 20px;
-`;
+export const HeaderRow = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  marginTop: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+
+  [theme.breakpoints.down("sm")]: {
+    justifyContent: "stretch",
+  },
+}));
+
 export const MenuFilterJob = styled(Grid)(() => ({
   margin: "auto",
   padding: "10px",
@@ -15,18 +22,28 @@ export const MenuFilterJob = styled(Grid)(() => ({
   width: "100%",
 }));
 
-export const Title = styled(Typography)(() => ({
-  fontWeight: "bold",
-  fontSize: "22px",
-  justifyContent: "left",
-  textAlign: "left",
-}));
-export const Wrapper = styled(Grid)(() => ({
-  margin: "auto",
-  padding: "20px",
-  justifyContent: "center",
+export const Title = styled(Typography)(({ theme }) => ({
+  fontWeight: 800,
+  fontSize: "40px",
   textAlign: "center",
   width: "100%",
+  marginTop: theme.spacing(1),
+
+  [theme.breakpoints.down("sm")]: {
+    fontSize: "32px",
+    marginTop: theme.spacing(2),
+  },
+}));
+
+export const Wrapper = styled(Grid)(({ theme }) => ({
+  margin: "0 auto",
+  padding: theme.spacing(2),
+  width: "100%",
+  boxSizing: "border-box",
+
+  [theme.breakpoints.up("md")]: {
+    padding: theme.spacing(3),
+  },
 }));
 
 export const ListCustomers = styled(List)(() => ({

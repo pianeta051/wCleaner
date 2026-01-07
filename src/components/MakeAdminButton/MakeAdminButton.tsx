@@ -1,4 +1,4 @@
-import { LoadingButton } from "@mui/lab";
+import { Button } from "@mui/material";
 import { FC, useState } from "react";
 import { ErrorCode, isErrorCode } from "../../services/error";
 import { makeUserAdmin } from "../../services/authentication";
@@ -33,13 +33,13 @@ export const MakeAdminButton: FC<MakeAdminButtonProps> = ({
       });
   };
   return (
-    <LoadingButton
+    <Button
       loading={loading}
       variant="text"
       color="success"
       onClick={makeAdminHandler}
     >
       Make Admin
-    </LoadingButton>
+    </Button>
   );
 };

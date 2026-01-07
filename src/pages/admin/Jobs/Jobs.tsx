@@ -9,6 +9,8 @@ import { JobCalendarColorLegend } from "../../../components/JobCalendarColorLege
 import { useJobs } from "../../../hooks/Jobs/useJobs";
 
 import { CalendarContainer, PageContainer, PageHeader } from "./Jobs.style";
+import { useLocation, useNavigate } from "react-router-dom";
+import { GenericJobModal } from "../../../components/GenericJobModal/GenericJobModal";
 
 export const JobsPage: FC = () => {
   const [legendView, setLegendView] = useState<"users" | "jobTypes">(
@@ -19,6 +21,9 @@ export const JobsPage: FC = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isNewJobRoute = location.pathname === "/admin/jobs/new";
 
   const today = dayjs().format("YYYY-MM-DD");
   const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
@@ -49,17 +54,21 @@ export const JobsPage: FC = () => {
   const changeLegendViewHandler = (v: "users" | "jobTypes") => setLegendView(v);
 
   const handleNewJob = () => {
-    // TODO: conecta aquí tu flujo real:
-    // - abrir modal (GenericJobModal)
-    // - navegar a /admin/jobs/new
-    // - etc.
-    console.log("New job");
+    navigate("/admin/jobs/new");
+  };
+
+  const handleCloseNewJob = () => {
+    navigate("/admin/jobs");
   };
 
   return (
     <PageContainer>
       <PageHeader>
-        <Typography variant="h6" fontWeight={800}>
+        <Typography
+          variant="h4"
+          fontWeight={800}
+          sx={{ textAlign: { xs: "center", sm: "left" } }}
+        >
           Jobs
         </Typography>
 
@@ -89,6 +98,14 @@ export const JobsPage: FC = () => {
           onChangeView={changeLegendViewHandler}
         />
       </CalendarContainer>
+      <GenericJobModal
+        key={isNewJobRoute ? "new-job" : "closed"}
+        open={isNewJobRoute}
+        onClose={handleCloseNewJob}
+        onSubmit={() => {
+          reload();
+        }}
+      />
     </PageContainer>
   );
 };

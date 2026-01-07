@@ -1,4 +1,4 @@
-import { TableCell } from "@mui/material";
+import { TableCell, Card } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
 export const TableCellWrap = styled(TableCell)(() => ({
@@ -8,4 +8,8 @@ export const TableCellWrap = styled(TableCell)(() => ({
   position: "sticky",
   top: 0,
   zIndex: 1,
+}));
+
+export const CustomerCard = styled(Card)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
 }));

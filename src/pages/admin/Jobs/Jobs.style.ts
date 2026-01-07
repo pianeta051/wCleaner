@@ -1,4 +1,3 @@
-// Jobs.style.ts
 import { styled } from "@mui/material/styles";
 import { Box } from "@mui/material";
 
@@ -18,6 +17,12 @@ export const PageHeader = styled(Box)(({ theme }) => ({
   justifyContent: "space-between",
   gap: theme.spacing(2),
   marginBottom: theme.spacing(2),
+
+  [theme.breakpoints.down("sm")]: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: theme.spacing(1.5),
+  },
 }));
 
 export const CalendarContainer = styled(Box)(({ theme }) => ({

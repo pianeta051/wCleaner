@@ -32,8 +32,6 @@ import {
   AddressSummaryTitle,
   AddressDeleteButton,
 } from "./CustomerForm.style";
-
-import { LoadingButton } from "@mui/lab";
 import { useFormik } from "formik";
 import * as yup from "yup";
 
@@ -253,7 +251,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               Customer Info
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Update the customer details and manage cleaning addresses.
+              Update the customer details.
             </Typography>
           </Grid>
 
@@ -280,6 +278,9 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           <Grid item xs={12}>
             <Typography variant="h6" fontWeight={800} mb={1}>
               Cleaning Addresses
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage cleaning addresses.
             </Typography>
 
             {enableCopyAddress && (
@@ -347,13 +348,9 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                     Cancel
                   </Button>
                 )}
-                <LoadingButton
-                  type="submit"
-                  variant="contained"
-                  loading={loading}
-                >
+                <Button type="submit" variant="contained" loading={loading}>
                   Save
-                </LoadingButton>
+                </Button>
               </ActionBar>
             </Grid>
           )}
