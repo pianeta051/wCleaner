@@ -1,6 +1,6 @@
 import { FC, useState } from "react";
 import { ErrorCode, isErrorCode } from "../../services/error";
-import { LoadingButton } from "@mui/lab";
+import { Button } from "@mui/material";
 import { removeUserAdmin } from "../../services/authentication";
 
 type RemoveAdminButtonProps = {
@@ -31,13 +31,13 @@ export const RemoveAdminButton: FC<RemoveAdminButtonProps> = ({
       });
   };
   return (
-    <LoadingButton
+    <Button
       loading={loading}
       variant="text"
       color="error"
       onClick={removeAdminHandler}
     >
       Remove Admin
-    </LoadingButton>
+    </Button>
   );
 };

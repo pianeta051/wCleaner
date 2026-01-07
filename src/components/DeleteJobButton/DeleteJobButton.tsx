@@ -10,7 +10,6 @@ import { FC, useState } from "react";
 
 import { ButtonWrapper } from "../DeleteJobButton/DeleteJobButton.style";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import { LoadingButton } from "@mui/lab";
 import { useDeleteJob } from "../../hooks/Jobs/useDeleteJob";
 
 type DeleteJobButtonProps = {
@@ -69,9 +68,9 @@ export const DeleteJobButton: FC<DeleteJobButtonProps> = ({
             Cancel
           </Button>
           {!error && (
-            <LoadingButton onClick={deleteHandler} autoFocus loading={loading}>
+            <Button onClick={deleteHandler} autoFocus loading={loading}>
               Agree
-            </LoadingButton>
+            </Button>
           )}
         </DialogActions>
       </Dialog>

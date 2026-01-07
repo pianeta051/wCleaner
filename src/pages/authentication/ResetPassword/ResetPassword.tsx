@@ -1,4 +1,3 @@
-import { LoadingButton } from "@mui/lab";
 import { FC, useState } from "react";
 import { Grid, Button, Typography } from "@mui/material";
 import { FormPaper, Title, Wrapper, Background } from "./ResetPassword.style";
@@ -83,7 +82,7 @@ export const ResetPassword: FC = () => {
                         />
                       </Grid>
                       <Grid item xs={12}>
-                        <LoadingButton
+                        <Button
                           type="submit"
                           fullWidth
                           variant="contained"
@@ -91,7 +90,7 @@ export const ResetPassword: FC = () => {
                           loading={loading}
                         >
                           Reset Password
-                        </LoadingButton>
+                        </Button>
                       </Grid>
 
                       <Grid item xs={12}>

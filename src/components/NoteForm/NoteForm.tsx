@@ -1,5 +1,4 @@
 import { FC } from "react";
-import { LoadingButton } from "@mui/lab";
 import {
   Button,
   Checkbox,
@@ -108,7 +107,7 @@ export const NoteForm: FC<NoteFormProps> = ({
         )}
 
         <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "right" }}>
-          <LoadingButton
+          <Button
             variant="contained"
             type="submit"
             loading={loading}
@@ -116,7 +115,7 @@ export const NoteForm: FC<NoteFormProps> = ({
             sx={{ width: { xs: "100%", md: "60%" }, textTransform: "none" }}
           >
             Save
-          </LoadingButton>
+          </Button>
         </Grid>
 
         <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "left" }}>
