@@ -1,7 +1,11 @@
 import { FC, useState } from "react";
 import { User } from "../../services/authentication";
-import { GridActionsColDef, GridColDef, DataGrid } from "@mui/x-data-grid";
-import { AdminManagementContainer, Wrapper } from "./UsersTable.style";
+import { GridActionsColDef, GridColDef } from "@mui/x-data-grid";
+import {
+  AdminManagementContainer,
+  StyledDataGrid,
+  Wrapper,
+} from "./UsersTable.style";
 import { UserColor } from "../UserColor/UserColor";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -111,7 +115,7 @@ export const UsersTable: FC<UsersTableProps> = ({
 
   return (
     <Wrapper elements={users.length}>
-      <DataGrid columns={[...columns, actionsColumn]} rows={users} />
+      <StyledDataGrid columns={[...columns, actionsColumn]} rows={users} />
       <Snackbar
         open={errorCode !== null}
         autoHideDuration={6000}
