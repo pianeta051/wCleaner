@@ -32,8 +32,6 @@ import {
   AddressSummaryTitle,
   AddressDeleteButton,
 } from "./CustomerForm.style";
-
-import { LoadingButton } from "@mui/lab";
 import { useFormik } from "formik";
 import * as yup from "yup";
 
@@ -350,13 +348,9 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                     Cancel
                   </Button>
                 )}
-                <LoadingButton
-                  type="submit"
-                  variant="contained"
-                  loading={loading}
-                >
+                <Button type="submit" variant="contained" loading={loading}>
                   Save
-                </LoadingButton>
+                </Button>
               </ActionBar>
             </Grid>
           )}

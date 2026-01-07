@@ -1,4 +1,4 @@
-import { LoadingButton } from "@mui/lab";
+import { Button } from "@mui/material";
 import {
   Card,
   CardContent,
@@ -108,9 +108,9 @@ export const JobTypeForm: FC<JobTypeFormProps> = ({
           />
         </CardContent>
       </Card>
-      <LoadingButton loading={loading} variant="outlined" type="submit">
+      <Button loading={loading} variant="outlined" type="submit">
         Save
-      </LoadingButton>
+      </Button>
     </Form>
   );
 };

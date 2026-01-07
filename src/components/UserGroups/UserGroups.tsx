@@ -1,4 +1,3 @@
-import { LoadingButton } from "@mui/lab";
 import { Button, CircularProgress } from "@mui/material";
 import { FC, SetStateAction, useEffect, useState } from "react";
 import {
@@ -112,24 +111,24 @@ export const UserGroups: FC<UserGroupsProps> = ({ id }) => {
         return null;
       }
       return (
-        <LoadingButton
+        <Button
           loading={makingAdmin}
           variant="outlined"
           color="error"
           onClick={removeButtonClickHandler}
         >
           Remove Admin access
-        </LoadingButton>
+        </Button>
       );
     } else {
       return (
-        <LoadingButton
+        <Button
           loading={makingAdmin}
           variant="outlined"
           onClick={makeAdminHandler}
         >
           Make Admin
-        </LoadingButton>
+        </Button>
       );
     }
   };

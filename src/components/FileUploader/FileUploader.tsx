@@ -1,6 +1,5 @@
 import { FC, useState } from "react";
-import { Box, Grid, Typography } from "@mui/material";
-import LoadingButton from "@mui/lab/LoadingButton";
+import { Box, Button, Grid, Typography } from "@mui/material";
 
 import { useUploadFile } from "../../hooks/Files/useUploadFile";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
@@ -48,14 +47,14 @@ export const FileUploader: FC<FileUploaderProps> = ({
           <FileInput value={files} onChange={selectFileHandler} />
         </Grid>
         <Grid item>
-          <LoadingButton
+          <Button
             loading={loading}
             variant="contained"
             onClick={handleUpload}
             disabled={files.length === 0}
           >
             Upload
-          </LoadingButton>
+          </Button>
         </Grid>
 
         {error && (

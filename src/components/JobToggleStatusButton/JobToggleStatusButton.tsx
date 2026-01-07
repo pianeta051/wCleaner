@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { Job, JobStatus } from "../../types/types";
 
-import { LoadingButton } from "@mui/lab";
+import { Button } from "@mui/material";
 import { useUpdateJobStatus } from "../../hooks/Jobs/useUpdateJobStatus";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 type JobToggleStatusButtonProps = {
@@ -35,9 +35,9 @@ export const JobToggleStatusButton: FC<JobToggleStatusButtonProps> = ({
 
   return (
     <>
-      <LoadingButton onClick={clickHandler} loading={loading}>
+      <Button onClick={clickHandler} loading={loading}>
         {text}
-      </LoadingButton>
+      </Button>
       {error && <ErrorMessage code={error} />}
     </>
   );

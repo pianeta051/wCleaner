@@ -1,4 +1,4 @@
-import { LoadingButton } from "@mui/lab";
+import { Button } from "@mui/material";
 import { TextField, Typography } from "@mui/material";
 import { FC, useState } from "react";
 import { Form } from "../Form/Form";
@@ -40,9 +40,9 @@ export const ProfileName: FC<ProfileNameProps> = ({
           margin="normal"
           onChange={changeHandler}
         />
-        <LoadingButton loading={loading} variant="outlined" type="submit">
+        <Button loading={loading} variant="outlined" type="submit">
           Save
-        </LoadingButton>
+        </Button>
       </Form>
     </>
   );

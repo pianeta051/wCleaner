@@ -9,7 +9,6 @@ import {
   TextField,
 } from "@mui/material";
 import { DateField, Field, TimeField } from "./JobForm.style";
-import { LoadingButton } from "@mui/lab";
 import { Form } from "../Form/Form";
 import { useFormik } from "formik";
 import * as yup from "yup";
@@ -285,7 +284,7 @@ export const JobForm: FC<JobFormProps> = ({
         </Grid>
 
         <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "right" }}>
-          <LoadingButton
+          <Button
             variant="contained"
             color="primary"
             style={{ textTransform: "none" }}
@@ -295,7 +294,7 @@ export const JobForm: FC<JobFormProps> = ({
             disabled={loading}
           >
             Save
-          </LoadingButton>
+          </Button>
         </Grid>
 
         <Grid

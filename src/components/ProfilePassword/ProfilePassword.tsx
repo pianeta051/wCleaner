@@ -1,4 +1,4 @@
-import { LoadingButton } from "@mui/lab";
+import { Button } from "@mui/material";
 import { Typography } from "@mui/material";
 import { FC } from "react";
 import { Form } from "../Form/Form";
@@ -58,9 +58,9 @@ export const ProfilePassword: FC<ProfilePasswordProps> = ({
           name="newPassword"
           showRestrictions={true}
         />
-        <LoadingButton loading={loading} variant="outlined" type="submit">
+        <Button loading={loading} variant="outlined" type="submit">
           Change password
-        </LoadingButton>
+        </Button>
       </Form>
     </>
   );

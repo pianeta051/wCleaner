@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import { FC, useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
-import LoadingButton from "@mui/lab/LoadingButton";
 import { useDeleteJobType } from "../../hooks/Jobs/useDeleteJobType";
 
 type DeleteJobTypeButtonProps = {
@@ -65,9 +64,9 @@ export const DeleteJobTypeButton: FC<DeleteJobTypeButtonProps> = ({
             Cancel
           </Button>
           {!error && (
-            <LoadingButton onClick={deleteHandler} autoFocus loading={loading}>
+            <Button onClick={deleteHandler} autoFocus loading={loading}>
               Agree
-            </LoadingButton>
+            </Button>
           )}
         </DialogActions>
       </Dialog>

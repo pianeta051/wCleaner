@@ -1,4 +1,4 @@
-import { LoadingButton } from "@mui/lab";
+import { Button } from "@mui/material";
 import { FC } from "react";
 import { EmailInput } from "../EmailInput/EmailInput";
 import { Form } from "../Form/Form";
@@ -120,9 +120,9 @@ export const UserForm: FC<UserFormProps> = ({
           />
         </CardContent>
       </Card>
-      <LoadingButton loading={loading} variant="outlined" type="submit">
+      <Button loading={loading} variant="outlined" type="submit">
         Save
-      </LoadingButton>
+      </Button>
     </Form>
   );
 };

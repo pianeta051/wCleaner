@@ -11,7 +11,6 @@ import { FC, useEffect, useState } from "react";
 import { ButtonWrapper } from "../DeleteCustomerButton/DeleteCustomerButton.style";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { useDeleteCustomer } from "../../hooks/Customers/useDeleteCustomer";
-import { LoadingButton } from "@mui/lab";
 import { useNavigate } from "react-router-dom";
 import { ErrorCode } from "../../services/error";
 
@@ -78,9 +77,9 @@ export const DeleteCustomerButton: FC<DeleteCustomerButtonProps> = ({
             Cancel
           </Button>
           {!errorMessage && (
-            <LoadingButton onClick={deleteHandler} autoFocus loading={loading}>
+            <Button onClick={deleteHandler} autoFocus loading={loading}>
               Agree
-            </LoadingButton>
+            </Button>
           )}
         </DialogActions>
       </Dialog>

@@ -8,7 +8,6 @@ import {
   Button,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { LoadingButton } from "@mui/lab";
 
 import { Customer } from "../../../../types/types";
 import {
@@ -108,7 +107,7 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
               Cancel
             </Button>
 
-            <LoadingButton
+            <Button
               variant="contained"
               type="submit"
               form="new-customer-form"
@@ -116,7 +115,7 @@ export const NewCustomerModal: FC<NewCustomerModalProps> = ({
               sx={{ textTransform: "none" }}
             >
               Save
-            </LoadingButton>
+            </Button>
           </Footer>
         </ModalBox>
       </Overlay>

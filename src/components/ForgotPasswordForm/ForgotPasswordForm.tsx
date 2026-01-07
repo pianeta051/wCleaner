@@ -1,4 +1,4 @@
-import { LoadingButton } from "@mui/lab";
+import { Button } from "@mui/material";
 import { FC } from "react";
 import { EmailInput } from "../EmailInput/EmailInput";
 import { Form } from "../Form/Form";
@@ -44,7 +44,7 @@ export const ForgotPasswordForm: FC<ForgotPasswordFormProps> = ({
         onChange={formik.handleChange}
         errorMessage={formik.touched.email ? formik.errors.email : undefined}
       />
-      <LoadingButton
+      <Button
         type="submit"
         fullWidth
         variant="contained"
@@ -52,7 +52,7 @@ export const ForgotPasswordForm: FC<ForgotPasswordFormProps> = ({
         loading={loading}
       >
         Reset
-      </LoadingButton>
+      </Button>
     </Form>
   );
 };

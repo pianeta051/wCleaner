@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { LoadingButton } from "@mui/lab";
 import { Toolbar } from "@mui/material";
 
 import { Wrapper, Title, OutcodeGrid } from "./Customers.style";
@@ -162,13 +161,13 @@ export const Customers: FC = () => {
                     <>
                       <CustomersTable customers={customers} onReload={reload} />
                       {moreToLoad && (
-                        <LoadingButton
+                        <Button
                           variant="text"
                           onClick={loadMore}
                           loading={loadingMore}
                         >
                           Load more
-                        </LoadingButton>
+                        </Button>
                       )}
                     </>
                   )}
