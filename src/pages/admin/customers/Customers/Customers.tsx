@@ -13,8 +13,9 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { LoadingButton } from "@mui/lab";
+import { Toolbar } from "@mui/material";
 
-import { Wrapper, Title, IconButton, OutcodeGrid } from "./Customers.style";
+import { Wrapper, Title, OutcodeGrid } from "./Customers.style";
 import { NewCustomerModal } from "../../../../components/Customer/CreateCustomer/NewCustomerModal/NewCustomerModal";
 import { CustomersTable } from "../../../../components/CustomersTable/CustomersTable";
 import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
@@ -74,6 +75,7 @@ export const Customers: FC = () => {
 
   return (
     <Wrapper>
+      <Toolbar />
       {isAdmin && (
         <>
           {isEmpty ? (
@@ -122,19 +124,35 @@ export const Customers: FC = () => {
                 )}
 
                 <Grid item xs={12} md={10}>
-                  <IconButton>
-                    <Button
-                      startIcon={<AddIcon />}
-                      onClick={openNewModalHandler}
-                    >
-                      New customer
-                    </Button>
-                  </IconButton>
+                  <Grid
+                    container
+                    spacing={2}
+                    alignItems="center"
+                    sx={{ mb: 2 }}
+                  >
+                    <Grid item xs={12} sm={8}>
+                      <SearchBar
+                        onSearch={searchHandler}
+                        initialValue={searchInput}
+                      />
+                    </Grid>
 
-                  <SearchBar
-                    onSearch={searchHandler}
-                    initialValue={searchInput}
-                  />
+                    <Grid
+                      item
+                      xs={12}
+                      sm={4}
+                      sx={{ textAlign: { xs: "center", sm: "right" } }}
+                    >
+                      <Button
+                        startIcon={<AddIcon />}
+                        onClick={openNewModalHandler}
+                        variant="contained"
+                        sx={{ width: { xs: "50%", sm: "auto" } }}
+                      >
+                        New customer
+                      </Button>
+                    </Grid>
+                  </Grid>
 
                   {loading ? (
                     <CircularProgress />

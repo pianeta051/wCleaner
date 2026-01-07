@@ -82,7 +82,7 @@ export const CustomerDetails: FC = () => {
     loading: editing,
     error: editError,
   } = useEditCustomer(customer?.id, customer?.slug);
-  const TOP_GAP = 20;
+  const TOP_GAP = 0;
 
   const stickyTop = useMemo(() => {
     const mh = theme.mixins.toolbar.minHeight;

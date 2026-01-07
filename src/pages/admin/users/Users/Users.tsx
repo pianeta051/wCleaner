@@ -1,10 +1,10 @@
-import { Button, CircularProgress, Grid, Typography } from "@mui/material";
+import { Button, CircularProgress, Grid } from "@mui/material";
 import { FC, useState } from "react";
 import { UsersTable } from "../../../../components/UsersTable/UsersTable";
 import { User } from "../../../../services/authentication";
 import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
-import { UserBackground, Wrapper } from "./Users.style";
+import { Title, UserBackground, Wrapper } from "./Users.style";
 import { EditUserModal } from "../../../../components/EditUserModal/EditUserModal";
 import { DeleteUser } from "../../../../components/DeleteUser/DeleteUser";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
@@ -52,9 +52,7 @@ export const UsersPage: FC = () => {
     <UserBackground>
       <Wrapper container spacing={1} columns={12}>
         <Grid item xs={12}>
-          <Typography align="center" variant="h3" gutterBottom>
-            Users
-          </Typography>
+          <Title>Users</Title>
           <Button startIcon={<AddIcon />} onClick={toCreateUser}>
             New user
           </Button>

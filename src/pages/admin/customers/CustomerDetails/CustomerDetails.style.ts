@@ -30,15 +30,16 @@ export const SubHeaderBar = styled(Box)<{ $top: number }>(
     marginBottom: theme.spacing(2),
     transform: "translateZ(0)",
     willChange: "transform",
+    display: "flex",
   })
 );
 
 export const SubHeaderInner = styled(Box)(({ theme }) => ({
   width: "100%",
+  maxWidth: "100%",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: theme.spacing(2),
   paddingLeft: theme.spacing(2),
   paddingRight: theme.spacing(2),
   paddingTop: theme.spacing(1),

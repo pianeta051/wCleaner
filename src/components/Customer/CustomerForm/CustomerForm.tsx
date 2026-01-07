@@ -253,7 +253,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               Customer Info
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Update the customer details and manage cleaning addresses.
+              Update the customer details.
             </Typography>
           </Grid>
 
@@ -280,6 +280,9 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           <Grid item xs={12}>
             <Typography variant="h6" fontWeight={800} mb={1}>
               Cleaning Addresses
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage cleaning addresses.
             </Typography>
 
             {enableCopyAddress && (

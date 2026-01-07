@@ -95,7 +95,7 @@ export const AddressesBox = styled(Box)(({ theme }) => ({
 }));
 
 export const AddressAccordion = styled(Accordion)(({ theme }) => ({
-  marginTop: theme.spacing(1),
+  marginTop: theme.spacing(2),
   borderRadius: theme.shape.borderRadius * 2,
   border: `1px solid ${theme.palette.divider}`,
   overflow: "hidden",
@@ -128,7 +128,7 @@ export const AddressSummaryRow = styled(Box)(({ theme }) => ({
   minWidth: 0,
 }));
 
-export const AddressSummaryTitle = styled(Typography)(({ theme }) => ({
+export const AddressSummaryTitle = styled(Typography)(() => ({
   fontWeight: 700,
   flex: 1,
   minWidth: 0,

@@ -1,6 +1,6 @@
 import { FC, useState } from "react";
-import { Button, CircularProgress, Stack, Box } from "@mui/material";
-import { Wrapper, Title, IconButton } from "./CustomerJobs.style";
+import { Button, CircularProgress, Box } from "@mui/material";
+import { Wrapper, Title, HeaderRow } from "./CustomerJobs.style";
 
 import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
 import { EmptyJobs } from "../EmptyJobs/EmptyJobs";
@@ -85,23 +85,16 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
         <EmptyJobs onCreateNew={() => openHandler()} />
       ) : (
         <>
-          <Stack
-            spacing={2}
-            direction="row"
-            mt={2}
-            sx={{ mb: "20px" }}
-            justifyContent="flex-start"
-          >
-            <IconButton>
-              <Button
-                startIcon={<AddIcon />}
-                onClick={() => openHandler()}
-                variant="outlined"
-              >
-                New Job
-              </Button>
-            </IconButton>
-          </Stack>
+          <HeaderRow>
+            <Button
+              startIcon={<AddIcon />}
+              onClick={() => openHandler()}
+              variant="contained"
+              sx={{ width: { xs: "100%", sm: "auto" } }}
+            >
+              New Job
+            </Button>
+          </HeaderRow>
 
           <JobsTable
             jobs={displayedJobs}

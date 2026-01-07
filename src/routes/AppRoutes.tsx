@@ -102,6 +102,7 @@ export const AppRoutes: FC = () => {
 
         <Route path="jobs" element={<AdminLayoutFullWidth />}>
           <Route index element={<JobsPage />} />
+          <Route path="new" element={<JobsPage />} />
         </Route>
       </Route>
 
