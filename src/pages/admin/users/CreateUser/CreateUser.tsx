@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import { FC, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
@@ -23,24 +23,32 @@ export const CreateUserPage: FC = () => {
         setLoading(false);
         navigate("/admin/users/");
       })
-      .catch((error) => {
-        console.error(error);
+      .catch((err) => {
         setLoading(false);
-        if (isErrorCode(error)) {
-          setError(error);
-        } else {
-          setError("INTERNAL_ERROR");
-        }
+        if (isErrorCode(err)) setError(err);
+        else setError("INTERNAL_ERROR");
       });
   };
 
   return (
-    <>
-      <Typography variant="h3" gutterBottom align="center">
-        Create user
+    <Container
+      maxWidth="md"
+      sx={{
+        py: { xs: 3, md: 6 },
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <Typography variant="h3" fontWeight={900} gutterBottom align="center">
+        Create User
       </Typography>
+
       {error && <ErrorMessage code={error} />}
-      <UserForm loading={loading} onSubmit={submitHandler} />
-    </>
+
+      <Box sx={{ width: "100%", mt: 2 }}>
+        <UserForm loading={loading} onSubmit={submitHandler} />
+      </Box>
+    </Container>
   );
 };

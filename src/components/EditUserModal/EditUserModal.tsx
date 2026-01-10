@@ -8,6 +8,7 @@ import {
   ModalContent,
   Title,
   Wrapper,
+  ModalViewport,
 } from "./EditUserModal.style";
 import { updateUser, User } from "../../services/authentication";
 import { ErrorCode, isErrorCode } from "../../services/error";
@@ -25,6 +26,7 @@ export const EditUserModal: FC<EditUserModalProps> = ({
 }) => {
   const [error, setError] = useState<ErrorCode | null>(null);
   const [loading, setLoading] = useState(false);
+
   const submitHandler = (values: UserFormValues) => {
     setLoading(true);
     updateUser(user.id, values)
@@ -34,11 +36,8 @@ export const EditUserModal: FC<EditUserModalProps> = ({
       })
       .catch((error) => {
         setLoading(false);
-        if (isErrorCode(error)) {
-          setError(error);
-        } else {
-          setError("INTERNAL_ERROR");
-        }
+        if (isErrorCode(error)) setError(error);
+        else setError("INTERNAL_ERROR");
       });
   };
 
@@ -56,23 +55,30 @@ export const EditUserModal: FC<EditUserModalProps> = ({
 
   return (
     <Modal open={open} onClose={closeHandler}>
-      <ModalContent>
-        <Wrapper container>
-          <Grid item xs={12}>
-            <Title variant="h4">Edit User</Title>
-          </Grid>
-        </Wrapper>
+      <ModalViewport
+        onClick={(e) => {
+          if (e.target === e.currentTarget) closeHandler();
+        }}
+      >
+        <ModalContent onClick={(e) => e.stopPropagation()}>
+          <Wrapper container>
+            <Grid item xs={12}>
+              <Title variant="h4">Edit User</Title>
+            </Grid>
+          </Wrapper>
 
-        <Background>
-          <UserForm
-            onSubmit={submitHandler}
-            initialValues={initialValues}
-            loading={loading}
-            isUpdate
-          />
-        </Background>
-        {error && <ErrorMessage code={error} />}
-      </ModalContent>
+          <Background>
+            <UserForm
+              onSubmit={submitHandler}
+              initialValues={initialValues}
+              loading={loading}
+              isUpdate
+            />
+          </Background>
+
+          {error && <ErrorMessage code={error} />}
+        </ModalContent>
+      </ModalViewport>
     </Modal>
   );
 };
