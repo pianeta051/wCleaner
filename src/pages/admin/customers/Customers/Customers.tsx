@@ -1,20 +1,29 @@
 import { FC, useState } from "react";
 import {
-  Accordion,
   AccordionSummary,
   AccordionDetails,
-  Button,
   CircularProgress,
   Grid,
-  Typography,
+  Toolbar,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Toolbar } from "@mui/material";
 
-import { Wrapper, Title, OutcodeGrid } from "./Customers.style";
+import {
+  Wrapper,
+  Title,
+  TopBarRow,
+  OutcodeAccordion,
+  AccordionTitle,
+  LoadingCenter,
+  DesktopOutcodeLoadingBox,
+  DesktopOutcodeBox,
+  ActionsGrid,
+  NewCustomerButton,
+} from "./Customers.style";
+
 import { NewCustomerModal } from "../../../../components/Customer/CreateCustomer/NewCustomerModal/NewCustomerModal";
 import { CustomersTable } from "../../../../components/CustomersTable/CustomersTable";
 import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
@@ -55,16 +64,10 @@ export const Customers: FC = () => {
     error: createError,
   } = useAddCustomer(searchInput, appliedOutcodes);
 
-  const closeNewModalHandler = () => {
-    setModalOpen(false);
-  };
-  const openNewModalHandler = () => {
-    setModalOpen(true);
-  };
+  const closeNewModalHandler = () => setModalOpen(false);
+  const openNewModalHandler = () => setModalOpen(true);
 
-  const searchHandler = (value: string) => {
-    setSearchInput(value);
-  };
+  const searchHandler = (value: string) => setSearchInput(value);
 
   const applyOutcodeFilterHandler = () => {
     setAppliedOutcodes(selectedOutcodes);
@@ -75,6 +78,7 @@ export const Customers: FC = () => {
   return (
     <Wrapper>
       <Toolbar />
+
       {isAdmin && (
         <>
           {isEmpty ? (
@@ -82,77 +86,75 @@ export const Customers: FC = () => {
           ) : (
             <>
               <Title>Customers</Title>
-              <Grid container spacing={1}>
-                {isMobile ? (
-                  <Grid item xs={12}>
-                    <Accordion>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography>Filter by Outcode</Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        {loadingOutcodes ? (
-                          <CircularProgress />
-                        ) : (
-                          outcodes && (
+
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TopBarRow container spacing={2}>
+                    <Grid item xs={12} md={2}>
+                      {isMobile ? (
+                        <OutcodeAccordion elevation={0}>
+                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <AccordionTitle>Search UK postcode</AccordionTitle>
+                          </AccordionSummary>
+
+                          <AccordionDetails>
+                            {loadingOutcodes ? (
+                              <LoadingCenter container>
+                                <CircularProgress size={24} />
+                              </LoadingCenter>
+                            ) : (
+                              outcodes && (
+                                <OutcodesSelector
+                                  outcodes={outcodes}
+                                  selected={selectedOutcodes}
+                                  onChange={setSelectedOutcodes}
+                                  onFilter={applyOutcodeFilterHandler}
+                                />
+                              )
+                            )}
+                          </AccordionDetails>
+                        </OutcodeAccordion>
+                      ) : loadingOutcodes ? (
+                        <DesktopOutcodeLoadingBox container>
+                          <CircularProgress size={24} />
+                        </DesktopOutcodeLoadingBox>
+                      ) : (
+                        outcodes && (
+                          <DesktopOutcodeBox>
                             <OutcodesSelector
                               outcodes={outcodes}
                               selected={selectedOutcodes}
                               onChange={setSelectedOutcodes}
                               onFilter={applyOutcodeFilterHandler}
                             />
-                          )
-                        )}
-                      </AccordionDetails>
-                    </Accordion>
-                  </Grid>
-                ) : (
-                  <OutcodeGrid item xs={12} md={2}>
-                    {loadingOutcodes ? (
-                      <CircularProgress />
-                    ) : (
-                      outcodes && (
-                        <OutcodesSelector
-                          outcodes={outcodes}
-                          selected={selectedOutcodes}
-                          onChange={setSelectedOutcodes}
-                          onFilter={applyOutcodeFilterHandler}
-                        />
-                      )
-                    )}
-                  </OutcodeGrid>
-                )}
+                          </DesktopOutcodeBox>
+                        )
+                      )}
+                    </Grid>
 
-                <Grid item xs={12} md={10}>
-                  <Grid
-                    container
-                    spacing={2}
-                    alignItems="center"
-                    sx={{ mb: 2 }}
-                  >
-                    <Grid item xs={12} sm={8}>
+                    <Grid item xs={12} md={6}>
                       <SearchBar
                         onSearch={searchHandler}
                         initialValue={searchInput}
                       />
                     </Grid>
 
-                    <Grid
-                      item
-                      xs={12}
-                      sm={4}
-                      sx={{ textAlign: { xs: "center", sm: "right" } }}
-                    >
-                      <Button
-                        startIcon={<AddIcon />}
-                        onClick={openNewModalHandler}
-                        variant="contained"
-                        sx={{ width: { xs: "50%", sm: "auto" } }}
-                      >
-                        New customer
-                      </Button>
+                    <Grid item xs={12} md={3}>
+                      <ActionsGrid>
+                        <NewCustomerButton
+                          startIcon={<AddIcon />}
+                          onClick={openNewModalHandler}
+                          variant="contained"
+                          fullWidth={isMobile}
+                        >
+                          New customer
+                        </NewCustomerButton>
+                      </ActionsGrid>
                     </Grid>
-                  </Grid>
+                  </TopBarRow>
+                </Grid>
 
+                <Grid item xs={12}>
                   {loading ? (
                     <CircularProgress />
                   ) : error ? (
@@ -161,13 +163,14 @@ export const Customers: FC = () => {
                     <>
                       <CustomersTable customers={customers} onReload={reload} />
                       {moreToLoad && (
-                        <Button
+                        <NewCustomerButton
                           variant="text"
                           onClick={loadMore}
-                          loading={loadingMore}
+                          disabled={loadingMore}
+                          sx={{ height: "auto" }}
                         >
-                          Load more
-                        </Button>
+                          {loadingMore ? "Loading..." : "Load more"}
+                        </NewCustomerButton>
                       )}
                     </>
                   )}

@@ -1,4 +1,11 @@
-import { styled, Grid, Typography, List } from "@mui/material";
+import {
+  styled,
+  Grid,
+  Typography,
+  List,
+  Accordion,
+  Button,
+} from "@mui/material";
 import { Link } from "react-router-dom";
 import styledComponents from "styled-components";
 
@@ -39,11 +46,13 @@ export const LinkItem = styled(Link)`
     color: #5ea1b6;
   }
 `;
+
 export const LeftGrid = styled(Grid)(({ theme }) => ({
   [theme.breakpoints.up("sm")]: {
     borderRight: "1px solid #ddd",
   },
 }));
+
 export const OutcodeGrid = styled(Grid)(({ theme }) => ({
   [theme.breakpoints.down("sm")]: {
     borderRight: "1px solid #ddd",
@@ -53,21 +62,78 @@ export const OutcodeGrid = styled(Grid)(({ theme }) => ({
   },
 }));
 
+export const TopBarRow = styled(Grid)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  padding: theme.spacing(2),
+  alignItems: "center",
+}));
+
+export const OutcodeAccordion = styled(Accordion)(({ theme }) => ({
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: theme.shape.borderRadius * 2,
+  "&:before": { display: "none" },
+}));
+
+export const AccordionTitle = styled(Typography)(() => ({
+  fontWeight: 600,
+}));
+
+export const LoadingCenter = styled(Grid)(({ theme }) => ({
+  justifyContent: "center",
+  paddingTop: theme.spacing(2),
+  paddingBottom: theme.spacing(2),
+}));
+
+export const DesktopOutcodeLoadingBox = styled(Grid)(({ theme }) => ({
+  height: 56,
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: theme.shape.borderRadius * 2,
+  backgroundColor: theme.palette.background.default,
+  alignItems: "center",
+  justifyContent: "center",
+}));
+
+export const DesktopOutcodeBox = styled(Grid)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius * 2,
+  padding: theme.spacing(1.5),
+  backgroundColor: theme.palette.background.default,
+}));
+
+export const ActionsGrid = styled(Grid)(({ theme }) => ({
+  display: "flex",
+  justifyContent: "flex-end",
+  alignItems: "flex-end",
+
+  [theme.breakpoints.down("sm")]: {
+    justifyContent: "stretch",
+  },
+}));
+
+export const NewCustomerButton = styled(Button)(({ theme }) => ({
+  height: 56,
+  borderRadius: theme.shape.borderRadius * 2,
+  textTransform: "none",
+  fontWeight: 700,
+}));
+
 export const TableHead = styledComponents.th`
   border: 1px solid #dddddd;
   text-align: center;
   padding: 8px;
 `;
+
 export const TableBody = styledComponents.tbody`
   background-color: #e4f0f5;
 `;
+
 export const Table = styledComponents.table`
-     font-family: arial, sans-serif;
+  font-family: arial, sans-serif;
   border-collapse: collapse;
   width: 100%;
 `;
+
 export const TableData = styledComponents.td`
-    border: 1px solid #dddddd;
+  border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
 `;
