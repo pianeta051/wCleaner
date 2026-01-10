@@ -1,18 +1,20 @@
-import { Button } from "@mui/material";
+import { CardContent, CardHeader, CardMedia, TextField } from "@mui/material";
 import { FC } from "react";
-import { EmailInput } from "../EmailInput/EmailInput";
-import { Form } from "../Form/Form";
-import { PasswordInput } from "../PasswordInput/PasswordInput";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardMedia,
-  TextField,
-} from "@mui/material";
 import { CirclePicker, ColorResult } from "react-color";
 import * as yup from "yup";
 import { useFormik } from "formik";
+
+import { EmailInput } from "../EmailInput/EmailInput";
+import { Form } from "../Form/Form";
+import { PasswordInput } from "../PasswordInput/PasswordInput";
+
+import {
+  ColorCard,
+  ColorPickerWrap,
+  ColorPreview,
+  FormContainer,
+  SubmitButton,
+} from "./UserForm.style";
 
 export type UserFormValues = {
   email: string;
@@ -21,12 +23,13 @@ export type UserFormValues = {
   name: string;
 };
 
-const EMPTY_FORM = {
+const EMPTY_FORM: UserFormValues = {
   email: "",
   password: "",
   color: "#f44336",
   name: "",
 };
+
 const validationSchemaCreate = yup.object<UserFormValues>({
   email: yup.string().email().required(),
   password: yup
@@ -58,7 +61,8 @@ export const UserForm: FC<UserFormProps> = ({
   isUpdate = false,
 }) => {
   const formik = useFormik<UserFormValues>({
-    initialValues: initialValues,
+    initialValues,
+    enableReinitialize: true,
     onSubmit,
     validationSchema: isUpdate
       ? validationSchemaUpdate
@@ -74,55 +78,73 @@ export const UserForm: FC<UserFormProps> = ({
     });
   };
 
+  const getUsername = (email: string) => email.split("@")[0];
+
   const emailChangeHandler: React.ChangeEventHandler<
     HTMLTextAreaElement | HTMLInputElement
   > = (event) => {
     formik.handleChange(event);
+
     if (!formik.touched.name) {
       const name = getUsername(event.target.value);
       formik.handleChange({ target: { name: "name", value: name } });
     }
   };
 
-  const getUsername = (email: string) => {
-    return email.split("@")[0];
-  };
-
   return (
     <Form onSubmit={formik.handleSubmit}>
-      <EmailInput value={formik.values.email} onChange={emailChangeHandler} />
-
-      <TextField
-        label="Name"
-        name="name"
-        variant="outlined"
-        margin="normal"
-        onChange={formik.handleChange}
-        value={formik.values.name}
-        onBlur={formik.handleBlur}
-      />
-
-      <PasswordInput
-        value={formik.values.password}
-        onChange={formik.handleChange}
-        showRestrictions
-      />
-      <Card sx={{ mb: 3 }}>
-        <CardHeader title="Pick a color" />
-        <CardMedia
-          sx={{ backgroundColor: formik.values.color, height: 50 }}
-          component="div"
+      <FormContainer>
+        <EmailInput
+          value={formik.values.email}
+          onChange={emailChangeHandler}
+          errorMessage={
+            formik.touched.email ? (formik.errors.email as string) : ""
+          }
         />
-        <CardContent>
-          <CirclePicker
-            color={formik.values.color}
-            onChange={colorChangeHandler}
+
+        <TextField
+          fullWidth
+          label="Name"
+          name="name"
+          variant="outlined"
+          margin="normal"
+          onChange={formik.handleChange}
+          value={formik.values.name}
+          onBlur={formik.handleBlur}
+          error={!!(formik.touched.name && formik.errors.name)}
+          helperText={formik.touched.name ? (formik.errors.name as string) : ""}
+        />
+
+        <PasswordInput
+          value={formik.values.password}
+          onChange={formik.handleChange}
+          showRestrictions={!isUpdate}
+          label={isUpdate ? "Password" : "Password *"}
+          errorMessage={
+            formik.touched.password ? (formik.errors.password as string) : ""
+          }
+        />
+
+        <ColorCard>
+          <CardHeader title="Pick a color" />
+          <CardMedia
+            component={ColorPreview}
+            sx={{ backgroundColor: formik.values.color }}
           />
-        </CardContent>
-      </Card>
-      <Button loading={loading} variant="outlined" type="submit">
-        Save
-      </Button>
+          <CardContent>
+            <ColorPickerWrap>
+              <CirclePicker
+                color={formik.values.color}
+                onChange={colorChangeHandler}
+              />
+            </ColorPickerWrap>
+          </CardContent>
+        </ColorCard>
+
+        <SubmitButton variant="outlined" type="submit" disabled={loading}>
+          {loading ? "SAVING..." : "SAVE"}
+        </SubmitButton>
+      </FormContainer>
     </Form>
   );
 };
