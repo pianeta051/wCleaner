@@ -1,9 +1,16 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { CircularProgress, Box, Grid } from "@mui/material";
+import {
+  CircularProgress,
+  Box,
+  Grid,
+  Toolbar,
+  useMediaQuery,
+} from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import { useTheme } from "@mui/material/styles";
 
 import { useJobCustomer } from "../../../hooks/Jobs/useJobCustomer";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
@@ -27,6 +34,15 @@ export const JobDetailsPage: FC = () => {
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
+  const theme = useTheme();
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
+
+  const stickyTop = useMemo(() => {
+    const mh = theme.mixins.toolbar.minHeight;
+    const appBarHeight = typeof mh === "number" ? mh : isMdUp ? 64 : 56;
+    return appBarHeight;
+  }, [theme, isMdUp]);
+
   if (!jobId || !customerId) return <ErrorMessage code="INTERNAL_ERROR" />;
 
   const { job, loading, error, reload } = useJobCustomer(customerId, jobId);
@@ -43,8 +59,10 @@ export const JobDetailsPage: FC = () => {
 
   return (
     <>
+      <Toolbar />
+
       {isAdmin && job.customer && (
-        <BreadcrumbsContainer>
+        <BreadcrumbsContainer $top={stickyTop}>
           <StyledBreadcrumbs aria-label="breadcrumb" separator="›">
             <BreadcrumbLink to="/admin/customers">
               <PeopleIcon fontSize="small" /> Customers
@@ -60,18 +78,27 @@ export const JobDetailsPage: FC = () => {
           </StyledBreadcrumbs>
         </BreadcrumbsContainer>
       )}
-
-      <Grid container spacing={4} justifyContent="center">
-        <Grid item xs={12} md={10} lg={8}>
-          <JobInfoDisplay job={job} onEdit={reload} />
-        </Grid>
-
-        {job.customer && (
-          <Grid item xs={12} md={10} lg={8}>
-            <JobCustomer job={job} />
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: { xs: "100%", md: "80%" },
+          mx: "auto",
+        }}
+      >
+        <Grid container spacing={{ xs: 2 }} sx={{ px: { xs: 1.5, md: 0 } }}>
+          <Grid item xs={12}>
+            <JobInfoDisplay job={job} onEdit={reload} />
           </Grid>
-        )}
-      </Grid>
+
+          {job.customer && (
+            <Grid item xs={12}>
+              <Box sx={{ position: { md: "sticky" }, top: { md: 88 } }}>
+                <JobCustomer job={job} />
+              </Box>
+            </Grid>
+          )}
+        </Grid>
+      </Box>
     </>
   );
 };

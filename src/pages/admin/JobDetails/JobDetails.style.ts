@@ -2,7 +2,12 @@ import { styled, Box, Breadcrumbs, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import styledComponents from "styled-components";
 
-export const BreadcrumbsContainer = styled(Box)(() => ({
+export const BreadcrumbsContainer = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "$top",
+})<{ $top: number }>(({ $top }) => ({
+  position: "sticky",
+  top: $top,
+  zIndex: 1200,
   display: "flex",
   alignItems: "center",
   marginBottom: "24px",
@@ -10,6 +15,9 @@ export const BreadcrumbsContainer = styled(Box)(() => ({
   borderRadius: "12px",
   padding: "12px 16px",
   boxShadow: "0px 2px 6px rgba(0,0,0,0.08)",
+
+  transform: "translateZ(0)",
+  willChange: "transform",
 }));
 
 export const StyledBreadcrumbs = styled(Breadcrumbs)(() => ({
