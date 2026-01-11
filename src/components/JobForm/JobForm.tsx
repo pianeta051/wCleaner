@@ -35,10 +35,12 @@ export type JobFormValues = {
   invoiceNumber?: string;
 };
 
+const NOW = dayjs();
+
 const INITIAL_VALUES: JobFormValues = {
-  date: dayjs(),
-  startTime: dayjs(),
-  endTime: dayjs().add(1, "hour"),
+  date: NOW,
+  startTime: NOW,
+  endTime: NOW.add(1, "hour"),
   price: 0,
   assignedTo: "",
   jobTypeId: "",
@@ -126,7 +128,12 @@ export const JobForm: FC<JobFormProps> = ({
   };
 
   const startTimeChangeHandler = (value: Dayjs | null) => {
+    if (!value) return;
+
     formik.setFieldValue("startTime", value);
+
+    const newEndTime = value.add(1, "hour");
+    formik.setFieldValue("endTime", newEndTime);
   };
 
   const endTimeChangeHandler = (value: Dayjs | null) => {
