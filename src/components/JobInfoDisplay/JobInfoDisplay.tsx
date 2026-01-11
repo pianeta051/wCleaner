@@ -8,22 +8,27 @@ import {
   Stack,
   Divider,
   Chip,
+  Box,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
-import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
 import CategoryIcon from "@mui/icons-material/Category";
 import HomeIcon from "@mui/icons-material/Home";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import ReceiptIcon from "@mui/icons-material/ReceiptLong";
+
+import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
 import { Job, JobStatus } from "../../types/types";
 import { useAuth } from "../../context/AuthContext";
 import { transformToFormValues } from "../../helpers/job";
 import { capitalize } from "lodash";
 import { JobToggleStatusButton } from "../JobToggleStatusButton/JobToggleStatusButton";
-import ReceiptIcon from "@mui/icons-material/ReceiptLong";
 import { useJobInvoice } from "../../hooks/Jobs/useJobInvoice";
 import { InvoiceActionButtons } from "../InvoiceActionButtons/InvoiceActionButtons";
 
@@ -43,14 +48,19 @@ const STATUS_COLORS: Record<
 
 export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
   const [modalOpen, setModalOpen] = useState(false);
+
   const { invoice, loading, error, reload } = useJobInvoice(
     job.customerId,
     job.id
   );
+
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
   const assignedTo = job?.assignedTo?.name ?? job?.assignedTo?.email;
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleGenerated = () => {
     reload();
@@ -62,26 +72,52 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
       <Card elevation={3}>
         <CardContent>
           <Stack
-            direction="row"
+            direction={isMobile ? "column" : "row"}
             justifyContent="space-between"
-            alignItems="center"
-            spacing={2}
+            alignItems={isMobile ? "stretch" : "center"}
+            spacing={isMobile ? 1.5 : 2}
             mb={3}
           >
-            <Typography variant="h5" fontWeight="bold">
-              Job Details
-            </Typography>
-            <Chip
-              label={capitalize(job.status ?? "pending")}
-              color={STATUS_COLORS[job.status ?? "pending"]}
-              sx={{
-                "& .MuiChip-label": {
-                  fontWeight: "bold",
-                  fontSize: "15px",
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              spacing={1.5}
+              sx={{ minWidth: 0 }}
+            >
+              <Typography
+                variant="h5"
+                fontWeight="bold"
+                sx={{ lineHeight: 1.1, minWidth: 0 }}
+              >
+                Job Details
+              </Typography>
+
+              <Chip
+                label={capitalize(job.status ?? "pending")}
+                color={STATUS_COLORS[job.status ?? "pending"]}
+                sx={{
+                  flexShrink: 0,
+                  "& .MuiChip-label": {
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                  },
+                }}
+              />
+            </Stack>
+
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+              justifyContent={isMobile ? "flex-start" : "flex-end"}
+              sx={[
+                isMobile && {
+                  "& > *": { flex: "1 1 auto" },
                 },
-              }}
-            />
-            <Stack direction="row" spacing={1}>
+              ]}
+            >
               <InvoiceActionButtons
                 job={job}
                 onGenerated={handleGenerated}
@@ -95,11 +131,15 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                   variant="contained"
                   size="small"
                   onClick={() => setModalOpen(true)}
+                  sx={{ whiteSpace: "nowrap" }}
+                  fullWidth={isMobile}
                 >
                   Edit Job
                 </Button>
               ) : (
-                <JobToggleStatusButton currentJob={job} onChange={onEdit} />
+                <Box sx={{ width: isMobile ? "100%" : "auto" }}>
+                  <JobToggleStatusButton currentJob={job} onChange={onEdit} />
+                </Box>
               )}
             </Stack>
           </Stack>
@@ -167,6 +207,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                       <Typography>{assignedTo}</Typography>
                     </Stack>
                   </Grid>
+
                   {invoice?.invoiceNumber && (
                     <Grid item xs={12} sm={6}>
                       <Stack direction="row" spacing={1.5} alignItems="center">
@@ -174,7 +215,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                         <Typography fontWeight="bold">
                           Invoice Number:
                         </Typography>
-                        <Typography>{invoice?.invoiceNumber}</Typography>
+                        <Typography>{invoice.invoiceNumber}</Typography>
                       </Stack>
                     </Grid>
                   )}
@@ -188,6 +229,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                   <Typography fontWeight="bold">£{job.price}</Typography>
                 </Stack>
               </Grid>
+
               <Grid item xs={6}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <PaymentsIcon fontSize="small" color="primary" />
@@ -199,6 +241,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
           </Stack>
         </CardContent>
       </Card>
+
       {job.customer && (
         <CustomerJobModal
           open={modalOpen}

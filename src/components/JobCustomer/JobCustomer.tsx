@@ -1,16 +1,22 @@
 import { FC } from "react";
 import { Job } from "../../types/types";
 import {
-  Card,
   CardContent,
   Divider,
   Grid,
   Stack,
   Typography,
+  Box,
 } from "@mui/material";
 import { CustomerFiles } from "../CustomerFiles/CustomerFiles";
 import { CustomerNotes } from "../CustomerNotes/CustomerNotes";
 import { useAuth } from "../../context/AuthContext";
+import {
+  CardHeaderRow,
+  CardTitle,
+  Section,
+  SectionCard,
+} from "./JobCustomer.style";
 
 type JobCustomerProps = {
   job: Job;
@@ -20,74 +26,82 @@ export const JobCustomer: FC<JobCustomerProps> = ({ job }) => {
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
-  if (!job.customer) {
-    return null;
-  }
+  if (!job.customer) return null;
+
   return (
-    <Grid container spacing={3} mt={3}>
-      <Grid item xs={12}>
-        <Card elevation={3}>
-          <CardContent>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              spacing={2}
-              mb={3}
-            >
-              <Typography variant="h5" fontWeight="bold">
-                Customer Details
-              </Typography>
-            </Stack>
+    <Section>
+      <SectionCard>
+        <CardContent>
+          <CardHeaderRow>
+            <CardTitle variant="h5">Customer Details</CardTitle>
+          </CardHeaderRow>
 
-            <Divider sx={{ mb: 3 }} />
+          <Divider sx={{ my: 2 }} />
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Typography fontWeight={800}>Name:</Typography>
+                <Typography sx={{ wordBreak: "break-word" }}>
+                  {job.customer.name}
+                </Typography>
+              </Stack>
+            </Grid>
+
+            {isAdmin && job.customer.email && (
+              <Grid item xs={12}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
-                  <Typography fontWeight="bold">Name:</Typography>
-                  <Typography>{job.customer.name}</Typography>
+                  <Typography fontWeight={800}>Email:</Typography>
+                  <Typography sx={{ wordBreak: "break-word" }}>
+                    {job.customer.email}
+                  </Typography>
                 </Stack>
               </Grid>
+            )}
 
-              {isAdmin && job.customer.email && (
-                <Grid item xs={6} sm={3}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Typography fontWeight="bold">Email:</Typography>
-                    <Typography>{job.customer.email}</Typography>
-                  </Stack>
-                </Grid>
-              )}
-            </Grid>
-            <Grid container spacing={2}>
-              {isAdmin && job.customer.mainTelephone && (
-                <Grid item xs={6} sm={3}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Typography fontWeight="bold">Telephone:</Typography>
-                    <Typography>{job.customer.mainTelephone}</Typography>
-                  </Stack>
-                </Grid>
-              )}
-              {isAdmin && job.customer.secondTelephone && (
-                <Grid item xs={6} sm={3}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Typography fontWeight="bold">Second Telephone:</Typography>
-                    <Typography>{job.customer.secondTelephone}</Typography>
-                  </Stack>
-                </Grid>
-              )}
-            </Grid>
-          </CardContent>
-        </Card>
-      </Grid>
+            {isAdmin && job.customer.mainTelephone && (
+              <Grid item xs={12} sm={6}>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Typography fontWeight={800}>Telephone:</Typography>
+                  <Typography sx={{ wordBreak: "break-word" }}>
+                    {job.customer.mainTelephone}
+                  </Typography>
+                </Stack>
+              </Grid>
+            )}
 
-      <Grid item xs={12} md={6}>
-        <CustomerFiles customer={job.customer} jobId={job.id} />
-      </Grid>
+            {isAdmin && job.customer.secondTelephone && (
+              <Grid item xs={12} sm={6}>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Typography fontWeight={800}>Second Telephone:</Typography>
+                  <Typography sx={{ wordBreak: "break-word" }}>
+                    {job.customer.secondTelephone}
+                  </Typography>
+                </Stack>
+              </Grid>
+            )}
+          </Grid>
+        </CardContent>
+      </SectionCard>
 
-      <Grid item xs={12} md={6}>
-        <CustomerNotes customer={job.customer} jobId={job.id} />
-      </Grid>
-    </Grid>
+      <SectionCard>
+        <CardContent>
+          <Box sx={{ mb: 2 }}>
+            <CardTitle variant="h6">Notes</CardTitle>
+            <Typography variant="body2" color="text.secondary">
+              Add notes and keep track of updates.
+            </Typography>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <CustomerNotes customer={job.customer} jobId={job.id} />
+        </CardContent>
+      </SectionCard>
+      <SectionCard>
+        <CardContent>
+          <Divider sx={{ mb: 2 }} />
+          <CustomerFiles customer={job.customer} jobId={job.id} />
+        </CardContent>
+      </SectionCard>
+    </Section>
   );
 };
