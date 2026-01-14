@@ -231,7 +231,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
       onReload?.();
-    } catch (e) {
+    } catch (_e) {
       setAddressIdDeleting(addressId);
       setDialogOpen(true);
     }

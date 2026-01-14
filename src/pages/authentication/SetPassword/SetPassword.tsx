@@ -46,8 +46,10 @@ export const SetPassword: FC<SetPasswordProps> = ({
             logIn(user);
           }
           setLoading(false);
-          {
-            isAdmin ? navigate("/admin/customers") : navigate("/");
+          if (isAdmin) {
+            navigate("/admin/customers");
+          } else {
+            navigate("/");
           }
         })
         .catch((error) => {

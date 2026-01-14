@@ -1,6 +1,0 @@
-{
-  "ignorePatterns": [
-    "node_modules",
-    "build"
-  ]
-}
