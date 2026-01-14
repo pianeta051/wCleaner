@@ -24,7 +24,7 @@ export const ModalBox = styled(Box)(({ theme }) => ({
   [theme.breakpoints.up("sm")]: {
     width: "min(760px, 96vw)",
     height: "min(92vh, 900px)",
-    borderRadius: theme.shape.borderRadius * 2,
+    borderRadius: +theme.shape.borderRadius * 2,
     margin: "auto",
   },
 }));

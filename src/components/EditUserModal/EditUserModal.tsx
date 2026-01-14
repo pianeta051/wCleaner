@@ -62,7 +62,7 @@ export const EditUserModal: FC<EditUserModalProps> = ({
       >
         <ModalContent onClick={(e) => e.stopPropagation()}>
           <Wrapper container>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Title variant="h4">Edit User</Title>
             </Grid>
           </Wrapper>

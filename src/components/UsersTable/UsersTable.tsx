@@ -1,6 +1,6 @@
 import { FC, useMemo, useState } from "react";
 import { User } from "../../services/authentication";
-import { GridActionsColDef, GridColDef } from "@mui/x-data-grid";
+import { GridColDef } from "@mui/x-data-grid";
 import {
   AdminManagementContainer,
   StyledDataGrid,
@@ -80,7 +80,7 @@ export const UsersTable: FC<UsersTableProps> = ({
   const successHandler = () => reload();
   const closeErrorSnackBar = () => setErrorCode(null);
 
-  const actionsColumn: GridActionsColDef = useMemo(
+  const actionsColumn: GridColDef = useMemo(
     () => ({
       field: "actions",
       type: "actions",
@@ -211,7 +211,7 @@ export const UsersTable: FC<UsersTableProps> = ({
         <StyledDataGrid
           columns={[...baseColumns, actionsColumn]}
           rows={users}
-          disableSelectionOnClick
+          disableRowSelectionOnClick
         />
       )}
 

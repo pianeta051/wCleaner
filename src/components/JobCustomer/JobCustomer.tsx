@@ -39,7 +39,7 @@ export const JobCustomer: FC<JobCustomerProps> = ({ job }) => {
           <Divider sx={{ my: 2 }} />
 
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Stack direction="row" spacing={1.5} alignItems="center">
                 <Typography fontWeight={800}>Name:</Typography>
                 <Typography sx={{ wordBreak: "break-word" }}>
@@ -49,7 +49,7 @@ export const JobCustomer: FC<JobCustomerProps> = ({ job }) => {
             </Grid>
 
             {isAdmin && job.customer.email && (
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <Typography fontWeight={800}>Email:</Typography>
                   <Typography sx={{ wordBreak: "break-word" }}>
@@ -60,7 +60,12 @@ export const JobCustomer: FC<JobCustomerProps> = ({ job }) => {
             )}
 
             {isAdmin && job.customer.mainTelephone && (
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <Typography fontWeight={800}>Telephone:</Typography>
                   <Typography sx={{ wordBreak: "break-word" }}>
@@ -71,7 +76,12 @@ export const JobCustomer: FC<JobCustomerProps> = ({ job }) => {
             )}
 
             {isAdmin && job.customer.secondTelephone && (
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <Typography fontWeight={800}>Second Telephone:</Typography>
                   <Typography sx={{ wordBreak: "break-word" }}>
@@ -83,7 +93,6 @@ export const JobCustomer: FC<JobCustomerProps> = ({ job }) => {
           </Grid>
         </CardContent>
       </SectionCard>
-
       <SectionCard>
         <CardContent>
           <Box sx={{ mb: 2 }}>

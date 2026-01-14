@@ -78,7 +78,7 @@ export const JobTypeModal: FC<JobTypeModalProps> = ({
     >
       <ModalBox>
         <Wrapper container>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Title variant="h4">{title}</Title>
           </Grid>
         </Wrapper>

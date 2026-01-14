@@ -145,7 +145,12 @@ export const JobForm: FC<JobFormProps> = ({
   return (
     <Form onSubmit={formik.handleSubmit}>
       <Grid container spacing={3} sx={{ px: { xs: 2, md: 4 } }}>
-        <Grid item xs={12} md={columns}>
+        <Grid
+          size={{
+            xs: 12,
+            md: columns,
+          }}
+        >
           <AddressSelector
             value={formik.values.addressId}
             onChange={(value) =>
@@ -159,7 +164,12 @@ export const JobForm: FC<JobFormProps> = ({
           />
         </Grid>
 
-        <Grid item xs={12} md={columns}>
+        <Grid
+          size={{
+            xs: 12,
+            md: columns,
+          }}
+        >
           <DateField
             name="date"
             onChange={dateChangeHandler}
@@ -169,9 +179,19 @@ export const JobForm: FC<JobFormProps> = ({
           />
         </Grid>
 
-        <Grid item xs={12} md={columns}>
+        <Grid
+          size={{
+            xs: 12,
+            md: columns,
+          }}
+        >
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+              }}
+            >
               <TimeField
                 label="Start Time"
                 name="startTime"
@@ -185,7 +205,12 @@ export const JobForm: FC<JobFormProps> = ({
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+              }}
+            >
               <TimeField
                 label="End Time"
                 name="endTime"
@@ -202,7 +227,12 @@ export const JobForm: FC<JobFormProps> = ({
             </Grid>
           </Grid>
 
-          <Grid item xs={12} md={columns}>
+          <Grid
+            size={{
+              xs: 12,
+              md: columns,
+            }}
+          >
             <Field
               name="price"
               label="Price"
@@ -215,7 +245,7 @@ export const JobForm: FC<JobFormProps> = ({
               }
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               name="invoiceDescription"
               label="Work description"
@@ -233,16 +263,26 @@ export const JobForm: FC<JobFormProps> = ({
               }
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  md: 6,
+                }}
+              >
                 <JobTypeSelector
                   value={formik.values.jobTypeId}
                   onChange={changeJobTypeHandler}
                 />
               </Grid>
               {isInGroup("Admin") && (
-                <Grid item xs={12} md={6}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    md: 6,
+                  }}
+                >
                   <UserSelector
                     value={formik.values.assignedTo}
                     onChange={changeUserHandler}
@@ -252,9 +292,14 @@ export const JobForm: FC<JobFormProps> = ({
             </Grid>
           </Grid>
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Grid container spacing={2}>
-            <Grid item xs={6} md={6}>
+            <Grid
+              size={{
+                xs: 6,
+                md: 6,
+              }}
+            >
               <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
                 <Select
@@ -270,7 +315,12 @@ export const JobForm: FC<JobFormProps> = ({
               </FormControl>
             </Grid>
 
-            <Grid item xs={6} md={6}>
+            <Grid
+              size={{
+                xs: 6,
+                md: 6,
+              }}
+            >
               <FormControl fullWidth>
                 <InputLabel>Payment Method</InputLabel>
                 <Select
@@ -290,7 +340,13 @@ export const JobForm: FC<JobFormProps> = ({
           </Grid>
         </Grid>
 
-        <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "right" }}>
+        <Grid
+          textAlign={{ xs: "center", md: "right" }}
+          size={{
+            xs: 12,
+            md: 6,
+          }}
+        >
           <Button
             variant="contained"
             color="primary"
@@ -305,11 +361,12 @@ export const JobForm: FC<JobFormProps> = ({
         </Grid>
 
         <Grid
-          item
-          xs={12}
-          md={6}
           textAlign={{ xs: "center", md: "left" }}
           mb={2}
+          size={{
+            xs: 12,
+            md: 6,
+          }}
         >
           {onCancel && (
             <Button

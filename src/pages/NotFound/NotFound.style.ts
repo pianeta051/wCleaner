@@ -1,8 +1,9 @@
+/// <reference types="vite-plugin-svgr/client" />
 import { Typography } from "@mui/material";
 import { Box, styled } from "@mui/system";
 import { Link } from "react-router-dom";
 import styledComponents from "styled-components";
-import { ReactComponent as Image } from "../../assets/illustrations_robots.svg";
+import Image from "../../assets/illustrations_robots.svg?react";
 
 export const BackHome = styled(Link)({
   color: "black",

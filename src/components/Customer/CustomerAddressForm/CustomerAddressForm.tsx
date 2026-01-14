@@ -40,7 +40,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Field
           name="name"
           label="Name"
@@ -54,8 +54,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           helperText={errors?.name}
         />
       </Grid>
-
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Field
           name="address"
           label="Address"
@@ -69,8 +68,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           helperText={errors?.address}
         />
       </Grid>
-
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Field
           name="postcode"
           label="Postcode"

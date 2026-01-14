@@ -78,7 +78,7 @@ export const GenericJobModal: FC<GenericJobModalProps> = ({
     >
       <ModalBox>
         <Wrapper container>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Title variant="h4">{jobId ? "Edit Job" : "New Job"}</Title>
           </Grid>
         </Wrapper>

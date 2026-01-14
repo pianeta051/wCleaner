@@ -34,7 +34,7 @@ export const createUser = async (formValues: UserFormValues): Promise<void> => {
   try {
     await AdminQueries.post("/createUser", {
       ...formValues,
-      redirectTo: process.env.REACT_APP_HOST ?? "",
+      redirectTo: import.meta.env.VITE_HOST ?? "",
     });
   } catch (error) {
     if (hasResponseMessage(error)) {
