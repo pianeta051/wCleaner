@@ -63,14 +63,20 @@ export const ResetPassword: FC = () => {
         <>
           <Background container>
             <Wrapper container>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Title variant="h4">Reset Password</Title>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6,
+                  md: 4,
+                }}
+              >
                 <Form onSubmit={submitHandler}>
                   <FormPaper>
                     <Grid container>
-                      <Grid item xs={12}>
+                      <Grid size={12}>
                         <PasswordInput
                           label="New Password"
                           onChange={(event) =>
@@ -81,7 +87,7 @@ export const ResetPassword: FC = () => {
                           showRestrictions={true}
                         />
                       </Grid>
-                      <Grid item xs={12}>
+                      <Grid size={12}>
                         <Button
                           type="submit"
                           fullWidth
@@ -93,7 +99,7 @@ export const ResetPassword: FC = () => {
                         </Button>
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid size={12}>
                         <Link to="/log-in">
                           <Button
                             disableFocusRipple

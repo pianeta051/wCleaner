@@ -19,7 +19,7 @@ export const Field = styled(TextField)(({ theme }) => ({
   ...commonFieldStyle,
 
   "& .MuiInputBase-root": {
-    borderRadius: theme.shape.borderRadius * 2,
+    borderRadius: +theme.shape.borderRadius * 2,
   },
 }));
 
@@ -27,6 +27,6 @@ export const MultilineField = styled(TextField)(({ theme }) => ({
   ...commonFieldStyle,
 
   "& .MuiInputBase-root": {
-    borderRadius: theme.shape.borderRadius * 2,
+    borderRadius: +theme.shape.borderRadius * 2,
   },
 }));

@@ -57,7 +57,7 @@ export const NoteForm: FC<NoteFormProps> = ({
   return (
     <Form onSubmit={formik.handleSubmit}>
       <Grid container spacing={2} sx={{ px: { xs: 2, md: 4 } }}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Field
             label="Title"
             name="title"
@@ -70,7 +70,7 @@ export const NoteForm: FC<NoteFormProps> = ({
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={12}>
           <TextField
             label="Content"
             name="content"
@@ -92,7 +92,7 @@ export const NoteForm: FC<NoteFormProps> = ({
         </Grid>
 
         {isAdmin && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <FormControlLabel
               control={
                 <Checkbox
@@ -106,7 +106,13 @@ export const NoteForm: FC<NoteFormProps> = ({
           </Grid>
         )}
 
-        <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "right" }}>
+        <Grid
+          textAlign={{ xs: "center", md: "right" }}
+          size={{
+            xs: 12,
+            md: 6,
+          }}
+        >
           <Button
             variant="contained"
             type="submit"
@@ -118,7 +124,13 @@ export const NoteForm: FC<NoteFormProps> = ({
           </Button>
         </Grid>
 
-        <Grid item xs={12} md={6} textAlign={{ xs: "center", md: "left" }}>
+        <Grid
+          textAlign={{ xs: "center", md: "left" }}
+          size={{
+            xs: 12,
+            md: 6,
+          }}
+        >
           {onCancel && (
             <Button
               variant="outlined"

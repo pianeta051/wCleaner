@@ -72,17 +72,23 @@ export const SetPassword: FC<SetPasswordProps> = ({
   return (
     <Background container>
       <Wrapper container>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Title variant="h4">Reset Password</Title>
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 4,
+          }}
+        >
           <Typography>
             This is your first time logging in. Please set your password.
           </Typography>
           <FormWrapper>
             <Form onSubmit={submitHandler}>
               <Grid container>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <PasswordInput
                     onChange={(event) => changeHandler(event.target.value)}
                     value={formData.password}
@@ -92,7 +98,7 @@ export const SetPassword: FC<SetPasswordProps> = ({
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Button
                     type="submit"
                     fullWidth
@@ -104,7 +110,7 @@ export const SetPassword: FC<SetPasswordProps> = ({
                   </Button>
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Link to="/log-in">
                     <Button
                       disableFocusRipple

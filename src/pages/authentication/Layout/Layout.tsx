@@ -18,13 +18,19 @@ export const Layout: FC<LayoutProps> = ({ children, title, subtitle }) => {
   return (
     <Background container>
       <Wrapper container>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Title variant="h4">{title}</Title>
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Subtitle variant="body2">{subtitle}</Subtitle>
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6,
+            md: 4,
+          }}
+        >
           <FormPaper>{children}</FormPaper>
         </Grid>
       </Wrapper>

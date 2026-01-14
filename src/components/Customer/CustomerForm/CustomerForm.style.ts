@@ -68,7 +68,7 @@ export const ModalBox = styled(Box)(({ theme }) => ({
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   width: "min(720px, 92vw)",
   maxHeight: "90vh",
   overflow: "auto",
@@ -78,7 +78,7 @@ export const ModalBox = styled(Box)(({ theme }) => ({
 export const Field = styled(TextField)(({ theme }) => ({
   width: "100%",
   "& .MuiInputBase-root": {
-    borderRadius: theme.shape.borderRadius * 2,
+    borderRadius: +theme.shape.borderRadius * 2,
   },
 }));
 
@@ -90,13 +90,13 @@ export const AddressesBox = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   border: "1px solid",
   borderColor: theme.palette.divider,
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   overflowX: "hidden",
 }));
 
 export const AddressAccordion = styled(Accordion)(({ theme }) => ({
   marginTop: theme.spacing(2),
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   border: `1px solid ${theme.palette.divider}`,
   overflow: "hidden",
   boxShadow: "none",

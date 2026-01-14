@@ -24,7 +24,7 @@ export const NotesContainer = styled(Box, {
   width: "100%",
   boxSizing: "border-box",
   border: `1px solid ${theme.palette.divider}`,
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   overflowY: scrollable ? "auto" : "visible",
   maxHeight: scrollable ? 400 : "none",
 }));

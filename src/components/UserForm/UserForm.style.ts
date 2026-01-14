@@ -18,7 +18,7 @@ export const FormContainer = styled(Box)(({ theme }) => ({
 export const ColorCard = styled(Card)(({ theme }) => ({
   marginTop: theme.spacing(2),
   marginBottom: theme.spacing(2),
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   overflow: "hidden",
   boxShadow: "none",
   border: `1px solid ${theme.palette.divider}`,
@@ -45,6 +45,6 @@ export const ColorPickerWrap = styled(Box)(({ theme }) => ({
 
 export const SubmitButton = styled(Button)(({ theme }) => ({
   width: "100%",
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   height: 44,
 }));

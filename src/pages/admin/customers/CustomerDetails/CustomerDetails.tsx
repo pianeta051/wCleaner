@@ -164,7 +164,6 @@ export const CustomerDetails: FC = () => {
   return (
     <Wrapper>
       <Toolbar />
-
       <SubHeaderBar $top={stickyTop}>
         <SubHeaderInner>
           <BreadcrumbContainer>
@@ -214,9 +213,8 @@ export const CustomerDetails: FC = () => {
           )}
         </SubHeaderInner>
       </SubHeaderBar>
-
       <Grid container spacing={4}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <ContentPaper elevation={3}>
             {editError && <ErrorMessage code={editError} />}
 
@@ -239,7 +237,7 @@ export const CustomerDetails: FC = () => {
 
             <section id="notes" style={{ scrollMarginTop: scrollOffset }}>
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <CustomerNotes customer={customer} />
                 </Grid>
               </Grid>
@@ -259,7 +257,6 @@ export const CustomerDetails: FC = () => {
           </ContentPaper>
         </Grid>
       </Grid>
-
       <Snackbar
         open={snackbarStatus !== "closed"}
         autoHideDuration={6000}

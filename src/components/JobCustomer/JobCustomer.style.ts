@@ -8,7 +8,7 @@ export const Section = styled(Box)(({ theme }) => ({
 }));
 
 export const SectionCard = styled(Card)(({ theme }) => ({
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   boxShadow: theme.shadows[2],
 }));
 

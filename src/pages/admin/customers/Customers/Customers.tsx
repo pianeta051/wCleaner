@@ -78,7 +78,6 @@ export const Customers: FC = () => {
   return (
     <Wrapper>
       <Toolbar />
-
       {isAdmin && (
         <>
           {isEmpty ? (
@@ -88,9 +87,14 @@ export const Customers: FC = () => {
               <Title>Customers</Title>
 
               <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <TopBarRow container spacing={2}>
-                    <Grid item xs={12} md={2}>
+                    <Grid
+                      size={{
+                        xs: 12,
+                        md: 2,
+                      }}
+                    >
                       {isMobile ? (
                         <OutcodeAccordion elevation={0}>
                           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -132,14 +136,24 @@ export const Customers: FC = () => {
                       )}
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
+                    <Grid
+                      size={{
+                        xs: 12,
+                        md: 6,
+                      }}
+                    >
                       <SearchBar
                         onSearch={searchHandler}
                         initialValue={searchInput}
                       />
                     </Grid>
 
-                    <Grid item xs={12} md={3}>
+                    <Grid
+                      size={{
+                        xs: 12,
+                        md: 3,
+                      }}
+                    >
                       <ActionsGrid>
                         <NewCustomerButton
                           startIcon={<AddIcon />}
@@ -154,7 +168,7 @@ export const Customers: FC = () => {
                   </TopBarRow>
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   {loading ? (
                     <CircularProgress />
                   ) : error ? (

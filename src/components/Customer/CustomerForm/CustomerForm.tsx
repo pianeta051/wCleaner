@@ -246,7 +246,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
         noValidate
       >
         <Grid container spacing={3} sx={{ overflowX: "hidden" }}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6" fontWeight={800}>
               Customer Info
             </Typography>
@@ -256,7 +256,13 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           </Grid>
 
           {scalarFields.map((field) => (
-            <Grid item xs={12} md={6} key={field}>
+            <Grid
+              key={field}
+              size={{
+                xs: 12,
+                md: 6,
+              }}
+            >
               <Field
                 name={field}
                 label={labels[field]}
@@ -271,11 +277,11 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               />
             </Grid>
           ))}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Divider sx={{ my: 2 }} />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="h6" fontWeight={800} mb={1}>
               Cleaning Addresses
             </Typography>
@@ -341,7 +347,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           </Grid>
 
           {showActions && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ActionBar variant={actionBarVariant}>
                 {onCancel && (
                   <Button variant="outlined" onClick={onCancel}>
@@ -356,7 +362,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           )}
         </Grid>
       </Box>
-
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
@@ -364,7 +369,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
       >
         <Alert severity={snackbarSeverity}>{snackbarMessage}</Alert>
       </Snackbar>
-
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Cannot delete address</DialogTitle>
         <DialogContent>
@@ -376,7 +380,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           <Button onClick={() => setDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
-
       {customerId && addressIdDeleting && (
         <AddressModal
           open={addressSelectorOpen}
