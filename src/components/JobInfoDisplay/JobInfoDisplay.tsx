@@ -222,7 +222,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </>
               )}
 
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <PointOfSaleIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Price:</Typography>
@@ -230,7 +230,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </Stack>
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <PaymentsIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Payment Method:</Typography>

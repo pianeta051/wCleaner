@@ -67,7 +67,7 @@ export const JobsPage: FC = () => {
         <Typography
           variant="h4"
           fontWeight={800}
-          sx={{ textAlign: { xs: "center", sm: "left" } }}
+          sx={{ textAlign: { xs: "center", sm: "left", mt: "20px" } }}
         >
           Jobs
         </Typography>

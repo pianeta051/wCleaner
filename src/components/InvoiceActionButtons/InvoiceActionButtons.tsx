@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import { CircularProgress, Stack } from "@mui/material";
 import { Job } from "../../types/types";
 import { GenerateInvoiceButton } from "../GenerateInvoiceButton/GenerateInvoiceButton";
@@ -22,7 +22,14 @@ export const InvoiceActionButtons: FC<InvoiceActionButtonsProps> = ({
   error,
   onGenerated,
 }) => {
+  const [hasLoaded, setHasLoaded] = useState(false);
   const { isInGroup } = useAuth();
+
+  useEffect(() => {
+    if (loading) {
+      setHasLoaded(true);
+    }
+  }, [loading]);
 
   if (!isInGroup("Admin")) {
     return null;
@@ -31,7 +38,7 @@ export const InvoiceActionButtons: FC<InvoiceActionButtonsProps> = ({
   if (error && error !== "INVOICE_NOT_FOUND") {
     return <ErrorMessage code={error} />;
   }
-  if (loading && !existing) {
+  if (loading && !hasLoaded) {
     return <CircularProgress />;
   }
 

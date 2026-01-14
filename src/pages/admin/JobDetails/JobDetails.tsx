@@ -83,6 +83,7 @@ export const JobDetailsPage: FC = () => {
           width: "100%",
           maxWidth: { xs: "100%", md: "80%" },
           mx: "auto",
+          marginBottom: "30px",
         }}
       >
         <Grid container spacing={{ xs: 2 }} sx={{ px: { xs: 1.5, md: 0 } }}>
