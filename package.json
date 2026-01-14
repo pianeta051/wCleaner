@@ -83,11 +83,11 @@
     "yup": "^1.2.0"
   },
   "scripts": {
-    "start": "node --max_old_space_size=4096 scripts/start.js",
-    "build": "node scripts/build.js",
-    "build:cd": "node --max_old_space_size=4096 scripts/build.js",
-    "test": "node scripts/test.js",
-    "test:ci": "node scripts/test.js --passWithNoTests --watchAll=false",
+    "start": "vite",
+    "build": "vite build",
+    "build:cd": "vite build",
+    "test": "vitest",
+    "test:ci": "vitest --passWithNoTests",
     "lint": "eslint ./src/**/*.{ts,tsx} --fix",
     "format": "prettier --write .",
     "prepare": "husky install",
@@ -124,6 +124,7 @@
     "@types/testing-library__cypress": "^5.0.9",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
+    "@vitejs/plugin-react": "^5.1.2",
     "css-loader": "^7.1.2",
     "cypress": "14.3.2",
     "cypress-file-upload": "^5.0.8",
@@ -139,7 +140,9 @@
     "style-loader": "^4.0.0",
     "ts-jest": "^29.0.3",
     "ts-loader": "^9.5.2",
-    "vite": "^6.3.2",
+    "vite": "^7.3.1",
+    "vite-plugin-svgr": "^4.5.0",
+    "vitest": "^4.0.17",
     "webpack": "^5.99.6"
   },
   "jest": {
