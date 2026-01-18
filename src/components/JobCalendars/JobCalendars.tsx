@@ -217,6 +217,22 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     };
   };
 
+  const navigateHandler = (date: Date, viewParam?: View) => {
+    const currentView = viewParam ?? view;
+
+    if (currentView === Views.MONTH) {
+      onStartDayChange(dayjs(date).startOf("month").format("YYYY-MM-DD"));
+      return;
+    }
+
+    if (currentView === Views.WEEK) {
+      onStartDayChange(dayjs(date).isoWeekday(1).format("YYYY-MM-DD"));
+      return;
+    }
+
+    onStartDayChange(dayjs(date).format("YYYY-MM-DD"));
+  };
+
   return (
     <>
       <CalendarWrapper className={loading ? "filtering" : undefined}>
