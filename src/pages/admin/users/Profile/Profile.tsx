@@ -1,5 +1,6 @@
-import { Alert, Box, Typography } from "@mui/material";
+import { Alert, Button, Snackbar } from "@mui/material";
 import { FC, useState } from "react";
+
 import { ProfileName } from "../../../../components/ProfileName/ProfileName";
 import {
   updateName,
@@ -11,9 +12,15 @@ import {
   ProfilePassword,
   ProfilePasswordFormValues,
 } from "../../../../components/ProfilePassword/ProfilePassword";
-import { Line } from "./Profile.style";
 import { useAuth } from "../../../../context/AuthContext";
-import Snackbar from "@mui/material/Snackbar";
+
+import {
+  Line,
+  PageTitle,
+  ProfileCard,
+  ProfileContainer,
+  PageWrap,
+} from "./Profile.style";
 
 export const ProfilePage: FC = () => {
   const { user, setUser } = useAuth();
@@ -23,81 +30,77 @@ export const ProfilePage: FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const changeNameHandler = (newName: string) => {
-    if (user) {
-      setChangingName(true);
-      updateName(user, newName)
-        .then((user) => {
-          setChangingName(false);
-          if (setUser) {
-            setUser(user);
-          }
-          setSnackbarOpen(true);
-        })
-        .catch((error) => {
-          setChangingName(false);
-          if (isErrorCode(error)) {
-            setError(error);
-          } else {
-            setError("INTERNAL_ERROR");
-          }
-        });
-    }
+    if (!user) return;
+    setError(null);
+    setChangingName(true);
+
+    updateName(user, newName)
+      .then((updatedUser) => {
+        setChangingName(false);
+        setUser?.(updatedUser);
+        setSnackbarOpen(true);
+      })
+      .catch((err) => {
+        setChangingName(false);
+        setError(isErrorCode(err) ? err : "INTERNAL_ERROR");
+      });
   };
 
   const changePasswordHandler = ({
     oldPassword,
     newPassword,
   }: ProfilePasswordFormValues) => {
-    if (user) {
-      setChangingPassword(true);
-      updatePassword(user, oldPassword, newPassword)
-        .then(() => {
-          setChangingPassword(false);
-          setSnackbarOpen(true);
-        })
-        .catch((error) => {
-          setChangingPassword(false);
-          if (isErrorCode(error)) {
-            setError(error);
-          } else {
-            setError("INTERNAL_ERROR");
-          }
-        });
-    }
+    if (!user) return;
+    setError(null);
+    setChangingPassword(true);
+
+    updatePassword(user, oldPassword, newPassword)
+      .then(() => {
+        setChangingPassword(false);
+        setSnackbarOpen(true);
+      })
+      .catch((err) => {
+        setChangingPassword(false);
+        setError(isErrorCode(err) ? err : "INTERNAL_ERROR");
+      });
   };
 
-  const closeHandler = () => {
-    setSnackbarOpen(false);
-  };
-
+  const closeHandler = () => setSnackbarOpen(false);
   const name: string = user?.attributes?.name || "";
+
   return (
-    <>
-      <Typography variant="h3" gutterBottom>
-        My Profile
-      </Typography>
-      {error && <ErrorMessage code={error} />}
-      <Box>
-        <ProfileName
-          name={name}
-          onChange={changeNameHandler}
-          loading={changingName}
-        />
-        <Line flexItem />
-        <ProfilePassword
-          onChange={changePasswordHandler}
-          loading={changingPassword}
-        />
-      </Box>
+    <PageWrap>
+      <ProfileContainer>
+        <PageTitle>My Profile</PageTitle>
+
+        {error && <ErrorMessage code={error} />}
+
+        <ProfileCard elevation={0}>
+          <ProfileName
+            name={name}
+            onChange={changeNameHandler}
+            loading={changingName}
+          />
+
+          <Line flexItem />
+
+          <ProfilePassword
+            onChange={changePasswordHandler}
+            loading={changingPassword}
+          />
+        </ProfileCard>
+      </ProfileContainer>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={closeHandler}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert onClose={closeHandler} severity="success" sx={{ width: "100%" }}>
           Successfully updated
         </Alert>
       </Snackbar>
-    </>
+    </PageWrap>
   );
 };

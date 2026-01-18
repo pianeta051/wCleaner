@@ -50,9 +50,9 @@ export const UsersPage: FC = () => {
 
   return (
     <UserBackground>
+      <Title>Users</Title>
       <Wrapper container spacing={1} columns={12}>
         <Grid size={12}>
-          <Title>Users</Title>
           <Button startIcon={<AddIcon />} onClick={toCreateUser}>
             New user
           </Button>

@@ -3,6 +3,7 @@ import { Grid, Paper, styled, Typography } from "@mui/material";
 export const UserBackground = styled(Paper)(() => ({
   padding: "10px",
   width: "98%",
+  marginTop: "50px",
 }));
 
 export const Wrapper = styled(Grid)(() => ({

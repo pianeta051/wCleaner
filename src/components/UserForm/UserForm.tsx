@@ -1,4 +1,12 @@
-import { CardContent, CardHeader, CardMedia, TextField } from "@mui/material";
+import {
+  Box,
+  CardContent,
+  CardHeader,
+  CardMedia,
+  IconButton,
+  TextField,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { FC } from "react";
 import { CirclePicker, ColorResult } from "react-color";
 import * as yup from "yup";
@@ -49,6 +57,7 @@ const validationSchemaUpdate = yup.object<UserFormValues>({
 
 type UserFormProps = {
   onSubmit: (values: UserFormValues) => void;
+  onCancel?: () => void;
   loading?: boolean;
   initialValues?: UserFormValues;
   isUpdate?: boolean;
@@ -56,6 +65,7 @@ type UserFormProps = {
 
 export const UserForm: FC<UserFormProps> = ({
   onSubmit,
+  onCancel,
   loading = false,
   initialValues = EMPTY_FORM,
   isUpdate = false,
@@ -94,6 +104,19 @@ export const UserForm: FC<UserFormProps> = ({
   return (
     <Form onSubmit={formik.handleSubmit}>
       <FormContainer>
+        {onCancel && (
+          <Box display="flex" justifyContent="flex-end">
+            <IconButton
+              onClick={onCancel}
+              size="small"
+              aria-label="close"
+              disabled={loading}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        )}
+
         <EmailInput
           value={formik.values.email}
           onChange={emailChangeHandler}
@@ -141,9 +164,21 @@ export const UserForm: FC<UserFormProps> = ({
           </CardContent>
         </ColorCard>
 
-        <SubmitButton variant="outlined" type="submit" disabled={loading}>
-          {loading ? "SAVING..." : "SAVE"}
-        </SubmitButton>
+        <Box display="flex" gap={2} justifyContent="flex-end" mt={2}>
+          <SubmitButton variant="outlined" type="submit" disabled={loading}>
+            {loading ? "SAVING..." : "SAVE"}
+          </SubmitButton>
+          {onCancel && (
+            <SubmitButton
+              variant="outlined"
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+            >
+              CANCEL
+            </SubmitButton>
+          )}
+        </Box>
       </FormContainer>
     </Form>
   );

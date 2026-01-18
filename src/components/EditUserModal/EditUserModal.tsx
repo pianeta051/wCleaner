@@ -70,6 +70,7 @@ export const EditUserModal: FC<EditUserModalProps> = ({
           <Background>
             <UserForm
               onSubmit={submitHandler}
+              onCancel={closeHandler}
               initialValues={initialValues}
               loading={loading}
               isUpdate
