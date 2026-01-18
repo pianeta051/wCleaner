@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from "react";
+import React, { FC, useMemo, useState, useEffect } from "react";
 import {
   Calendar,
   momentLocalizer,
@@ -89,22 +89,25 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   moment.updateLocale("en", { week: { dow: 1 } });
   const localizer = momentLocalizer(moment);
 
+  const [calendarView, setCalendarView] = useState<View>(view);
+  const [eventJob, setEventJob] = useState<Job | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStartTime, setModalStartTime] = useState<Dayjs | null>(null);
   const [modalEndTime, setModalEndTime] = useState<Dayjs | null>(null);
   const [modalDate, setModalDate] = useState<Dayjs | null>(null);
 
-  const [eventJob, setEventJob] = useState<Job | null>(null);
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-  const [calendarView, setCalendarView] = useState<View>(view);
-
   const jobType = useJobTypeGetter();
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
-  const handlePopoverClose = () => setAnchorEl(null);
+  useEffect(() => {
+    setCalendarView(view);
+  }, [view]);
+
   const open = Boolean(anchorEl);
+  const handlePopoverClose = () => setAnchorEl(null);
 
   const getColor = (job: Job) => {
     if (job.status === "cancelled") return CANCELED_COLOR;
@@ -114,8 +117,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     }
 
     if (job.jobTypeId) {
-      const jobTypeColor = jobType(job.jobTypeId)?.color;
-      return jobTypeColor ?? DEFAULT_COLOR;
+      return jobType(job.jobTypeId)?.color ?? DEFAULT_COLOR;
     }
 
     return DEFAULT_COLOR;
@@ -133,26 +135,25 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
       const t = dayjs(`${startDay} ${j.startTime}`);
       if (t.isBefore(earliest)) earliest = t;
     }
+
     return earliest.toDate();
   }, [view, jobs, startDay]);
 
-  const events: Event[] = useMemo(() => {
-    return jobs.map((job) => {
-      const resource: CalendarJobResource = {
-        ...job,
-        color: getColor(job),
-        calendarView,
-        isMobile: !!isMobile,
-      };
-
-      return {
-        resource,
+  const events: Event[] = useMemo(
+    () =>
+      jobs.map((job) => ({
+        resource: {
+          ...job,
+          color: getColor(job),
+          calendarView,
+          isMobile: !!isMobile,
+        } as CalendarJobResource,
         title: `${job.customer?.address ?? ""} ${job.customer?.postcode ?? ""}`,
         start: new Date(`${job.date} ${job.startTime}`),
         end: new Date(`${job.date} ${job.endTime}`),
-      };
-    });
-  }, [jobs, calendarView, colorLegendView, isMobile]);
+      })),
+    [jobs, calendarView, isMobile, colorLegendView]
+  );
 
   const eventClickHandler = (
     event: Event,
@@ -172,30 +173,20 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     setCalendarView(currentView);
 
     if (currentView === Views.DAY) {
-      const currentDate = (range as Date[])[0];
-      onStartDayChange(dayjs(currentDate).format("YYYY-MM-DD"));
-      return;
+      onStartDayChange(dayjs((range as Date[])[0]).format("YYYY-MM-DD"));
     }
 
     if (currentView === Views.WEEK) {
-      const currentMonday = (range as Date[])[0];
-      onStartDayChange(dayjs(currentMonday).format("YYYY-MM-DD"));
-      return;
+      onStartDayChange(dayjs((range as Date[])[0]).format("YYYY-MM-DD"));
     }
 
     if (currentView === Views.MONTH) {
-      const firstDayOfTheRange = dayjs(
-        (range as { start: Date; end: Date }).start
+      onStartDayChange(
+        dayjs((range as { start: Date }).start)
+          .startOf("month")
+          .format("YYYY-MM-DD")
       );
-      const firstDayOfSecondWeek = firstDayOfTheRange.add(7, "day");
-      const firstDayOfTheMonth = firstDayOfSecondWeek.startOf("month");
-      onStartDayChange(firstDayOfTheMonth.format("YYYY-MM-DD"));
     }
-  };
-
-  const closeModalHandler = () => {
-    setIsModalOpen(false);
-    onJobsChanged();
   };
 
   const calendarClickHandler = (slotInfo: SlotInfo) => {
@@ -216,46 +207,14 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     };
   };
 
-  const navigateHandler = (date: Date, viewParam?: View) => {
-    const currentView = viewParam ?? view;
-
-    if (currentView === Views.MONTH) {
-      onStartDayChange(dayjs(date).startOf("month").format("YYYY-MM-DD"));
-      return;
-    }
-
-    if (currentView === Views.WEEK) {
-      onStartDayChange(dayjs(date).isoWeekday(1).format("YYYY-MM-DD"));
-      return;
-    }
-
-    onStartDayChange(dayjs(date).format("YYYY-MM-DD"));
-  };
-  const dynamicMin = useMemo(() => {
-    const fallback = new Date(`${startDay} 06:00`);
-
-    if (view !== Views.DAY) return fallback;
-
-    const jobsForDay = jobs.filter((j) => j.date === startDay);
-    if (jobsForDay.length === 0) return fallback;
-
-    let earliest = dayjs(`${startDay} ${jobsForDay[0].startTime}`);
-    for (const j of jobsForDay) {
-      const t = dayjs(`${startDay} ${j.startTime}`);
-      if (t.isBefore(earliest)) earliest = t;
-    }
-
-    return earliest.toDate();
-  }, [view, jobs, startDay]);
-
   return (
     <>
       <CalendarWrapper className={loading ? "filtering" : undefined}>
         {!error ? (
           <Calendar
             localizer={localizer}
-            timeslots={2}
             events={events}
+            timeslots={2}
             defaultView={isMobile ? Views.DAY : Views.WEEK}
             views={
               isMobile
@@ -264,13 +223,15 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             }
             startAccessor="start"
             endAccessor="end"
-            onView={onViewChange}
             view={view}
             date={new Date(startDay)}
-            onNavigate={navigateHandler}
+            onView={onViewChange}
+            onNavigate={(date) =>
+              onStartDayChange(dayjs(date).format("YYYY-MM-DD"))
+            }
+            onRangeChange={rangeChangeHandler}
             onSelectEvent={eventClickHandler}
             onSelectSlot={calendarClickHandler}
-            onRangeChange={rangeChangeHandler}
             selectable
             step={30}
             min={dynamicMin}
@@ -293,20 +254,18 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
           anchorOrigin={{ vertical: "top", horizontal: "left" }}
           transformOrigin={{ vertical: "top", horizontal: "right" }}
         >
-          <JobCard
-            job={eventJob}
-            onJobChanged={() => {
-              onJobsChanged();
-            }}
-          />
+          <JobCard job={eventJob} onJobChanged={onJobsChanged} />
         </Popover>
       )}
 
       {isModalOpen && modalDate && modalStartTime && modalEndTime && isAdmin && (
         <GenericJobModal
           open={isModalOpen}
-          onClose={closeModalHandler}
-          onSubmit={closeModalHandler}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={() => {
+            setIsModalOpen(false);
+            onJobsChanged();
+          }}
           initialValues={{
             date: modalDate,
             startTime: modalStartTime,
@@ -330,9 +289,7 @@ const CustomEvent: FC<EventProps<Event>> = ({ event, title }) => {
 
   const isCompleted = resource.status === "completed";
   const isMonthView = resource.calendarView === Views.MONTH;
-  const isMobileDevice = resource.isMobile;
-
-  const useSmallFont = isMonthView && isMobileDevice;
+  const useSmallFont = isMonthView && resource.isMobile;
 
   return (
     <div style={{ position: "relative" }}>
