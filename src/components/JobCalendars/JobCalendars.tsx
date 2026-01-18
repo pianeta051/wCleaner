@@ -217,6 +217,38 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     };
   };
 
+  const navigateHandler = (date: Date, viewParam?: View) => {
+    const currentView = viewParam ?? view;
+
+    if (currentView === Views.MONTH) {
+      onStartDayChange(dayjs(date).startOf("month").format("YYYY-MM-DD"));
+      return;
+    }
+
+    if (currentView === Views.WEEK) {
+      onStartDayChange(dayjs(date).isoWeekday(1).format("YYYY-MM-DD"));
+      return;
+    }
+
+    onStartDayChange(dayjs(date).format("YYYY-MM-DD"));
+  };
+  const dynamicMin = useMemo(() => {
+    const fallback = new Date(`${startDay} 06:00`);
+
+    if (view !== Views.DAY) return fallback;
+
+    const jobsForDay = jobs.filter((j) => j.date === startDay);
+    if (jobsForDay.length === 0) return fallback;
+
+    let earliest = dayjs(`${startDay} ${jobsForDay[0].startTime}`);
+    for (const j of jobsForDay) {
+      const t = dayjs(`${startDay} ${j.startTime}`);
+      if (t.isBefore(earliest)) earliest = t;
+    }
+
+    return earliest.toDate();
+  }, [view, jobs, startDay]);
+
   return (
     <>
       <CalendarWrapper className={loading ? "filtering" : undefined}>
