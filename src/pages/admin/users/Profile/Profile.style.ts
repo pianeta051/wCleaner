@@ -18,7 +18,7 @@ export const PageTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
 }));
 
-export const ProfileContainer = styled(Box)(({ theme }) => ({
+export const ProfileContainer = styled(Box)(() => ({
   width: "100%",
   maxWidth: 720,
   margin: "0 auto",

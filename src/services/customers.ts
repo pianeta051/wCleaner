@@ -246,7 +246,7 @@ export const getCustomerAddressses = async (
       throw "INTERNAL_ERROR";
     }
     return response.addresses;
-  } catch (e) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -409,7 +409,7 @@ export const deleteCustomerNote = async (
 ): Promise<void> => {
   try {
     await remove(`/customers/${customerId}/note/${noteId}`);
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };

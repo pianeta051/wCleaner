@@ -1,4 +1,4 @@
-import { Alert, Button, Snackbar } from "@mui/material";
+import { Alert, Snackbar } from "@mui/material";
 import { FC, useState } from "react";
 
 import { ProfileName } from "../../../../components/ProfileName/ProfileName";

@@ -127,15 +127,20 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
               />
 
               {isAdmin ? (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => setModalOpen(true)}
-                  sx={{ whiteSpace: "nowrap" }}
-                  fullWidth={isMobile}
-                >
-                  Edit Job
-                </Button>
+                <>
+                  <Box sx={{ width: isMobile ? "100%" : "auto" }}>
+                    <JobToggleStatusButton currentJob={job} onChange={onEdit} />
+                  </Box>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => setModalOpen(true)}
+                    sx={{ whiteSpace: "nowrap" }}
+                    fullWidth={isMobile}
+                  >
+                    Edit Job
+                  </Button>
+                </>
               ) : (
                 <Box sx={{ width: isMobile ? "100%" : "auto" }}>
                   <JobToggleStatusButton currentJob={job} onChange={onEdit} />

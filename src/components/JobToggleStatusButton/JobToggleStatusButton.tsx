@@ -35,7 +35,7 @@ export const JobToggleStatusButton: FC<JobToggleStatusButtonProps> = ({
 
   return (
     <>
-      <Button onClick={clickHandler} loading={loading}>
+      <Button variant="outlined" onClick={clickHandler} loading={loading}>
         {text}
       </Button>
       {error && <ErrorMessage code={error} />}

@@ -53,7 +53,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
   const addFileHandler = async (fileKeys: string[]) => {
     try {
       await replaceFiles([...(customer.fileUrls ?? []), ...fileKeys]);
-    } catch (error) {
+    } catch {
       // the hook manages the error
     }
   };
@@ -65,7 +65,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
       await deleteFile(fileKeyToDelete);
       const newFiles = customer.fileUrls.filter((_url, i) => index !== i);
       await replaceFiles(newFiles);
-    } catch (error) {
+    } catch {
       // error handled by hook
     }
   };
@@ -86,7 +86,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
             customer.fileUrls.map((key) => getFileUrl(key))
           );
           setSignedFileUrls(urls);
-        } catch (e) {
+        } catch {
           setSignedFileUrls([]);
         }
       } else {
