@@ -58,13 +58,16 @@ type JobCalendarsProps = {
   error?: ErrorCode | null;
   jobs: Job[];
   isMobile?: boolean;
+
   onViewChange: (view: View) => void;
   view: View;
 
+  // NOTE: en tu arquitectura actual esto representa la fecha "ancla" (YYYY-MM-DD)
+  // JobsPage decide si es hoy, lunes de semana, o primer día del mes.
   onStartDayChange: (startDate: string) => void;
   startDay: string;
 
-  endDay: string;
+  endDay: string; // YYYY-MM-DD
   onJobsChanged: () => void;
   colorLegendView: "users" | "jobTypes";
 };
@@ -99,6 +102,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   const [eventJob, setEventJob] = useState<Job | null>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
+  // internal view for CustomEvent rendering
   const [calendarView, setCalendarView] = useState<View>(view);
 
   const jobType = useJobTypeGetter();
@@ -123,20 +127,21 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     return DEFAULT_COLOR;
   };
 
+  // ✅ min dinámico usando dayjs (solo DAY). En otras vistas, 06:00.
   const dynamicMin = useMemo(() => {
-    const anchor = startDay;
-    const fallback = dayjs(`${anchor} 06:00`);
+    const fallback = dayjs(`${startDay} 06:00`);
 
     if (view !== Views.DAY) return fallback;
 
-    const jobsForDay = jobs.filter((j) => j.date === anchor);
+    const jobsForDay = jobs.filter((j) => j.date === startDay);
     if (jobsForDay.length === 0) return fallback;
 
-    let earliest = dayjs(`${anchor} ${jobsForDay[0].startTime}`);
+    let earliest = dayjs(`${startDay} ${jobsForDay[0].startTime}`);
     for (const j of jobsForDay) {
-      const t = dayjs(`${anchor} ${j.startTime}`);
+      const t = dayjs(`${startDay} ${j.startTime}`);
       if (t.isBefore(earliest)) earliest = t;
     }
+
     return earliest;
   }, [view, jobs, startDay]);
 
@@ -151,7 +156,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
       return {
         resource,
-
+        // ✅ dirección del JOB (no customer default)
         title: `${job.address ?? ""} ${job.postcode ?? ""}`.trim(),
         start: dayjs(`${job.date} ${job.startTime}`).toDate(),
         end: dayjs(`${job.date} ${job.endTime}`).toDate(),
@@ -169,16 +174,21 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     setAnchorEl(e.currentTarget);
   };
 
+  // ✅ Today/Back/Next (toolbar)
   const navigateHandler = (date: Date) => {
     onStartDayChange(dayjs(date).format("YYYY-MM-DD"));
   };
 
+  // ✅ cambiar vista desde botones Day/Week/Month
+  // (si quieres "ir a HOY" al cambiar vista, déjalo así)
   const viewHandler = (nextView: View) => {
     setCalendarView(nextView);
     onViewChange(nextView);
     onStartDayChange(dayjs().format("YYYY-MM-DD"));
   };
 
+  // Solo mantenemos el calendarView interno sincronizado.
+  // (El rango/fetch lo controla JobsPage)
   const rangeChangeHandler = (
     _range: Date[] | { start: Date; end: Date },
     viewParam?: View
@@ -239,7 +249,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             max={dayjs(`${endDay} 17:00`).toDate()}
             eventPropGetter={eventProps}
             components={{
-              event: CustomEvent as any,
+              event: CustomEvent as unknown as any,
             }}
           />
         ) : (
