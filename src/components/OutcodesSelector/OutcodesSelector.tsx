@@ -1,5 +1,5 @@
 import { Box, Button, TextField } from "@mui/material";
-import Autocomplete from "@mui/lab/Autocomplete";
+import Autocomplete from "@mui/material/Autocomplete";
 import { FC, useMemo } from "react";
 import { AutocompleteWrap } from "./OutcodesSelector.style";
 

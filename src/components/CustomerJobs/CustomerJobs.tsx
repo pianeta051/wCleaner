@@ -80,7 +80,6 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   return (
     <Wrapper>
       <Title>Jobs</Title>
-
       {customerJobs.length === 0 ? (
         <EmptyJobs onCreateNew={() => openHandler()} />
       ) : (

@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { View, Views } from "react-big-calendar";
 import { Button, Typography, useMediaQuery, useTheme } from "@mui/material";
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -9,8 +9,15 @@ import { JobCalendarColorLegend } from "../../../components/JobCalendarColorLege
 import { useJobs } from "../../../hooks/Jobs/useJobs";
 
 import { CalendarContainer, PageContainer, PageHeader } from "./Jobs.style";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { GenericJobModal } from "../../../components/GenericJobModal/GenericJobModal";
+
+const parseViewParam = (value: string | null, isMobile: boolean): View => {
+  if (value === "month") return Views.MONTH;
+  if (value === "week") return Views.WEEK;
+  if (value === "day") return Views.DAY;
+  return isMobile ? Views.DAY : Views.WEEK;
+};
 
 export const JobsPage: FC = () => {
   const [legendView, setLegendView] = useState<"users" | "jobTypes">(
@@ -23,15 +30,48 @@ export const JobsPage: FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const isNewJobRoute = location.pathname === "/admin/jobs/new";
 
   const today = dayjs().format("YYYY-MM-DD");
   const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
 
-  const [startDay, setStartDay] = useState(isMobile ? today : lastMonday);
-  const [calendarView, setCalendarView] = useState<View>(
-    isMobile ? Views.DAY : Views.WEEK
+  const initialView = useMemo(
+    () => parseViewParam(searchParams.get("view"), isMobile),
+
+    [isMobile]
   );
+
+  const [calendarView, setCalendarView] = useState<View>(initialView);
+  const [startDay, setStartDay] = useState(() => {
+    if (initialView === Views.MONTH) {
+      return dayjs(today).startOf("month").format("YYYY-MM-DD");
+    }
+    return isMobile ? today : lastMonday;
+  });
+
+  useEffect(() => {
+    const nextView = parseViewParam(searchParams.get("view"), isMobile);
+
+    setCalendarView((prev) => {
+      if (prev === nextView) return prev;
+
+      if (nextView === Views.MONTH) {
+        setStartDay((prevStart) =>
+          dayjs(prevStart).startOf("month").format("YYYY-MM-DD")
+        );
+      }
+
+      if (nextView === Views.WEEK && !isMobile) {
+        setStartDay((prevStart) =>
+          dayjs(prevStart).isoWeekday(1).format("YYYY-MM-DD")
+        );
+      }
+
+      return nextView;
+    });
+  }, [searchParams, isMobile, today]);
 
   const endDay = useMemo(() => {
     if (calendarView === Views.DAY) return startDay;
@@ -48,7 +88,19 @@ export const JobsPage: FC = () => {
     false
   );
 
-  const viewChangeHandler = (view: View) => setCalendarView(view);
+  const viewChangeHandler = (view: View) => {
+    setCalendarView(view);
+
+    const viewParam =
+      view === Views.MONTH ? "month" : view === Views.WEEK ? "week" : "day";
+
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("view", viewParam);
+      return next;
+    });
+  };
+
   const startDayChangeHandler = (d: string) => setStartDay(d);
 
   const changeLegendViewHandler = (v: "users" | "jobTypes") => setLegendView(v);
@@ -58,7 +110,8 @@ export const JobsPage: FC = () => {
   };
 
   const handleCloseNewJob = () => {
-    navigate("/admin/jobs");
+    const viewParam = searchParams.get("view");
+    navigate(viewParam ? `/admin/jobs?view=${viewParam}` : "/admin/jobs");
   };
 
   return (
@@ -67,7 +120,7 @@ export const JobsPage: FC = () => {
         <Typography
           variant="h4"
           fontWeight={800}
-          sx={{ textAlign: { xs: "center", sm: "left" } }}
+          sx={{ textAlign: { xs: "center", sm: "left", mt: "20px" } }}
         >
           Jobs
         </Typography>
@@ -98,6 +151,7 @@ export const JobsPage: FC = () => {
           onChangeView={changeLegendViewHandler}
         />
       </CalendarContainer>
+
       <GenericJobModal
         key={isNewJobRoute ? "new-job" : "closed"}
         open={isNewJobRoute}

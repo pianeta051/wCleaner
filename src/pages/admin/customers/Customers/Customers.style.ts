@@ -70,7 +70,7 @@ export const TopBarRow = styled(Grid)(({ theme }) => ({
 
 export const OutcodeAccordion = styled(Accordion)(({ theme }) => ({
   border: `1px solid ${theme.palette.divider}`,
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   "&:before": { display: "none" },
 }));
 
@@ -87,14 +87,14 @@ export const LoadingCenter = styled(Grid)(({ theme }) => ({
 export const DesktopOutcodeLoadingBox = styled(Grid)(({ theme }) => ({
   height: 56,
   border: `1px solid ${theme.palette.divider}`,
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   backgroundColor: theme.palette.background.default,
   alignItems: "center",
   justifyContent: "center",
 }));
 
 export const DesktopOutcodeBox = styled(Grid)(({ theme }) => ({
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   padding: theme.spacing(1.5),
   backgroundColor: theme.palette.background.default,
 }));
@@ -111,7 +111,7 @@ export const ActionsGrid = styled(Grid)(({ theme }) => ({
 
 export const NewCustomerButton = styled(Button)(({ theme }) => ({
   height: 56,
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   textTransform: "none",
   fontWeight: 700,
 }));

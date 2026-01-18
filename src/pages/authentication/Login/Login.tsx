@@ -32,8 +32,10 @@ export const Login: FC = () => {
           navigate("/set-password");
         } else if (logIn) {
           logIn(user);
-          {
-            isAdmin ? navigate("/admin/customers") : navigate("/");
+          if (isAdmin) {
+            navigate("/admin/customers");
+          } else {
+            navigate("/");
           }
         }
       })

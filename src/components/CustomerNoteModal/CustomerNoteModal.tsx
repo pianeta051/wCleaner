@@ -76,7 +76,7 @@ export const CustomerNoteModal: FC<CustomerNoteModalProps> = ({
     >
       <ModalBox>
         <Wrapper container>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Title variant="h4">{isEditing ? "Edit Note" : "New Note"}</Title>
           </Grid>
         </Wrapper>

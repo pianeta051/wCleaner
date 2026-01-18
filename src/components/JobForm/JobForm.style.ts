@@ -31,6 +31,6 @@ export const PreviewImage = styled("img")(({ theme }) => ({
   width: 60,
   height: 60,
   objectFit: "cover",
-  borderRadius: theme.shape.borderRadius,
+  borderRadius: +theme.shape.borderRadius,
   border: "1px solid #ccc",
 }));

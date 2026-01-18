@@ -53,7 +53,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
   const addFileHandler = async (fileKeys: string[]) => {
     try {
       await replaceFiles([...(customer.fileUrls ?? []), ...fileKeys]);
-    } catch (error) {
+    } catch {
       // the hook manages the error
     }
   };
@@ -65,7 +65,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
       await deleteFile(fileKeyToDelete);
       const newFiles = customer.fileUrls.filter((_url, i) => index !== i);
       await replaceFiles(newFiles);
-    } catch (error) {
+    } catch {
       // error handled by hook
     }
   };
@@ -86,7 +86,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
             customer.fileUrls.map((key) => getFileUrl(key))
           );
           setSignedFileUrls(urls);
-        } catch (e) {
+        } catch {
           setSignedFileUrls([]);
         }
       } else {
@@ -103,7 +103,7 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
 
   return (
     <Grid container>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <FileUploader
           uploadDirectory={uploadDirectory}
           onSubmit={addFileHandler}
@@ -112,13 +112,13 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
           {replacing || deleting ? (
             <>
               <Grid container spacing={2}>
-                <Grid item xs={4}>
+                <Grid size={4}>
                   <Skeleton variant="rectangular" width={50} height={200} />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid size={4}>
                   <Skeleton variant="rectangular" width={50} height={200} />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid size={4}>
                   <Skeleton variant="rectangular" width={50} height={200} />
                 </Grid>
               </Grid>
@@ -126,7 +126,14 @@ export const CustomerFiles: FC<CustomerFilesProps> = ({ customer, jobId }) => {
           ) : (
             <Grid container spacing={2} sx={{ mt: 2 }}>
               {signedFileUrls.map((url, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
+                <Grid
+                  key={index}
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    md: 4,
+                  }}
+                >
                   <MuiLink
                     href={url}
                     target="_blank"

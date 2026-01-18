@@ -60,7 +60,6 @@ export const JobDetailsPage: FC = () => {
   return (
     <>
       <Toolbar />
-
       {isAdmin && job.customer && (
         <BreadcrumbsContainer $top={stickyTop}>
           <StyledBreadcrumbs aria-label="breadcrumb" separator="›">
@@ -83,15 +82,16 @@ export const JobDetailsPage: FC = () => {
           width: "100%",
           maxWidth: { xs: "100%", md: "80%" },
           mx: "auto",
+          marginBottom: "30px",
         }}
       >
         <Grid container spacing={{ xs: 2 }} sx={{ px: { xs: 1.5, md: 0 } }}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <JobInfoDisplay job={job} onEdit={reload} />
           </Grid>
 
           {job.customer && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Box sx={{ position: { md: "sticky" }, top: { md: 88 } }}>
                 <JobCustomer job={job} />
               </Box>

@@ -21,7 +21,7 @@ export const ModalViewport = styled(Box)(({ theme }) => ({
 export const ModalContent = styled(Paper)(({ theme }) => ({
   cursor: "default",
   width: "min(520px, 96vw)",
-  borderRadius: theme.shape.borderRadius * 2,
+  borderRadius: +theme.shape.borderRadius * 2,
   overflow: "hidden",
   boxShadow: theme.shadows[8],
 

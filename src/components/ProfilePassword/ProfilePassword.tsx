@@ -6,6 +6,7 @@ import { PasswordInput } from "../PasswordInput/PasswordInput";
 import { isNumberRegx, upperCaseRegx } from "../PasswordInput/PasswordInput";
 import * as yup from "yup";
 import { useFormik } from "formik";
+import { useNavigate } from "react-router-dom";
 
 export type ProfilePasswordFormValues = {
   oldPassword: string;
@@ -40,6 +41,10 @@ export const ProfilePassword: FC<ProfilePasswordProps> = ({
     validationSchema,
     onSubmit: onChange,
   });
+  const navigate = useNavigate();
+  const cancelHandler = () => {
+    navigate(-1);
+  };
 
   return (
     <>
@@ -60,6 +65,9 @@ export const ProfilePassword: FC<ProfilePasswordProps> = ({
         />
         <Button loading={loading} variant="outlined" type="submit">
           Change password
+        </Button>
+        <Button variant="text" onClick={cancelHandler}>
+          CANCEL
         </Button>
       </Form>
     </>

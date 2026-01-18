@@ -250,7 +250,7 @@ export const deleteCustomerJob = async (
 ): Promise<void> => {
   try {
     await remove(`/customers/${customerId}/job/${jobId}`);
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -258,7 +258,7 @@ export const deleteCustomerJob = async (
 export const deleteJobType = async (jobTypeId: string): Promise<void> => {
   try {
     await remove(`/job-type/${jobTypeId}`);
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -470,38 +470,6 @@ export const getJob = async (
 
     throw "INTERNAL_ERROR";
   }
-
-  // return {
-  //   id: jobId,
-  //   customerId,
-  //   date: dayjs().format("YYYY-MM-DD"),
-  //   startTime: "09:00",
-  //   endTime: "10:30",
-  //   price: 120,
-  //   jobTypeName: "Gutter Cleaning",
-  //   address: "24 High Street",
-  //   postcode: "SW1A 1AA",
-  //   status: "completed",
-  //   paymentMethod: "bank_transfer",
-  //   invoiceNumber: "CWC00999",
-  //   assignedTo: {
-  //     sub: "1111111-444444-777777",
-  //     name: "James Doe",
-  //     email: "james@company.com",
-  //   },
-  //   customer: {
-  //     id: customerId,
-  //     name: "Test Customer Ltd",
-  //     address: "24 High Street",
-  //     postcode: "SW1A 1AA",
-  //     email: "billing@testcustomer.com",
-  //     mainTelephone: "020 3344 5566",
-  //     slug: "test-customer-ltd",
-  //     fileUrls: [],
-  //     notes: [],
-  //     cleaningAddresses: [],
-  //   },
-  // };
 };
 
 export const getJobs = async (
@@ -520,7 +488,7 @@ export const getJobs = async (
       throw "INTERNAL_ERROR";
     }
     return { jobs: response.jobs, nextToken: response.nextToken };
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -535,7 +503,7 @@ export const getJobTypes = async (): Promise<JobType[]> => {
       throw "INTERNAL_ERROR";
     }
     return response.jobTypes;
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };

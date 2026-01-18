@@ -127,15 +127,20 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
               />
 
               {isAdmin ? (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => setModalOpen(true)}
-                  sx={{ whiteSpace: "nowrap" }}
-                  fullWidth={isMobile}
-                >
-                  Edit Job
-                </Button>
+                <>
+                  <Box sx={{ width: isMobile ? "100%" : "auto" }}>
+                    <JobToggleStatusButton currentJob={job} onChange={onEdit} />
+                  </Box>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => setModalOpen(true)}
+                    sx={{ whiteSpace: "nowrap" }}
+                    fullWidth={isMobile}
+                  >
+                    Edit Job
+                  </Button>
+                </>
               ) : (
                 <Box sx={{ width: isMobile ? "100%" : "auto" }}>
                   <JobToggleStatusButton currentJob={job} onChange={onEdit} />
@@ -148,7 +153,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
 
           <Stack spacing={2}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <CalendarTodayIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Date:</Typography>
@@ -156,7 +166,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </Stack>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 3,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <AccessTimeIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Start:</Typography>
@@ -164,7 +179,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </Stack>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 3,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <AccessTimeIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">End:</Typography>
@@ -172,7 +192,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </Stack>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <HomeIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Address:</Typography>
@@ -180,7 +205,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </Stack>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <MailOutlineIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Postcode:</Typography>
@@ -189,7 +219,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
               </Grid>
 
               {job.jobTypeName && (
-                <Grid item xs={12} sm={6}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                  }}
+                >
                   <Stack direction="row" spacing={1.5} alignItems="center">
                     <CategoryIcon fontSize="small" color="primary" />
                     <Typography fontWeight="bold">Job Type:</Typography>
@@ -200,7 +235,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
 
               {assignedTo && (
                 <>
-                  <Grid item xs={12} sm={6}>
+                  <Grid
+                    size={{
+                      xs: 12,
+                      sm: 6,
+                    }}
+                  >
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <PersonIcon fontSize="small" color="primary" />
                       <Typography fontWeight="bold">Assigned To:</Typography>
@@ -209,7 +249,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                   </Grid>
 
                   {invoice?.invoiceNumber && (
-                    <Grid item xs={12} sm={6}>
+                    <Grid
+                      size={{
+                        xs: 12,
+                        sm: 6,
+                      }}
+                    >
                       <Stack direction="row" spacing={1.5} alignItems="center">
                         <ReceiptIcon fontSize="small" color="primary" />
                         <Typography fontWeight="bold">
@@ -222,7 +267,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </>
               )}
 
-              <Grid item xs={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <PointOfSaleIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Price:</Typography>
@@ -230,7 +280,12 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
                 </Stack>
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6,
+                }}
+              >
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <PaymentsIcon fontSize="small" color="primary" />
                   <Typography fontWeight="bold">Payment Method:</Typography>
@@ -241,7 +296,6 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
           </Stack>
         </CardContent>
       </Card>
-
       {job.customer && (
         <CustomerJobModal
           open={modalOpen}

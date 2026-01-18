@@ -1,5 +1,5 @@
 import { FC, useState } from "react";
-import { Button } from "@mui/material";
+import { Button, useMediaQuery, useTheme } from "@mui/material";
 import ReceiptIcon from "@mui/icons-material/ReceiptLong";
 import { Job } from "../../types/types";
 import { GenerateInvoiceModal } from "../GenerateInvoiceModal/GenerateInvoiceModal";
@@ -13,6 +13,8 @@ export const GenerateInvoiceButton: FC<GenerateInvoiceButtonProps> = ({
   job,
   onGenerated,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
 
   const openModal = () => setOpen(true);
@@ -26,6 +28,7 @@ export const GenerateInvoiceButton: FC<GenerateInvoiceButtonProps> = ({
         color="primary"
         startIcon={<ReceiptIcon />}
         onClick={openModal}
+        fullWidth={isMobile}
       >
         Generate Invoice
       </Button>

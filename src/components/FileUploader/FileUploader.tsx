@@ -41,12 +41,11 @@ export const FileUploader: FC<FileUploaderProps> = ({
       <Typography variant="h6" gutterBottom>
         Upload Files
       </Typography>
-
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12}>
+        <Grid size={12}>
           <FileInput value={files} onChange={selectFileHandler} />
         </Grid>
-        <Grid item>
+        <Grid>
           <Button
             loading={loading}
             variant="contained"
@@ -58,7 +57,7 @@ export const FileUploader: FC<FileUploaderProps> = ({
         </Grid>
 
         {error && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ErrorMessage code={error} />
           </Grid>
         )}

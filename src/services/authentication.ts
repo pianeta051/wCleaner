@@ -34,7 +34,7 @@ export const createUser = async (formValues: UserFormValues): Promise<void> => {
   try {
     await AdminQueries.post("/createUser", {
       ...formValues,
-      redirectTo: process.env.REACT_APP_HOST ?? "",
+      redirectTo: import.meta.env.VITE_HOST ?? "",
     });
   } catch (error) {
     if (hasResponseMessage(error)) {
@@ -67,7 +67,7 @@ export const getAuthenticatedUser =
     try {
       const user = await Auth.currentAuthenticatedUser();
       return user;
-    } catch (error) {
+    } catch {
       return null;
     }
   };
@@ -93,7 +93,7 @@ export const getUserGroups = async (id: string): Promise<string[]> => {
       }
     ).filter((group: string | null) => group !== null);
     return groups;
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -143,7 +143,7 @@ export const getUsers = async (): Promise<User[]> => {
       return { id, email, name, color, isAdmin };
     }).filter((user: User | null) => user !== null);
     return users;
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -234,7 +234,7 @@ export const makeUserAdmin = async (id: string) => {
       username: id,
       groupname: "Admin",
     });
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -242,7 +242,7 @@ export const makeUserAdmin = async (id: string) => {
 export const logOut = async () => {
   try {
     await Auth.signOut();
-  } catch (e) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -280,7 +280,7 @@ export const removeUser = async (id: string) => {
       username: id,
       groupname: "Admin",
     });
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -288,7 +288,7 @@ export const removeUser = async (id: string) => {
 export const updateUser = async (id: string, formValues: UserFormValues) => {
   try {
     await AdminQueries.put("/user/" + id, formValues);
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -353,7 +353,7 @@ export const updateColor = async (
       "custom:color": newColor,
     };
     return newUser;
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
@@ -369,7 +369,7 @@ export const updateName = async (
       name: newName,
     };
     return newUser;
-  } catch (error) {
+  } catch {
     throw "INTERNAL_ERROR";
   }
 };
