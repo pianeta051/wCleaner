@@ -123,7 +123,6 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
     return DEFAULT_COLOR;
   };
-
   const dynamicMin = useMemo(() => {
     const fallback = new Date(`${startDay} 06:00`);
     if (view !== Views.DAY) return fallback;
