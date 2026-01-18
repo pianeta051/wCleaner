@@ -58,6 +58,7 @@ type JobCalendarsProps = {
   error?: ErrorCode | null;
   jobs: Job[];
   isMobile?: boolean;
+
   onViewChange: (view: View) => void;
   view: View;
   onStartDayChange: (startDate: string) => void;
