@@ -62,12 +62,10 @@ type JobCalendarsProps = {
   onViewChange: (view: View) => void;
   view: View;
 
-  // NOTE: en tu arquitectura actual esto representa la fecha "ancla" (YYYY-MM-DD)
-  // JobsPage decide si es hoy, lunes de semana, o primer día del mes.
   onStartDayChange: (startDate: string) => void;
   startDay: string;
 
-  endDay: string; // YYYY-MM-DD
+  endDay: string;
   onJobsChanged: () => void;
   colorLegendView: "users" | "jobTypes";
 };
@@ -102,7 +100,6 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   const [eventJob, setEventJob] = useState<Job | null>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-  // internal view for CustomEvent rendering
   const [calendarView, setCalendarView] = useState<View>(view);
 
   const jobType = useJobTypeGetter();
@@ -126,8 +123,6 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
     return DEFAULT_COLOR;
   };
-
-  // ✅ min dinámico usando dayjs (solo DAY). En otras vistas, 06:00.
   const dynamicMin = useMemo(() => {
     const fallback = dayjs(`${startDay} 06:00`);
 
@@ -156,7 +151,6 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
       return {
         resource,
-        // ✅ dirección del JOB (no customer default)
         title: `${job.address ?? ""} ${job.postcode ?? ""}`.trim(),
         start: dayjs(`${job.date} ${job.startTime}`).toDate(),
         end: dayjs(`${job.date} ${job.endTime}`).toDate(),
@@ -174,21 +168,16 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     setAnchorEl(e.currentTarget);
   };
 
-  // ✅ Today/Back/Next (toolbar)
   const navigateHandler = (date: Date) => {
     onStartDayChange(dayjs(date).format("YYYY-MM-DD"));
   };
 
-  // ✅ cambiar vista desde botones Day/Week/Month
-  // (si quieres "ir a HOY" al cambiar vista, déjalo así)
   const viewHandler = (nextView: View) => {
     setCalendarView(nextView);
     onViewChange(nextView);
     onStartDayChange(dayjs().format("YYYY-MM-DD"));
   };
 
-  // Solo mantenemos el calendarView interno sincronizado.
-  // (El rango/fetch lo controla JobsPage)
   const rangeChangeHandler = (
     _range: Date[] | { start: Date; end: Date },
     viewParam?: View
