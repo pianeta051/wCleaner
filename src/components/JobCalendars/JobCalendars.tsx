@@ -189,6 +189,22 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     }
     return {};
   };
+  const dynamicMin = useMemo(() => {
+    const fallback = new Date(`${startDay} 06:00`);
+
+    if (view !== Views.DAY) return fallback;
+
+    const jobsForDay = jobs.filter((j) => j.date === startDay);
+    if (jobsForDay.length === 0) return fallback;
+
+    let earliest = dayjs(`${startDay} ${jobsForDay[0].startTime}`);
+    for (const j of jobsForDay) {
+      const t = dayjs(`${startDay} ${j.startTime}`);
+      if (t.isBefore(earliest)) earliest = t;
+    }
+
+    return earliest.toDate();
+  }, [view, jobs, startDay]);
 
   return (
     <>
@@ -213,7 +229,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             onRangeChange={rangeChangeHandler}
             selectable
             step={30}
-            min={new Date(`${startDay} 6:00`)}
+            min={dynamicMin}
             max={new Date(`${endDay} 17:00`)}
             eventPropGetter={eventProps}
             components={{
