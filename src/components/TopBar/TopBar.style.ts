@@ -99,11 +99,21 @@ export const UserButton = styled(IconButton)(() => ({
   },
 }));
 
+export const CalendarButton = styled(IconButton)(() => ({
+  width: 42,
+  height: 42,
+  color: "white",
+  backgroundColor: "rgba(255,255,255,0.14)",
+  "&:hover": {
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+}));
+
 export const MobileDrawer = styled(Drawer)(({ theme }) => ({
   "& .MuiPaper-root": {
     width: "min(86vw, 360px)",
-    borderTopRightRadius: +theme.shape.borderRadius * 2,
-    borderBottomRightRadius: +theme.shape.borderRadius * 2,
+    borderTopRightRadius: Number(theme.shape.borderRadius) * 2,
+    borderBottomRightRadius: Number(theme.shape.borderRadius) * 2,
     paddingTop: "env(safe-area-inset-top)",
     paddingBottom: "env(safe-area-inset-bottom)",
     backgroundImage: "none",
@@ -154,7 +164,7 @@ export const DrawerItemButton = styled(Box, {
   alignItems: "center",
   gap: theme.spacing(1.25),
   padding: theme.spacing(1.25, 1.25),
-  borderRadius: +theme.shape.borderRadius * 2,
+  borderRadius: Number(theme.shape.borderRadius) * 2,
   cursor: "pointer",
   userSelect: "none",
   transition: "background-color 0.15s ease",
@@ -189,7 +199,7 @@ export const UserPopover = styled(Popover)(({ theme }) => ({
   "& .MuiPaper-root": {
     marginTop: theme.spacing(1),
     width: 320,
-    borderRadius: +theme.shape.borderRadius * 2,
+    borderRadius: Number(theme.shape.borderRadius) * 2,
     overflow: "hidden",
     boxShadow: theme.shadows[8],
   },
@@ -230,7 +240,7 @@ export const UserPopoverList = styled(Box)(({ theme }) => ({
 }));
 
 export const UserActionButton = styled(ListItemButton)(({ theme }) => ({
-  borderRadius: +theme.shape.borderRadius * 2,
+  borderRadius: Number(theme.shape.borderRadius) * 2,
 }));
 
 export const UserActionIcon = styled(ListItemIcon)(() => ({

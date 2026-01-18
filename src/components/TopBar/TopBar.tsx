@@ -9,6 +9,7 @@ import {
   ListItemText,
   Avatar,
   Typography,
+  IconButton,
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
@@ -19,6 +20,7 @@ import WorkIcon from "@mui/icons-material/Work";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -42,6 +44,7 @@ import {
   DrawerItemText,
   DrawerFooter,
   UserButton,
+  CalendarButton,
   UserPopover,
   UserPopoverHeader,
   UserPopoverHeaderText,
@@ -88,6 +91,11 @@ export const TopBar: FC = () => {
           url: "/admin/jobs",
           icon: <WorkIcon fontSize="small" />,
         },
+        {
+          label: "Calendar",
+          url: "/admin/jobs?view=month",
+          icon: <CalendarMonthIcon fontSize="small" />,
+        },
       ].filter((p) => (p.exclusiveFor ? isInGroup(p.exclusiveFor) : true)),
     [isInGroup]
   );
@@ -107,6 +115,12 @@ export const TopBar: FC = () => {
     setMobileOpen(false);
   };
 
+  const toCalendarMonth = () => {
+    navigate("/admin/jobs?view=month");
+    closeUserMenu();
+    setMobileOpen(false);
+  };
+
   const logOutHandler = async () => {
     if (logOut) await logOut();
     closeUserMenu();
@@ -114,8 +128,12 @@ export const TopBar: FC = () => {
     navigate("/");
   };
 
-  const isActive = (url: string) =>
-    location.pathname === url || location.pathname.startsWith(url + "/");
+  const isActive = (url: string) => {
+    const [path] = url.split("?");
+    return (
+      location.pathname === path || location.pathname.startsWith(path + "/")
+    );
+  };
 
   const userMenuOpen = Boolean(anchorElUser);
 
@@ -150,15 +168,20 @@ export const TopBar: FC = () => {
         <Spacer />
 
         <RightZone>
+          <Tooltip title="Calendar">
+            <CalendarButton onClick={toCalendarMonth} aria-label="calendar">
+              <CalendarMonthIcon />
+            </CalendarButton>
+          </Tooltip>
+
           <Tooltip title="Account">
-            <UserButton onClick={openUserMenu}>
+            <UserButton onClick={openUserMenu} aria-label="account">
               <ProfileIcon />
             </UserButton>
           </Tooltip>
         </RightZone>
       </Bar>
 
-      {/* LEFT MOBILE DRAWER  */}
       <MobileDrawer
         anchor="left"
         open={mobileOpen}
@@ -233,7 +256,6 @@ export const TopBar: FC = () => {
         </DrawerFooter>
       </MobileDrawer>
 
-      {/* RIGHT USER POPOVER */}
       <UserPopover
         open={userMenuOpen}
         anchorEl={anchorElUser}
@@ -275,7 +297,25 @@ export const TopBar: FC = () => {
                 </UserActionIcon>
                 <ListItemText
                   primary="Profile"
-                  primaryTypographyProps={{ fontWeight: 700 }}
+                  slotProps={{
+                    primary: {
+                      fontWeight: 700,
+                    },
+                  }}
+                />
+              </UserActionButton>
+
+              <UserActionButton onClick={toCalendarMonth}>
+                <UserActionIcon>
+                  <CalendarMonthIcon fontSize="small" />
+                </UserActionIcon>
+                <ListItemText
+                  primary="Calendar"
+                  slotProps={{
+                    primary: {
+                      fontWeight: 700,
+                    },
+                  }}
                 />
               </UserActionButton>
 
@@ -285,7 +325,11 @@ export const TopBar: FC = () => {
                 </UserActionIcon>
                 <ListItemText
                   primary="Log out"
-                  primaryTypographyProps={{ fontWeight: 700 }}
+                  slotProps={{
+                    primary: {
+                      fontWeight: 700,
+                    },
+                  }}
                 />
               </UserActionButton>
             </List>

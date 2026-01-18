@@ -1,3 +1,4 @@
+import React, { FC, useMemo, useState } from "react";
 import {
   Calendar,
   momentLocalizer,
@@ -7,23 +8,25 @@ import {
   Event,
   EventProps,
 } from "react-big-calendar";
+import moment from "moment";
+import dayjs, { Dayjs } from "dayjs";
+import { Popover } from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
+
 import {
   CalendarWrapper,
   CheckCircle,
   CheckWrapper,
 } from "./JobCalendar.style";
-import React, { FC, useMemo, useState } from "react";
-import moment from "moment";
-import dayjs, { Dayjs } from "dayjs";
+
 import { GenericJobModal } from "../GenericJobModal/GenericJobModal";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { Popover } from "@mui/material";
-import { Job, JobStatus } from "../../types/types";
 import { JobCard } from "../JobCard/JobCard";
+
+import { Job, JobStatus } from "../../types/types";
 import { ErrorCode } from "../../services/error";
 import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
 import { useAuth } from "../../context/AuthContext";
-import CheckIcon from "@mui/icons-material/Check";
 
 export const DEFAULT_COLOR = "#3174ad";
 export const CANCELED_COLOR = "#979da0ff";
@@ -213,6 +216,22 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     };
   };
 
+  const navigateHandler = (date: Date, viewParam?: View) => {
+    const currentView = viewParam ?? view;
+
+    if (currentView === Views.MONTH) {
+      onStartDayChange(dayjs(date).startOf("month").format("YYYY-MM-DD"));
+      return;
+    }
+
+    if (currentView === Views.WEEK) {
+      onStartDayChange(dayjs(date).isoWeekday(1).format("YYYY-MM-DD"));
+      return;
+    }
+
+    onStartDayChange(dayjs(date).format("YYYY-MM-DD"));
+  };
+
   return (
     <>
       <CalendarWrapper className={loading ? "filtering" : undefined}>
@@ -231,6 +250,8 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             endAccessor="end"
             onView={onViewChange}
             view={view}
+            date={new Date(startDay)}
+            onNavigate={navigateHandler}
             onSelectEvent={eventClickHandler}
             onSelectSlot={calendarClickHandler}
             onRangeChange={rangeChangeHandler}
