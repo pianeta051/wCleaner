@@ -58,6 +58,7 @@ type JobCalendarsProps = {
   error?: ErrorCode | null;
   jobs: Job[];
   isMobile?: boolean;
+
   onViewChange: (view: View) => void;
   view: View;
   onStartDayChange: (startDate: string) => void;
@@ -238,7 +239,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             max={new Date(`${endDay} 17:00`)}
             eventPropGetter={eventProps}
             components={{
-              event: CustomEvent as any,
+              event: CustomEvent as unknown as any,
             }}
           />
         ) : (
