@@ -60,8 +60,10 @@ type JobCalendarsProps = {
   isMobile?: boolean;
   onViewChange: (view: View) => void;
   view: View;
+
   onStartDayChange: (startDate: string) => void;
   startDay: string;
+
   endDay: string;
   onJobsChanged: () => void;
   colorLegendView: "users" | "jobTypes";
@@ -122,18 +124,20 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   };
 
   const dynamicMin = useMemo(() => {
-    const fallback = new Date(`${startDay} 06:00`);
+    const anchor = startDay;
+    const fallback = dayjs(`${anchor} 06:00`);
+
     if (view !== Views.DAY) return fallback;
 
-    const jobsForDay = jobs.filter((j) => j.date === startDay);
+    const jobsForDay = jobs.filter((j) => j.date === anchor);
     if (jobsForDay.length === 0) return fallback;
 
-    let earliest = dayjs(`${startDay} ${jobsForDay[0].startTime}`);
+    let earliest = dayjs(`${anchor} ${jobsForDay[0].startTime}`);
     for (const j of jobsForDay) {
-      const t = dayjs(`${startDay} ${j.startTime}`);
+      const t = dayjs(`${anchor} ${j.startTime}`);
       if (t.isBefore(earliest)) earliest = t;
     }
-    return earliest.toDate();
+    return earliest;
   }, [view, jobs, startDay]);
 
   const events: Event[] = useMemo(() => {
@@ -147,9 +151,10 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
       return {
         resource,
-        title: `${job.customer?.address ?? ""} ${job.customer?.postcode ?? ""}`,
-        start: new Date(`${job.date} ${job.startTime}`),
-        end: new Date(`${job.date} ${job.endTime}`),
+
+        title: `${job.address ?? ""} ${job.postcode ?? ""}`.trim(),
+        start: dayjs(`${job.date} ${job.startTime}`).toDate(),
+        end: dayjs(`${job.date} ${job.endTime}`).toDate(),
       };
     });
   }, [jobs, calendarView, colorLegendView, isMobile]);
@@ -164,33 +169,22 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     setAnchorEl(e.currentTarget);
   };
 
+  const navigateHandler = (date: Date) => {
+    onStartDayChange(dayjs(date).format("YYYY-MM-DD"));
+  };
+
+  const viewHandler = (nextView: View) => {
+    setCalendarView(nextView);
+    onViewChange(nextView);
+    onStartDayChange(dayjs().format("YYYY-MM-DD"));
+  };
+
   const rangeChangeHandler = (
-    range: Date[] | { start: Date; end: Date },
+    _range: Date[] | { start: Date; end: Date },
     viewParam?: View
   ) => {
     const currentView = viewParam ?? view;
     setCalendarView(currentView);
-
-    if (currentView === Views.DAY) {
-      const currentDate = (range as Date[])[0];
-      onStartDayChange(dayjs(currentDate).format("YYYY-MM-DD"));
-      return;
-    }
-
-    if (currentView === Views.WEEK) {
-      const currentMonday = (range as Date[])[0];
-      onStartDayChange(dayjs(currentMonday).format("YYYY-MM-DD"));
-      return;
-    }
-
-    if (currentView === Views.MONTH) {
-      const firstDayOfTheRange = dayjs(
-        (range as { start: Date; end: Date }).start
-      );
-      const firstDayOfSecondWeek = firstDayOfTheRange.add(7, "day");
-      const firstDayOfTheMonth = firstDayOfSecondWeek.startOf("month");
-      onStartDayChange(firstDayOfTheMonth.format("YYYY-MM-DD"));
-    }
   };
 
   const closeModalHandler = () => {
@@ -216,22 +210,6 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     };
   };
 
-  const navigateHandler = (date: Date, viewParam?: View) => {
-    const currentView = viewParam ?? view;
-
-    if (currentView === Views.MONTH) {
-      onStartDayChange(dayjs(date).startOf("month").format("YYYY-MM-DD"));
-      return;
-    }
-
-    if (currentView === Views.WEEK) {
-      onStartDayChange(dayjs(date).isoWeekday(1).format("YYYY-MM-DD"));
-      return;
-    }
-
-    onStartDayChange(dayjs(date).format("YYYY-MM-DD"));
-  };
-
   return (
     <>
       <CalendarWrapper className={loading ? "filtering" : undefined}>
@@ -248,17 +226,17 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             }
             startAccessor="start"
             endAccessor="end"
-            onView={onViewChange}
+            onView={viewHandler}
             view={view}
-            date={new Date(startDay)}
+            date={dayjs(startDay).toDate()}
             onNavigate={navigateHandler}
             onSelectEvent={eventClickHandler}
             onSelectSlot={calendarClickHandler}
             onRangeChange={rangeChangeHandler}
             selectable
             step={30}
-            min={dynamicMin}
-            max={new Date(`${endDay} 17:00`)}
+            min={dynamicMin.toDate()}
+            max={dayjs(`${endDay} 17:00`).toDate()}
             eventPropGetter={eventProps}
             components={{
               event: CustomEvent as any,
@@ -277,12 +255,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
           anchorOrigin={{ vertical: "top", horizontal: "left" }}
           transformOrigin={{ vertical: "top", horizontal: "right" }}
         >
-          <JobCard
-            job={eventJob}
-            onJobChanged={() => {
-              onJobsChanged();
-            }}
-          />
+          <JobCard job={eventJob} onJobChanged={onJobsChanged} />
         </Popover>
       )}
 
@@ -314,9 +287,7 @@ const CustomEvent: FC<EventProps<Event>> = ({ event, title }) => {
 
   const isCompleted = resource.status === "completed";
   const isMonthView = resource.calendarView === Views.MONTH;
-  const isMobileDevice = resource.isMobile;
-
-  const useSmallFont = isMonthView && isMobileDevice;
+  const useSmallFont = isMonthView && resource.isMobile;
 
   return (
     <div style={{ position: "relative" }}>

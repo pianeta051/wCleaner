@@ -91,11 +91,6 @@ export const TopBar: FC = () => {
           url: "/admin/jobs",
           icon: <WorkIcon fontSize="small" />,
         },
-        {
-          label: "Calendar",
-          url: "/admin/jobs?view=month",
-          icon: <CalendarMonthIcon fontSize="small" />,
-        },
       ].filter((p) => (p.exclusiveFor ? isInGroup(p.exclusiveFor) : true)),
     [isInGroup]
   );
