@@ -43,17 +43,17 @@ export const JobsPage: FC = () => {
 
   const initialView = useMemo(
     () => parseViewParam(searchParams.get("view"), isMobile),
-
-    [isMobile]
+    [isMobile, searchParams]
   );
 
   const [calendarView, setCalendarView] = useState<View>(initialView);
 
-  const [anchorDate, setAnchorDate] = useState<string>(() => {
-    const today = dayjs().format("YYYY-MM-DD");
-    return today;
-  });
+  // This is the "anchor" date: when you switch views or navigate, everything derives from this.
+  const [anchorDate, setAnchorDate] = useState<string>(() =>
+    dayjs().format("YYYY-MM-DD")
+  );
 
+  // Keep URL in sync with current view (so refresh/share keeps the view)
   useEffect(() => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -62,15 +62,18 @@ export const JobsPage: FC = () => {
     });
   }, [calendarView, setSearchParams]);
 
+  // Derive startDay from anchorDate + view
   const startDay = useMemo(() => {
     const d = dayjs(anchorDate);
 
     if (calendarView === Views.MONTH) {
       return d.startOf("month").format("YYYY-MM-DD");
     }
+
     if (calendarView === Views.WEEK) {
       return d.isoWeekday(1).format("YYYY-MM-DD");
     }
+
     return d.format("YYYY-MM-DD");
   }, [anchorDate, calendarView]);
 
@@ -91,9 +94,11 @@ export const JobsPage: FC = () => {
 
   const viewChangeHandler = (nextView: View) => {
     setCalendarView(nextView);
-    setAnchorDate(dayjs().format("YYYY-MM-DD"));
+    // IMPORTANT: do NOT reset anchorDate here.
+    // The calendar itself will call onStartDayChange/onNavigate and update anchorDate.
   };
 
+  // JobCalendars should call this with the calendar's "current date"
   const anchorDateChangeHandler = (d: string) => {
     setAnchorDate(d);
   };
@@ -103,6 +108,7 @@ export const JobsPage: FC = () => {
   const handleNewJob = () => navigate("/admin/jobs/new");
 
   const handleCloseNewJob = () => {
+    // Keep the view param on close
     navigate(`/admin/jobs?view=${viewToParam(calendarView)}`);
   };
 

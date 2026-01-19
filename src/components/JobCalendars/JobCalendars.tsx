@@ -1,11 +1,11 @@
-import React, { FC, useMemo, useState, useEffect } from "react";
+import React, { FC, useEffect, useMemo, useState } from "react";
 import {
   Calendar,
   momentLocalizer,
   View,
   Views,
   SlotInfo,
-  Event,
+  Event as RBCEvent,
   EventProps,
 } from "react-big-calendar";
 import moment from "moment";
@@ -58,7 +58,6 @@ type JobCalendarsProps = {
   error?: ErrorCode | null;
   jobs: Job[];
   isMobile?: boolean;
-
   onViewChange: (view: View) => void;
   view: View;
   onStartDayChange: (startDate: string) => void;
@@ -72,6 +71,10 @@ type CalendarJobResource = Job & {
   color: string;
   calendarView: View;
   isMobile: boolean;
+};
+
+type CalendarEvent = Omit<RBCEvent, "resource"> & {
+  resource?: CalendarJobResource;
 };
 
 export const JobCalendars: FC<JobCalendarsProps> = ({
@@ -123,7 +126,8 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
     return DEFAULT_COLOR;
   };
-  const dynamicMin = useMemo(() => {
+
+  const dynamicMin: Date = useMemo(() => {
     const fallback = new Date(`${startDay} 06:00`);
     if (view !== Views.DAY) return fallback;
 
@@ -139,28 +143,33 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     return earliest.toDate();
   }, [view, jobs, startDay]);
 
-  const events: Event[] = useMemo(
-    () =>
-      jobs.map((job) => ({
-        resource: {
-          ...job,
-          color: getColor(job),
-          calendarView,
-          isMobile: !!isMobile,
-        } as CalendarJobResource,
-        title: `${job.customer?.address ?? ""} ${job.customer?.postcode ?? ""}`,
+  const events: CalendarEvent[] = useMemo(() => {
+    return jobs.map((job) => {
+      const resource: CalendarJobResource = {
+        ...job,
+        color: getColor(job),
+        calendarView,
+        isMobile: !!isMobile,
+      };
+
+      return {
+        resource,
+        title: `${job.address ?? job.customer?.address ?? ""} ${
+          job.postcode ?? job.customer?.postcode ?? ""
+        }`.trim(),
         start: new Date(`${job.date} ${job.startTime}`),
         end: new Date(`${job.date} ${job.endTime}`),
-      })),
-    [jobs, calendarView, isMobile, colorLegendView]
-  );
+      };
+    });
+  }, [jobs, calendarView, isMobile, colorLegendView]);
 
   const eventClickHandler = (
-    event: Event,
+    event: CalendarEvent,
     e: React.SyntheticEvent<HTMLElement>
   ) => {
-    const resource = event.resource as CalendarJobResource | undefined;
+    const resource = event.resource;
     if (!resource) return;
+
     setEventJob(resource);
     setAnchorEl(e.currentTarget);
   };
@@ -174,17 +183,17 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
     if (currentView === Views.DAY) {
       onStartDayChange(dayjs((range as Date[])[0]).format("YYYY-MM-DD"));
+      return;
     }
 
     if (currentView === Views.WEEK) {
       onStartDayChange(dayjs((range as Date[])[0]).format("YYYY-MM-DD"));
+      return;
     }
 
     if (currentView === Views.MONTH) {
       onStartDayChange(
-        dayjs((range as { start: Date }).start)
-          .startOf("month")
-          .format("YYYY-MM-DD")
+        dayjs((range as { start: Date }).start).format("YYYY-MM-DD")
       );
     }
   };
@@ -196,9 +205,10 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     setIsModalOpen(true);
   };
 
-  const eventProps = (event: Event) => {
-    const resource = event.resource as CalendarJobResource | undefined;
+  const eventProps = (event: CalendarEvent) => {
+    const resource = event.resource;
     if (!resource) return {};
+
     return {
       style: {
         backgroundColor: resource.color,
@@ -211,7 +221,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     <>
       <CalendarWrapper className={loading ? "filtering" : undefined}>
         {!error ? (
-          <Calendar
+          <Calendar<CalendarEvent>
             localizer={localizer}
             events={events}
             timeslots={2}
@@ -283,8 +293,8 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   );
 };
 
-const CustomEvent: FC<EventProps<Event>> = ({ event, title }) => {
-  const resource = event.resource as CalendarJobResource | undefined;
+const CustomEvent: FC<EventProps<CalendarEvent>> = ({ event, title }) => {
+  const resource = event.resource;
   if (!resource) return null;
 
   const isCompleted = resource.status === "completed";
