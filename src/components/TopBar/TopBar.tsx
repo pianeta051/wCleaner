@@ -9,7 +9,6 @@ import {
   ListItemText,
   Avatar,
   Typography,
-  IconButton,
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
@@ -90,11 +89,6 @@ export const TopBar: FC = () => {
           label: "Jobs",
           url: "/admin/jobs",
           icon: <WorkIcon fontSize="small" />,
-        },
-        {
-          label: "Calendar",
-          url: "/admin/jobs?view=month",
-          icon: <CalendarMonthIcon fontSize="small" />,
         },
       ].filter((p) => (p.exclusiveFor ? isInGroup(p.exclusiveFor) : true)),
     [isInGroup]

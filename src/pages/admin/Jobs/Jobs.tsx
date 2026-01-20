@@ -12,6 +12,8 @@ import { CalendarContainer, PageContainer, PageHeader } from "./Jobs.style";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { GenericJobModal } from "../../../components/GenericJobModal/GenericJobModal";
 
+dayjs.extend(isoWeek);
+
 const parseViewParam = (value: string | null, isMobile: boolean): View => {
   if (value === "month") return Views.MONTH;
   if (value === "week") return Views.WEEK;
@@ -19,59 +21,61 @@ const parseViewParam = (value: string | null, isMobile: boolean): View => {
   return isMobile ? Views.DAY : Views.WEEK;
 };
 
+const viewToParam = (view: View) => {
+  if (view === Views.MONTH) return "month";
+  if (view === Views.WEEK) return "week";
+  return "day";
+};
+
 export const JobsPage: FC = () => {
   const [legendView, setLegendView] = useState<"users" | "jobTypes">(
     "jobTypes"
   );
 
-  dayjs.extend(isoWeek);
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const isNewJobRoute = location.pathname === "/admin/jobs/new";
 
-  const today = dayjs().format("YYYY-MM-DD");
-  const lastMonday = dayjs().isoWeekday(1).format("YYYY-MM-DD");
-
   const initialView = useMemo(
     () => parseViewParam(searchParams.get("view"), isMobile),
-
-    [isMobile]
+    [isMobile, searchParams]
   );
 
   const [calendarView, setCalendarView] = useState<View>(initialView);
-  const [startDay, setStartDay] = useState(() => {
-    if (initialView === Views.MONTH) {
-      return dayjs(today).startOf("month").format("YYYY-MM-DD");
-    }
-    return isMobile ? today : lastMonday;
-  });
 
+  // This is the "anchor" date: when you switch views or navigate, everything derives from this.
+  const [anchorDate, setAnchorDate] = useState<string>(() =>
+    dayjs().format("YYYY-MM-DD")
+  );
+
+  // Keep URL in sync with current view (so refresh/share keeps the view)
   useEffect(() => {
-    const nextView = parseViewParam(searchParams.get("view"), isMobile);
-
-    setCalendarView((prev) => {
-      if (prev === nextView) return prev;
-
-      if (nextView === Views.MONTH) {
-        setStartDay((prevStart) =>
-          dayjs(prevStart).startOf("month").format("YYYY-MM-DD")
-        );
-      }
-
-      if (nextView === Views.WEEK && !isMobile) {
-        setStartDay((prevStart) =>
-          dayjs(prevStart).isoWeekday(1).format("YYYY-MM-DD")
-        );
-      }
-
-      return nextView;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("view", viewToParam(calendarView));
+      return next;
     });
-  }, [searchParams, isMobile, today]);
+  }, [calendarView, setSearchParams]);
+
+  // Derive startDay from anchorDate + view
+  const startDay = useMemo(() => {
+    const d = dayjs(anchorDate);
+
+    if (calendarView === Views.MONTH) {
+      return d.startOf("month").format("YYYY-MM-DD");
+    }
+
+    if (calendarView === Views.WEEK) {
+      return d.isoWeekday(1).format("YYYY-MM-DD");
+    }
+
+    return d.format("YYYY-MM-DD");
+  }, [anchorDate, calendarView]);
 
   const endDay = useMemo(() => {
     if (calendarView === Views.DAY) return startDay;
@@ -88,30 +92,24 @@ export const JobsPage: FC = () => {
     false
   );
 
-  const viewChangeHandler = (view: View) => {
-    setCalendarView(view);
-
-    const viewParam =
-      view === Views.MONTH ? "month" : view === Views.WEEK ? "week" : "day";
-
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("view", viewParam);
-      return next;
-    });
+  const viewChangeHandler = (nextView: View) => {
+    setCalendarView(nextView);
+    // IMPORTANT: do NOT reset anchorDate here.
+    // The calendar itself will call onStartDayChange/onNavigate and update anchorDate.
   };
 
-  const startDayChangeHandler = (d: string) => setStartDay(d);
+  // JobCalendars should call this with the calendar's "current date"
+  const anchorDateChangeHandler = (d: string) => {
+    setAnchorDate(d);
+  };
 
   const changeLegendViewHandler = (v: "users" | "jobTypes") => setLegendView(v);
 
-  const handleNewJob = () => {
-    navigate("/admin/jobs/new");
-  };
+  const handleNewJob = () => navigate("/admin/jobs/new");
 
   const handleCloseNewJob = () => {
-    const viewParam = searchParams.get("view");
-    navigate(viewParam ? `/admin/jobs?view=${viewParam}` : "/admin/jobs");
+    // Keep the view param on close
+    navigate(`/admin/jobs?view=${viewToParam(calendarView)}`);
   };
 
   return (
@@ -138,8 +136,8 @@ export const JobsPage: FC = () => {
           isMobile={isMobile}
           onViewChange={viewChangeHandler}
           view={calendarView}
-          onStartDayChange={startDayChangeHandler}
-          startDay={startDay}
+          onStartDayChange={anchorDateChangeHandler}
+          startDay={anchorDate}
           endDay={endDay}
           onJobsChanged={reload}
           colorLegendView={legendView}
@@ -156,9 +154,7 @@ export const JobsPage: FC = () => {
         key={isNewJobRoute ? "new-job" : "closed"}
         open={isNewJobRoute}
         onClose={handleCloseNewJob}
-        onSubmit={() => {
-          reload();
-        }}
+        onSubmit={() => reload()}
       />
     </PageContainer>
   );
