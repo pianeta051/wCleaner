@@ -13,9 +13,15 @@
  */
 
 const { CognitoIdentityServiceProvider } = require("aws-sdk");
+import {
+  CognitoIdentityProviderClient,
+  AdminAddUserToGroupCommand,
+} from "@aws-sdk/client-cognito-identity-provider";
 
 const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider();
 const userPoolId = process.env.USERPOOL;
+
+const cognitoClient = new CognitoIdentityProviderClient();
 
 async function addUserToGroup(username, groupname) {
   const params = {
@@ -27,9 +33,8 @@ async function addUserToGroup(username, groupname) {
   console.log(`Attempting to add ${username} to ${groupname}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminAddUserToGroup(params)
-      .promise();
+    const command = new AdminAddUserToGroupCommand(params);
+    await cognitoClient.send(command);
     console.log(`Success adding ${username} to ${groupname}`);
     return {
       message: `Success adding ${username} to ${groupname}`,
