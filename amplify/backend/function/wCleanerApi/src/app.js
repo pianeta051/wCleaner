@@ -73,25 +73,35 @@ app.use(async function (req, res, next) {
 });
 
 // Get all customer
-
 app.get("/customers", async function (req, res) {
-  const nextToken = req.query?.nextToken;
-  const limit = req.query?.limit ? +req.query?.limit : 50;
-  const search = req.query?.search;
-  const outcodeFilter = req.query?.outcodeFilter
-    ? req.query.outcodeFilter.split(",")
-    : undefined;
+  try {
+    const nextToken =
+      typeof req.query?.nextToken === "string" &&
+      req.query.nextToken.trim() !== ""
+        ? req.query.nextToken
+        : undefined;
 
-  const paginationEnabled = req.query?.paginationDisabled !== "true";
-  const exclusiveStartKey = parseToken(nextToken);
-  const { items, lastEvaluatedKey } = await getCustomers(
-    { searchInput: search, outcodeFilter },
-    { exclusiveStartKey, limit, enabled: paginationEnabled }
-  );
+    const limit = req.query?.limit ? +req.query?.limit : 50;
+    const search = req.query?.search;
 
-  const customers = items.map(mapCustomer);
-  const responseToken = generateToken(lastEvaluatedKey);
-  res.json({ customers, nextToken: responseToken });
+    const outcodeFilter = req.query?.outcodeFilter
+      ? req.query.outcodeFilter.split(",").filter(Boolean)
+      : undefined;
+
+    const paginationEnabled = req.query?.paginationDisabled !== "true";
+
+    const { items, nextToken: responseToken } = await getCustomers(
+      { searchInput: search, outcodeFilter },
+      { nextToken, limit, enabled: paginationEnabled }
+    );
+
+    const customers = items.map(mapCustomer);
+
+    res.json({ customers, nextToken: responseToken });
+  } catch (err) {
+    console.error("GET /customers failed", err);
+    res.status(500).json({ message: "Failed to fetch customers" });
+  }
 });
 
 // Get outcodes
