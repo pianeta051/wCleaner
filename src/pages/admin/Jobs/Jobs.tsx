@@ -3,14 +3,13 @@ import { View, Views } from "react-big-calendar";
 import { Button, Typography, useMediaQuery, useTheme } from "@mui/material";
 import isoWeek from "dayjs/plugin/isoWeek";
 import dayjs from "dayjs";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import { JobCalendars } from "../../../components/JobCalendars/JobCalendars";
 import { JobCalendarColorLegend } from "../../../components/JobCalendarColorLegend/JobCalendarColorLegend";
 import { useJobs } from "../../../hooks/Jobs/useJobs";
-
-import { CalendarContainer, PageContainer, PageHeader } from "./Jobs.style";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { GenericJobModal } from "../../../components/GenericJobModal/GenericJobModal";
+import { CalendarContainer, PageContainer, PageHeader } from "./Jobs.style";
 
 dayjs.extend(isoWeek);
 
@@ -25,6 +24,26 @@ const viewToParam = (view: View) => {
   if (view === Views.MONTH) return "month";
   if (view === Views.WEEK) return "week";
   return "day";
+};
+
+const getRangeForView = (date: Date, view: View) => {
+  const d = dayjs(date);
+
+  if (view === Views.DAY) {
+    const start = d.startOf("day");
+    const end = d.endOf("day");
+    return { start, end };
+  }
+
+  if (view === Views.WEEK) {
+    const start = d.isoWeekday(1).startOf("day");
+    const end = start.add(6, "day").endOf("day");
+    return { start, end };
+  }
+
+  const start = d.startOf("month").startOf("day");
+  const end = d.endOf("month").endOf("day");
+  return { start, end };
 };
 
 export const JobsPage: FC = () => {
@@ -46,70 +65,44 @@ export const JobsPage: FC = () => {
     [isMobile, searchParams]
   );
 
-  const [calendarView, setCalendarView] = useState<View>(initialView);
+  const [view, setView] = useState<View>(initialView);
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
 
-  // This is the "anchor" date: when you switch views or navigate, everything derives from this.
-  const [anchorDate, setAnchorDate] = useState<string>(() =>
-    dayjs().format("YYYY-MM-DD")
-  );
-
-  // Keep URL in sync with current view (so refresh/share keeps the view)
   useEffect(() => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      next.set("view", viewToParam(calendarView));
+      next.set("view", viewToParam(view));
       return next;
     });
-  }, [calendarView, setSearchParams]);
+  }, [view, setSearchParams]);
 
-  // Derive startDay from anchorDate + view
-  const startDay = useMemo(() => {
-    const d = dayjs(anchorDate);
-
-    if (calendarView === Views.MONTH) {
-      return d.startOf("month").format("YYYY-MM-DD");
-    }
-
-    if (calendarView === Views.WEEK) {
-      return d.isoWeekday(1).format("YYYY-MM-DD");
-    }
-
-    return d.format("YYYY-MM-DD");
-  }, [anchorDate, calendarView]);
-
-  const endDay = useMemo(() => {
-    if (calendarView === Views.DAY) return startDay;
-    if (calendarView === Views.WEEK)
-      return dayjs(startDay).add(6, "days").format("YYYY-MM-DD");
-    if (calendarView === Views.MONTH)
-      return dayjs(startDay).endOf("month").format("YYYY-MM-DD");
-    return "";
-  }, [startDay, calendarView]);
+  const range = useMemo(
+    () => getRangeForView(currentDate, view),
+    [currentDate, view]
+  );
 
   const { jobs, error, loading, reload } = useJobs(
-    { start: `${startDay} 00:00`, end: `${endDay} 23:59` },
+    {
+      start: range.start.format("YYYY-MM-DD HH:mm"),
+      end: range.end.format("YYYY-MM-DD HH:mm"),
+    },
     "desc",
     false
   );
 
-  const viewChangeHandler = (nextView: View) => {
-    setCalendarView(nextView);
-    // IMPORTANT: do NOT reset anchorDate here.
-    // The calendar itself will call onStartDayChange/onNavigate and update anchorDate.
+  const handleViewChange = (nextView: View) => {
+    setView(nextView);
+    setCurrentDate(new Date());
   };
 
-  // JobCalendars should call this with the calendar's "current date"
-  const anchorDateChangeHandler = (d: string) => {
-    setAnchorDate(d);
+  const handleNavigate = (nextDate: Date) => {
+    setCurrentDate(nextDate);
   };
-
-  const changeLegendViewHandler = (v: "users" | "jobTypes") => setLegendView(v);
 
   const handleNewJob = () => navigate("/admin/jobs/new");
 
   const handleCloseNewJob = () => {
-    // Keep the view param on close
-    navigate(`/admin/jobs?view=${viewToParam(calendarView)}`);
+    navigate(`/admin/jobs?view=${viewToParam(view)}`);
   };
 
   return (
@@ -134,11 +127,12 @@ export const JobsPage: FC = () => {
           error={error}
           jobs={jobs}
           isMobile={isMobile}
-          onViewChange={viewChangeHandler}
-          view={calendarView}
-          onStartDayChange={anchorDateChangeHandler}
-          startDay={anchorDate}
-          endDay={endDay}
+          view={view}
+          date={currentDate}
+          onViewChange={handleViewChange}
+          onNavigate={handleNavigate}
+          rangeStart={range.start.toDate()}
+          rangeEnd={range.end.toDate()}
           onJobsChanged={reload}
           colorLegendView={legendView}
         />
@@ -146,7 +140,7 @@ export const JobsPage: FC = () => {
         <JobCalendarColorLegend
           jobs={jobs}
           view={legendView}
-          onChangeView={changeLegendViewHandler}
+          onChangeView={setLegendView}
         />
       </CalendarContainer>
 

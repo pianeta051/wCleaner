@@ -1,56 +1,44 @@
-import React, { FC, useEffect, useMemo, useState } from "react";
-import {
-  Calendar,
-  momentLocalizer,
-  View,
-  Views,
-  SlotInfo,
-  Event as RBCEvent,
-  EventProps,
-} from "react-big-calendar";
+import React, { FC, useCallback, useMemo, useState } from "react";
 import moment from "moment";
 import dayjs, { Dayjs } from "dayjs";
-import { Popover } from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-
 import {
-  CalendarWrapper,
-  CheckCircle,
-  CheckWrapper,
-} from "./JobCalendar.style";
-
-import { GenericJobModal } from "../GenericJobModal/GenericJobModal";
-import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { JobCard } from "../JobCard/JobCard";
+  Calendar,
+  EventProps,
+  SlotInfo,
+  View,
+  Views,
+  momentLocalizer,
+  type Event as RBCEvent,
+} from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import { Popover } from "@mui/material";
 
 import { Job, JobStatus } from "../../types/types";
 import { ErrorCode } from "../../services/error";
 import { useJobTypeGetter } from "../../hooks/Jobs/useJobTypeGetter";
 import { useAuth } from "../../context/AuthContext";
 
+import { GenericJobModal } from "../GenericJobModal/GenericJobModal";
+import { JobCard } from "../JobCard/JobCard";
+import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
+import CheckIcon from "@mui/icons-material/Check";
+import {
+  CalendarWrapper,
+  CheckCircle,
+  CheckWrapper,
+} from "./JobCalendar.style";
+
+moment.updateLocale("en", { week: { dow: 1 } });
+
 export const DEFAULT_COLOR = "#3174ad";
 export const CANCELED_COLOR = "#979da0ff";
 
 const BACKGROUND_TO_TEXT: Record<string, string> = {
   [DEFAULT_COLOR]: "white",
-  "#f44336": "white",
-  "#e91e63": "white",
-  "#9c27b0": "white",
-  "#673ab7": "white",
-  "#3f51b5": "white",
-  "#2196f3": "white",
-  "#03a9f4": "white",
-  "#00bcd4": "white",
-  "#009688": "white",
-  "#4caf50": "white",
-  "#8bc34a": "white",
+  [CANCELED_COLOR]: "white",
   "#cddc39": "black",
   "#ffeb3b": "black",
   "#ffc107": "black",
-  "#ff9800": "white",
-  "#ff5722": "white",
-  "#795548": "white",
-  [CANCELED_COLOR]: "white",
 };
 
 type JobCalendarsProps = {
@@ -58,11 +46,12 @@ type JobCalendarsProps = {
   error?: ErrorCode | null;
   jobs: Job[];
   isMobile?: boolean;
-  onViewChange: (view: View) => void;
   view: View;
-  onStartDayChange: (startDate: string) => void;
-  startDay: string;
-  endDay: string;
+  date: Date;
+  onViewChange: (view: View) => void;
+  onNavigate: (date: Date) => void;
+  rangeStart: Date;
+  rangeEnd: Date;
   onJobsChanged: () => void;
   colorLegendView: "users" | "jobTypes";
 };
@@ -77,23 +66,24 @@ type CalendarEvent = Omit<RBCEvent, "resource"> & {
   resource?: CalendarJobResource;
 };
 
+const toDateTime = (date: string, time: string) => new Date(`${date}T${time}`);
+
 export const JobCalendars: FC<JobCalendarsProps> = ({
   loading,
   error,
   jobs,
   isMobile,
-  onViewChange,
   view,
-  onStartDayChange,
-  startDay,
-  endDay,
+  date,
+  onViewChange,
+  onNavigate,
+  rangeStart,
+  rangeEnd,
   onJobsChanged,
   colorLegendView,
 }) => {
-  moment.updateLocale("en", { week: { dow: 1 } });
-  const localizer = momentLocalizer(moment);
+  const localizer = useMemo(() => momentLocalizer(moment), []);
 
-  const [calendarView, setCalendarView] = useState<View>(view);
   const [eventJob, setEventJob] = useState<Job | null>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
@@ -106,96 +96,80 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
-  useEffect(() => {
-    setCalendarView(view);
-  }, [view]);
-
   const open = Boolean(anchorEl);
   const handlePopoverClose = () => setAnchorEl(null);
 
-  const getColor = (job: Job) => {
-    if (job.status === "cancelled") return CANCELED_COLOR;
+  const getColor = useCallback(
+    (job: Job) => {
+      if (job.status === "cancelled") return CANCELED_COLOR;
 
-    if (colorLegendView === "users") {
-      return job.assignedTo?.color ?? DEFAULT_COLOR;
-    }
+      if (colorLegendView === "users") {
+        return job.assignedTo?.color ?? DEFAULT_COLOR;
+      }
 
-    if (job.jobTypeId) {
-      return jobType(job.jobTypeId)?.color ?? DEFAULT_COLOR;
-    }
+      if (job.jobTypeId) {
+        return jobType(job.jobTypeId)?.color ?? DEFAULT_COLOR;
+      }
 
-    return DEFAULT_COLOR;
-  };
+      return DEFAULT_COLOR;
+    },
+    [colorLegendView, jobType]
+  );
 
   const dynamicMin: Date = useMemo(() => {
-    const fallback = new Date(`${startDay} 06:00`);
+    const fallback = dayjs(rangeStart)
+      .hour(6)
+      .minute(0)
+      .second(0)
+      .millisecond(0)
+      .toDate();
     if (view !== Views.DAY) return fallback;
 
-    const jobsForDay = jobs.filter((j) => j.date === startDay);
+    const dayStr = dayjs(date).format("YYYY-MM-DD");
+    const jobsForDay = jobs.filter((j) => j.date === dayStr);
     if (jobsForDay.length === 0) return fallback;
 
-    let earliest = dayjs(`${startDay} ${jobsForDay[0].startTime}`);
+    let earliest = dayjs(`${dayStr}T${jobsForDay[0].startTime}`);
     for (const j of jobsForDay) {
-      const t = dayjs(`${startDay} ${j.startTime}`);
+      const t = dayjs(`${dayStr}T${j.startTime}`);
       if (t.isBefore(earliest)) earliest = t;
     }
-
     return earliest.toDate();
-  }, [view, jobs, startDay]);
+  }, [view, jobs, date, rangeStart]);
+
+  const maxTime: Date = useMemo(() => {
+    return dayjs(rangeEnd).hour(17).minute(0).second(0).millisecond(0).toDate();
+  }, [rangeEnd]);
 
   const events: CalendarEvent[] = useMemo(() => {
     return jobs.map((job) => {
       const resource: CalendarJobResource = {
         ...job,
         color: getColor(job),
-        calendarView,
+        calendarView: view,
         isMobile: !!isMobile,
       };
 
+      const title = `${job.address ?? job.customer?.address ?? ""} ${
+        job.postcode ?? job.customer?.postcode ?? ""
+      }`.trim();
+
       return {
         resource,
-        title: `${job.address ?? job.customer?.address ?? ""} ${
-          job.postcode ?? job.customer?.postcode ?? ""
-        }`.trim(),
-        start: new Date(`${job.date} ${job.startTime}`),
-        end: new Date(`${job.date} ${job.endTime}`),
+        title,
+        start: toDateTime(job.date, job.startTime),
+        end: toDateTime(job.date, job.endTime),
       };
     });
-  }, [jobs, calendarView, isMobile, colorLegendView]);
+  }, [jobs, getColor, view, isMobile]);
 
   const eventClickHandler = (
     event: CalendarEvent,
     e: React.SyntheticEvent<HTMLElement>
   ) => {
-    const resource = event.resource;
-    if (!resource) return;
-
-    setEventJob(resource);
+    if (!event.resource) return;
+    setEventJob(event.resource);
     setAnchorEl(e.currentTarget);
-  };
-
-  const rangeChangeHandler = (
-    range: Date[] | { start: Date; end: Date },
-    viewParam?: View
-  ) => {
-    const currentView = viewParam ?? view;
-    setCalendarView(currentView);
-
-    if (currentView === Views.DAY) {
-      onStartDayChange(dayjs((range as Date[])[0]).format("YYYY-MM-DD"));
-      return;
-    }
-
-    if (currentView === Views.WEEK) {
-      onStartDayChange(dayjs((range as Date[])[0]).format("YYYY-MM-DD"));
-      return;
-    }
-
-    if (currentView === Views.MONTH) {
-      onStartDayChange(
-        dayjs((range as { start: Date }).start).format("YYYY-MM-DD")
-      );
-    }
   };
 
   const calendarClickHandler = (slotInfo: SlotInfo) => {
@@ -205,7 +179,7 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
     setIsModalOpen(true);
   };
 
-  const eventProps = (event: CalendarEvent) => {
+  const eventPropGetter = (event: CalendarEvent) => {
     const resource = event.resource;
     if (!resource) return {};
 
@@ -222,8 +196,16 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
       <CalendarWrapper className={loading ? "filtering" : undefined}>
         {!error ? (
           <Calendar<CalendarEvent>
+            style={{ height: "100%" }}
             localizer={localizer}
             events={events}
+            showAllEvents={false}
+            popup={true}
+            onShowMore={(_events, d) => {
+              onViewChange(Views.DAY);
+              onNavigate(d);
+            }}
+            drilldownView={Views.DAY}
             timeslots={2}
             defaultView={isMobile ? Views.DAY : Views.WEEK}
             views={
@@ -234,20 +216,18 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             startAccessor="start"
             endAccessor="end"
             view={view}
-            date={new Date(startDay)}
+            date={date}
             onView={onViewChange}
-            onNavigate={(date) =>
-              onStartDayChange(dayjs(date).format("YYYY-MM-DD"))
-            }
-            onRangeChange={rangeChangeHandler}
+            onNavigate={onNavigate}
             onSelectEvent={eventClickHandler}
             onSelectSlot={calendarClickHandler}
             selectable
             step={30}
             min={dynamicMin}
-            max={new Date(`${endDay} 17:00`)}
-            eventPropGetter={eventProps}
+            max={maxTime}
+            eventPropGetter={eventPropGetter}
             components={{
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               event: CustomEvent as unknown as any,
             }}
           />
@@ -301,6 +281,22 @@ const CustomEvent: FC<EventProps<CalendarEvent>> = ({ event, title }) => {
   const isMonthView = resource.calendarView === Views.MONTH;
   const useSmallFont = isMonthView && resource.isMobile;
 
+  const textStyle: React.CSSProperties = isMonthView
+    ? {
+        fontSize: useSmallFont ? "0.65rem" : "0.8rem",
+        lineHeight: 1.2,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      }
+    : {
+        fontSize: useSmallFont ? "0.65rem" : "0.9rem",
+        lineHeight: useSmallFont ? 1.1 : 1.3,
+        whiteSpace: "normal",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      };
+
   return (
     <div style={{ position: "relative" }}>
       {isCompleted && (
@@ -311,17 +307,7 @@ const CustomEvent: FC<EventProps<CalendarEvent>> = ({ event, title }) => {
         </CheckWrapper>
       )}
 
-      <div
-        style={{
-          fontSize: useSmallFont ? "0.65rem" : "0.9rem",
-          lineHeight: useSmallFont ? 1.1 : 1.3,
-          whiteSpace: "normal",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {title}
-      </div>
+      <div style={textStyle}>{title}</div>
     </div>
   );
 };
