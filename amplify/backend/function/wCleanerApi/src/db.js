@@ -5,7 +5,6 @@ const uuid = require("node-uuid");
 const { mapCustomer, mapInvoice } = require("./mappers");
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 50;
-const INVOICE_PREFIX = "CWC";
 const encodeNextToken = (lek) =>
   lek ? Buffer.from(JSON.stringify(lek)).toString("base64") : null;
 
