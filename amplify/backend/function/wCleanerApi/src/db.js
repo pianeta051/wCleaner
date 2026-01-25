@@ -4,7 +4,7 @@ const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 const { mapCustomer, mapInvoice } = require("./mappers");
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 100;
 
 const generateSlug = async (email, name) => {
   const nameSlug = name
