@@ -5,6 +5,13 @@ Licensed under the Apache License, Version 2.0 (the "License"). You may not use 
 or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and limitations under the License.
 */
+/*
+Copyright 2017 - 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
+    http://aws.amazon.com/apache2.0/
+or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations under the License.
+*/
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -73,35 +80,25 @@ app.use(async function (req, res, next) {
 });
 
 // Get all customer
+
 app.get("/customers", async function (req, res) {
-  try {
-    const nextToken =
-      typeof req.query?.nextToken === "string" &&
-      req.query.nextToken.trim() !== ""
-        ? req.query.nextToken
-        : undefined;
+  const nextToken = req.query?.nextToken;
+  const limit = req.query?.limit ? +req.query?.limit : 50;
+  const search = req.query?.search;
+  const outcodeFilter = req.query?.outcodeFilter
+    ? req.query.outcodeFilter.split(",")
+    : undefined;
 
-    const limit = req.query?.limit ? +req.query?.limit : 50;
-    const search = req.query?.search;
+  const paginationEnabled = req.query?.paginationDisabled !== "true";
+  const exclusiveStartKey = parseToken(nextToken);
+  const { items, lastEvaluatedKey } = await getCustomers(
+    { searchInput: search, outcodeFilter },
+    { exclusiveStartKey, limit, enabled: paginationEnabled }
+  );
 
-    const outcodeFilter = req.query?.outcodeFilter
-      ? req.query.outcodeFilter.split(",").filter(Boolean)
-      : undefined;
-
-    const paginationEnabled = req.query?.paginationDisabled !== "true";
-
-    const { items, nextToken: responseToken } = await getCustomers(
-      { searchInput: search, outcodeFilter },
-      { nextToken, limit, enabled: paginationEnabled }
-    );
-
-    const customers = items.map(mapCustomer);
-
-    res.json({ customers, nextToken: responseToken });
-  } catch (err) {
-    console.error("GET /customers failed", err);
-    res.status(500).json({ message: "Failed to fetch customers" });
-  }
+  const customers = items.map(mapCustomer);
+  const responseToken = generateToken(lastEvaluatedKey);
+  res.json({ customers, nextToken: responseToken });
 });
 
 // Get outcodes

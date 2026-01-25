@@ -1,29 +1,29 @@
 const dayjs = require("dayjs");
 
 const mapCustomer = (customerFromDb) => ({
-  id: customerFromDb?.PK?.S?.replace("customer_", "") ?? "",
-  name: customerFromDb?.name?.S ?? "",
-  address: customerFromDb?.address?.S ?? "",
-  postcode: customerFromDb?.postcode?.S ?? "",
-  mainTelephone: customerFromDb?.mainTelephone?.S ?? "",
-  secondTelephone: customerFromDb?.secondTelephone?.S ?? "",
-  email: customerFromDb?.email?.S ?? "",
-  slug: customerFromDb?.slug?.S ?? "",
-  fileUrls: customerFromDb?.fileUrls?.L?.map((f) => f?.S).filter(Boolean) ?? [],
+  id: customerFromDb.PK.S.replace("customer_", ""),
+  name: customerFromDb.name.S,
+  address: customerFromDb.address.S,
+  postcode: customerFromDb.postcode.S,
+  mainTelephone: customerFromDb.mainTelephone?.S,
+  secondTelephone: customerFromDb.secondTelephone?.S,
+  email: customerFromDb.email?.S,
+  slug: customerFromDb.slug.S,
+  fileUrls: customerFromDb.fileUrls?.L?.map((f) => f.S) ?? [],
   notes:
-    customerFromDb?.notes?.L?.map((item) => {
-      const note = item?.M ?? {};
+    customerFromDb.notes?.L?.map((item) => {
+      const note = item.M;
       return {
-        id: note?.id?.S ?? "",
-        title: note?.title?.S ?? "",
-        content: note?.content?.S ?? "",
-        author: note?.author?.S ?? "",
-        timestamp: note?.timestamp?.N ? Number(note.timestamp.N) : undefined,
+        id: note.id?.S || "",
+        title: note.title?.S || "",
+        content: note.content?.S || "",
+        author: note.author?.S || "",
+        timestamp: note.timestamp ? Number(note.timestamp.N) : undefined,
         isFavourite: !!note?.isFavourite?.BOOL,
-        updatedAt: note?.updatedAt?.N ? Number(note.updatedAt.N) : undefined,
-        updatedBy: note?.updatedBy?.S ?? "",
+        updatedAt: note.updatedAt ? Number(note.updatedAt.N) : undefined,
+        updatedBy: note.updatedBy?.S || "",
       };
-    }) ?? [],
+    }) || [],
 });
 
 const mapCleaningAddress = (cleaningAddressFromDb) => ({

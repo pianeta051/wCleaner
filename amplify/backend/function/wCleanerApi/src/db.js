@@ -5,14 +5,7 @@ const uuid = require("node-uuid");
 const { mapCustomer, mapInvoice } = require("./mappers");
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 50;
-const encodeNextToken = (lek) =>
-  lek ? Buffer.from(JSON.stringify(lek)).toString("base64") : null;
 
-const decodeNextToken = (token) => {
-  if (!token || typeof token !== "string" || token.trim() === "")
-    return undefined;
-  return JSON.parse(Buffer.from(token, "base64").toString("utf8"));
-};
 const generateSlug = async (email, name) => {
   const nameSlug = name
     .toLowerCase()
@@ -21,6 +14,7 @@ const generateSlug = async (email, name) => {
     .join("-");
   const emailSlug = email?.split("@")[0].toLowerCase();
   const baseSlug = emailSlug?.length ? emailSlug : nameSlug;
+
   let slug = baseSlug;
   let counter = 2;
 
@@ -392,15 +386,12 @@ const findAddressesByName = async (customerId, addressName) => {
 };
 
 const getCustomers = async (filters, pagination) => {
-  const { nextToken, limit, enabled } = pagination;
-  const exclusiveStartKey = decodeNextToken(nextToken);
+  const { exclusiveStartKey, limit, enabled } = pagination;
 
   const { searchInput, outcodeFilter } = filters;
-
   const filterExpressions = [
     "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
   ];
-
   let params = {
     TableName: TABLE_NAME,
     ExpressionAttributeNames: {
@@ -440,11 +431,9 @@ const getCustomers = async (filters, pagination) => {
         ...params.ExpressionAttributeValues,
       },
     };
-
     filterExpressions.push(
       "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
     );
-
     params = {
       ...params,
       ...searchParams,
@@ -457,24 +446,21 @@ const getCustomers = async (filters, pagination) => {
       "#OC": "outcode",
     };
 
-    const expressionAttributeValues = {
+    const expressionAttributesValues = {
       ...params.ExpressionAttributeValues,
     };
-
     for (let i = 0; i < outcodeFilter.length; i++) {
-      expressionAttributeValues[`:outcode${i}`] = { S: outcodeFilter[i] };
+      const outcode = outcodeFilter[i];
+      expressionAttributesValues[`:outcode${i}`] = { S: outcode };
     }
-
     const filterExpression = `#OC IN (${outcodeFilter
       .map((_id, index) => `:outcode${index}`)
       .join(", ")})`;
-
     filterExpressions.push(filterExpression);
-
     params = {
       ...params,
       ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
+      ExpressionAttributeValues: expressionAttributesValues,
     };
   }
 
@@ -483,27 +469,28 @@ const getCustomers = async (filters, pagination) => {
   let result = await ddb.scan(params).promise();
   const items = result.Items;
 
-  let lastEvaluatedKey = null;
+  let lastEvaluatedKey;
 
   if (enabled) {
     while (result.LastEvaluatedKey && items.length < limit) {
+      const exclusiveStartKey = result.LastEvaluatedKey;
       params = {
         ...params,
-        ExclusiveStartKey: result.LastEvaluatedKey,
+        ExclusiveStartKey: exclusiveStartKey,
         Limit: limit - items.length,
       };
-
       result = await ddb.scan(params).promise();
+
       items.push(...result.Items);
     }
 
-    lastEvaluatedKey = result.LastEvaluatedKey ?? null;
+    const nextItem = await getNextCustomer(result.LastEvaluatedKey);
+    lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
   }
 
   return {
     items,
     lastEvaluatedKey,
-    nextToken: encodeNextToken(lastEvaluatedKey),
   };
 };
 
@@ -528,21 +515,26 @@ const getOutcodes = async () => {
   const items = result.Items;
 
   while (result.LastEvaluatedKey) {
+    const exclusiveStartKey = result.LastEvaluatedKey;
     params = {
       ...params,
-      ExclusiveStartKey: result.LastEvaluatedKey,
+      ExclusiveStartKey: exclusiveStartKey,
+      Limit: limit - items.length,
     };
     result = await ddb.scan(params).promise();
     items.push(...result.Items);
   }
-
   const outcodes = [];
-  for (let i = 0; i < items.length; i++) {
-    const outcode = items[i].outcode?.S;
-    if (outcode && !outcodes.includes(outcode)) outcodes.push(outcode);
+  for (let index = 0; index < items.length; index++) {
+    const outcode = items[index].outcode?.S;
+    if (outcode && !outcodes.includes(outcode)) {
+      outcodes.push(outcode);
+    }
   }
 
-  return { outcodes };
+  return {
+    outcodes,
+  };
 };
 
 const getCleaningAddress = async (customerId, addressId) => {
@@ -1460,6 +1452,23 @@ const getNextInvoiceNumber = async () => {
   return Number(result.Items[0].invoice_number.N) + 1;
 };
 
+// const getInvoiceByJobId = async (jobId) => {
+//   const params = {
+//     TableName: TABLE_NAME,
+//     Key: {
+//       PK: { S: `job_id_${jobId}` },
+//       SK: { S: "invoice" },
+//     },
+//   };
+
+//   const result = await ddb.getItem(params).promise();
+
+//   if (!result.Item) {
+//     return null;
+//   }
+
+//   return mapInvoice(result.Item);
+// };
 const getInvoiceByJobId = async (jobId) => {
   const params = {
     TableName: TABLE_NAME,
