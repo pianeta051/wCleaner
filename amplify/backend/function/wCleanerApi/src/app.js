@@ -85,24 +85,31 @@ app.get("/customers", async function (req, res) {
   try {
     const nextToken = req.query?.nextToken;
     const limit = req.query?.limit ? +req.query?.limit : 50;
+
     const search = req.query?.search;
     const outcodeFilter = req.query?.outcodeFilter
-      ? req.query.outcodeFilter.split(",")
+      ? req.query.outcodeFilter.split(",").filter(Boolean)
       : undefined;
 
     const paginationEnabled = req.query?.paginationDisabled !== "true";
-    const exclusiveStartKey = parseToken(nextToken);
+
+    const exclusiveStartKey =
+      nextToken && typeof nextToken === "string" && nextToken.trim().length
+        ? parseToken(nextToken)
+        : undefined;
+
     const { items, lastEvaluatedKey } = await getCustomers(
       { searchInput: search, outcodeFilter },
       { exclusiveStartKey, limit, enabled: paginationEnabled }
     );
 
     const customers = items.map(mapCustomer);
+
+    // genete token only if there is a real lastEvaluatedKey
     const responseToken = generateToken(lastEvaluatedKey);
-    console.log(JSON.stringify({ customers }));
-    console.log(JSON.stringify({ nextToken }));
+
     res.json({ customers, nextToken: responseToken });
-  } catch {
+  } catch (err) {
     console.error("GET /customers failed", err);
     res.status(500).json({ message: "Failed to fetch customers" });
   }
