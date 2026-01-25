@@ -406,7 +406,7 @@ const getCustomers = async (filters, pagination) => {
     },
     IndexName: "status-index",
   };
-
+  console.log("Enabled: " + enabled);
   if (enabled) {
     params.Limit = limit;
     if (exclusiveStartKey) {
@@ -487,7 +487,8 @@ const getCustomers = async (filters, pagination) => {
     const nextItem = await getNextCustomer(result.LastEvaluatedKey);
     lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
   }
-
+  console.log("Items: " + JSON.stringify({ items }));
+  console.log("LastEvaluatedKey: " + lastEvaluatedKey);
   return {
     items,
     lastEvaluatedKey,
