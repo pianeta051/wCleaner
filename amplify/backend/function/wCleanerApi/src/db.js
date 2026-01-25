@@ -4,7 +4,7 @@ const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 const { mapCustomer, mapInvoice } = require("./mappers");
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 50;
 
 const generateSlug = async (email, name) => {
   const nameSlug = name
@@ -387,11 +387,12 @@ const findAddressesByName = async (customerId, addressName) => {
 
 const getCustomers = async (filters, pagination) => {
   const { exclusiveStartKey, limit, enabled } = pagination;
-
   const { searchInput, outcodeFilter } = filters;
+
   const filterExpressions = [
     "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
   ];
+
   let params = {
     TableName: TABLE_NAME,
     ExpressionAttributeNames: {
@@ -406,10 +407,10 @@ const getCustomers = async (filters, pagination) => {
     },
     IndexName: "status-index",
   };
-  console.log("Enabled: " + enabled);
+
   if (enabled) {
     params.Limit = limit;
-    if (exclusiveStartKey) {
+    if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
       params.ExclusiveStartKey = exclusiveStartKey;
     }
   }
@@ -431,13 +432,12 @@ const getCustomers = async (filters, pagination) => {
         ...params.ExpressionAttributeValues,
       },
     };
+
     filterExpressions.push(
       "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
     );
-    params = {
-      ...params,
-      ...searchParams,
-    };
+
+    params = { ...params, ...searchParams };
   }
 
   if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
@@ -446,17 +446,16 @@ const getCustomers = async (filters, pagination) => {
       "#OC": "outcode",
     };
 
-    const expressionAttributesValues = {
-      ...params.ExpressionAttributeValues,
-    };
+    const expressionAttributesValues = { ...params.ExpressionAttributeValues };
+
     for (let i = 0; i < outcodeFilter.length; i++) {
-      const outcode = outcodeFilter[i];
-      expressionAttributesValues[`:outcode${i}`] = { S: outcode };
+      expressionAttributesValues[`:outcode${i}`] = { S: outcodeFilter[i] };
     }
-    const filterExpression = `#OC IN (${outcodeFilter
-      .map((_id, index) => `:outcode${index}`)
-      .join(", ")})`;
-    filterExpressions.push(filterExpression);
+
+    filterExpressions.push(
+      `#OC IN (${outcodeFilter.map((_v, i) => `:outcode${i}`).join(", ")})`
+    );
+
     params = {
       ...params,
       ExpressionAttributeNames: expressionAttributeNames,
@@ -467,32 +466,27 @@ const getCustomers = async (filters, pagination) => {
   params.FilterExpression = filterExpressions.join(" AND ");
 
   let result = await ddb.scan(params).promise();
-  const items = result.Items;
+  const items = result.Items || [];
 
-  let lastEvaluatedKey;
+  let lastEvaluatedKey = null;
 
   if (enabled) {
     while (result.LastEvaluatedKey && items.length < limit) {
-      const exclusiveStartKey = result.LastEvaluatedKey;
       params = {
         ...params,
-        ExclusiveStartKey: exclusiveStartKey,
+        ExclusiveStartKey: result.LastEvaluatedKey,
         Limit: limit - items.length,
       };
-      result = await ddb.scan(params).promise();
 
-      items.push(...result.Items);
+      result = await ddb.scan(params).promise();
+      items.push(...(result.Items || []));
     }
 
     const nextItem = await getNextCustomer(result.LastEvaluatedKey);
     lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
   }
-  console.log("Items: " + JSON.stringify({ items }));
-  console.log("LastEvaluatedKey: " + lastEvaluatedKey);
-  return {
-    items,
-    lastEvaluatedKey,
-  };
+
+  return { items, lastEvaluatedKey };
 };
 
 const getOutcodes = async () => {
