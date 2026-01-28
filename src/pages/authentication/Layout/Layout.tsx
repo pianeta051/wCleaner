@@ -27,8 +27,6 @@ export const Layout: FC<LayoutProps> = ({ children, title, subtitle }) => {
         <Grid
           size={{
             xs: 12,
-            sm: 6,
-            md: 4,
           }}
         >
           <FormPaper>{children}</FormPaper>
