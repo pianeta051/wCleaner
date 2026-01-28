@@ -470,6 +470,21 @@ const getCustomers = async (filters, pagination) => {
 
   let lastEvaluatedKey = null;
 
+  // if (enabled) {
+  //   while (result.LastEvaluatedKey && items.length < limit) {
+  //     params = {
+  //       ...params,
+  //       ExclusiveStartKey: result.LastEvaluatedKey,
+  //       Limit: limit - items.length,
+  //     };
+
+  //     result = await ddb.scan(params).promise();
+  //     items.push(...(result.Items || []));
+  //   }
+
+  //   const nextItem = await getNextCustomer(result.LastEvaluatedKey);
+  //   lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
+  // }
   if (enabled) {
     while (result.LastEvaluatedKey && items.length < limit) {
       params = {
@@ -482,8 +497,22 @@ const getCustomers = async (filters, pagination) => {
       items.push(...(result.Items || []));
     }
 
-    const nextItem = await getNextCustomer(result.LastEvaluatedKey);
-    lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
+    if (result.LastEvaluatedKey) {
+      const nextItem = await ddb
+        .scan({
+          ...params,
+          ExclusiveStartKey: result.LastEvaluatedKey,
+          Limit: 1,
+        })
+        .promise();
+
+      lastEvaluatedKey =
+        nextItem.Items && nextItem.Items.length
+          ? result.LastEvaluatedKey
+          : null;
+    } else {
+      lastEvaluatedKey = null;
+    }
   }
 
   return { items, lastEvaluatedKey };
@@ -514,7 +543,7 @@ const getOutcodes = async () => {
     params = {
       ...params,
       ExclusiveStartKey: exclusiveStartKey,
-      Limit: limit - items.length,
+      //Limit: limit - items.length,
     };
     result = await ddb.scan(params).promise();
     items.push(...result.Items);
