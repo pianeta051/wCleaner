@@ -23,14 +23,15 @@ export const keyFunctionGenerator: (
   disablePagination?: boolean
 ) => KeyFunctionType =
   (searchInput, outcodeFilter, disablePagination) =>
-  (_index, previousRequest) =>
-    [
+  (_index, previousRequest) => {
+    return [
       "customers",
       previousRequest?.nextToken,
       searchInput,
       outcodeFilter,
       !!disablePagination,
     ];
+  };
 
 export const useCustomers = (
   searchInput?: string,
@@ -78,7 +79,6 @@ export const useCustomers = (
 
   return {
     customers,
-
     moreToLoad,
     error: extractErrorCode(error),
     loading,
