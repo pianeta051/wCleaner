@@ -385,149 +385,16 @@ const findAddressesByName = async (customerId, addressName) => {
   return items;
 };
 
-// const getCustomers = async (filters, pagination) => {
-//   const { exclusiveStartKey, limit, enabled } = pagination;
-//   const { searchInput, outcodeFilter } = filters;
-
-//   const filterExpressions = [
-//     "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
-//   ];
-
-//   let params = {
-//     TableName: TABLE_NAME,
-//     ExpressionAttributeNames: {
-//       "#PK": "PK",
-//       "#SK": "SK",
-//       "#ST": "status",
-//     },
-//     ExpressionAttributeValues: {
-//       ":pk": { S: "customer_" },
-//       ":sk": { S: "profile" },
-//       ":status": { S: "active" },
-//     },
-//     IndexName: "status-index",
-//   };
-
-//   if (enabled) {
-//     params.Limit = limit;
-//     if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
-//       params.ExclusiveStartKey = exclusiveStartKey;
-//     }
-//   }
-
-//   if (searchInput?.length) {
-//     const searchParams = {
-//       ExpressionAttributeNames: {
-//         "#NL": "name_lowercase",
-//         "#EL": "email_lowercase",
-//         "#A": "address",
-//         "#P": "postcode",
-//         ...params.ExpressionAttributeNames,
-//       },
-//       ExpressionAttributeValues: {
-//         ":name": { S: searchInput.toLowerCase() },
-//         ":email": { S: searchInput.toLowerCase() },
-//         ":address": { S: searchInput.toLowerCase() },
-//         ":postcode": { S: searchInput.toLowerCase() },
-//         ...params.ExpressionAttributeValues,
-//       },
-//     };
-
-//     filterExpressions.push(
-//       "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
-//     );
-
-//     params = { ...params, ...searchParams };
-//   }
-
-//   if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
-//     const expressionAttributeNames = {
-//       ...params.ExpressionAttributeNames,
-//       "#OC": "outcode",
-//     };
-
-//     const expressionAttributesValues = { ...params.ExpressionAttributeValues };
-
-//     for (let i = 0; i < outcodeFilter.length; i++) {
-//       expressionAttributesValues[`:outcode${i}`] = { S: outcodeFilter[i] };
-//     }
-
-//     filterExpressions.push(
-//       `#OC IN (${outcodeFilter.map((_v, i) => `:outcode${i}`).join(", ")})`
-//     );
-
-//     params = {
-//       ...params,
-//       ExpressionAttributeNames: expressionAttributeNames,
-//       ExpressionAttributeValues: expressionAttributesValues,
-//     };
-//   }
-
-//   params.FilterExpression = filterExpressions.join(" AND ");
-
-//   let result = await ddb.scan(params).promise();
-//   const items = result.Items || [];
-
-//   let lastEvaluatedKey = null;
-
-//   // if (enabled) {
-//   //   while (result.LastEvaluatedKey && items.length < limit) {
-//   //     params = {
-//   //       ...params,
-//   //       ExclusiveStartKey: result.LastEvaluatedKey,
-//   //       Limit: limit - items.length,
-//   //     };
-
-//   //     result = await ddb.scan(params).promise();
-//   //     items.push(...(result.Items || []));
-//   //   }
-
-//   //   const nextItem = await getNextCustomer(result.LastEvaluatedKey);
-//   //   lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
-//   // }
-//   if (enabled) {
-//     while (result.LastEvaluatedKey && items.length < limit) {
-//       params = {
-//         ...params,
-//         ExclusiveStartKey: result.LastEvaluatedKey,
-//         Limit: limit - items.length,
-//       };
-
-//       result = await ddb.scan(params).promise();
-//       items.push(...(result.Items || []));
-//     }
-
-//     if (result.LastEvaluatedKey) {
-//       const nextItem = await ddb
-//         .scan({
-//           ...params,
-//           ExclusiveStartKey: result.LastEvaluatedKey,
-//           Limit: 1,
-//         })
-//         .promise();
-
-//       lastEvaluatedKey =
-//         nextItem.Items && nextItem.Items.length
-//           ? result.LastEvaluatedKey
-//           : null;
-//     } else {
-//       lastEvaluatedKey = null;
-//     }
-//   }
-
-//   return { items, lastEvaluatedKey };
-// };
-
 const getCustomers = async (filters, pagination) => {
   const { exclusiveStartKey, limit, enabled } = pagination;
   const { searchInput, outcodeFilter } = filters;
 
-  const filterExpressions = ["begins_with(#PK, :pk) AND #SK = :sk"];
+  const filterExpressions = [
+    "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
+  ];
 
   let params = {
     TableName: TABLE_NAME,
-    IndexName: "status-index",
-    KeyConditionExpression: "#ST = :status",
     ExpressionAttributeNames: {
       "#PK": "PK",
       "#SK": "SK",
@@ -538,48 +405,8 @@ const getCustomers = async (filters, pagination) => {
       ":sk": { S: "profile" },
       ":status": { S: "active" },
     },
+    IndexName: "status-index",
   };
-
-  if (searchInput?.length) {
-    params.ExpressionAttributeNames = {
-      ...params.ExpressionAttributeNames,
-      "#NL": "name_lowercase",
-      "#EL": "email_lowercase",
-      "#A": "address",
-      "#P": "postcode",
-    };
-
-    params.ExpressionAttributeValues = {
-      ...params.ExpressionAttributeValues,
-      ":name": { S: searchInput.toLowerCase() },
-      ":email": { S: searchInput.toLowerCase() },
-      ":address": { S: searchInput.toLowerCase() },
-      ":postcode": { S: searchInput.toLowerCase() },
-    };
-
-    filterExpressions.push(
-      "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
-    );
-  }
-
-  if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
-    params.ExpressionAttributeNames = {
-      ...params.ExpressionAttributeNames,
-      "#OC": "outcode",
-    };
-
-    for (let i = 0; i < outcodeFilter.length; i++) {
-      params.ExpressionAttributeValues[`:outcode${i}`] = {
-        S: outcodeFilter[i],
-      };
-    }
-
-    filterExpressions.push(
-      `#OC IN (${outcodeFilter.map((_v, i) => `:outcode${i}`).join(", ")})`
-    );
-  }
-
-  params.FilterExpression = filterExpressions.join(" AND ");
 
   if (enabled) {
     params.Limit = limit;
@@ -588,35 +415,181 @@ const getCustomers = async (filters, pagination) => {
     }
   }
 
-  let result = await ddb.query(params).promise();
+  if (searchInput?.length) {
+    const searchParams = {
+      ExpressionAttributeNames: {
+        "#NL": "name_lowercase",
+        "#EL": "email_lowercase",
+        "#A": "address",
+        "#P": "postcode",
+        ...params.ExpressionAttributeNames,
+      },
+      ExpressionAttributeValues: {
+        ":name": { S: searchInput.toLowerCase() },
+        ":email": { S: searchInput.toLowerCase() },
+        ":address": { S: searchInput.toLowerCase() },
+        ":postcode": { S: searchInput.toLowerCase() },
+        ...params.ExpressionAttributeValues,
+      },
+    };
+
+    filterExpressions.push(
+      "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
+    );
+
+    params = { ...params, ...searchParams };
+  }
+
+  if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
+    const expressionAttributeNames = {
+      ...params.ExpressionAttributeNames,
+      "#OC": "outcode",
+    };
+
+    const expressionAttributesValues = { ...params.ExpressionAttributeValues };
+
+    for (let i = 0; i < outcodeFilter.length; i++) {
+      expressionAttributesValues[`:outcode${i}`] = { S: outcodeFilter[i] };
+    }
+
+    filterExpressions.push(
+      `#OC IN (${outcodeFilter.map((_v, i) => `:outcode${i}`).join(", ")})`
+    );
+
+    params = {
+      ...params,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributesValues,
+    };
+  }
+
+  params.FilterExpression = filterExpressions.join(" AND ");
+
+  let result = await ddb.scan(params).promise();
   const items = result.Items || [];
 
-  if (enabled) {
-    while (result.LastEvaluatedKey && items.length < limit) {
-      result = await ddb
-        .query({
-          ...params,
-          ExclusiveStartKey: result.LastEvaluatedKey,
-          Limit: limit - items.length,
-        })
-        .promise();
+  let lastEvaluatedKey = null;
 
-      items.push(...(result.Items || []));
-    }
+  if (enabled) {
+    const nextItem = await getNextCustomer(result.LastEvaluatedKey);
+    lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
   } else {
-    while (result.LastEvaluatedKey) {
-      result = await ddb
-        .query({ ...params, ExclusiveStartKey: result.LastEvaluatedKey })
-        .promise();
+    console.log("Pagination disabled, getting all pages at once");
+    while (result.LastEvaluatedKey && items.length < limit) {
+      params = {
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: limit - items.length,
+      };
+
+      result = await ddb.scan(params).promise();
+      console.log(JSON.stringify({ result }, null, 2));
       items.push(...(result.Items || []));
     }
   }
 
-  return {
-    items,
-    lastEvaluatedKey: enabled ? result.LastEvaluatedKey ?? null : null,
-  };
+  return { items, lastEvaluatedKey };
 };
+
+// const getCustomers = async (filters, pagination) => {
+//   const { exclusiveStartKey, limit, enabled } = pagination;
+//   const { searchInput, outcodeFilter } = filters;
+
+//   const filterExpressions = ["begins_with(#PK, :pk) AND #SK = :sk"];
+
+//   let params = {
+//     TableName: TABLE_NAME,
+//     IndexName: "status-index",
+//     KeyConditionExpression: "#ST = :status",
+//     ExpressionAttributeNames: {
+//       "#PK": "PK",
+//       "#SK": "SK",
+//       "#ST": "status",
+//     },
+//     ExpressionAttributeValues: {
+//       ":pk": { S: "customer_" },
+//       ":sk": { S: "profile" },
+//       ":status": { S: "active" },
+//     },
+//   };
+
+//   if (searchInput?.length) {
+//     params.ExpressionAttributeNames = {
+//       ...params.ExpressionAttributeNames,
+//       "#NL": "name_lowercase",
+//       "#EL": "email_lowercase",
+//       "#A": "address",
+//       "#P": "postcode",
+//     };
+
+//     params.ExpressionAttributeValues = {
+//       ...params.ExpressionAttributeValues,
+//       ":name": { S: searchInput.toLowerCase() },
+//       ":email": { S: searchInput.toLowerCase() },
+//       ":address": { S: searchInput.toLowerCase() },
+//       ":postcode": { S: searchInput.toLowerCase() },
+//     };
+
+//     filterExpressions.push(
+//       "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
+//     );
+//   }
+
+//   if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
+//     params.ExpressionAttributeNames = {
+//       ...params.ExpressionAttributeNames,
+//       "#OC": "outcode",
+//     };
+
+//     for (let i = 0; i < outcodeFilter.length; i++) {
+//       params.ExpressionAttributeValues[`:outcode${i}`] = {
+//         S: outcodeFilter[i],
+//       };
+//     }
+
+//     filterExpressions.push(
+//       `#OC IN (${outcodeFilter.map((_v, i) => `:outcode${i}`).join(", ")})`
+//     );
+//   }
+
+//   params.FilterExpression = filterExpressions.join(" AND ");
+
+//   if (enabled) {
+//     params.Limit = limit;
+//     if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
+//       params.ExclusiveStartKey = exclusiveStartKey;
+//     }
+//   }
+
+//   let result = await ddb.query(params).promise();
+//   const items = result.Items || [];
+
+//   if (enabled) {
+//     while (result.LastEvaluatedKey && items.length < limit) {
+//       result = await ddb
+//         .query({
+//           ...params,
+//           ExclusiveStartKey: result.LastEvaluatedKey,
+//           Limit: limit - items.length,
+//         })
+//         .promise();
+
+//       items.push(...(result.Items || []));
+//     }
+//   } else {
+//     while (result.LastEvaluatedKey) {
+//       result = await ddb
+//         .query({ ...params, ExclusiveStartKey: result.LastEvaluatedKey })
+//         .promise();
+//       items.push(...(result.Items || []));
+//     }
+//   }
+
+//   return {
+//     items,
+//     lastEvaluatedKey: enabled ? result.LastEvaluatedKey ?? null : null,
+//   };
+// };
 
 const getOutcodes = async () => {
   let params = {
@@ -735,6 +708,7 @@ const getNextCustomer = async (lastEvaluatedKey) => {
     TableName: TABLE_NAME,
     Limit: 5,
     ExclusiveStartKey: lastEvaluatedKey,
+    IndexName: "status-index",
   };
   const result = await ddb.scan(params).promise();
   if (result.Items.length) {
