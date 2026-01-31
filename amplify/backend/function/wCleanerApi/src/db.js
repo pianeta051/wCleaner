@@ -464,131 +464,47 @@ const getCustomers = async (filters, pagination) => {
   }
 
   params.FilterExpression = filterExpressions.join(" AND ");
+  let items = [];
+  let result;
+  let ExclusiveStartKey;
 
-  let result = await ddb.scan(params).promise();
-  const items = result.Items || [];
-
-  let lastEvaluatedKey = null;
-
-  if (enabled) {
-    const nextItem = await getNextCustomer(result.LastEvaluatedKey);
-    lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
-  } else {
-    console.log("Pagination disabled, getting all pages at once");
-    while (result.LastEvaluatedKey && items.length < limit) {
-      params = {
+  do {
+    result = await ddb
+      .scan({
         ...params,
-        ExclusiveStartKey: result.LastEvaluatedKey,
-        Limit: limit - items.length,
-      };
+        ExclusiveStartKey,
+      })
+      .promise();
 
-      result = await ddb.scan(params).promise();
-      console.log(JSON.stringify({ result }, null, 2));
-      items.push(...(result.Items || []));
-    }
-  }
+    items.push(...(result.Items || []));
+    ExclusiveStartKey = result.LastEvaluatedKey;
+  } while (ExclusiveStartKey);
 
-  return { items, lastEvaluatedKey };
+  return { items, lastEvaluatedKey: null };
 };
 
-// const getCustomers = async (filters, pagination) => {
-//   const { exclusiveStartKey, limit, enabled } = pagination;
-//   const { searchInput, outcodeFilter } = filters;
-
-//   const filterExpressions = ["begins_with(#PK, :pk) AND #SK = :sk"];
-
-//   let params = {
-//     TableName: TABLE_NAME,
-//     IndexName: "status-index",
-//     KeyConditionExpression: "#ST = :status",
-//     ExpressionAttributeNames: {
-//       "#PK": "PK",
-//       "#SK": "SK",
-//       "#ST": "status",
-//     },
-//     ExpressionAttributeValues: {
-//       ":pk": { S: "customer_" },
-//       ":sk": { S: "profile" },
-//       ":status": { S: "active" },
-//     },
-//   };
-
-//   if (searchInput?.length) {
-//     params.ExpressionAttributeNames = {
-//       ...params.ExpressionAttributeNames,
-//       "#NL": "name_lowercase",
-//       "#EL": "email_lowercase",
-//       "#A": "address",
-//       "#P": "postcode",
-//     };
-
-//     params.ExpressionAttributeValues = {
-//       ...params.ExpressionAttributeValues,
-//       ":name": { S: searchInput.toLowerCase() },
-//       ":email": { S: searchInput.toLowerCase() },
-//       ":address": { S: searchInput.toLowerCase() },
-//       ":postcode": { S: searchInput.toLowerCase() },
-//     };
-
-//     filterExpressions.push(
-//       "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
-//     );
-//   }
-
-//   if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
-//     params.ExpressionAttributeNames = {
-//       ...params.ExpressionAttributeNames,
-//       "#OC": "outcode",
-//     };
-
-//     for (let i = 0; i < outcodeFilter.length; i++) {
-//       params.ExpressionAttributeValues[`:outcode${i}`] = {
-//         S: outcodeFilter[i],
-//       };
-//     }
-
-//     filterExpressions.push(
-//       `#OC IN (${outcodeFilter.map((_v, i) => `:outcode${i}`).join(", ")})`
-//     );
-//   }
-
-//   params.FilterExpression = filterExpressions.join(" AND ");
-
-//   if (enabled) {
-//     params.Limit = limit;
-//     if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
-//       params.ExclusiveStartKey = exclusiveStartKey;
-//     }
-//   }
-
-//   let result = await ddb.query(params).promise();
+//   let result = await ddb.scan(params).promise();
 //   const items = result.Items || [];
 
-//   if (enabled) {
-//     while (result.LastEvaluatedKey && items.length < limit) {
-//       result = await ddb
-//         .query({
-//           ...params,
-//           ExclusiveStartKey: result.LastEvaluatedKey,
-//           Limit: limit - items.length,
-//         })
-//         .promise();
+//   let lastEvaluatedKey = null;
 
-//       items.push(...(result.Items || []));
-//     }
-//   } else {
-//     while (result.LastEvaluatedKey) {
-//       result = await ddb
-//         .query({ ...params, ExclusiveStartKey: result.LastEvaluatedKey })
-//         .promise();
-//       items.push(...(result.Items || []));
-//     }
+//   if (enabled) {
+//     const nextItem = await getNextCustomer(result.LastEvaluatedKey);
+//     lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
+//   }
+//   while (result.LastEvaluatedKey && items.length < limit) {
+//     params = {
+//       ...params,
+//       ExclusiveStartKey: result.LastEvaluatedKey,
+//       Limit: limit - items.length,
+//     };
+
+//     result = await ddb.scan(params).promise();
+//     console.log(JSON.stringify({ result }, null, 2));
+//     items.push(...(result.Items || []));
 //   }
 
-//   return {
-//     items,
-//     lastEvaluatedKey: enabled ? result.LastEvaluatedKey ?? null : null,
-//   };
+//   return { items, lastEvaluatedKey };
 // };
 
 const getOutcodes = async () => {
@@ -616,7 +532,7 @@ const getOutcodes = async () => {
     params = {
       ...params,
       ExclusiveStartKey: exclusiveStartKey,
-      //Limit: limit - items.length,
+      Limit: limit - items.length,
     };
     result = await ddb.scan(params).promise();
     items.push(...result.Items);
