@@ -308,7 +308,16 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                 <AddressAccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <AddressSummaryRow>
                     <AddressSummaryTitle>
-                      {addr.address || `Address ${index + 1}`}
+                      {addr.address ? (
+                        <>
+                          {addr.address}{" "}
+                          <Typography color="textDisabled" component="span">
+                            ({addr.name})
+                          </Typography>
+                        </>
+                      ) : (
+                        addr.name ?? `Address ${index + 1}`
+                      )}
                     </AddressSummaryTitle>
 
                     {formik.values.cleaningAddresses.length > 1 && (
