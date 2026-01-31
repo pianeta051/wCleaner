@@ -69,12 +69,22 @@ export const JobsPage: FC = () => {
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
 
   useEffect(() => {
+    const viewParam = searchParams.get("view");
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.set("view", viewToParam(view));
       return next;
     });
   }, [view, setSearchParams]);
+
+  useEffect(() => {
+    const viewParam = searchParams.get("view");
+
+    if (!isMobile && !viewParam) {
+      setView(Views.MONTH);
+      setCurrentDate(new Date());
+    }
+  }, [searchParams, isMobile]);
 
   const range = useMemo(
     () => getRangeForView(currentDate, view),

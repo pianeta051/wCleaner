@@ -10,6 +10,7 @@ import {
   Avatar,
   Typography,
 } from "@mui/material";
+import { useMediaQuery, useTheme } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
@@ -65,6 +66,8 @@ type Page = {
 export const TopBar: FC = () => {
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const { logOut, isInGroup, user } = useAuth();
   const navigate = useNavigate();
@@ -110,7 +113,7 @@ export const TopBar: FC = () => {
   };
 
   const toCalendarMonth = () => {
-    navigate("/admin/jobs?view=month");
+    navigate(isMobile ? "/admin/jobs?view=month" : "/admin/jobs");
     closeUserMenu();
     setMobileOpen(false);
   };
