@@ -3,9 +3,7 @@ backend:
   phases:
     build:
       commands:
-        - amplify pull --appId $AMPLIFY_BACKEND_APP_ID --envName $USER_BRANCH -y
-        - grep another ./amplify/backend/function/wCleanerApi/src/db.js
-        - amplify push -y
+        - amplifyPush
 frontend:
   phases:
     preBuild:
