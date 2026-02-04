@@ -3,6 +3,8 @@ AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 const { mapCustomer, mapInvoice } = require("./mappers");
+const { formatInvoiceNumber } = require("./utils/invoiceNumber");
+
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 50;
 
@@ -464,48 +466,48 @@ const getCustomers = async (filters, pagination) => {
   }
 
   params.FilterExpression = filterExpressions.join(" AND ");
-  let items = [];
-  let result;
-  let ExclusiveStartKey;
+  //   let items = [];
+  //   let result;
+  //   let ExclusiveStartKey;
 
-  do {
-    result = await ddb
-      .scan({
-        ...params,
-        ExclusiveStartKey,
-      })
-      .promise();
+  //   do {
+  //     result = await ddb
+  //       .scan({
+  //         ...params,
+  //         ExclusiveStartKey,
+  //       })
+  //       .promise();
 
+  //     items.push(...(result.Items || []));
+  //     ExclusiveStartKey = result.LastEvaluatedKey;
+  //   } while (ExclusiveStartKey);
+
+  //   return { items, lastEvaluatedKey: null };
+  // };
+
+  let result = await ddb.scan(params).promise();
+  const items = result.Items || [];
+
+  let lastEvaluatedKey = null;
+
+  if (enabled) {
+    const nextItem = await getNextCustomer(result.LastEvaluatedKey);
+    lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
+  }
+  while (result.LastEvaluatedKey && items.length < limit) {
+    params = {
+      ...params,
+      ExclusiveStartKey: result.LastEvaluatedKey,
+      Limit: limit - items.length,
+    };
+
+    result = await ddb.scan(params).promise();
+    console.log(JSON.stringify({ result }, null, 2));
     items.push(...(result.Items || []));
-    ExclusiveStartKey = result.LastEvaluatedKey;
-  } while (ExclusiveStartKey);
+  }
 
-  return { items, lastEvaluatedKey: null };
+  return { items, lastEvaluatedKey };
 };
-
-//   let result = await ddb.scan(params).promise();
-//   const items = result.Items || [];
-
-//   let lastEvaluatedKey = null;
-
-//   if (enabled) {
-//     const nextItem = await getNextCustomer(result.LastEvaluatedKey);
-//     lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
-//   }
-//   while (result.LastEvaluatedKey && items.length < limit) {
-//     params = {
-//       ...params,
-//       ExclusiveStartKey: result.LastEvaluatedKey,
-//       Limit: limit - items.length,
-//     };
-
-//     result = await ddb.scan(params).promise();
-//     console.log(JSON.stringify({ result }, null, 2));
-//     items.push(...(result.Items || []));
-//   }
-
-//   return { items, lastEvaluatedKey };
-// };
 
 const getOutcodes = async () => {
   let params = {
@@ -1531,10 +1533,12 @@ const addInvoice = async (jobId, invoiceNumber, invoiceData) => {
 
   return {
     jobId,
-    invoiceNumber,
+    invoiceNumber: formatInvoiceNumber(invoiceNumber),
+    invoiceNumberRaw: invoiceNumber,
     date: invoiceData.date,
     description: invoiceData.description,
     generatedAt,
+    addressId: invoiceData.addressId,
   };
 };
 
