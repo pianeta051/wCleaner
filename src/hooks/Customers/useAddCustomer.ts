@@ -1,60 +1,35 @@
 import useSWRMutation from "swr/mutation";
 import { useSWRConfig } from "swr";
-import { unstable_serialize } from "swr/infinite";
 
 import { Customer } from "../../types/types";
 import { addCustomer } from "../../services/customers";
 import { CustomerFormValues } from "../../components/Customer/CustomerForm/CustomerForm";
 import { extractErrorCode } from "../../services/error";
-import { keyFunctionGenerator } from "./useCustomers";
 
-export const useAddCustomer = (searchInput: string, outcodes: string[]) => {
+export const useAddCustomer = () => {
   const { mutate } = useSWRConfig();
 
   const { trigger, isMutating, error } = useSWRMutation<
     Customer,
     string,
-    [string],
+    readonly ["add-customer"],
     CustomerFormValues
   >(
     ["add-customer"],
     async (_key, { arg: formValues }) => {
       const customer = await addCustomer(formValues);
 
+      //  Cache del detalle del customer
       await mutate(["customer", customer.slug], customer, {
         populateCache: true,
         revalidate: false,
       });
 
+      // Revalida TODAS las listas de customers (con o sin filtros)
       await mutate(
-        unstable_serialize(keyFunctionGenerator(searchInput, outcodes)),
-        (
-          current:
-            | {
-                customers: Customer[];
-                nextToken?: string;
-              }[]
-            | undefined
-        ) => {
-          if (!current) return undefined;
-
-          // Optional: only update if current filter matches new customer
-          const firstPage = current[0] ?? {
-            customers: [],
-            nextToken: undefined,
-          };
-          return [
-            {
-              ...firstPage,
-              customers: [customer, ...firstPage.customers],
-            },
-            ...current.slice(1),
-          ];
-        },
-        {
-          populateCache: true,
-          revalidate: false,
-        }
+        (key) => Array.isArray(key) && key.length > 0 && key[0] === "customers",
+        undefined,
+        { revalidate: true }
       );
 
       return customer;

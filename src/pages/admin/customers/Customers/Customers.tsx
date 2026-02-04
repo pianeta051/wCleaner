@@ -40,19 +40,14 @@ export const Customers: FC = () => {
   const isAdmin = isInGroup("Admin");
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedOutcodes, setSelectedOutcodes] = useState<string[]>([]);
-  const [appliedOutcodes, setAppliedOutcodes] = useState<string[]>([]);
+
+  const [outcodesFilter, setOutcodesFilter] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState("");
 
-  const {
-    customers,
-    error,
-    loading,
-    loadMore,
-    moreToLoad,
-    loadingMore,
-    reload,
-  } = useCustomers(searchInput, appliedOutcodes);
+  const { customers, error, loading, reload } = useCustomers(
+    searchInput,
+    outcodesFilter
+  );
 
   const { outcodes, loading: loadingOutcodes } = useOutcodes();
   const theme = useTheme();
@@ -62,16 +57,12 @@ export const Customers: FC = () => {
     addCustomer,
     loading: creating,
     error: createError,
-  } = useAddCustomer(searchInput, appliedOutcodes);
+  } = useAddCustomer(searchInput, outcodesFilter);
 
   const closeNewModalHandler = () => setModalOpen(false);
   const openNewModalHandler = () => setModalOpen(true);
 
   const searchHandler = (value: string) => setSearchInput(value);
-
-  const applyOutcodeFilterHandler = () => {
-    setAppliedOutcodes(selectedOutcodes);
-  };
 
   const isEmpty = customers.length === 0 && !loading && searchInput === "";
 
@@ -110,9 +101,8 @@ export const Customers: FC = () => {
                               outcodes && (
                                 <OutcodesSelector
                                   outcodes={outcodes}
-                                  selected={selectedOutcodes}
-                                  onChange={setSelectedOutcodes}
-                                  onFilter={applyOutcodeFilterHandler}
+                                  selected={outcodesFilter}
+                                  onChange={setOutcodesFilter}
                                 />
                               )
                             )}
@@ -127,9 +117,8 @@ export const Customers: FC = () => {
                           <DesktopOutcodeBox>
                             <OutcodesSelector
                               outcodes={outcodes}
-                              selected={selectedOutcodes}
-                              onChange={setSelectedOutcodes}
-                              onFilter={applyOutcodeFilterHandler}
+                              selected={outcodesFilter}
+                              onChange={setOutcodesFilter}
                             />
                           </DesktopOutcodeBox>
                         )
@@ -174,19 +163,7 @@ export const Customers: FC = () => {
                   ) : error ? (
                     <ErrorMessage code={error} />
                   ) : (
-                    <>
-                      <CustomersTable customers={customers} onReload={reload} />
-                      {moreToLoad && (
-                        <NewCustomerButton
-                          variant="text"
-                          onClick={loadMore}
-                          disabled={loadingMore}
-                          sx={{ height: "auto" }}
-                        >
-                          {loadingMore ? "Loading..." : "Load more"}
-                        </NewCustomerButton>
-                      )}
-                    </>
+                    <CustomersTable customers={customers} onReload={reload} />
                   )}
                 </Grid>
               </Grid>

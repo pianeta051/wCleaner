@@ -1,4 +1,5 @@
 const dayjs = require("dayjs");
+const { formatInvoiceNumber } = require("./utils/invoiceNumber");
 
 const mapCustomer = (customerFromDb) => ({
   id: customerFromDb.PK.S.replace("customer_", ""),
@@ -46,16 +47,23 @@ const mapCustomerJobs = (customerJob) => ({
   paymentMethod: customerJob.payment_method?.S || "none",
 });
 
-const mapInvoice = (item) => ({
-  jobId: item.PK.S.replace("job_id_", ""),
-  invoiceNumber: item.invoice_number
+const mapInvoice = (item) => {
+  const rawInvoiceNumber = item.invoice_number
     ? Number(item.invoice_number.N)
-    : undefined,
-  date: item.date ? Number(item.date.S) : undefined,
-  description: item.description?.S ?? "",
-  generatedAt: item.generated_at?.S,
-  addressId: item.address_id?.S,
-});
+    : undefined;
+
+  return {
+    jobId: item.PK.S.replace("job_id_", ""),
+    invoiceNumber: rawInvoiceNumber
+      ? formatInvoiceNumber(rawInvoiceNumber)
+      : undefined,
+    invoiceNumberRaw: rawInvoiceNumber,
+    date: item.date ? Number(item.date.S) : undefined,
+    description: item.description?.S ?? "",
+    generatedAt: item.generated_at?.S,
+    addressId: item.address_id?.S,
+  };
+};
 
 // map a single standalone job
 const mapJob = (jobFromDb) => {
