@@ -1,40 +1,30 @@
 import { deleteCustomer } from "../../services/customers";
-import { Customer } from "../../types/types";
+
 import useSWRMutation from "swr/mutation";
 import { extractErrorCode } from "../../services/error";
 import { useSWRConfig } from "swr";
-import { keyFunctionGenerator } from "./useCustomers";
-import { unstable_serialize } from "swr/infinite";
 
 export const useDeleteCustomer = (id: string | undefined) => {
   const { mutate } = useSWRConfig();
+
   const { trigger, isMutating, error } = useSWRMutation<
     void,
     string,
-    readonly [string, string] | null,
-    never,
-    Customer | null
+    readonly ["customer", string] | null
   >(
     id ? ["customer", id] : null,
-    async ([_operation, id]) => {
-      await deleteCustomer(id);
-      // Mutar la cache de coleccion de customers
-      await mutate<
-        readonly [string, string | undefined, string | undefined],
-        {
-          customers: Customer[];
-          nextToken?: string;
-        } | null
-      >(
-        unstable_serialize(keyFunctionGenerator("")), // claves de cache a modificar
-        () => undefined, // valor que le queremos dar
-        // opciones
-        { revalidate: true, populateCache: false }
+    async ([_key, customerId]) => {
+      await deleteCustomer(customerId);
+
+      // Revalida TODAS las listas de customers (con o sin filtros)
+      await mutate(
+        (key) => Array.isArray(key) && key.length > 0 && key[0] === "customers",
+        undefined,
+        { revalidate: true }
       );
     },
     {
       revalidate: false,
-      populateCache: () => null,
     }
   );
 

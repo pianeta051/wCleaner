@@ -1,89 +1,47 @@
-import useSWRInfinite from "swr/infinite";
+import useSWR from "swr";
 import { getCustomers } from "../../services/customers";
 import { extractErrorCode } from "../../services/error";
 import { Customer } from "../../types/types";
 
-type KeyFunctionType = (
-  index: number,
-  previousPageData: {
-    customers: Customer[];
-    nextToken?: string;
-  } | null
-) => readonly [
-  string,
-  string | undefined,
-  string | undefined,
-  string[] | undefined,
-  boolean
-];
+type CustomersResponse = {
+  customers: Customer[];
+  nextToken?: string;
+};
 
-export const keyFunctionGenerator: (
-  searchInput?: string,
-  outcodeFilter?: string[],
-  disablePagination?: boolean
-) => KeyFunctionType =
-  (searchInput, outcodeFilter, disablePagination) =>
-  (_index, previousRequest) => {
-    return [
-      "customers",
-      previousRequest?.nextToken,
-      searchInput,
-      outcodeFilter,
-      !!disablePagination,
-    ];
-  };
+type CustomersKey = readonly [
+  "customers",
+  string | undefined,
+  string[] | undefined
+];
 
 export const useCustomers = (
   searchInput?: string,
-  outcodeFilter?: string[],
-  disablePagination?: boolean
+  outcodeFilter?: string[]
 ) => {
+  const key: CustomersKey = ["customers", searchInput, outcodeFilter];
+
   const {
     data,
     error,
     isLoading: loading,
-    isValidating: loadingMore,
-    setSize,
     mutate: reload,
-  } = useSWRInfinite<
-    {
-      customers: Customer[];
-      nextToken?: string;
-    },
-    Error,
-    KeyFunctionType
-  >(
-    keyFunctionGenerator(searchInput, outcodeFilter, disablePagination),
-    async ([
-      _operation,
-      nextToken,
-      searchInput,
-      outcodeFilter,
-      disablePagination,
-    ]) => {
+  } = useSWR<CustomersResponse, Error, CustomersKey>(
+    key,
+    async ([_op, search, outcodes]) => {
       return getCustomers(
-        { searchInput, outcodeFilter },
-        { nextToken, disabled: disablePagination }
+        { searchInput: search, outcodeFilter: outcodes },
+        { disabled: true }
       );
+    },
+    {
+      keepPreviousData: true,
     }
   );
 
-  const loadMore = () => setSize((size) => size + 1);
-
-  const customers: Customer[] =
-    data?.reduce((acc, { customers }) => {
-      return [...acc, ...customers];
-    }, [] as Customer[]) ?? [];
-
-  const moreToLoad = !!data?.[data.length - 1].nextToken;
-
   return {
-    customers,
-    moreToLoad,
+    customers: data?.customers ?? [],
     error: extractErrorCode(error),
     loading,
-    loadMore,
-    loadingMore,
     reload,
   };
 };

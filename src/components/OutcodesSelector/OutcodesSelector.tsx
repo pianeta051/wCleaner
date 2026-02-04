@@ -1,20 +1,18 @@
-import { Box, Button, TextField } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import Autocomplete from "@mui/material/Autocomplete";
-import { FC, useMemo } from "react";
+import React, { FC, useMemo } from "react";
 import { AutocompleteWrap } from "./OutcodesSelector.style";
 
 type OutcodesSelectorProps = {
   outcodes: string[];
   selected: string[];
   onChange: (value: string[]) => void;
-  onFilter?: (outcodes: string[]) => void;
 };
 
 export const OutcodesSelector: FC<OutcodesSelectorProps> = ({
   outcodes,
   selected,
   onChange,
-  onFilter,
 }) => {
   const sortedOutcodes = useMemo(() => {
     return [...outcodes].sort((a, b) => a.localeCompare(b));
@@ -27,37 +25,23 @@ export const OutcodesSelector: FC<OutcodesSelectorProps> = ({
     onChange(newValue);
   };
 
-  const goButtonhandler = () => {
-    onFilter?.(selected);
-  };
-
   return (
-    <>
-      <AutocompleteWrap>
-        <Autocomplete
-          multiple
-          options={sortedOutcodes}
-          value={selected}
-          onChange={autocompleteChangeHandler}
-          renderInput={(params) => (
-            <Box display="flex" flexDirection="column" gap={1}>
-              <TextField
-                {...params}
-                label="Search UK Postcode"
-                variant="outlined"
-              />
-              <Button
-                variant="contained"
-                size="small"
-                onClick={goButtonhandler}
-                sx={{ alignSelf: "flex-start" }}
-              >
-                Go
-              </Button>
-            </Box>
-          )}
-        />
-      </AutocompleteWrap>
-    </>
+    <AutocompleteWrap>
+      <Autocomplete
+        multiple
+        options={sortedOutcodes}
+        value={selected}
+        onChange={autocompleteChangeHandler}
+        renderInput={(params) => (
+          <Box display="flex" flexDirection="column" gap={1}>
+            <TextField
+              {...params}
+              label="Search UK Postcode"
+              variant="outlined"
+            />
+          </Box>
+        )}
+      />
+    </AutocompleteWrap>
   );
 };
