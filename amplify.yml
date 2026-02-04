@@ -4,7 +4,7 @@ backend:
     build:
       commands:
         - amplify pull --appId $AMPLIFY_BACKEND_APP_ID --envName $USER_BRANCH -y
-        - amplify push -y
+        - amplify push -y --force
 frontend:
   phases:
     preBuild:
