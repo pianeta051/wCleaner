@@ -2,3 +2,4 @@
 node_modules
 build
 aws/dist
+amplify/**/*.json
