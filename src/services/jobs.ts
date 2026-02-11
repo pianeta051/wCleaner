@@ -324,40 +324,64 @@ export const updateJobStatus = async (
 export const generateJobInvoice = async (
   customerId: string,
   jobId: string,
-  formValues: InvoiceFormValues
-): Promise<Job> => {
-  const payload = {
-    ...formValues,
-    date: formValues.date?.valueOf(),
-    description: formValues.description.trim(),
-  };
-  const response = await post(
-    `/customers/${customerId}/jobs/${jobId}/invoice`,
-    payload
-  );
+  formValues: InvoiceFormValues & { invoiceNumber?: string } // 👈 opcional
+): Promise<Invoice> => {
+  try {
+    const payload: Record<string, unknown> = {
+      ...formValues,
+      date: formValues.date?.valueOf(),
+      description: formValues.description.trim(),
+      addressId: formValues.addressId,
+    };
 
-  return response.invoice;
+    if (formValues.invoiceNumber?.trim()) {
+      payload.invoiceNumber = formValues.invoiceNumber.trim().toUpperCase();
+    }
 
-  // await new Promise((res) => setTimeout(res, 1000));
+    const response = await post(
+      `/customers/${customerId}/jobs/${jobId}/invoice`,
+      payload
+    );
 
-  // const fakeJob: Job = {
-  //   id: jobId,
-  //   customerId,
-  //   date: dayjs().format("YYYY-MM-DD"),
-  //   startTime: "09:00",
-  //   endTime: "10:00",
-  //   price: 80,
-  //   jobTypeId: "jt-test",
-  //   addressId: "addr-1",
-  //   address: "123 Test Street",
-  //   postcode: "AB12 3CD",
-  //   status: "pending",
-  //   paymentMethod: "none",
-  //   invoiceNumber: "CWC00025",
-  //   invoiceDate: dayjs().format("YYYY-MM-DD"),
-  // };
+    return response.invoice as Invoice;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response.status;
+      const code = error.response.data?.error;
 
-  // return fakeJob;
+      if (status === 400) {
+        if (code === "INVOICE_ALREADY_EXISTS") throw "INVOICE_ALREADY_EXISTS";
+        if (code === "INVOICE_NUMBER_IN_USE") throw "INVOICE_NUMBER_IN_USE";
+        if (code === "INVOICE_NUMBER_OUT_OF_RANGE")
+          throw "INVOICE_NUMBER_OUT_OF_RANGE";
+        if (code === "INVALID_INVOICE_NUMBER") throw "INVALID_INVOICE_NUMBER";
+        if (code === "MISSING_INVOICE_DATE") throw "MISSING_INVOICE_DATE";
+        if (code === "MISSING_INVOICE_DESCRIPTION")
+          throw "MISSING_INVOICE_DESCRIPTION";
+        if (code === "MISSING_INVOICE_ADDRESS") throw "MISSING_INVOICE_ADDRESS";
+      }
+
+      if (status === 403) throw "UNAUTHORIZED";
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const deleteJobInvoice = async (
+  customerId: string,
+  jobId: string
+): Promise<void> => {
+  try {
+    await remove(`/customers/${customerId}/jobs/${jobId}/invoice`);
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response.status;
+      if (status === 403) throw "UNAUTHORIZED";
+      if (status === 404) throw "INVOICE_NOT_FOUND";
+    }
+    throw "INTERNAL_ERROR";
+  }
 };
 
 export const getJobInvoice = async (

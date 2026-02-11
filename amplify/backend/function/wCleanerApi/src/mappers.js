@@ -48,16 +48,12 @@ const mapCustomerJobs = (customerJob) => ({
 });
 
 const mapInvoice = (item) => {
-  const rawInvoiceNumber = item.invoice_number
-    ? Number(item.invoice_number.N)
-    : undefined;
+  const raw = item.invoice_number ? Number(item.invoice_number.N) : undefined;
 
   return {
     jobId: item.PK.S.replace("job_id_", ""),
-    invoiceNumber: rawInvoiceNumber
-      ? formatInvoiceNumber(rawInvoiceNumber)
-      : undefined,
-    invoiceNumberRaw: rawInvoiceNumber,
+    invoiceNumber: raw !== undefined ? formatInvoiceNumber(raw) : undefined,
+    invoiceNumberRaw: raw,
     date: item.date ? Number(item.date.S) : undefined,
     description: item.description?.S ?? "",
     generatedAt: item.generated_at?.S,

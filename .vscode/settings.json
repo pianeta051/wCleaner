@@ -14,5 +14,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "cSpell.words": ["adminqueries"]
+  "cSpell.words": [
+    "adminqueries"
+  ]
 }

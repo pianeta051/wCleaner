@@ -45,6 +45,7 @@ export const GenerateInvoiceModal: FC<GenerateInvoiceModalProps> = ({
           date: dayjs(job.date),
           description: "",
           addressId: job.addressId as string,
+          invoiceNumber: "",
         }}
         customerId={customerId}
       />

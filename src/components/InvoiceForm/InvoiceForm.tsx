@@ -11,12 +11,14 @@ export type InvoiceFormValues = {
   description: string;
   date: Dayjs;
   addressId: string;
+  invoiceNumber?: string;
 };
 
 const INITIAL_VALUES: InvoiceFormValues = {
   date: dayjs(),
   description: "",
   addressId: "",
+  invoiceNumber: "",
 };
 
 const validationSchema = yup.object({
@@ -29,6 +31,13 @@ const validationSchema = yup.object({
     ),
   description: yup.string().required("Description is required"),
   addressId: yup.string().required("Address is required"),
+  invoiceNumber: yup
+    .string()
+    .optional()
+    .test("invoice-format", "Use format CWC00012", (value) => {
+      if (!value?.trim()) return true;
+      return /^CWC\d{5}$/i.test(value.trim());
+    }),
 });
 
 type InvoiceFormProps = {
@@ -59,6 +68,23 @@ export const InvoiceForm: FC<InvoiceFormProps> = ({
   return (
     <Form onSubmit={formik.handleSubmit}>
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <TextField
+          name="invoiceNumber"
+          label="Invoice number (optional)"
+          value={formik.values.invoiceNumber ?? ""}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          placeholder="CWC00012"
+          fullWidth
+          error={
+            !!(formik.touched.invoiceNumber && formik.errors.invoiceNumber)
+          }
+          helperText={
+            formik.touched.invoiceNumber
+              ? formik.errors.invoiceNumber
+              : "Leave empty to auto-generate"
+          }
+        />
         <AddressSelector
           value={formik.values.addressId}
           onChange={(value) =>

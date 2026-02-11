@@ -33,6 +33,14 @@ export const ERROR_CODES = [
   "DELETING_LAST_ADDRESS",
   "THIS_CUSTOMER_HAS_PENDING_JOBS",
   "INVOICE_NOT_FOUND",
+  "INVOICE_ALREADY_EXISTS",
+  "INVOICE_NUMBER_IN_USE",
+  "INVOICE_NUMBER_OUT_OF_RANGE",
+  "INVALID_INVOICE_NUMBER",
+  "MISSING_INVOICE_NUMBER",
+  "MISSING_INVOICE_DATE",
+  "MISSING_INVOICE_DESCRIPTION",
+  "MISSING_INVOICE_ADDRESS",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>
@@ -61,15 +69,8 @@ export const isErrorResponse = (value: unknown): value is ErrorResponse => {
 };
 
 export const extractErrorCode = (error: Error | string | undefined) => {
-  let errorCode: ErrorCode | null = null;
   if (typeof error === "string") {
-    if (isErrorCode(error)) {
-      return error;
-    }
-    return "INTERNAL_ERROR";
+    return isErrorCode(error) ? error : "INTERNAL_ERROR";
   }
-  if (error) {
-    errorCode = isErrorCode(error) ? error : "INTERNAL_ERROR";
-  }
-  return errorCode;
+  return null;
 };

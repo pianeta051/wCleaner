@@ -82,37 +82,32 @@ app.use(async function (req, res, next) {
 // Get all customer
 
 app.get("/customers", async function (req, res) {
-  try {
-    const nextToken = req.query?.nextToken;
-    const limit = req.query?.limit ? +req.query?.limit : 50;
+  const nextToken = req.query?.nextToken;
+  const limit = req.query?.limit ? +req.query?.limit : 50;
 
-    const search = req.query?.search;
-    const outcodeFilter = req.query?.outcodeFilter
-      ? req.query.outcodeFilter.split(",").filter(Boolean)
+  const search = req.query?.search;
+  const outcodeFilter = req.query?.outcodeFilter
+    ? req.query.outcodeFilter.split(",").filter(Boolean)
+    : undefined;
+
+  const paginationEnabled = req.query?.paginationDisabled !== "true";
+
+  const exclusiveStartKey =
+    nextToken && typeof nextToken === "string" && nextToken.trim().length
+      ? parseToken(nextToken)
       : undefined;
 
-    const paginationEnabled = req.query?.paginationDisabled !== "true";
+  const { items, lastEvaluatedKey } = await getCustomers(
+    { searchInput: search, outcodeFilter },
+    { exclusiveStartKey, limit, enabled: paginationEnabled }
+  );
 
-    const exclusiveStartKey =
-      nextToken && typeof nextToken === "string" && nextToken.trim().length
-        ? parseToken(nextToken)
-        : undefined;
+  const customers = items.map(mapCustomer);
 
-    const { items, lastEvaluatedKey } = await getCustomers(
-      { searchInput: search, outcodeFilter },
-      { exclusiveStartKey, limit, enabled: paginationEnabled }
-    );
+  // genete token only if there is a real lastEvaluatedKey
+  const responseToken = generateToken(lastEvaluatedKey);
 
-    const customers = items.map(mapCustomer);
-
-    // genete token only if there is a real lastEvaluatedKey
-    const responseToken = generateToken(lastEvaluatedKey);
-
-    res.json({ customers, nextToken: responseToken });
-  } catch (err) {
-    console.error("GET /customers failed", err);
-    res.status(500).json({ message: "Failed to fetch customers" });
-  }
+  res.json({ customers, nextToken: responseToken });
 });
 
 // Get outcodes
@@ -284,8 +279,7 @@ app.post("/customers/:customerId/address", async function (req, res) {
       return res.status(404).json({ error: "Customer not found" });
     }
 
-    console.error("Internal error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    throw error;
   }
 });
 
@@ -682,8 +676,7 @@ app.post("/files", async function (req, res) {
     } else if (error === "FILE_TOO_LARGE") {
       res.status(413).json({ error: "File too large" });
     } else {
-      console.error(error);
-      res.status(500).json({ error: "Internal Error" });
+      throw error;
     }
   }
 });
@@ -725,49 +718,172 @@ app.put("/customers/:customerId/files", async function (req, res) {
 
 //ADDING
 
+// app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
+//   const { jobId } = req.params;
+//   const { date, description, addressId } = req.body;
+
+//   try {
+//     const groups = req.authData?.groups || [];
+//     const isAdmin = groups.includes("Admin");
+
+//     if (!isAdmin) {
+//       res.status(403).json({ error: "User unauthorized" });
+//       return;
+//     }
+
+//     if (!date) {
+//       res.status(400).json({ error: "MISSING_INVOICE_DATE" });
+//       return;
+//     }
+//     if (!description) {
+//       res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
+//       return;
+//     }
+//     if (!addressId) {
+//       res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
+//       return;
+//     }
+
+//     const existingInvoice = await getInvoiceByJobId(jobId);
+//     if (existingInvoice) {
+//       res.status(400).json({ error: "INVOICE_ALREADY_EXISTS" });
+//       return;
+//     }
+
+//     const nextInvoiceNumber = await getNextInvoiceNumber();
+
+//     const invoice = await addInvoice(jobId, nextInvoiceNumber, req.body);
+
+//     res.json({ invoice });
+
+//     return;
+//   } catch (err) {
+//     console.error("Invoice generation error", err);
+//     res.status(500).json({ error: "INTERNAL_ERROR" });
+//     return;
+//   }
+// });
+
 app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
+  const { jobId } = req.params;
+  const { date, description, addressId, invoiceNumber } = req.body;
+
+  try {
+    const groups = req.authData?.groups || [];
+    const isAdmin = groups.includes("Admin");
+    if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
+
+    if (!date) return res.status(400).json({ error: "MISSING_INVOICE_DATE" });
+    if (!description)
+      return res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
+    if (!addressId)
+      return res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
+
+    const invoice = invoiceNumber
+      ? await createInvoiceManual(jobId, invoiceNumber, {
+          date,
+          description,
+          addressId,
+        })
+      : await createInvoiceAuto(jobId, { date, description, addressId });
+
+    res.json({ invoice });
+  } catch (err) {
+    if (err === "INVOICE_ALREADY_EXISTS") {
+      res.status(400).json({ error: "INVOICE_ALREADY_EXISTS" });
+      return;
+    }
+    if (err === "INVOICE_NUMBER_IN_USE") {
+      res.status(400).json({ error: "INVOICE_NUMBER_IN_USE" });
+      return;
+    }
+    if (err === "INVOICE_NUMBER_OUT_OF_RANGE") {
+      res.status(400).json({ error: "INVOICE_NUMBER_OUT_OF_RANGE" });
+      return;
+    }
+    if (err === "INVALID_INVOICE_NUMBER") {
+      res.status(400).json({ error: "INVALID_INVOICE_NUMBER" });
+      return;
+    }
+    throw err;
+  }
+});
+
+//EDIT INVOICE CONTENT
+app.put("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   const { jobId } = req.params;
   const { date, description, addressId } = req.body;
 
   try {
     const groups = req.authData?.groups || [];
     const isAdmin = groups.includes("Admin");
+    if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
 
-    if (!isAdmin) {
-      res.status(403).json({ error: "User unauthorized" });
-      return;
-    }
-
-    if (!date) {
-      res.status(400).json({ error: "MISSING_INVOICE_DATE" });
-      return;
-    }
-    if (!description) {
-      res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
-      return;
-    }
-    if (!addressId) {
-      res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
-      return;
-    }
-
-    const existingInvoice = await getInvoiceByJobId(jobId);
-    if (existingInvoice) {
-      res.status(400).json({ error: "INVOICE_ALREADY_EXISTS" });
-      return;
-    }
-
-    const nextInvoiceNumber = await getNextInvoiceNumber();
-
-    const invoice = await addInvoice(jobId, nextInvoiceNumber, req.body);
-
+    const invoice = await editInvoiceContent(jobId, {
+      date,
+      description,
+      addressId,
+    });
     res.json({ invoice });
-
-    return;
   } catch (err) {
-    console.error("Invoice generation error", err);
-    res.status(500).json({ error: "INTERNAL_ERROR" });
-    return;
+    if (err === "INVOICE_NOT_FOUND") {
+      res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+      return;
+    }
+
+    throw err;
+  }
+});
+
+//RENUMBER INVOICE
+app.put(
+  "/customers/:customerId/jobs/:jobId/invoice/number",
+  async (req, res) => {
+    const { jobId } = req.params;
+    const { invoiceNumber } = req.body;
+
+    try {
+      const groups = req.authData?.groups || [];
+      const isAdmin = groups.includes("Admin");
+      if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
+
+      if (!invoiceNumber)
+        return res.status(400).json({ error: "MISSING_INVOICE_NUMBER" });
+
+      const invoice = await renumberInvoice(jobId, invoiceNumber);
+      res.json({ invoice });
+    } catch (err) {
+      if (err === "INVOICE_NOT_FOUND")
+        return res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+      if (err === "INVOICE_NUMBER_IN_USE")
+        return res.status(400).json({ error: "INVOICE_NUMBER_IN_USE" });
+      if (err === "INVOICE_NUMBER_OUT_OF_RANGE")
+        return res.status(400).json({ error: "INVOICE_NUMBER_OUT_OF_RANGE" });
+      if (err === "INVALID_INVOICE_NUMBER")
+        return res.status(400).json({ error: "INVALID_INVOICE_NUMBER" });
+
+      throw err;
+    }
+  }
+);
+
+//DELETE INVOICE AND REALISE NUMBER
+
+app.delete("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
+  const { jobId } = req.params;
+
+  try {
+    const groups = req.authData?.groups || [];
+    const isAdmin = groups.includes("Admin");
+    if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
+
+    await deleteInvoice(jobId);
+    res.json({ message: "INVOICE_DELETED" });
+  } catch (err) {
+    if (err === "INVOICE_NOT_FOUND")
+      return res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+
+    throw err;
   }
 });
 
@@ -775,24 +891,16 @@ app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
 app.get("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   const { jobId, customerId } = req.params;
 
-  try {
-    const invoice = await getInvoiceByJobId(jobId);
+  const invoice = await getInvoiceByJobId(jobId);
 
-    if (!invoice) {
-      res.status(404).json({ error: "INVOICE_NOT_FOUND" });
-      return;
-    }
-    const addressFromDB = await getCleaningAddress(
-      customerId,
-      invoice.addressId
-    );
-    invoice.address = mapCleaningAddress(addressFromDB);
-
-    res.json({ invoice });
-  } catch (err) {
-    console.error("Error fetching invoice", err);
-    res.status(500).json({ error: "INTERNAL_ERROR" });
+  if (!invoice) {
+    res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+    return;
   }
+  const addressFromDB = await getCleaningAddress(customerId, invoice.addressId);
+  invoice.address = mapCleaningAddress(addressFromDB);
+
+  res.json({ invoice });
 });
 
 // Customers Notes
@@ -844,8 +952,7 @@ app.post("/customers/:customerId/note", async function (req, res) {
       return res.status(404).json({ error: "Customer not found" });
     }
 
-    console.error("Internal error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    throw error;
   }
 });
 
@@ -898,8 +1005,7 @@ app.put("/customers/:customerId/note/:noteId", async function (req, res) {
       return res.status(404).json({ error: "Customer not found" });
     }
 
-    console.error("Internal error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    throw error;
   }
 });
 

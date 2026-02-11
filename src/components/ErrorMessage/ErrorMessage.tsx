@@ -199,6 +199,76 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+
+  if (code === "INVOICE_NOT_FOUND") {
+    return (
+      <Alert severity="info">
+        <Typography>No invoice exists for this job yet.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "INVOICE_ALREADY_EXISTS") {
+    return (
+      <Alert severity="error">
+        <Typography>An invoice already exists for this job.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "INVALID_INVOICE_NUMBER") {
+    return (
+      <Alert severity="error">
+        <Typography>
+          Invalid invoice number format. Use e.g. CWC00012.
+        </Typography>
+      </Alert>
+    );
+  }
+  if (code === "INVOICE_NUMBER_IN_USE") {
+    return (
+      <Alert severity="error">
+        <Typography>This invoice number is already in use.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "INVOICE_NUMBER_OUT_OF_RANGE") {
+    return (
+      <Alert severity="error">
+        <Typography>
+          Invoice number is out of range. Please use a number within the issued
+          range.
+        </Typography>
+      </Alert>
+    );
+  }
+  if (code === "MISSING_INVOICE_NUMBER") {
+    return (
+      <Alert severity="error">
+        <Typography>Invoice number is required.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "MISSING_INVOICE_DATE") {
+    return (
+      <Alert severity="error">
+        <Typography>Invoice date is required.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "MISSING_INVOICE_DESCRIPTION") {
+    return (
+      <Alert severity="error">
+        <Typography>Invoice description is required.</Typography>
+      </Alert>
+    );
+  }
+  if (code === "MISSING_INVOICE_ADDRESS") {
+    return (
+      <Alert severity="error">
+        <Typography>Invoice address is required.</Typography>
+      </Alert>
+    );
+  }
+
   if (code === "INTERNAL_ERROR") {
     return (
       <Alert severity="error">
