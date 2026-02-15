@@ -33,6 +33,7 @@ const {
   getCustomerJobs,
   getJob,
   getJobs,
+  getJobCustomers,
   getJobType,
   getJobTypes,
   getInvoiceByJobId,
@@ -333,13 +334,25 @@ app.get("/jobs", async function (req, res) {
   );
 
   const responseToken = generateToken(lastEvaluatedKey);
+
+  console.log("ITEMAS before customers");
+  console.log(JSON.stringify({ items }, null, 2));
   let jobs = items.map(mapJob);
+  console.log("before customers");
+  console.log(JSON.stringify({ jobs }, null, 2));
+  jobs = await getJobCustomers(jobs);
+  console.log("After customers");
+  console.log(JSON.stringify({ jobs }, null, 2));
 
   if (isAdmin) {
-    jobs = await getJobUsers(items);
+    jobs = await getJobUsers(jobs, items);
+    console.log("After users");
+    console.log(JSON.stringify({ jobs }, null, 2));
   }
 
   jobs = await getAddressesForJobs(jobs);
+  console.log("After users");
+  console.log(JSON.stringify({ jobs }, null, 2));
   res.json({ jobs, nextToken: responseToken });
 });
 
@@ -401,7 +414,7 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   );
   let jobs = items.map(mapCustomerJobs);
   if (isAdmin) {
-    jobs = await getJobUsers(items);
+    jobs = await getJobUsers(jobs, items);
   }
   jobs = await getAddressesForJobs(jobs);
 

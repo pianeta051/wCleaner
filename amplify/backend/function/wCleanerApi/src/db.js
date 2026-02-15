@@ -886,20 +886,64 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
       items.push(...result.Items);
     }
   }
-  for (let i = 0; i < items.length; i++) {
-    const job = items[i];
-    const customerId = job.PK.S.replace("customer_", "");
-    const customer = await getCustomerById(customerId);
-    items[i] = {
-      ...job,
-      customer,
+  // for (let i = 0; i < items.length; i++) {
+  //   const job = items[i];
+  //   const customerId = job.PK.S.replace("customer_", "");
+  //   const customer = await getCustomerById(customerId);
+  //   items[i] = {
+  //     ...job,
+  //     customer,
+  //   };
+  // }
+
+  return { items, lastEvaluatedKey };
+};
+
+const chunk = (arr, size) =>
+  Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+    arr.slice(i * size, i * size + size)
+  );
+
+const batchGetCustomersByIds = async (customerIds) => {
+  const customerBatches = chunk(customerIds, 100);
+  const customers = {};
+
+  for (const customerIdsBatch of customerBatches) {
+    const params = {
+      RequestItems: {
+        [TABLE_NAME]: {
+          Keys: customerIdsBatch.map((customerId) => ({
+            PK: { S: `customer_${customerId}` },
+            SK: { S: "profile" },
+          })),
+        },
+      },
     };
+
+    const result = await ddb.batchGetItem(params).promise();
+    const customersBatch = (result.Responses?.[TABLE_NAME] ?? []).map(
+      mapCustomer
+    );
+
+    for (const customer of customersBatch) {
+      customers[customer.id] = customer;
+    }
   }
 
-  return {
-    items,
-    lastEvaluatedKey,
-  };
+  return customers;
+};
+
+const getJobCustomers = async (jobs) => {
+  const customerIds = Array.from(
+    new Set(jobs.map((j) => j.customerId).filter(Boolean))
+  );
+
+  const customers = await batchGetCustomersByIds(customerIds);
+
+  return jobs.map((job) => ({
+    ...job,
+    customer: customers[job.customerId],
+  }));
 };
 
 const getFutureJobsFromAddress = async (addressId) => {
@@ -1933,6 +1977,7 @@ module.exports = {
   getCustomers,
   getCustomerJobs,
   getJob,
+  getJobCustomers,
   getJobs,
   getJobType,
   getJobTypes,

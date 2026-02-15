@@ -55,7 +55,7 @@ const getUserInfo = async (userSub) => {
   }, {});
 };
 
-const getJobUsers = async (items) => {
+const getJobUsers = async (jobs, items) => {
   const userIds = [];
   items.forEach((item) => {
     let userId;
@@ -85,17 +85,15 @@ const getJobUsers = async (items) => {
       }
     }
   }
-  let jobs = items.map(mapJob);
-  jobs = jobs.map((job, i) => {
-    const assignedTo = users.find(
-      (user) => user.sub === items[i].assigned_to.S
-    );
+  return jobs.map((job, i) => {
+    const sub = items[i]?.assigned_to?.S;
+    const assignedTo = sub ? users.find((u) => u.sub === sub) : null;
+
     return {
       ...job,
       assignedTo,
     };
   });
-  return jobs;
 };
 
 module.exports = {
