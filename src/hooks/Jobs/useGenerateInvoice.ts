@@ -1,42 +1,40 @@
-import { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
-import { Job } from "../../types/types";
 import { extractErrorCode } from "../../services/error";
-import { unstable_serialize } from "swr/infinite";
-import { keyFunctionGenerator } from "./useCustomerJobs";
 import { generateJobInvoice } from "../../services/jobs";
+import { Invoice } from "../../types/types";
 import { InvoiceFormValues } from "../../components/InvoiceForm/InvoiceForm";
 
-type Key = readonly [string, string, string] | null;
 export const useGenerateInvoice = (customerId?: string, jobId?: string) => {
-  const { mutate } = useSWRConfig();
+  const key =
+    customerId && jobId
+      ? (["invoice-generate", customerId, jobId] as const)
+      : null;
 
-  const { trigger, isMutating, error, data } = useSWRMutation<
-    Job,
-    string,
-    Key,
+  const { trigger, isMutating, error } = useSWRMutation<
+    Invoice,
+    unknown,
+    typeof key,
     InvoiceFormValues
   >(
-    customerId && jobId ? ["generate-invoice", customerId, jobId] : null,
-    async ([_k, customerId, jobId], { arg }) => {
-      const job = await generateJobInvoice(customerId, jobId, arg);
-
-      const filters = { start: "", end: "" };
-
-      await mutate(
-        unstable_serialize(keyFunctionGenerator(customerId, filters)),
-        undefined,
-        { revalidate: true, populateCache: false }
-      );
-      return job;
+    key,
+    async (_key, { arg }) => {
+      if (!customerId || !jobId) throw "INTERNAL_ERROR";
+      return generateJobInvoice(customerId, jobId, arg);
     },
-    { revalidate: false, populateCache: false }
+    {
+      revalidate: false,
+    }
   );
+
+  const formatted =
+    // @ts-expect-error axios shape
+    error?.response?.data?.error ??
+    // @ts-expect-error axios shape
+    (error?.response?.status === 404 ? "INVOICE_NOT_FOUND" : undefined);
 
   return {
     generate: trigger,
     loading: isMutating,
-    error: extractErrorCode(error),
-    job: data,
+    error: extractErrorCode(formatted),
   };
 };

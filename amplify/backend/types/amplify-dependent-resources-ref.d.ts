@@ -8,6 +8,7 @@ export type AmplifyDependentResourcesAttributes = {
     wCleanerApi: {
       ApiId: "string";
       ApiName: "string";
+      DeploymentId: "string";
       RootUrl: "string";
     };
   };

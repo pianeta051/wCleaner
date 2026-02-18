@@ -36,7 +36,7 @@ export const GenerateInvoiceModal: FC<GenerateInvoiceModalProps> = ({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Generate Invoice</DialogTitle>
-      {error && <ErrorMessage code={error} />}
+
       <InvoiceForm
         loading={loading}
         onSubmit={handleSubmit}
@@ -48,6 +48,7 @@ export const GenerateInvoiceModal: FC<GenerateInvoiceModalProps> = ({
         }}
         customerId={customerId}
       />
+      {error && <ErrorMessage code={error} />}
     </Dialog>
   );
 };

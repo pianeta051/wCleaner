@@ -3,6 +3,7 @@ import { CircularProgress, Stack } from "@mui/material";
 import { Job } from "../../types/types";
 import { GenerateInvoiceButton } from "../GenerateInvoiceButton/GenerateInvoiceButton";
 import { DownloadInvoiceButton } from "../DownloadInvoiceButton/DownloadInvoiceButton";
+import { DeleteInvoiceButton } from "../DeleteInvoiceButton/DeleteInvoiceButton";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { useAuth } from "../../context/AuthContext";
 import { ErrorCode } from "../../services/error";
@@ -47,7 +48,14 @@ export const InvoiceActionButtons: FC<InvoiceActionButtonsProps> = ({
       {!existing ? (
         <GenerateInvoiceButton job={job} onGenerated={onGenerated} />
       ) : (
-        <DownloadInvoiceButton job={job} />
+        <>
+          <DownloadInvoiceButton job={job} />
+          <DeleteInvoiceButton
+            customerId={job.customerId as string}
+            jobId={job.id}
+            onDeleted={onGenerated}
+          />
+        </>
       )}
     </Stack>
   );

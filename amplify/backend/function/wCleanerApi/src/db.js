@@ -3,10 +3,16 @@ AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
 const { mapCustomer, mapInvoice } = require("./mappers");
-const { formatInvoiceNumber } = require("./utils/invoiceNumber");
+const {
+  formatInvoiceNumber,
+  parseInvoiceNumber,
+  padInvoice,
+} = require("./utils/invoiceNumber");
 
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 50;
+//INVOICES CONST
+const INVOICE_ALLOCATOR_PK = "invoice_allocator";
 
 const generateSlug = async (email, name) => {
   const nameSlug = name
@@ -879,20 +885,64 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
       items.push(...result.Items);
     }
   }
-  for (let i = 0; i < items.length; i++) {
-    const job = items[i];
-    const customerId = job.PK.S.replace("customer_", "");
-    const customer = await getCustomerById(customerId);
-    items[i] = {
-      ...job,
-      customer,
+  // for (let i = 0; i < items.length; i++) {
+  //   const job = items[i];
+  //   const customerId = job.PK.S.replace("customer_", "");
+  //   const customer = await getCustomerById(customerId);
+  //   items[i] = {
+  //     ...job,
+  //     customer,
+  //   };
+  // }
+
+  return { items, lastEvaluatedKey };
+};
+
+const chunk = (arr, size) =>
+  Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+    arr.slice(i * size, i * size + size)
+  );
+
+const batchGetCustomersByIds = async (customerIds) => {
+  const customerBatches = chunk(customerIds, 100);
+  const customers = {};
+
+  for (const customerIdsBatch of customerBatches) {
+    const params = {
+      RequestItems: {
+        [TABLE_NAME]: {
+          Keys: customerIdsBatch.map((customerId) => ({
+            PK: { S: `customer_${customerId}` },
+            SK: { S: "profile" },
+          })),
+        },
+      },
     };
+
+    const result = await ddb.batchGetItem(params).promise();
+    const customersBatch = (result.Responses?.[TABLE_NAME] ?? []).map(
+      mapCustomer
+    );
+
+    for (const customer of customersBatch) {
+      customers[customer.id] = customer;
+    }
   }
 
-  return {
-    items,
-    lastEvaluatedKey,
-  };
+  return customers;
+};
+
+const getJobCustomers = async (jobs) => {
+  const customerIds = Array.from(
+    new Set(jobs.map((j) => j.customerId).filter(Boolean))
+  );
+
+  const customers = await batchGetCustomersByIds(customerIds);
+
+  return jobs.map((job) => ({
+    ...job,
+    customer: customers[job.customerId],
+  }));
 };
 
 const getFutureJobsFromAddress = async (addressId) => {
@@ -1445,6 +1495,65 @@ const deleteCustomerNote = async (customerId, noteId) => {
 };
 
 //INVOICES
+
+const isInvoiceNumberInUse = async (rawNumber) => {
+  const response = await ddb
+    .query({
+      TableName: TABLE_NAME,
+      IndexName: "invoice_number",
+      KeyConditionExpression: "#SK = :sk AND invoice_number = :n",
+      ExpressionAttributeNames: { "#SK": "SK" },
+      ExpressionAttributeValues: {
+        ":sk": { S: "invoice" },
+        ":n": { N: String(rawNumber) },
+      },
+      Limit: 1,
+    })
+    .promise();
+
+  return (response.Items?.length ?? 0) > 0;
+};
+
+const takeSmallestFreeNumber = async () => {
+  const response = await ddb
+    .query({
+      TableName: TABLE_NAME,
+      KeyConditionExpression: "PK = :pk AND begins_with(SK, :prefix)",
+      ExpressionAttributeValues: {
+        ":pk": { S: INVOICE_ALLOCATOR_PK },
+        ":prefix": { S: "free_" },
+      },
+      Limit: 1,
+      ScanIndexForward: true, // smallest first
+    })
+    .promise();
+
+  const item = response.Items?.[0];
+  if (!item) return null;
+
+  return {
+    raw: Number(item.number.N),
+    freeSk: item.SK.S,
+  };
+};
+
+const makeFreeItemKey = (rawNumber) => ({
+  PK: { S: INVOICE_ALLOCATOR_PK },
+  SK: { S: `free_${padInvoice(rawNumber)}` },
+});
+
+const releaseInvoiceNumber = async (rawNumber) => {
+  await ddb
+    .putItem({
+      TableName: TABLE_NAME,
+      Item: {
+        ...makeFreeItemKey(rawNumber),
+        number: { N: String(rawNumber) },
+      },
+    })
+    .promise();
+};
+
 const getNextInvoiceNumber = async () => {
   const params = {
     TableName: TABLE_NAME,
@@ -1487,59 +1596,182 @@ const getNextInvoiceNumber = async () => {
 //   return mapInvoice(result.Item);
 // };
 const getInvoiceByJobId = async (jobId) => {
-  const params = {
-    TableName: TABLE_NAME,
-    FilterExpression: "#pk = :pk AND #sk = :sk",
-    ExpressionAttributeNames: {
-      "#pk": "PK",
-      "#sk": "SK",
-    },
-    ExpressionAttributeValues: {
-      ":pk": { S: `job_id_${jobId}` },
-      ":sk": { S: "invoice" },
-    },
-  };
+  const res = await ddb
+    .getItem({
+      TableName: TABLE_NAME,
+      Key: {
+        PK: { S: `job_id_${jobId}` },
+        SK: { S: "invoice" },
+      },
+    })
+    .promise();
 
-  let lastEvaluatedKey = undefined;
-  let result;
-
-  do {
-    result = await ddb
-      .scan({ ...params, ExclusiveStartKey: lastEvaluatedKey })
-      .promise();
-    lastEvaluatedKey = result.LastEvaluatedKey;
-  } while (lastEvaluatedKey && (!result.Items || result.Items.length === 0));
-
-  return result.Items[0] ? mapInvoice(result.Items[0]) : null;
+  return res.Item ? mapInvoice(res.Item) : null;
 };
 
-const addInvoice = async (jobId, invoiceNumber, invoiceData) => {
+const createInvoiceAuto = async (jobId, invoiceData) => {
+  // One invoice per job
+  const existing = await getInvoiceByJobId(jobId);
+  if (existing) throw "INVOICE_ALREADY_EXISTS";
+
+  const free = await takeSmallestFreeNumber();
+
+  if (free) {
+    if (await isInvoiceNumberInUse(free.raw)) {
+      await ddb
+        .deleteItem({
+          TableName: TABLE_NAME,
+          Key: { PK: { S: INVOICE_ALLOCATOR_PK }, SK: { S: free.freeSk } },
+        })
+        .promise();
+
+      return createInvoiceAuto(jobId, invoiceData);
+    }
+
+    const generatedAt = new Date().toISOString();
+    const params = {
+      TransactItems: [
+        {
+          Delete: {
+            TableName: TABLE_NAME,
+            Key: { PK: { S: INVOICE_ALLOCATOR_PK }, SK: { S: free.freeSk } },
+          },
+        },
+
+        {
+          Put: {
+            TableName: TABLE_NAME,
+            Item: {
+              PK: { S: `job_id_${jobId}` },
+              SK: { S: "invoice" },
+              invoice_number: { N: String(free.raw) },
+              generated_at: { S: generatedAt },
+              date: { S: "" + invoiceData.date },
+              description: { S: invoiceData.description },
+              address_id: { S: invoiceData.addressId },
+            },
+            ConditionExpression: "attribute_not_exists(PK)",
+          },
+        },
+      ],
+    };
+
+    await ddb.transactWriteItems(params).promise();
+
+    return {
+      jobId,
+      invoiceNumber: formatInvoiceNumber(free.raw),
+      invoiceNumberRaw: free.raw,
+      date: invoiceData.date,
+      description: invoiceData.description,
+      generatedAt,
+      addressId: invoiceData.addressId,
+    };
+  }
+  const next = await getNextInvoiceNumber();
+
   const generatedAt = new Date().toISOString();
-
-  const params = {
-    TableName: TABLE_NAME,
-    Item: {
-      PK: { S: `job_id_${jobId}` },
-      SK: { S: "invoice" },
-      invoice_number: { N: "" + invoiceNumber },
-      generated_at: { S: generatedAt },
-      date: { S: "" + invoiceData.date },
-      description: { S: invoiceData.description },
-      address_id: { S: invoiceData.addressId },
-    },
-  };
-
-  await ddb.putItem(params).promise();
+  await ddb
+    .putItem({
+      TableName: TABLE_NAME,
+      Item: {
+        PK: { S: `job_id_${jobId}` },
+        SK: { S: "invoice" },
+        invoice_number: { N: String(next) },
+        generated_at: { S: generatedAt },
+        date: { S: "" + invoiceData.date },
+        description: { S: invoiceData.description },
+        address_id: { S: invoiceData.addressId },
+      },
+      ConditionExpression: "attribute_not_exists(PK)",
+    })
+    .promise();
 
   return {
     jobId,
-    invoiceNumber: formatInvoiceNumber(invoiceNumber),
-    invoiceNumberRaw: invoiceNumber,
+    invoiceNumber: formatInvoiceNumber(next),
+    invoiceNumberRaw: next,
     date: invoiceData.date,
     description: invoiceData.description,
     generatedAt,
     addressId: invoiceData.addressId,
   };
+};
+
+const editInvoiceContent = async (jobId, invoiceData) => {
+  const existing = await getInvoiceByJobId(jobId);
+  if (!existing) throw "INVOICE_NOT_FOUND";
+
+  const updateExpr = [];
+  const names = {};
+  const values = {};
+
+  if (invoiceData.date !== undefined) {
+    names["#D"] = "date";
+    values[":date"] = { S: "" + invoiceData.date };
+    updateExpr.push("#D = :date");
+  }
+  if (invoiceData.description !== undefined) {
+    names["#DESC"] = "description";
+    values[":desc"] = { S: invoiceData.description };
+    updateExpr.push("#DESC = :desc");
+  }
+  if (invoiceData.addressId !== undefined) {
+    names["#AID"] = "address_id";
+    values[":aid"] = { S: invoiceData.addressId };
+    updateExpr.push("#AID = :aid");
+  }
+
+  if (!updateExpr.length) return existing;
+
+  await ddb
+    .updateItem({
+      TableName: TABLE_NAME,
+      Key: {
+        PK: { S: `job_id_${jobId}` },
+        SK: { S: "invoice" },
+      },
+      UpdateExpression: `SET ${updateExpr.join(", ")}`,
+      ExpressionAttributeNames: names,
+      ExpressionAttributeValues: values,
+    })
+    .promise();
+
+  return await getInvoiceByJobId(jobId);
+};
+
+const deleteInvoice = async (jobId) => {
+  // Need raw number to free it
+  const existing = await getInvoiceByJobId(jobId);
+  if (!existing) throw "INVOICE_NOT_FOUND";
+
+  const raw =
+    existing.invoiceNumberRaw ?? parseInvoiceNumber(existing.invoiceNumber);
+
+  await ddb
+    .transactWriteItems({
+      TransactItems: [
+        {
+          Delete: {
+            TableName: TABLE_NAME,
+            Key: {
+              PK: { S: `job_id_${jobId}` },
+              SK: { S: "invoice" },
+            },
+          },
+        },
+        {
+          Put: {
+            TableName: TABLE_NAME,
+            Item: {
+              ...makeFreeItemKey(raw),
+              number: { N: String(raw) },
+            },
+          },
+        },
+      ],
+    })
+    .promise();
 };
 
 module.exports = {
@@ -1548,12 +1780,13 @@ module.exports = {
   addCustomerJob,
   addCustomerNote,
   addJobType,
-  addInvoice,
+  createInvoiceAuto,
   deleteAddress,
   editAddress,
   editCustomer,
   editCustomerNote,
   editJobType,
+  editInvoiceContent,
   getAddressesForJobs,
   getCleaningAddress,
   getCleaningAddresses,
@@ -1562,6 +1795,7 @@ module.exports = {
   getCustomers,
   getCustomerJobs,
   getJob,
+  getJobCustomers,
   getJobs,
   getJobType,
   getJobTypes,
@@ -1572,6 +1806,7 @@ module.exports = {
   deleteCustomer,
   deleteJobType,
   deleteCustomerNote,
+  deleteInvoice,
   editJobFromCustomer,
   updateJobStatus,
   deleteJobFromCustomer,
