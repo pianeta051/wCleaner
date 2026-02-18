@@ -1,5 +1,4 @@
 const { CognitoIdentityServiceProvider } = require("aws-sdk");
-const { mapJob } = require("./mappers");
 
 const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider();
 

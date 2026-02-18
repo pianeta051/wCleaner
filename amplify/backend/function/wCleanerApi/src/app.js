@@ -23,7 +23,7 @@ const {
   addCustomerJob,
   addCustomerNote,
   addJobType,
-  addInvoice,
+  createInvoiceAuto,
   getAddressesForJobs,
   getCleaningAddress,
   getCleaningAddresses,
@@ -37,10 +37,10 @@ const {
   getJobType,
   getJobTypes,
   getInvoiceByJobId,
-  getNextInvoiceNumber,
   getOutcodes,
   deleteCustomer,
   deleteCustomerNote,
+  deleteInvoice,
   deleteJobType,
   editAddress,
   editJobFromCustomer,
@@ -335,24 +335,14 @@ app.get("/jobs", async function (req, res) {
 
   const responseToken = generateToken(lastEvaluatedKey);
 
-  console.log("ITEMAS before customers");
-  console.log(JSON.stringify({ items }, null, 2));
   let jobs = items.map(mapJob);
-  console.log("before customers");
-  console.log(JSON.stringify({ jobs }, null, 2));
   jobs = await getJobCustomers(jobs);
-  console.log("After customers");
-  console.log(JSON.stringify({ jobs }, null, 2));
 
   if (isAdmin) {
     jobs = await getJobUsers(jobs, items);
-    console.log("After users");
-    console.log(JSON.stringify({ jobs }, null, 2));
   }
 
   jobs = await getAddressesForJobs(jobs);
-  console.log("After users");
-  console.log(JSON.stringify({ jobs }, null, 2));
   res.json({ jobs, nextToken: responseToken });
 });
 
@@ -365,7 +355,7 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
     const groups = req.authData?.groups;
     const isAdmin = groups.includes("Admin");
     if (isAdmin) {
-      job = (await getJobUsers([jobFromDb]))[0];
+      job = (await getJobUsers([job], [jobFromDb]))[0];
     } else {
       const userSub = req.authData?.userSub;
       const assignedTo = jobFromDb.assigned_to?.S;
@@ -729,76 +719,35 @@ app.put("/customers/:customerId/files", async function (req, res) {
 
 //JOB INVOICE
 
-//ADDING
-
-// app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-//   const { jobId } = req.params;
-//   const { date, description, addressId } = req.body;
-
-//   try {
-//     const groups = req.authData?.groups || [];
-//     const isAdmin = groups.includes("Admin");
-
-//     if (!isAdmin) {
-//       res.status(403).json({ error: "User unauthorized" });
-//       return;
-//     }
-
-//     if (!date) {
-//       res.status(400).json({ error: "MISSING_INVOICE_DATE" });
-//       return;
-//     }
-//     if (!description) {
-//       res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
-//       return;
-//     }
-//     if (!addressId) {
-//       res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
-//       return;
-//     }
-
-//     const existingInvoice = await getInvoiceByJobId(jobId);
-//     if (existingInvoice) {
-//       res.status(400).json({ error: "INVOICE_ALREADY_EXISTS" });
-//       return;
-//     }
-
-//     const nextInvoiceNumber = await getNextInvoiceNumber();
-
-//     const invoice = await addInvoice(jobId, nextInvoiceNumber, req.body);
-
-//     res.json({ invoice });
-
-//     return;
-//   } catch (err) {
-//     console.error("Invoice generation error", err);
-//     res.status(500).json({ error: "INTERNAL_ERROR" });
-//     return;
-//   }
-// });
-
 app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   const { jobId } = req.params;
-  const { date, description, addressId, invoiceNumber } = req.body;
+  const { date, description, addressId } = req.body;
 
   try {
     const groups = req.authData?.groups || [];
     const isAdmin = groups.includes("Admin");
-    if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
+    if (!isAdmin) {
+      res.status(403).json({ error: "User unauthorized" });
+      return;
+    }
+    if (!date) {
+      res.status(400).json({ error: "MISSING_INVOICE_DATE" });
+      return;
+    }
+    if (!description) {
+      res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
+      return;
+    }
+    if (!addressId) {
+      res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
+      return;
+    }
 
-    if (!date) return res.status(400).json({ error: "MISSING_INVOICE_DATE" });
-    if (!description)
-      return res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
-    if (!addressId)
-      return res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
-
-    const invoice = invoiceNumber
-      ? await createInvoiceManual(jobId, invoiceNumber, {
-          date,
-          description,
-          addressId,
-        })
-      : await createInvoiceAuto(jobId, { date, description, addressId });
+    const invoice = await createInvoiceAuto(jobId, {
+      date,
+      description,
+      addressId,
+    });
 
     res.json({ invoice });
   } catch (err) {
@@ -847,38 +796,6 @@ app.put("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
     throw err;
   }
 });
-
-//RENUMBER INVOICE
-app.put(
-  "/customers/:customerId/jobs/:jobId/invoice/number",
-  async (req, res) => {
-    const { jobId } = req.params;
-    const { invoiceNumber } = req.body;
-
-    try {
-      const groups = req.authData?.groups || [];
-      const isAdmin = groups.includes("Admin");
-      if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
-
-      if (!invoiceNumber)
-        return res.status(400).json({ error: "MISSING_INVOICE_NUMBER" });
-
-      const invoice = await renumberInvoice(jobId, invoiceNumber);
-      res.json({ invoice });
-    } catch (err) {
-      if (err === "INVOICE_NOT_FOUND")
-        return res.status(404).json({ error: "INVOICE_NOT_FOUND" });
-      if (err === "INVOICE_NUMBER_IN_USE")
-        return res.status(400).json({ error: "INVOICE_NUMBER_IN_USE" });
-      if (err === "INVOICE_NUMBER_OUT_OF_RANGE")
-        return res.status(400).json({ error: "INVOICE_NUMBER_OUT_OF_RANGE" });
-      if (err === "INVALID_INVOICE_NUMBER")
-        return res.status(400).json({ error: "INVALID_INVOICE_NUMBER" });
-
-      throw err;
-    }
-  }
-);
 
 //DELETE INVOICE AND REALISE NUMBER
 

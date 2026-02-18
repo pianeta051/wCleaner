@@ -13,7 +13,6 @@ const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 50;
 //INVOICES CONST
 const INVOICE_ALLOCATOR_PK = "invoice_allocator";
-const INVOICE_COUNTER_SK = "counter";
 
 const generateSlug = async (email, name) => {
   const nameSlug = name
@@ -1496,20 +1495,6 @@ const deleteCustomerNote = async (customerId, noteId) => {
 };
 
 //INVOICES
-const getMaxIssuedInvoiceNumber = async () => {
-  const response = await ddb
-    .getItem({
-      TableName: TABLE_NAME,
-      Key: {
-        PK: { S: INVOICE_ALLOCATOR_PK },
-        SK: { S: INVOICE_COUNTER_SK },
-      },
-    })
-    .promise();
-
-  const next = response.Item?.next?.N ? Number(response.Item.next.N) : 0;
-  return next;
-};
 
 const isInvoiceNumberInUse = async (rawNumber) => {
   const response = await ddb
@@ -1550,27 +1535,6 @@ const takeSmallestFreeNumber = async () => {
     raw: Number(item.number.N),
     freeSk: item.SK.S,
   };
-};
-
-const incrementCounterAndGet = async () => {
-  const response = await ddb
-    .updateItem({
-      TableName: TABLE_NAME,
-      Key: {
-        PK: { S: INVOICE_ALLOCATOR_PK },
-        SK: { S: INVOICE_COUNTER_SK },
-      },
-      UpdateExpression: "SET #next = if_not_exists(#next, :zero) + :one",
-      ExpressionAttributeNames: { "#next": "next" },
-      ExpressionAttributeValues: {
-        ":zero": { N: "0" },
-        ":one": { N: "1" },
-      },
-      ReturnValues: "UPDATED_NEW",
-    })
-    .promise();
-
-  return Number(response.Attributes.next.N);
 };
 
 const makeFreeItemKey = (rawNumber) => ({
@@ -1704,7 +1668,7 @@ const createInvoiceAuto = async (jobId, invoiceData) => {
       addressId: invoiceData.addressId,
     };
   }
-  const next = await incrementCounterAndGet();
+  const next = await getNextInvoiceNumber();
 
   const generatedAt = new Date().toISOString();
   await ddb
@@ -1727,64 +1691,6 @@ const createInvoiceAuto = async (jobId, invoiceData) => {
     jobId,
     invoiceNumber: formatInvoiceNumber(next),
     invoiceNumberRaw: next,
-    date: invoiceData.date,
-    description: invoiceData.description,
-    generatedAt,
-    addressId: invoiceData.addressId,
-  };
-};
-
-const createInvoiceManual = async (
-  jobId,
-  invoiceNumberFormatted,
-  invoiceData
-) => {
-  const existing = await getInvoiceByJobId(jobId);
-  if (existing) throw "INVOICE_ALREADY_EXISTS";
-
-  const raw = parseInvoiceNumber(invoiceNumberFormatted);
-  const maxIssued = await getMaxIssuedInvoiceNumber();
-  if (raw > maxIssued) throw "INVOICE_NUMBER_OUT_OF_RANGE";
-
-  if (await isInvoiceNumberInUse(raw)) throw "INVOICE_NUMBER_IN_USE";
-
-  const generatedAt = new Date().toISOString();
-
-  // Delete pool key is safe even if not exists
-  const freeKey = makeFreeItemKey(raw);
-
-  await ddb
-    .transactWriteItems({
-      TransactItems: [
-        {
-          Delete: {
-            TableName: TABLE_NAME,
-            Key: freeKey,
-          },
-        },
-        {
-          Put: {
-            TableName: TABLE_NAME,
-            Item: {
-              PK: { S: `job_id_${jobId}` },
-              SK: { S: "invoice" },
-              invoice_number: { N: String(raw) },
-              generated_at: { S: generatedAt },
-              date: { S: "" + invoiceData.date },
-              description: { S: invoiceData.description },
-              address_id: { S: invoiceData.addressId },
-            },
-            ConditionExpression: "attribute_not_exists(PK)",
-          },
-        },
-      ],
-    })
-    .promise();
-
-  return {
-    jobId,
-    invoiceNumber: formatInvoiceNumber(raw),
-    invoiceNumberRaw: raw,
     date: invoiceData.date,
     description: invoiceData.description,
     generatedAt,
@@ -1834,63 +1740,6 @@ const editInvoiceContent = async (jobId, invoiceData) => {
   return await getInvoiceByJobId(jobId);
 };
 
-const renumberInvoice = async (jobId, newInvoiceNumberFormatted) => {
-  const existing = await getInvoiceByJobId(jobId);
-  if (!existing) throw "INVOICE_NOT_FOUND";
-
-  const oldRaw =
-    existing.invoiceNumberRaw ?? parseInvoiceNumber(existing.invoiceNumber);
-  const newRaw = parseInvoiceNumber(newInvoiceNumberFormatted);
-
-  if (newRaw === oldRaw) return existing;
-
-  const maxIssued = await getMaxIssuedInvoiceNumber();
-  if (newRaw > maxIssued) throw "INVOICE_NUMBER_OUT_OF_RANGE";
-
-  if (await isInvoiceNumberInUse(newRaw)) throw "INVOICE_NUMBER_IN_USE";
-
-  const freeOldKey = makeFreeItemKey(oldRaw);
-  const freeNewKey = makeFreeItemKey(newRaw);
-
-  await ddb
-    .transactWriteItems({
-      TransactItems: [
-        {
-          Put: {
-            TableName: TABLE_NAME,
-            Item: {
-              ...freeOldKey,
-              number: { N: String(oldRaw) },
-            },
-          },
-        },
-        {
-          Delete: {
-            TableName: TABLE_NAME,
-            Key: freeNewKey,
-          },
-        },
-
-        {
-          Update: {
-            TableName: TABLE_NAME,
-            Key: {
-              PK: { S: `job_id_${jobId}` },
-              SK: { S: "invoice" },
-            },
-            UpdateExpression: "SET invoice_number = :n",
-            ExpressionAttributeValues: {
-              ":n": { N: String(newRaw) },
-            },
-          },
-        },
-      ],
-    })
-    .promise();
-
-  return await getInvoiceByJobId(jobId);
-};
-
 const deleteInvoice = async (jobId) => {
   // Need raw number to free it
   const existing = await getInvoiceByJobId(jobId);
@@ -1925,44 +1774,13 @@ const deleteInvoice = async (jobId) => {
     .promise();
 };
 
-const addInvoice = async (jobId, invoiceNumber, invoiceData) => {
-  const generatedAt = new Date().toISOString();
-
-  const params = {
-    TableName: TABLE_NAME,
-    Item: {
-      PK: { S: `job_id_${jobId}` },
-      SK: { S: "invoice" },
-      invoice_number: { N: "" + invoiceNumber },
-      generated_at: { S: generatedAt },
-      date: { S: "" + invoiceData.date },
-      description: { S: invoiceData.description },
-      address_id: { S: invoiceData.addressId },
-    },
-  };
-
-  await ddb.putItem(params).promise();
-
-  return {
-    jobId,
-    invoiceNumber: formatInvoiceNumber(invoiceNumber),
-    invoiceNumberRaw: invoiceNumber,
-    date: invoiceData.date,
-    description: invoiceData.description,
-    generatedAt,
-    addressId: invoiceData.addressId,
-  };
-};
-
 module.exports = {
   addCustomer,
   addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
-  addInvoice,
   createInvoiceAuto,
-  createInvoiceManual,
   deleteAddress,
   editAddress,
   editCustomer,
