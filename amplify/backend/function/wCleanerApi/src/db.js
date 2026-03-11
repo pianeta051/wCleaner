@@ -2,7 +2,7 @@ const AWS = require("aws-sdk");
 AWS.config.update({ region: "eu-west-2" });
 const ddb = new AWS.DynamoDB();
 const uuid = require("node-uuid");
-const { mapCustomer, mapInvoice } = require("./mappers");
+const { mapCustomer, mapInvoice, mapCleaningAddress } = require("./mappers");
 const {
   formatInvoiceNumber,
   parseInvoiceNumber,
@@ -932,17 +932,37 @@ const batchGetCustomersByIds = async (customerIds) => {
   return customers;
 };
 
-const getJobCustomers = async (jobs) => {
-  const customerIds = Array.from(
-    new Set(jobs.map((j) => j.customerId).filter(Boolean))
-  );
+const batchGetAddresses = async (customerAndAddressId) => {
+  const addressBatches = chunk(customerAndAddressId, 100);
+  console.log(JSON.stringify({ addressBatches }, null, 2));
+  const addresses = {};
 
-  const customers = await batchGetCustomersByIds(customerIds);
+  for (const addressIdsBatch of addressBatches) {
+    const params = {
+      RequestItems: {
+        [TABLE_NAME]: {
+          Keys: addressIdsBatch.map(({ customerId, addressId }) => ({
+            PK: { S: `customer_${customerId}` },
+            SK: { S: `address_${addressId}` },
+          })),
+        },
+      },
+    };
+    console.log(JSON.stringify({ params }, null, 2));
 
-  return jobs.map((job) => ({
-    ...job,
-    customer: customers[job.customerId],
-  }));
+    const result = await ddb.batchGetItem(params).promise();
+    console.log(JSON.stringify({ result }, null, 2));
+    const addressesBatch = (result.Responses?.[TABLE_NAME] ?? []).map(
+      mapCleaningAddress
+    );
+    console.log(JSON.stringify({ addressesBatch }, null, 2));
+
+    for (const address of addressesBatch) {
+      addresses[`${address.customerId}_${address.id}`] = address;
+    }
+  }
+
+  return addresses;
 };
 
 const getFutureJobsFromAddress = async (addressId) => {
@@ -1011,17 +1031,40 @@ const getJobTypes = async () => {
   };
 };
 
+const getJobCustomers = async (jobs) => {
+  const customerIds = Array.from(
+    new Set(jobs.map((j) => j.customerId).filter(Boolean))
+  );
+
+  const customers = await batchGetCustomersByIds(customerIds);
+
+  return jobs.map((job) => ({
+    ...job,
+    customer: customers[job.customerId],
+  }));
+};
+
 const getAddressesForJobs = async (jobs) => {
-  for (let i = 0; i < jobs.length; i++) {
-    const job = jobs[i];
-    const address = await getCleaningAddress(job.customerId, job.addressId);
-    jobs[i] = {
+  console.log(JSON.stringify({ jobs }, null, 2));
+  const customerAndAddressIds = Array.from(
+    new Set(jobs.map((j) => `${j.customerId}_${j.addressId}`).filter(Boolean))
+  ).map((concatenated) => {
+    const [customerId, addressId] = concatenated.split("_");
+    return { customerId, addressId };
+  });
+  console.log(JSON.stringify({ customerAndAddressIds }, null, 2));
+  const addresses = await batchGetAddresses(customerAndAddressIds);
+  console.log(JSON.stringify({ addresses }, null, 2));
+  return jobs.map((job) => {
+    console.log(JSON.stringify({ job }, null, 2));
+    const address = addresses[`${job.customerId}_${job.addressId}`];
+    console.log(JSON.stringify({ address }, null, 2));
+    return {
       ...job,
-      address: address?.address?.S ?? address?.name?.S ?? "Unknown",
-      postcode: address?.postcode?.S ?? "",
+      address: address?.address ?? address?.name ?? "Unknown",
+      postcode: address?.postcode ?? "",
     };
-  }
-  return jobs;
+  });
 };
 
 //EDIT JOB TYPE
@@ -1524,7 +1567,7 @@ const takeSmallestFreeNumber = async () => {
         ":prefix": { S: "free_" },
       },
       Limit: 1,
-      ScanIndexForward: true, // smallest first
+      ScanIndexForward: true,
     })
     .promise();
 
@@ -1532,7 +1575,7 @@ const takeSmallestFreeNumber = async () => {
   if (!item) return null;
 
   return {
-    raw: Number(item.number.N),
+    raw: Number(item.invoice_number?.N ?? item.number?.N),
     freeSk: item.SK.S,
   };
 };
@@ -1541,18 +1584,6 @@ const makeFreeItemKey = (rawNumber) => ({
   PK: { S: INVOICE_ALLOCATOR_PK },
   SK: { S: `free_${padInvoice(rawNumber)}` },
 });
-
-const releaseInvoiceNumber = async (rawNumber) => {
-  await ddb
-    .putItem({
-      TableName: TABLE_NAME,
-      Item: {
-        ...makeFreeItemKey(rawNumber),
-        number: { N: String(rawNumber) },
-      },
-    })
-    .promise();
-};
 
 const getNextInvoiceNumber = async () => {
   const params = {
@@ -1578,23 +1609,6 @@ const getNextInvoiceNumber = async () => {
   return Number(result.Items[0].invoice_number.N) + 1;
 };
 
-// const getInvoiceByJobId = async (jobId) => {
-//   const params = {
-//     TableName: TABLE_NAME,
-//     Key: {
-//       PK: { S: `job_id_${jobId}` },
-//       SK: { S: "invoice" },
-//     },
-//   };
-
-//   const result = await ddb.getItem(params).promise();
-
-//   if (!result.Item) {
-//     return null;
-//   }
-
-//   return mapInvoice(result.Item);
-// };
 const getInvoiceByJobId = async (jobId) => {
   const res = await ddb
     .getItem({
@@ -1765,7 +1779,7 @@ const deleteInvoice = async (jobId) => {
             TableName: TABLE_NAME,
             Item: {
               ...makeFreeItemKey(raw),
-              number: { N: String(raw) },
+              invoice_number: { N: String(raw) },
             },
           },
         },

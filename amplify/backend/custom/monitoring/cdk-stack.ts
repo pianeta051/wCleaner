@@ -128,6 +128,5 @@ export class cdkStack extends cdk.Stack {
       tracingEnabled: true,
       methodSettings: methodSettings,
     });
-    wCleanerApiStage.addDependency(apiGatewayAccount);
   }
 }

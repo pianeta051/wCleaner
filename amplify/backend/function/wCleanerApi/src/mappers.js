@@ -32,6 +32,7 @@ const mapCleaningAddress = (cleaningAddressFromDb) => ({
   name: cleaningAddressFromDb.name.S,
   address: cleaningAddressFromDb.address?.S,
   postcode: cleaningAddressFromDb.postcode.S,
+  customerId: cleaningAddressFromDb.PK.S.replace("customer_", ""),
 });
 
 const mapCustomerJobs = (customerJob) => ({
