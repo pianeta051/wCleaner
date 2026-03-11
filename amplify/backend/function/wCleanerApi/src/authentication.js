@@ -54,9 +54,9 @@ const getUserInfo = async (userSub) => {
   }, {});
 };
 
-const getJobUsers = async (jobs, items) => {
+const getJobUsers = async (jobs) => {
   const userIds = [];
-  items.forEach((item) => {
+  jobs.forEach((item) => {
     let userId;
     if (item.assigned_to?.S) {
       userId = item.assigned_to?.S;
@@ -84,15 +84,22 @@ const getJobUsers = async (jobs, items) => {
       }
     }
   }
-  return jobs.map((job, i) => {
-    const sub = items[i]?.assigned_to?.S;
-    const assignedTo = sub ? users.find((u) => u.sub === sub) : null;
 
-    return {
-      ...job,
-      assignedTo,
-    };
-  });
+  const usersAssignation = {};
+  for (const job of jobs) {
+    console.log(JSON.stringify({ job }, null, 2));
+    const sub = job.assigned_to?.S;
+    console.log(JSON.stringify({ sub }, null, 2));
+    const assignedTo = sub ? users.find((u) => u.sub === sub) : null;
+    console.log(JSON.stringify({ assignedTo }, null, 2));
+    const jobId = job.SK?.S?.replace("job_", "");
+    console.log(JSON.stringify({ jobId }, null, 2));
+    if (assignedTo) {
+      usersAssignation[jobId] = assignedTo;
+    }
+  }
+  console.log(JSON.stringify({ usersAssignation }, null, 2));
+  return usersAssignation;
 };
 
 module.exports = {

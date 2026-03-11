@@ -166,7 +166,7 @@ app.get("/jobs", async function (req, res) {
   const userSub = req.authData?.userSub;
   const groups = req.authData?.groups;
   const isAdmin = groups.includes("Admin");
-  const { items, lastEvaluatedKey } = await getJobs(
+  const { items: jobsFromDB, lastEvaluatedKey } = await getJobs(
     {
       start,
       end,
@@ -179,14 +179,26 @@ app.get("/jobs", async function (req, res) {
 
   const responseToken = generateToken(lastEvaluatedKey);
 
-  let jobs = items.map(mapJob);
-  jobs = await getJobCustomers(jobs);
+  let jobs = jobsFromDB.map(mapJob);
 
-  if (isAdmin) {
-    jobs = await getJobUsers(jobs, items);
-  }
+  const [customers, jobUsers, addresses] = await Promise.all([
+    getJobCustomers(jobs),
+    isAdmin ? getJobUsers(jobsFromDB) : {},
+    getAddressesForJobs(jobs),
+  ]);
 
-  jobs = await getAddressesForJobs(jobs);
+  // merge all async data
+  jobs = jobs.map((job) => {
+    const address = addresses[`${job.customerId}_${job.addressId}`];
+    return {
+      ...job,
+      customer: customers[job.customerId],
+      address: address?.address ?? address?.name ?? "Unknown",
+      postcode: address?.postcode ?? "",
+      assignedTo: jobUsers[job.id],
+    };
+  });
+
   res.json({ jobs, nextToken: responseToken });
 });
 

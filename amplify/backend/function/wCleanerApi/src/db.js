@@ -934,7 +934,6 @@ const batchGetCustomersByIds = async (customerIds) => {
 
 const batchGetAddresses = async (customerAndAddressId) => {
   const addressBatches = chunk(customerAndAddressId, 100);
-  console.log(JSON.stringify({ addressBatches }, null, 2));
   const addresses = {};
 
   for (const addressIdsBatch of addressBatches) {
@@ -948,14 +947,11 @@ const batchGetAddresses = async (customerAndAddressId) => {
         },
       },
     };
-    console.log(JSON.stringify({ params }, null, 2));
 
     const result = await ddb.batchGetItem(params).promise();
-    console.log(JSON.stringify({ result }, null, 2));
     const addressesBatch = (result.Responses?.[TABLE_NAME] ?? []).map(
       mapCleaningAddress
     );
-    console.log(JSON.stringify({ addressesBatch }, null, 2));
 
     for (const address of addressesBatch) {
       addresses[`${address.customerId}_${address.id}`] = address;
@@ -1038,33 +1034,18 @@ const getJobCustomers = async (jobs) => {
 
   const customers = await batchGetCustomersByIds(customerIds);
 
-  return jobs.map((job) => ({
-    ...job,
-    customer: customers[job.customerId],
-  }));
+  return customers;
 };
 
 const getAddressesForJobs = async (jobs) => {
-  console.log(JSON.stringify({ jobs }, null, 2));
   const customerAndAddressIds = Array.from(
     new Set(jobs.map((j) => `${j.customerId}_${j.addressId}`).filter(Boolean))
   ).map((concatenated) => {
     const [customerId, addressId] = concatenated.split("_");
     return { customerId, addressId };
   });
-  console.log(JSON.stringify({ customerAndAddressIds }, null, 2));
   const addresses = await batchGetAddresses(customerAndAddressIds);
-  console.log(JSON.stringify({ addresses }, null, 2));
-  return jobs.map((job) => {
-    console.log(JSON.stringify({ job }, null, 2));
-    const address = addresses[`${job.customerId}_${job.addressId}`];
-    console.log(JSON.stringify({ address }, null, 2));
-    return {
-      ...job,
-      address: address?.address ?? address?.name ?? "Unknown",
-      postcode: address?.postcode ?? "",
-    };
-  });
+  return addresses;
 };
 
 //EDIT JOB TYPE
