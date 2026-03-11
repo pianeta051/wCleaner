@@ -324,7 +324,7 @@ export const updateJobStatus = async (
 export const generateJobInvoice = async (
   customerId: string,
   jobId: string,
-  formValues: InvoiceFormValues & { invoiceNumber?: string } // 👈 opcional
+  formValues: InvoiceFormValues & { invoiceNumber?: string }
 ): Promise<Invoice> => {
   try {
     const payload: Record<string, unknown> = {
