@@ -13,10 +13,11 @@
  */
 
 const { CognitoIdentityServiceProvider } = require("aws-sdk");
-import {
+const {
   CognitoIdentityProviderClient,
   AdminAddUserToGroupCommand,
-} from "@aws-sdk/client-cognito-identity-provider";
+  AdminRemoveUserFromGroupCommand,
+} = require("@aws-sdk/client-cognito-identity-provider");
 
 const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider();
 const userPoolId = process.env.USERPOOL;
@@ -55,9 +56,8 @@ async function removeUserFromGroup(username, groupname) {
   console.log(`Attempting to remove ${username} from ${groupname}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminRemoveUserFromGroup(params)
-      .promise();
+    const command = new AdminRemoveUserFromGroupCommand(params);
+    await cognitoClient.send(command);
     console.log(`Removed ${username} from ${groupname}`);
     return {
       message: `Removed ${username} from ${groupname}`,
