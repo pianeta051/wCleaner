@@ -57,7 +57,7 @@ export const Customers: FC = () => {
     addCustomer,
     loading: creating,
     error: createError,
-  } = useAddCustomer(searchInput, outcodesFilter);
+  } = useAddCustomer();
 
   const closeNewModalHandler = () => setModalOpen(false);
   const openNewModalHandler = () => setModalOpen(true);

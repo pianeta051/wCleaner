@@ -25,6 +25,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
+import ReceiptIcon from "@mui/icons-material/Receipt";
 
 import {
   Bar,
@@ -92,6 +93,12 @@ export const TopBar: FC = () => {
           label: "Jobs",
           url: "/admin/jobs",
           icon: <WorkIcon fontSize="small" />,
+        },
+        {
+          label: "Invoices",
+          url: "/admin/invoices",
+          exclusiveFor: "Admin",
+          icon: <ReceiptIcon fontSize="small" />,
         },
       ].filter((p) => (p.exclusiveFor ? isInGroup(p.exclusiveFor) : true)),
     [isInGroup]

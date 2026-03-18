@@ -29,8 +29,8 @@ import {
   CustomerCard,
   CustomerCardLink,
   TableCellWrap,
-  CustomerCardActionsSx,
   LinkStyle,
+  CustomerCardActions,
 } from "./CustomerTable.style";
 import { theme } from "../../theme";
 
@@ -59,7 +59,7 @@ export const CustomersTable: FC<CustomersTableProps> = ({
     <Stack spacing={2}>
       {customers.map((customer) => (
         <CustomerCard key={customer.id} variant="outlined">
-          <CustomerCardLink to={toCustomer(customer.slug)} style={LinkStyle}>
+          <CustomerCardLink to={toCustomer(customer.slug)}>
             <CardContent sx={{ pb: 1.5 }}>
               <Stack
                 direction="row"
@@ -141,7 +141,7 @@ export const CustomersTable: FC<CustomersTableProps> = ({
             </CardContent>
           </CustomerCardLink>
 
-          <CardActions {...CustomerCardActionsSx}>
+          <CustomerCardActions>
             <Button
               component={RouterLink}
               to={toCustomer(customer.slug)}
@@ -155,7 +155,7 @@ export const CustomersTable: FC<CustomersTableProps> = ({
               customerId={customer.id}
               onDelete={onReload}
             />
-          </CardActions>
+          </CustomerCardActions>
         </CustomerCard>
       ))}
     </Stack>

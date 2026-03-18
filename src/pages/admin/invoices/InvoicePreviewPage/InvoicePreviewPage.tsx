@@ -2,16 +2,16 @@ import { FC, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { CircularProgress } from "@mui/material";
 import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
-import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
-import { useJobCustomer } from "../../../hooks/Jobs/useJobCustomer";
-import { JobInvoice } from "../../../components/JobInvoice/JobInvoice";
+import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
+import { useJobCustomer } from "../../../../hooks/Jobs/useJobCustomer";
+import { JobInvoice } from "../../../../components/JobInvoice/JobInvoice";
 import {
   FullScreenWrapper,
   TopBar,
   PdfContainer,
   ButtonDownload,
 } from "./InvoicePreviewPage.style";
-import { useJobInvoice } from "../../../hooks/Jobs/useJobInvoice";
+import { useJobInvoice } from "../../../../hooks/Jobs/useJobInvoice";
 
 type Params = {
   jobId: string;

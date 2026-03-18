@@ -13,6 +13,5 @@
   "editor.formatOnPaste": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
-  },
-  "cSpell.words": ["adminqueries"]
+  }
 }

@@ -94,18 +94,13 @@ const getJobUsers = async (jobs) => {
 
   const usersAssignation = {};
   for (const job of jobs) {
-    console.log(JSON.stringify({ job }, null, 2));
     const sub = job.assigned_to?.S;
-    console.log(JSON.stringify({ sub }, null, 2));
     const assignedTo = sub ? users.find((u) => u.sub === sub) : null;
-    console.log(JSON.stringify({ assignedTo }, null, 2));
     const jobId = job.SK?.S?.replace("job_", "");
-    console.log(JSON.stringify({ jobId }, null, 2));
     if (assignedTo) {
       usersAssignation[jobId] = assignedTo;
     }
   }
-  console.log(JSON.stringify({ usersAssignation }, null, 2));
   return usersAssignation;
 };
 

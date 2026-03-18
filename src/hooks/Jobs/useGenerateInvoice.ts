@@ -1,8 +1,18 @@
 import useSWRMutation from "swr/mutation";
+
 import { extractErrorCode } from "../../services/error";
 import { generateJobInvoice } from "../../services/jobs";
 import { Invoice } from "../../types/types";
 import { InvoiceFormValues } from "../../components/InvoiceForm/InvoiceForm";
+
+type ErrorResponseShape = {
+  response?: {
+    status?: number;
+    data?: {
+      error?: string;
+    };
+  };
+};
 
 export const useGenerateInvoice = (customerId?: string, jobId?: string) => {
   const key =
@@ -12,13 +22,16 @@ export const useGenerateInvoice = (customerId?: string, jobId?: string) => {
 
   const { trigger, isMutating, error } = useSWRMutation<
     Invoice,
-    unknown,
+    ErrorResponseShape,
     typeof key,
     InvoiceFormValues
   >(
     key,
     async (_key, { arg }) => {
-      if (!customerId || !jobId) throw "INTERNAL_ERROR";
+      if (!customerId || !jobId) {
+        throw "INTERNAL_ERROR";
+      }
+
       return generateJobInvoice(customerId, jobId, arg);
     },
     {
@@ -26,15 +39,13 @@ export const useGenerateInvoice = (customerId?: string, jobId?: string) => {
     }
   );
 
-  const formatted =
-    // @ts-expect-error axios shape
+  const formattedError =
     error?.response?.data?.error ??
-    // @ts-expect-error axios shape
     (error?.response?.status === 404 ? "INVOICE_NOT_FOUND" : undefined);
 
   return {
     generate: trigger,
     loading: isMutating,
-    error: extractErrorCode(formatted),
+    error: extractErrorCode(formattedError),
   };
 };
