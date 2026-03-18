@@ -25,6 +25,7 @@ const {
   createInvoiceAuto,
   getAddressesForJobs,
   getCleaningAddress,
+  getCleaningAddressById,
   getCleaningAddresses,
   getCustomerJobs,
   getJob,
@@ -32,6 +33,7 @@ const {
   getJobCustomers,
   getJobType,
   getJobTypes,
+  getInvoices,
   getInvoiceByJobId,
   getOutcodes,
   deleteCustomerNote,
@@ -50,6 +52,7 @@ const {
 const {
   mapCleaningAddress,
   mapCustomerJobs,
+  mapInvoice,
   mapJob,
   mapJobFromRequestBody,
   mapJobTypeFromRequestBody,
@@ -211,7 +214,8 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
     const groups = req.authData?.groups;
     const isAdmin = groups.includes("Admin");
     if (isAdmin) {
-      job = (await getJobUsers([job], [jobFromDb]))[0];
+      const assignedTo = await getJobUsers([jobFromDb]);
+      job.assignedTo = assignedTo[job.id];
     } else {
       const userSub = req.authData?.userSub;
       const assignedTo = jobFromDb.assigned_to?.S;
@@ -233,8 +237,9 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
     }
     const jobType = await getJobType(job.jobTypeId);
     job.jobTypeName = mapJobType(jobType).name;
-    const jobsWithAddress = await getAddressesForJobs([job]);
-    res.json({ job: jobsWithAddress[0] });
+    const addresses = await getAddressesForJobs([job]);
+    job.address = addresses[job.id];
+    res.json({ job });
   } catch (e) {
     if (e === "JOB_NOT_FOUND") {
       res.status(404).json({ message: "The job doesn't exist" });
@@ -259,10 +264,20 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
     order
   );
   let jobs = items.map(mapCustomerJobs);
+  let jobUsers = {};
   if (isAdmin) {
-    jobs = await getJobUsers(jobs, items);
+    jobUsers = await getJobUsers(items);
   }
-  jobs = await getAddressesForJobs(jobs);
+  const addresses = await getAddressesForJobs(jobs);
+  jobs = jobs.map((job) => {
+    const address = addresses[`${job.customerId}_${job.addressId}`];
+    return {
+      ...job,
+      address: address?.address ?? address?.name ?? "Unknown",
+      postcode: address?.postcode ?? "",
+      assignedTo: jobUsers[job.id],
+    };
+  });
 
   try {
     res.json({ jobs });
@@ -573,33 +588,90 @@ app.put("/customers/:customerId/files", async function (req, res) {
   }
 });
 
-//JOB INVOICE
+//GET INVOICES
+app.get("/invoices", async function (req, res) {
+  try {
+    const nextToken = req.query?.nextToken;
+    const paginate = req.query?.paginate !== "false";
+    const exclusiveStartKey = parseToken(nextToken);
 
+    const groups = req.authData?.groups || [];
+    const isAdmin = groups.includes("Admin");
+
+    if (!isAdmin) {
+      res.status(403).json({ error: "User unauthorized" });
+      return;
+    }
+
+    const { items: invoicesFromDb, lastEvaluatedKey } = await getInvoices({
+      exclusiveStartKey,
+
+      enabled: paginate,
+    });
+
+    let invoices = invoicesFromDb.map(mapInvoice);
+
+    const addresses = await Promise.all(
+      invoices.map(async (invoice) => {
+        if (!invoice.addressId) {
+          return undefined;
+        }
+
+        try {
+          const addressFromDb = await getCleaningAddressById(invoice.addressId);
+          return addressFromDb ? mapCleaningAddress(addressFromDb) : undefined;
+        } catch (error) {
+          console.error(error);
+          return undefined;
+        }
+      })
+    );
+
+    const responseToken = generateToken(lastEvaluatedKey);
+
+    invoices = invoices.map((invoice, index) => ({
+      ...invoice,
+      address: addresses[index],
+    }));
+
+    res.json({
+      invoices,
+      nextToken: responseToken,
+    });
+  } catch (error) {
+    throw error;
+  }
+});
+//
 app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-  const { jobId } = req.params;
+  const { customerId, jobId } = req.params;
   const { date, description, addressId } = req.body;
 
   try {
     const groups = req.authData?.groups || [];
     const isAdmin = groups.includes("Admin");
+
     if (!isAdmin) {
       res.status(403).json({ error: "User unauthorized" });
       return;
     }
+
     if (!date) {
       res.status(400).json({ error: "MISSING_INVOICE_DATE" });
       return;
     }
+
     if (!description) {
       res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
       return;
     }
+
     if (!addressId) {
       res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
       return;
     }
 
-    const invoice = await createInvoiceAuto(jobId, {
+    const invoice = await createInvoiceAuto(customerId, jobId, {
       date,
       description,
       addressId,
@@ -623,10 +695,17 @@ app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
       res.status(400).json({ error: "INVALID_INVOICE_NUMBER" });
       return;
     }
+    if (err === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({ error: "CUSTOMER_NOT_FOUND" });
+      return;
+    }
+    if (err === "JOB_NOT_FOUND") {
+      res.status(404).json({ error: "JOB_NOT_FOUND" });
+      return;
+    }
     throw err;
   }
 });
-
 //EDIT INVOICE CONTENT
 app.put("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   const { jobId } = req.params;
