@@ -494,7 +494,9 @@ app.delete("/job-type/:jobTypeId", async function (req, res) {
   }
 });
 
-app.listen(3000, function () {
+const APP_PORT = process.env.APP_PORT ?? 3000;
+
+app.listen(APP_PORT, function () {
   console.log("App started");
 });
 

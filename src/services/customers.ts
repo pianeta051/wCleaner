@@ -4,35 +4,7 @@ import { Customer, CustomerCleaningAddress } from "../types/types";
 import { isErrorResponse } from "./error";
 import { uploadFile } from "./files";
 import { NoteFormValues } from "../components/NoteForm/NoteForm";
-
-const get = async (
-  path: string,
-  queryParams: { [param: string]: string | undefined | number | boolean } = {}
-) => {
-  return API.get("wCleanerApi", path, {
-    queryStringParameters: queryParams,
-  });
-};
-
-const post = async <TBody = unknown, TResponse = unknown>(
-  path: string,
-  body: TBody
-): Promise<TResponse> => {
-  return API.post("wCleanerApi", path, {
-    body,
-  });
-};
-
-const remove = async (path: string) => {
-  return API.del("wCleanerApi", path, {});
-};
-
-const put = async <TBody = unknown, TResponse = unknown>(
-  path: string,
-  body: TBody
-): Promise<TResponse> => {
-  return API.put("wCleanerApi", path, { body });
-};
+import { get, post, put, remove } from "./dataApi";
 
 export const isCustomer = (value: unknown): value is Customer => {
   if (typeof value !== "object" || value === null) return false;

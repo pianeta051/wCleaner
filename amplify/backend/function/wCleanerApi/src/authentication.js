@@ -20,13 +20,20 @@ const getGroups = async (userSub) => {
 };
 
 const getAuthData = async (req) => {
-  const authProvider =
-    req.apiGateway.event.requestContext.identity.cognitoAuthenticationProvider;
-  if (!authProvider) {
-    return {};
+  let userSub;
+  if (process.env.MOCKED_USER_SUB) {
+    userSub = process.env.MOCKED_USER_SUB;
+  } else {
+    const authProvider =
+      req.apiGateway?.event.requestContext.identity
+        .cognitoAuthenticationProvider;
+    if (!authProvider) {
+      return {};
+    }
+    const providerParts = authProvider.split(":");
+    userSub = providerParts[providerParts.length - 1];
   }
-  const providerParts = authProvider.split(":");
-  const userSub = providerParts[providerParts.length - 1];
+
   const groups = await getGroups(userSub);
   const userInfo = await getUserInfo(userSub);
   return {

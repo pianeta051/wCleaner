@@ -1,5 +1,3 @@
-import { API } from "aws-amplify";
-
 import {
   Invoice,
   Job,
@@ -14,28 +12,34 @@ import { JobFormValues } from "../components/JobForm/JobForm";
 import { isCustomer } from "./customers";
 import { JobTypeFormValues } from "../components/JobTypeForm/JobTypeForm";
 import { InvoiceFormValues } from "../components/InvoiceForm/InvoiceForm";
+import { API } from "aws-amplify";
+import { API_URL, localFetch } from "./dataApi";
 
 // GENERAL FUNCTIONS
 const get = async (
   path: string,
   queryParams: { [param: string]: string | undefined | number } = {}
 ) => {
+  if (API_URL) return localFetch("GET", path, { queryParams });
   return API.get("wCleanerApi", path, {
     queryStringParameters: queryParams,
   });
 };
 
 const post = async (path: string, body: { [param: string]: unknown } = {}) => {
+  if (API_URL) return localFetch("POST", path, { body });
   return API.post("wCleanerApi", path, {
     body,
   });
 };
 
 const remove = async (path: string) => {
+  if (API_URL) return localFetch("DELETE", path);
   return API.del("wCleanerApi", path, {});
 };
 
 const put = async (path: string, body: { [param: string]: unknown } = {}) => {
+  if (API_URL) return localFetch("PUT", path, { body });
   return API.put("wCleanerApi", path, {
     body,
   });
