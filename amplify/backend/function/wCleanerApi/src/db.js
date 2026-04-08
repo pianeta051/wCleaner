@@ -98,6 +98,12 @@ const addCustomer = async (customer) => {
       status: {
         S: "active",
       },
+      address_lowercase: {
+        S: customer.address.toLowerCase(),
+      },
+      postcode_lowercase: {
+        S: customer.postcode.toLowerCase(),
+      },
     },
   };
 
@@ -245,8 +251,12 @@ const editCustomer = async (id, editedCustomer) => {
 
   if (editedCustomer.address !== undefined) {
     exprAttrNames["#A"] = "address";
+    exprAttrNames["#AL"] = "address_lowercase";
     exprAttrValues[":address"] = { S: editedCustomer.address };
-    updateExprParts.push("#A = :address");
+    exprAttrValues[":address_lowercase"] = {
+      S: editedCustomer.address.toLowerCase(),
+    };
+    updateExprParts.push("#A = :address", "#AL = :address_lowercase");
   }
 
   if (editedCustomer.postcode !== undefined) {
@@ -255,13 +265,22 @@ const editCustomer = async (id, editedCustomer) => {
       throw "INVALID_POSTCODE";
     }
     const outcode = postcodeParts[0];
+
     exprAttrNames["#P"] = "postcode";
+    exprAttrNames["#PL"] = "postcode_lowercase";
     exprAttrNames["#OC"] = "outcode";
     exprAttrValues[":postcode"] = { S: editedCustomer.postcode };
-    exprAttrValues[":outcode"] = { S: outcode };
-    updateExprParts.push("#P = :postcode", "#OC = :outcode");
-  }
+    exprAttrValues[":postcode_lowercase"] = {
+      S: editedCustomer.postcode.toLowerCase(),
+    };
+    exprAttrValues[":outcode"] = { S: outcode.toUpperCase() };
 
+    updateExprParts.push(
+      "#P = :postcode",
+      "#PL = :postcode_lowercase",
+      "#OC = :outcode"
+    );
+  }
   if (editedCustomer.mainTelephone !== undefined) {
     exprAttrNames["#MP"] = "mainTelephone";
     exprAttrValues[":mainTelephone"] = { S: editedCustomer.mainTelephone };
@@ -428,8 +447,8 @@ const getCustomers = async (filters, pagination) => {
       ExpressionAttributeNames: {
         "#NL": "name_lowercase",
         "#EL": "email_lowercase",
-        "#A": "address",
-        "#P": "postcode",
+        "#AL": "address_lowercase",
+        "#PL": "postcode_lowercase",
         ...params.ExpressionAttributeNames,
       },
       ExpressionAttributeValues: {
@@ -442,9 +461,8 @@ const getCustomers = async (filters, pagination) => {
     };
 
     filterExpressions.push(
-      "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
+      "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#AL, :address) OR contains(#PL, :postcode))"
     );
-
     params = { ...params, ...searchParams };
   }
 

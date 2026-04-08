@@ -21,7 +21,10 @@ const setCustomerRoutes = (app) => {
 
     const search = req.query?.search;
     const outcodeFilter = req.query?.outcodeFilter
-      ? req.query.outcodeFilter.split(",").filter(Boolean)
+      ? req.query.outcodeFilter
+          .split(",")
+          .map((value) => value.trim().toUpperCase())
+          .filter(Boolean)
       : undefined;
 
     const paginationEnabled = req.query?.paginationDisabled !== "true";
