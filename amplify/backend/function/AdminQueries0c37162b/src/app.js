@@ -11,9 +11,9 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
-const express = require("express");
+
 const bodyParser = require("body-parser");
-const awsServerlessExpressMiddleware = require("aws-serverless-express/middleware");
+const express = require("serverless-express/express");
 
 const {
   addUserToGroup,

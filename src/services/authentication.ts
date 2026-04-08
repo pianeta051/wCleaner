@@ -104,7 +104,7 @@ const findAttributeValue = (user: UserResponse, attribute: string) =>
 export const forgotPassword = async (email: string) => {
   try {
     await Auth.forgotPassword(email, {
-      redirectTo: process.env.REACT_APP_HOST || "",
+      redirectTo: import.meta.env.VITE_HOST || "",
     });
   } catch (error) {
     if (hasCode(error)) {

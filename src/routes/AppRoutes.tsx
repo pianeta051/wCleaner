@@ -18,7 +18,8 @@ import { JobsPage } from "../pages/admin/Jobs/Jobs";
 import { JobDetailsPage } from "../pages/admin/JobDetails/JobDetails";
 import { AdminLayoutFullWidth } from "../components/AdminLayout/AdminLayoutFullWidth";
 import { useAuth } from "../context/AuthContext";
-import { InvoicePreviewPage } from "../pages/admin/invoices/InvoicePreviewPage";
+import { InvoicePreviewPage } from "../pages/admin/invoices/InvoicePreviewPage/InvoicePreviewPage";
+import { InvoicesList } from "../pages/admin/invoices/InvoicesList/InvoicesList";
 
 export const AppRoutes: FC = () => {
   const { isInGroup } = useAuth();
@@ -103,6 +104,17 @@ export const AppRoutes: FC = () => {
         <Route path="jobs" element={<AdminLayoutFullWidth />}>
           <Route index element={<JobsPage />} />
           <Route path="new" element={<JobsPage />} />
+        </Route>
+
+        <Route
+          path="invoices"
+          element={
+            <AdminRoute>
+              <AdminLayoutFullWidth />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<InvoicesList />} />
         </Route>
       </Route>
 

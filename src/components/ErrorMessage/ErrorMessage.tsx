@@ -297,5 +297,13 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+
+  if (code === "NO_INVOICES_FOUND") {
+    return (
+      <Alert severity="error">
+        <Typography>There are Invoices</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

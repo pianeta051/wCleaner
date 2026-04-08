@@ -20,13 +20,20 @@ const getGroups = async (userSub) => {
 };
 
 const getAuthData = async (req) => {
-  const authProvider =
-    req.apiGateway.event.requestContext.identity.cognitoAuthenticationProvider;
-  if (!authProvider) {
-    return {};
+  let userSub;
+  if (process.env.MOCKED_USER_SUB) {
+    userSub = process.env.MOCKED_USER_SUB;
+  } else {
+    const authProvider =
+      req.apiGateway?.event.requestContext.identity
+        .cognitoAuthenticationProvider;
+    if (!authProvider) {
+      return {};
+    }
+    const providerParts = authProvider.split(":");
+    userSub = providerParts[providerParts.length - 1];
   }
-  const providerParts = authProvider.split(":");
-  const userSub = providerParts[providerParts.length - 1];
+
   const groups = await getGroups(userSub);
   const userInfo = await getUserInfo(userSub);
   return {
@@ -54,9 +61,9 @@ const getUserInfo = async (userSub) => {
   }, {});
 };
 
-const getJobUsers = async (jobs, items) => {
+const getJobUsers = async (jobs) => {
   const userIds = [];
-  items.forEach((item) => {
+  jobs.forEach((item) => {
     let userId;
     if (item.assigned_to?.S) {
       userId = item.assigned_to?.S;
@@ -84,15 +91,17 @@ const getJobUsers = async (jobs, items) => {
       }
     }
   }
-  return jobs.map((job, i) => {
-    const sub = items[i]?.assigned_to?.S;
-    const assignedTo = sub ? users.find((u) => u.sub === sub) : null;
 
-    return {
-      ...job,
-      assignedTo,
-    };
-  });
+  const usersAssignation = {};
+  for (const job of jobs) {
+    const sub = job.assigned_to?.S;
+    const assignedTo = sub ? users.find((u) => u.sub === sub) : null;
+    const jobId = job.SK?.S?.replace("job_", "");
+    if (assignedTo) {
+      usersAssignation[jobId] = assignedTo;
+    }
+  }
+  return usersAssignation;
 };
 
 module.exports = {

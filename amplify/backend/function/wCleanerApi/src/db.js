@@ -98,6 +98,12 @@ const addCustomer = async (customer) => {
       status: {
         S: "active",
       },
+      address_lowercase: {
+        S: customer.address.toLowerCase(),
+      },
+      postcode_lowercase: {
+        S: customer.postcode.toLowerCase(),
+      },
     },
   };
 
@@ -245,8 +251,12 @@ const editCustomer = async (id, editedCustomer) => {
 
   if (editedCustomer.address !== undefined) {
     exprAttrNames["#A"] = "address";
+    exprAttrNames["#AL"] = "address_lowercase";
     exprAttrValues[":address"] = { S: editedCustomer.address };
-    updateExprParts.push("#A = :address");
+    exprAttrValues[":address_lowercase"] = {
+      S: editedCustomer.address.toLowerCase(),
+    };
+    updateExprParts.push("#A = :address", "#AL = :address_lowercase");
   }
 
   if (editedCustomer.postcode !== undefined) {
@@ -255,13 +265,22 @@ const editCustomer = async (id, editedCustomer) => {
       throw "INVALID_POSTCODE";
     }
     const outcode = postcodeParts[0];
+
     exprAttrNames["#P"] = "postcode";
+    exprAttrNames["#PL"] = "postcode_lowercase";
     exprAttrNames["#OC"] = "outcode";
     exprAttrValues[":postcode"] = { S: editedCustomer.postcode };
-    exprAttrValues[":outcode"] = { S: outcode };
-    updateExprParts.push("#P = :postcode", "#OC = :outcode");
-  }
+    exprAttrValues[":postcode_lowercase"] = {
+      S: editedCustomer.postcode.toLowerCase(),
+    };
+    exprAttrValues[":outcode"] = { S: outcode.toUpperCase() };
 
+    updateExprParts.push(
+      "#P = :postcode",
+      "#PL = :postcode_lowercase",
+      "#OC = :outcode"
+    );
+  }
   if (editedCustomer.mainTelephone !== undefined) {
     exprAttrNames["#MP"] = "mainTelephone";
     exprAttrValues[":mainTelephone"] = { S: editedCustomer.mainTelephone };
@@ -428,8 +447,8 @@ const getCustomers = async (filters, pagination) => {
       ExpressionAttributeNames: {
         "#NL": "name_lowercase",
         "#EL": "email_lowercase",
-        "#A": "address",
-        "#P": "postcode",
+        "#AL": "address_lowercase",
+        "#PL": "postcode_lowercase",
         ...params.ExpressionAttributeNames,
       },
       ExpressionAttributeValues: {
@@ -442,9 +461,8 @@ const getCustomers = async (filters, pagination) => {
     };
 
     filterExpressions.push(
-      "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#A, :address) OR contains(#P, :postcode))"
+      "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#AL, :address) OR contains(#PL, :postcode))"
     );
-
     params = { ...params, ...searchParams };
   }
 
@@ -569,6 +587,26 @@ const getCleaningAddress = async (customerId, addressId) => {
   };
   const address = await ddb.getItem(params).promise();
   return address.Item;
+};
+
+const getCleaningAddressById = async (addressId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    FilterExpression: "#SK = :SK",
+    ExpressionAttributeValues: {
+      ":SK": { S: `address_${addressId}` },
+    },
+    ExpressionAttributeNames: {
+      "#SK": "SK",
+    },
+  };
+  const result = await ddb.scan(params).promise();
+  if (!result.Items?.length) {
+    return null;
+  }
+
+  const address = result.Items[0];
+  return address;
 };
 
 const getCleaningAddresses = async (customerId) => {
@@ -934,7 +972,6 @@ const batchGetCustomersByIds = async (customerIds) => {
 
 const batchGetAddresses = async (customerAndAddressId) => {
   const addressBatches = chunk(customerAndAddressId, 100);
-  console.log(JSON.stringify({ addressBatches }, null, 2));
   const addresses = {};
 
   for (const addressIdsBatch of addressBatches) {
@@ -948,14 +985,11 @@ const batchGetAddresses = async (customerAndAddressId) => {
         },
       },
     };
-    console.log(JSON.stringify({ params }, null, 2));
 
     const result = await ddb.batchGetItem(params).promise();
-    console.log(JSON.stringify({ result }, null, 2));
     const addressesBatch = (result.Responses?.[TABLE_NAME] ?? []).map(
       mapCleaningAddress
     );
-    console.log(JSON.stringify({ addressesBatch }, null, 2));
 
     for (const address of addressesBatch) {
       addresses[`${address.customerId}_${address.id}`] = address;
@@ -1038,33 +1072,18 @@ const getJobCustomers = async (jobs) => {
 
   const customers = await batchGetCustomersByIds(customerIds);
 
-  return jobs.map((job) => ({
-    ...job,
-    customer: customers[job.customerId],
-  }));
+  return customers;
 };
 
 const getAddressesForJobs = async (jobs) => {
-  console.log(JSON.stringify({ jobs }, null, 2));
   const customerAndAddressIds = Array.from(
     new Set(jobs.map((j) => `${j.customerId}_${j.addressId}`).filter(Boolean))
   ).map((concatenated) => {
     const [customerId, addressId] = concatenated.split("_");
     return { customerId, addressId };
   });
-  console.log(JSON.stringify({ customerAndAddressIds }, null, 2));
   const addresses = await batchGetAddresses(customerAndAddressIds);
-  console.log(JSON.stringify({ addresses }, null, 2));
-  return jobs.map((job) => {
-    console.log(JSON.stringify({ job }, null, 2));
-    const address = addresses[`${job.customerId}_${job.addressId}`];
-    console.log(JSON.stringify({ address }, null, 2));
-    return {
-      ...job,
-      address: address?.address ?? address?.name ?? "Unknown",
-      postcode: address?.postcode ?? "",
-    };
-  });
+  return addresses;
 };
 
 //EDIT JOB TYPE
@@ -1623,10 +1642,87 @@ const getInvoiceByJobId = async (jobId) => {
   return res.Item ? mapInvoice(res.Item) : null;
 };
 
-const createInvoiceAuto = async (jobId, invoiceData) => {
-  // One invoice per job
+// GET INVOICES
+const getInvoices = async (pagination = {}) => {
+  const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
+
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "invoice_number",
+    KeyConditionExpression: "#SK = :invoice",
+    ExpressionAttributeNames: {
+      "#SK": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":invoice": { S: "invoice" },
+    },
+    ScanIndexForward: false,
+  };
+
+  if (enabled) {
+    params.Limit = limit;
+    if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
+      params.ExclusiveStartKey = exclusiveStartKey;
+    }
+  }
+
+  let result = await ddb.query(params).promise();
+  const items = result.Items || [];
+  let lastEvaluatedKey = null;
+
+  if (enabled) {
+    const nextItem = await ddb
+      .query({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: 1,
+      })
+      .promise();
+
+    if ((nextItem.Items || []).length > 0) {
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+  } else {
+    while (result.LastEvaluatedKey) {
+      result = await ddb
+        .query({
+          ...params,
+          ExclusiveStartKey: result.LastEvaluatedKey,
+        })
+        .promise();
+
+      items.push(...(result.Items || []));
+    }
+  }
+
+  return { items, lastEvaluatedKey };
+};
+
+const createInvoiceAuto = async (customerId, jobId, invoiceData) => {
+  if (!customerId) {
+    throw "CUSTOMER_NOT_FOUND";
+  }
+
+  if (!jobId) {
+    throw "JOB_NOT_FOUND";
+  }
+
+  if (!invoiceData?.date) {
+    throw "MISSING_INVOICE_DATE";
+  }
+
+  if (!invoiceData?.description) {
+    throw "MISSING_INVOICE_DESCRIPTION";
+  }
+
+  if (!invoiceData?.addressId) {
+    throw "MISSING_INVOICE_ADDRESS";
+  }
+
   const existing = await getInvoiceByJobId(jobId);
-  if (existing) throw "INVOICE_ALREADY_EXISTS";
+  if (existing) {
+    throw "INVOICE_ALREADY_EXISTS";
+  }
 
   const free = await takeSmallestFreeNumber();
 
@@ -1635,65 +1731,69 @@ const createInvoiceAuto = async (jobId, invoiceData) => {
       await ddb
         .deleteItem({
           TableName: TABLE_NAME,
-          Key: { PK: { S: INVOICE_ALLOCATOR_PK }, SK: { S: free.freeSk } },
+          Key: {
+            PK: { S: INVOICE_ALLOCATOR_PK },
+            SK: { S: free.freeSk },
+          },
         })
         .promise();
 
-      return createInvoiceAuto(jobId, invoiceData);
+      return createInvoiceAuto(customerId, jobId, invoiceData);
     }
 
-    const generatedAt = new Date().toISOString();
-    const params = {
-      TransactItems: [
-        {
-          Delete: {
-            TableName: TABLE_NAME,
-            Key: { PK: { S: INVOICE_ALLOCATOR_PK }, SK: { S: free.freeSk } },
-          },
-        },
-
-        {
-          Put: {
-            TableName: TABLE_NAME,
-            Item: {
-              PK: { S: `job_id_${jobId}` },
-              SK: { S: "invoice" },
-              invoice_number: { N: String(free.raw) },
-              generated_at: { S: generatedAt },
-              date: { S: "" + invoiceData.date },
-              description: { S: invoiceData.description },
-              address_id: { S: invoiceData.addressId },
+    await ddb
+      .transactWriteItems({
+        TransactItems: [
+          {
+            Delete: {
+              TableName: TABLE_NAME,
+              Key: {
+                PK: { S: INVOICE_ALLOCATOR_PK },
+                SK: { S: free.freeSk },
+              },
             },
-            ConditionExpression: "attribute_not_exists(PK)",
           },
-        },
-      ],
-    };
-
-    await ddb.transactWriteItems(params).promise();
+          {
+            Put: {
+              TableName: TABLE_NAME,
+              Item: {
+                PK: { S: `job_id_${jobId}` },
+                SK: { S: "invoice" },
+                customer_id: { S: customerId },
+                invoice_number: { N: String(free.raw) },
+                date: { S: String(invoiceData.date) },
+                description: { S: invoiceData.description },
+                address_id: { S: invoiceData.addressId },
+              },
+              ConditionExpression: "attribute_not_exists(PK)",
+            },
+          },
+        ],
+      })
+      .promise();
 
     return {
       jobId,
+      customerId,
       invoiceNumber: formatInvoiceNumber(free.raw),
       invoiceNumberRaw: free.raw,
       date: invoiceData.date,
       description: invoiceData.description,
-      generatedAt,
       addressId: invoiceData.addressId,
     };
   }
+
   const next = await getNextInvoiceNumber();
 
-  const generatedAt = new Date().toISOString();
   await ddb
     .putItem({
       TableName: TABLE_NAME,
       Item: {
         PK: { S: `job_id_${jobId}` },
         SK: { S: "invoice" },
+        customer_id: { S: customerId },
         invoice_number: { N: String(next) },
-        generated_at: { S: generatedAt },
-        date: { S: "" + invoiceData.date },
+        date: { S: String(invoiceData.date) },
         description: { S: invoiceData.description },
         address_id: { S: invoiceData.addressId },
       },
@@ -1703,11 +1803,11 @@ const createInvoiceAuto = async (jobId, invoiceData) => {
 
   return {
     jobId,
+    customerId,
     invoiceNumber: formatInvoiceNumber(next),
     invoiceNumberRaw: next,
     date: invoiceData.date,
     description: invoiceData.description,
-    generatedAt,
     addressId: invoiceData.addressId,
   };
 };
@@ -1803,11 +1903,13 @@ module.exports = {
   editInvoiceContent,
   getAddressesForJobs,
   getCleaningAddress,
+  getCleaningAddressById,
   getCleaningAddresses,
   getCustomerBySlug,
   getCustomerById,
   getCustomers,
   getCustomerJobs,
+  getInvoices,
   getJob,
   getJobCustomers,
   getJobs,

@@ -53,16 +53,15 @@ const mapInvoice = (item) => {
 
   return {
     jobId: item.PK.S.replace("job_id_", ""),
-    invoiceNumber: raw !== undefined ? formatInvoiceNumber(raw) : undefined,
+    customerId: item.customer_id?.S,
+    invoiceNumber: raw !== undefined ? formatInvoiceNumber(raw) : "",
     invoiceNumberRaw: raw,
-    date: item.date ? Number(item.date.S) : undefined,
+    date: item.date ? Number(item.date.S) : 0,
     description: item.description?.S ?? "",
-    generatedAt: item.generated_at?.S,
-    addressId: item.address_id?.S,
+    addressId: item.address_id?.S ?? "",
   };
 };
 
-// map a single standalone job
 const mapJob = (jobFromDb) => {
   const startValue = jobFromDb.start?.N ? +jobFromDb.start.N : Date.now();
   const endValue = jobFromDb.end?.N ? +jobFromDb.end.N : startValue + 3600000;
@@ -92,6 +91,7 @@ const mapJobAddressUpdate = (jobFromDb, newAddress) => ({
   address: newAddress.address,
   postcode: newAddress.postcode,
 });
+
 const mapJobType = (jobTypeFromDb) => {
   if (!jobTypeFromDb || !jobTypeFromDb.PK || !jobTypeFromDb.name) {
     return {
@@ -113,9 +113,11 @@ const mapJobFromRequestBody = (job) => ({
   start: +new Date(`${job.date} ${job.startTime}`),
   end: +new Date(`${job.date} ${job.endTime}`),
 });
+
 const mapJobTypeFromRequestBody = (jobType) => ({
   ...jobType,
 });
+
 const mapJobTemporalFilters = (start, end) => {
   const startNumeric = +new Date(start);
   const endNumeric = +new Date(end);

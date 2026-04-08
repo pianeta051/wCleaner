@@ -34,16 +34,13 @@ export const CustomerCardLink = styled(RouterLink)(({ theme }) => ({
   },
 }));
 
-export const CustomerCardActionsSx = {
-  sx: {
-    px: 2,
-    pb: 2,
-    pt: 0,
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 1,
-  },
-};
+export const CustomerCardActions = styled(Card)(({ theme }) => ({
+  padding: theme.spacing(2),
+  paddingTop: theme.spacing(0),
+  display: "flex",
+  justifyContent: "space-between",
+  gap: theme.spacing(1),
+}));
 
 export const LinkStyle: React.CSSProperties = {
   textDecoration: "none",

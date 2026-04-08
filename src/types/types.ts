@@ -31,6 +31,7 @@ export type CustomerCleaningAddress = {
   name: string;
   address: string;
   postcode: string;
+  customerId: string;
 };
 
 export type CustomerNote = {
@@ -45,12 +46,17 @@ export type CustomerNote = {
 };
 
 export type Invoice = {
-  invoiceNumber: number;
+  jobId: string;
+  customerId?: string;
+  invoiceNumber: string;
+  invoiceNumberRaw?: number;
   date: number;
   description: string;
-  generatedAt: string;
-  jobId: string;
   addressId: string;
+  address?: CustomerCleaningAddress;
+};
+
+export type InvoiceWithAddress = Invoice & {
   address: CustomerCleaningAddress;
 };
 export type RawInvoiceResponse = {
@@ -71,7 +77,7 @@ export type JobAssignation = {
 export type JobStatus = "pending" | "completed" | "cancelled";
 
 export type Job = {
-  customerId?: string;
+  customerId: string;
   id: string;
   date: string;
   startTime: string;

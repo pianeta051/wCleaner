@@ -42,6 +42,7 @@ export const SearchBar: FC<SearchBarProps> = ({
             type="text"
             value={searchTerm}
             onChange={handleChange}
+            onBlur={handleSubmit}
             label="Search customer"
             endAdornment={
               <InputAdornment position="end">
