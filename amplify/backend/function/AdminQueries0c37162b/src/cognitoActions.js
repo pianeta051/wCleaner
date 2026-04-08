@@ -11,11 +11,28 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
  * and limitations under the License.
  */
+const {
+  CognitoIdentityProviderClient,
+  AdminAddUserToGroupCommand,
+  AdminRemoveUserFromGroupCommand,
+  AdminCreateUserCommand,
+  AdminUpdateUserAttributesCommand,
+  AdminSetUserPasswordCommand,
+  AdminDisableUserCommand,
+  AdminEnableUserCommand,
+  AdminGetUserCommand,
+  AdminDeleteUserCommand,
+  AdminListGroupsForUserCommand,
+  ListUsersCommand,
+  ListGroupsCommand,
+  ListUsersInGroupCommand,
+  AdminConfirmSignUpCommand,
+  AdminUserGlobalSignOutCommand,
+} = require("@aws-sdk/client-cognito-identity-provider");
 
-const { CognitoIdentityServiceProvider } = require("aws-sdk");
-
-const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider();
 const userPoolId = process.env.USERPOOL;
+
+const cognitoClient = new CognitoIdentityProviderClient();
 
 async function addUserToGroup(username, groupname) {
   const params = {
@@ -27,9 +44,8 @@ async function addUserToGroup(username, groupname) {
   console.log(`Attempting to add ${username} to ${groupname}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminAddUserToGroup(params)
-      .promise();
+    const command = new AdminAddUserToGroupCommand(params);
+    await cognitoClient.send(command);
     console.log(`Success adding ${username} to ${groupname}`);
     return {
       message: `Success adding ${username} to ${groupname}`,
@@ -50,9 +66,8 @@ async function removeUserFromGroup(username, groupname) {
   console.log(`Attempting to remove ${username} from ${groupname}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminRemoveUserFromGroup(params)
-      .promise();
+    const command = new AdminRemoveUserFromGroupCommand(params);
+    await cognitoClient.send(command);
     console.log(`Removed ${username} from ${groupname}`);
     return {
       message: `Removed ${username} from ${groupname}`,
@@ -71,9 +86,8 @@ async function confirmUserSignUp(username) {
   };
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminConfirmSignUp(params)
-      .promise();
+    const command = new AdminConfirmSignUpCommand(params);
+    await cognitoClient.send(command);
     console.log(`Confirmed ${username} registration`);
     return {
       message: `Confirmed ${username} registration`,
@@ -114,7 +128,8 @@ async function createUser(user, redirectTo) {
     params.UserAttributes.push({ Name: "name", Value: name });
   }
   try {
-    await cognitoIdentityServiceProvider.adminCreateUser(params).promise();
+    const command = new AdminCreateUserCommand(params);
+    await cognitoClient.send(command);
     return {
       message: `Create user ${email}`,
     };
@@ -123,6 +138,7 @@ async function createUser(user, redirectTo) {
     throw err;
   }
 }
+
 async function updateUser(id, user) {
   const { email, color, name, password } = user;
   if (!email && !color && !name && !password) {
@@ -146,10 +162,8 @@ async function updateUser(id, user) {
     if (name) {
       params.UserAttributes.push({ Name: "name", Value: name });
     }
-
-    await cognitoIdentityServiceProvider
-      .adminUpdateUserAttributes(params)
-      .promise();
+    const command = new AdminUpdateUserAttributesCommand(params);
+    await cognitoClient.send(command);
   }
   if (password) {
     const params = {
@@ -158,7 +172,8 @@ async function updateUser(id, user) {
       Password: password,
       Permanent: true,
     };
-    await cognitoIdentityServiceProvider.adminSetUserPassword(params).promise();
+    const command = new AdminSetUserPasswordCommand(params);
+    await cognitoClient.send(command);
   }
 }
 
@@ -169,9 +184,9 @@ async function disableUser(username) {
   };
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminDisableUser(params)
-      .promise();
+    const command = new AdminDisableUserCommand(params);
+
+    await cognitoClient.send(command);
     console.log(`Disabled ${username}`);
     return {
       message: `Disabled ${username}`,
@@ -189,9 +204,9 @@ async function enableUser(username) {
   };
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminEnableUser(params)
-      .promise();
+    const command = new AdminEnableUserCommand(params);
+
+    await cognitoClient.send(command);
     console.log(`Enabled ${username}`);
     return {
       message: `Enabled ${username}`,
@@ -211,10 +226,9 @@ async function getUser(username) {
   console.log(`Attempting to retrieve information for ${username}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminGetUser(params)
-      .promise();
-    return result;
+    const command = new AdminGetUserCommand(params);
+
+    await cognitoClient.send(command);
   } catch (err) {
     console.log(err);
     throw err;
@@ -230,9 +244,8 @@ async function removeUser(username) {
   console.log(`Attempting to remove ${username}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminDeleteUser(params)
-      .promise();
+    const command = new AdminDeleteUserCommand(params);
+    await cognitoClient.send(command);
     console.log(`Removed ${username}`);
     return {
       message: `Removed ${username}`,
@@ -270,9 +283,8 @@ async function listUsers(Limit, PaginationToken) {
   console.log("Attempting to list users");
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .listUsers(params)
-      .promise();
+    const command = new ListUsersCommand(params);
+    const result = await cognitoClient.send(command);
 
     // Rename to NextToken for consistency with other Cognito APIs
     result.NextToken = result.PaginationToken;
@@ -295,9 +307,8 @@ async function listGroups(Limit, PaginationToken) {
   console.log("Attempting to list groups");
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .listGroups(params)
-      .promise();
+    const command = new ListGroupsCommand(params);
+    const result = await cognitoClient.send(command);
 
     // Rename to NextToken for consistency with other Cognito APIs
     result.NextToken = result.PaginationToken;
@@ -321,9 +332,9 @@ async function listGroupsForUser(username, Limit, NextToken) {
   console.log(`Attempting to list groups for ${username}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminListGroupsForUser(params)
-      .promise();
+    const command = new AdminListGroupsForUserCommand(params);
+
+    const result = await cognitoClient.send(command);
     /**
      * We are filtering out the results that seem to be innapropriate for client applications
      * to prevent any informaiton disclosure. Customers can modify if they have the need.
@@ -354,10 +365,8 @@ async function listUsersInGroup(groupname, Limit, NextToken) {
   console.log(`Attempting to list users in group ${groupname}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .listUsersInGroup(params)
-      .promise();
-    return result;
+    const command = new ListUsersInGroupCommand(params);
+    return await cognitoClient.send(command);
   } catch (err) {
     console.log(err);
     throw err;
@@ -374,9 +383,8 @@ async function signUserOut(username) {
   console.log(`Attempting to signout ${username}`);
 
   try {
-    const result = await cognitoIdentityServiceProvider
-      .adminUserGlobalSignOut(params)
-      .promise();
+    const command = new AdminUserGlobalSignOutCommand(params);
+    await cognitoClient.send(command);
     console.log(`Signed out ${username} from all devices`);
     return {
       message: `Signed out ${username} from all devices`,

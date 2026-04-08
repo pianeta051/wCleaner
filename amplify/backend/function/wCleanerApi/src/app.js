@@ -613,14 +613,15 @@ app.get("/invoices", async function (req, res) {
 
     let invoices = invoicesFromDb.map(mapInvoice);
 
-    const addresses = await Promise.all(
-      invoices.map(async (invoice) => {
-        if (!invoice.addressId) {
-          return undefined;
-        }
+    // lista de address ids sin duplicados
+    const addressIds = Array.from(
+      new Set(invoices.map((invoice) => invoice.addressId))
+    );
 
+    const addresses = await Promise.all(
+      addressIds.map(async (addressId) => {
         try {
-          const addressFromDb = await getCleaningAddressById(invoice.addressId);
+          const addressFromDb = await getCleaningAddressById(addressId);
           return addressFromDb ? mapCleaningAddress(addressFromDb) : undefined;
         } catch (error) {
           console.error(error);
@@ -629,11 +630,20 @@ app.get("/invoices", async function (req, res) {
       })
     );
 
+    // obtener las addresses en batches
+    // {[addressId]: {...address}}
+    const addressMap = {};
+    addresses.forEach((address) => {
+      addressMap[address.id] = address;
+    });
+
     const responseToken = generateToken(lastEvaluatedKey);
 
-    invoices = invoices.map((invoice, index) => ({
+    // unir los invoices a la address
+    // invoice.address = addresseMap[invoices.addressId]
+    invoices = invoices.map((invoice) => ({
       ...invoice,
-      address: addresses[index],
+      address: addressMap[invoice.addressId],
     }));
 
     res.json({

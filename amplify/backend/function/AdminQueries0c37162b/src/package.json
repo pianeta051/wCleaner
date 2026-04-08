@@ -5,9 +5,9 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "dependencies": {
-    "aws-sdk": "^2.1692.0",
-    "aws-serverless-express": "^3.3.5",
+    "@aws-sdk/client-cognito-identity-provider": "^3.972.0",
     "body-parser": "^1.17.2",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "serverless-express": "^2.0.12"
   }
 }
