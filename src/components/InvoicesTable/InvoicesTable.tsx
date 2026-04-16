@@ -1,11 +1,15 @@
 import { FC } from "react";
 import {
   Alert,
-  Button,
   CardContent,
   Chip,
   Divider,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
+  SelectChangeEvent,
   Stack,
   Table,
   TableBody,
@@ -13,6 +17,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   Typography,
   useMediaQuery,
 } from "@mui/material";
@@ -20,7 +25,6 @@ import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import dayjs from "dayjs";
 
 import { InvoiceWithAddress } from "../../types/types";
@@ -33,28 +37,51 @@ import {
   AddressCellContent,
 } from "./InvoicesTable.style";
 import { DownloadInvoiceButton } from "../DownloadInvoiceButton/DownloadInvoiceButton";
+import {
+  SortableColumnId,
+  SortDirection,
+} from "../../pages/admin/invoices/InvoicesList/InvoicesList";
 
 type InvoicesTableProps = {
   invoices: InvoiceWithAddress[];
   onReload?: (invoice: InvoiceWithAddress) => void;
+  sorting: {
+    sortBy: SortableColumnId;
+    direction: SortDirection;
+  };
+  setSorting: (newSorting: {
+    sortBy: SortableColumnId;
+    direction: SortDirection;
+  }) => void;
 };
 
-const COLUMN_HEADERS: { name: string; align: "left" | "right" }[] = [
-  { name: "Invoice #", align: "left" },
-  { name: "Date", align: "left" },
-  { name: "Address", align: "left" },
-  { name: "Description", align: "left" },
-  { name: "Actions", align: "right" },
+type ColumnHeader = {
+  label: string;
+  align: "left" | "right";
+  id: "invoiceNumber" | "invoiceDate" | "address" | "description" | "actions";
+  sortable?: boolean;
+};
+
+type MobileSortOption =
+  | "newest"
+  | "oldest"
+  | "highestInvoiceNumber"
+  | "lowestInvoiceNumber";
+
+const COLUMN_HEADERS: ColumnHeader[] = [
+  { label: "Invoice #", align: "left", id: "invoiceNumber", sortable: true },
+  { label: "Date", align: "left", id: "invoiceDate", sortable: true },
+  { label: "Address", align: "left", id: "address" },
+  { label: "Description", align: "left", id: "description" },
+  { label: "Actions", align: "right", id: "actions" },
 ];
 
-export const InvoicesTable: FC<InvoicesTableProps> = ({ invoices }) => {
+export const InvoicesTable: FC<InvoicesTableProps> = ({
+  invoices,
+  sorting,
+  setSorting,
+}) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  if (invoices.length === 0) {
-    return <Alert severity="warning">No invoices found</Alert>;
-  }
-
-  const sortedInvoices = [...invoices].sort((a, b) => b.date - a.date);
 
   const formatDate = (date: number) => dayjs(date).format("YYYY-MM-DD");
 
@@ -83,9 +110,103 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({ invoices }) => {
   const formatAddressName = (invoice: InvoiceWithAddress) =>
     formatMaybe(invoice.address?.name);
 
+  const getInvoiceNumberValue = (invoice: InvoiceWithAddress) => {
+    if (
+      "invoiceNumberRaw" in invoice &&
+      typeof invoice.invoiceNumberRaw === "number"
+    ) {
+      return invoice.invoiceNumberRaw;
+    }
+
+    const digits = invoice.invoiceNumber?.match(/\d+/g)?.join("") ?? "0";
+    return Number(digits);
+  };
+
+  const handleSortChange = (columnId: SortableColumnId) => {
+    if (columnId === sorting.sortBy) {
+      setSorting({
+        sortBy: columnId,
+        direction: sorting.direction === "asc" ? "desc" : "asc",
+      });
+      return;
+    }
+
+    setSorting({
+      sortBy: columnId,
+      direction: "desc",
+    });
+  };
+
+  const getMobileSortOptionValue = (): MobileSortOption => {
+    if (sorting.sortBy === "invoiceDate" && sorting.direction === "desc") {
+      return "newest";
+    }
+    if (sorting.sortBy === "invoiceDate" && sorting.direction === "asc") {
+      return "oldest";
+    }
+    if (sorting.sortBy === "invoiceNumber" && sorting.direction === "desc") {
+      return "highestInvoiceNumber";
+    }
+    return "lowestInvoiceNumber";
+  };
+
+  const handleMobileSortChange = (
+    event: SelectChangeEvent<MobileSortOption>
+  ) => {
+    const option = event.target.value as MobileSortOption;
+
+    switch (option) {
+      case "newest":
+        setSorting({
+          sortBy: "invoiceDate",
+          direction: "desc",
+        });
+        break;
+      case "oldest":
+        setSorting({
+          sortBy: "invoiceDate",
+          direction: "asc",
+        });
+        break;
+      case "highestInvoiceNumber":
+        setSorting({
+          sortBy: "invoiceNumber",
+          direction: "desc",
+        });
+        break;
+      case "lowestInvoiceNumber":
+        setSorting({
+          sortBy: "invoiceNumber",
+          direction: "asc",
+        });
+        break;
+    }
+  };
+
+  if (invoices.length === 0) {
+    return <Alert severity="warning">No invoices found</Alert>;
+  }
+
   return isMobile ? (
     <Stack spacing={2}>
-      {sortedInvoices.map((invoice) => (
+      <FormControl fullWidth size="small">
+        <InputLabel id="mobile-invoice-sort-label">Sort by</InputLabel>
+        <Select
+          labelId="mobile-invoice-sort-label"
+          value={getMobileSortOptionValue()}
+          label="Sort by"
+          onChange={handleMobileSortChange}
+        >
+          <MenuItem value="newest">Newest</MenuItem>
+          <MenuItem value="oldest">Oldest</MenuItem>
+          <MenuItem value="highestInvoiceNumber">
+            Highest invoice number
+          </MenuItem>
+          <MenuItem value="lowestInvoiceNumber">Lowest invoice number</MenuItem>
+        </Select>
+      </FormControl>
+
+      {invoices.map((invoice) => (
         <InvoiceCard key={invoice.jobId} variant="outlined">
           <CardContent sx={{ pb: 1.5 }}>
             <Stack
@@ -160,7 +281,7 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({ invoices }) => {
             <DownloadInvoiceButton
               job={{
                 id: invoice.jobId,
-                customerId: invoice.address.customerId,
+                customerId: invoice.address?.customerId ?? invoice.customerId,
               }}
             />
           </InvoiceCardActions>
@@ -175,16 +296,28 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({ invoices }) => {
       <Table stickyHeader aria-label="invoices table">
         <TableHead>
           <TableRow>
-            {COLUMN_HEADERS.map(({ name, align }) => (
-              <TableCellWrap key={name} align={align}>
-                {name}
+            {COLUMN_HEADERS.map(({ label, align, id, sortable }) => (
+              <TableCellWrap key={id} align={align}>
+                {sortable ? (
+                  <TableSortLabel
+                    active={sorting.sortBy === id}
+                    direction={
+                      sorting.sortBy === id ? sorting.direction : "desc"
+                    }
+                    onClick={() => handleSortChange(id as SortableColumnId)}
+                  >
+                    {label}
+                  </TableSortLabel>
+                ) : (
+                  <>{label}</>
+                )}
               </TableCellWrap>
             ))}
           </TableRow>
         </TableHead>
 
         <TableBody>
-          {sortedInvoices.map((invoice, index) => (
+          {invoices.map((invoice, index) => (
             <TableRow
               key={invoice.jobId}
               sx={{
@@ -216,7 +349,8 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({ invoices }) => {
                 <DownloadInvoiceButton
                   job={{
                     id: invoice.jobId,
-                    customerId: invoice.address.customerId,
+                    customerId:
+                      invoice.address?.customerId ?? invoice.customerId,
                   }}
                 />
               </TableCell>

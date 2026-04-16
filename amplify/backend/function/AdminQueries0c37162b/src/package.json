@@ -4,10 +4,17 @@
   "description": "Administrative actions for Amazon Cognito",
   "main": "index.js",
   "license": "Apache-2.0",
+  "scripts": {
+    "start": "node --watch -r dotenv/config app.js"
+  },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.972.0",
+    "aws-serverless-express": "^3.4.0",
     "body-parser": "^1.17.2",
     "express": "^4.17.1",
     "serverless-express": "^2.0.12"
+  },
+  "devDependencies": {
+    "dotenv": "^17.4.2"
   }
 }

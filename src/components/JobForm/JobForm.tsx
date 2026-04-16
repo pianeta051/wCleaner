@@ -245,24 +245,7 @@ export const JobForm: FC<JobFormProps> = ({
               }
             />
           </Grid>
-          <Grid size={12}>
-            <TextField
-              name="invoiceDescription"
-              label="Work description"
-              multiline
-              minRows={4}
-              fullWidth
-              value={formik.values.invoiceDescription ?? ""}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              disabled={Boolean(defaultValues?.invoiceNumber)}
-              helperText={
-                defaultValues?.invoiceNumber
-                  ? "Invoice already generated — description is read-only."
-                  : "This text will appear on the invoice."
-              }
-            />
-          </Grid>
+
           <Grid size={12}>
             <Grid container spacing={2}>
               <Grid
