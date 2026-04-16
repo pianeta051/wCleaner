@@ -56,7 +56,7 @@ const mapInvoice = (item) => {
     customerId: item.customer_id?.S,
     invoiceNumber: raw !== undefined ? formatInvoiceNumber(raw) : "",
     invoiceNumberRaw: raw,
-    date: item.date ? Number(item.date.S) : 0,
+    date: item.date?.N ? Number(item.date.N) : 0,
     description: item.description?.S ?? "",
     addressId: item.address_id?.S ?? "",
   };

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import useSWRInfinite from "swr/infinite";
 
-import { getInvoices } from "../../services/jobs";
+import { getInvoices, InvoicesListParams } from "../../services/jobs";
 import { extractErrorCode } from "../../services/error";
 import { InvoiceWithAddress } from "../../types/types";
 
@@ -19,31 +19,35 @@ type ErrorResponseShape = {
   };
 };
 
-type InvoicesKey = readonly [string, string | undefined];
+type InvoicesKey = readonly [
+  string,
+  string | undefined,
+  InvoicesListParams | undefined
+];
 
-export const useInvoicesInfinite = () => {
+export const useInvoicesInfinite = (params?: InvoicesListParams) => {
   const getKey = (
     pageIndex: number,
     previousPageData: InvoicesResponse | null
   ): InvoicesKey | null => {
     if (pageIndex === 0) {
-      return ["invoices", undefined] as const;
+      return ["invoices", undefined, params] as const;
     }
 
     if (!previousPageData?.nextToken) {
       return null;
     }
 
-    return ["invoices", previousPageData.nextToken] as const;
+    return ["invoices", previousPageData.nextToken, params] as const;
   };
 
   const { data, error, isLoading, mutate, setSize, isValidating } =
     useSWRInfinite<InvoicesResponse, ErrorResponseShape>(
       getKey,
       (key) => {
-        const [, nextToken] = key as InvoicesKey;
+        const [, nextToken, params] = key as InvoicesKey;
 
-        return getInvoices({ nextToken });
+        return getInvoices({ nextToken, params });
       },
       {
         revalidateFirstPage: false,

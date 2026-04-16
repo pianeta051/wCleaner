@@ -61,12 +61,12 @@ export const JobInvoice: FC<JobInvoiceProps> = ({ job, invoice, customer }) => {
         <View style={billToStyles.container}>
           <Text style={billToStyles.label}>Bill To:</Text>
           <Text style={billToStyles.customerLine}>{customer.name}</Text>
-          {invoice.address.address && (
+          {invoice?.address?.address && (
             <Text style={billToStyles.customerLine}>
               {invoice.address.address}
             </Text>
           )}
-          {invoice.address.postcode && (
+          {invoice?.address?.postcode && (
             <Text style={billToStyles.customerLine}>
               {invoice.address.postcode}
             </Text>

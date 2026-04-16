@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import {
   Alert,
   Button,
@@ -13,11 +13,29 @@ import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 import { Title, Wrapper } from "./InvoicesList.style";
 import { useInvoicesInfinite } from "../../../../hooks/Jobs/useInvoicesInfinite";
 
+export type SortableColumnId = "invoiceNumber" | "invoiceDate";
+export type SortDirection = "asc" | "desc";
+
 export const InvoicesList: FC = () => {
+  const [sortBy, setSortBy] = useState<SortableColumnId>("invoiceNumber");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const { invoices, loading, loadingMore, error, hasMore, loadMore } =
-    useInvoicesInfinite();
+    useInvoicesInfinite({
+      sorting: {
+        sortBy,
+        direction: sortDirection,
+      },
+    });
 
   const isEmpty = !loading && !error && invoices.length === 0;
+
+  const changeSortingHandler = (newSorting: {
+    sortBy: SortableColumnId;
+    direction: SortDirection;
+  }) => {
+    setSortBy(newSorting.sortBy);
+    setSortDirection(newSorting.direction);
+  };
 
   return (
     <Wrapper>
@@ -34,7 +52,11 @@ export const InvoicesList: FC = () => {
             <Alert severity="info">No invoices found</Alert>
           ) : (
             <Stack spacing={2}>
-              <InvoicesTable invoices={invoices} />
+              <InvoicesTable
+                invoices={invoices}
+                sorting={{ sortBy, direction: sortDirection }}
+                setSorting={changeSortingHandler}
+              />
 
               {hasMore ? (
                 <Button

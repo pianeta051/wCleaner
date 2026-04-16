@@ -66,6 +66,17 @@
         "fieldName": "invoice_number",
         "fieldType": "number"
       }
+    },
+    {
+      "name": "invoice_date",
+      "partitionKey": {
+        "fieldName": "SK",
+        "fieldType": "string"
+      },
+      "sortKey": {
+        "fieldName": "date",
+        "fieldType": "number"
+      }
     }
   ],
   "triggerFunctions": []

@@ -15,6 +15,10 @@ import { JobTypeFormValues } from "../components/JobTypeForm/JobTypeForm";
 import { InvoiceFormValues } from "../components/InvoiceForm/InvoiceForm";
 import { API } from "aws-amplify";
 import { API_URL, localFetch } from "./dataApi";
+import {
+  SortableColumnId,
+  SortDirection,
+} from "../pages/admin/invoices/InvoicesList/InvoicesList";
 
 // GENERAL FUNCTIONS
 const get = async (
@@ -476,17 +480,31 @@ export const getJobInvoice = async (
 };
 
 //GET INVOIVES
+export type InvoicesListParams = {
+  sorting?: {
+    sortBy: SortableColumnId;
+    direction: SortDirection;
+  };
+};
+
 export const getInvoices = async ({
   nextToken,
   paginate = true,
+  params,
 }: {
   nextToken?: string;
   paginate?: boolean;
+  params?: InvoicesListParams;
 } = {}): Promise<{ invoices: InvoiceWithAddress[]; nextToken?: string }> => {
   try {
     const queryParams: { [param: string]: string } = {
       paginate: paginate === false ? "false" : "true",
     };
+
+    if (params?.sorting) {
+      queryParams.sortBy = params.sorting.sortBy;
+      queryParams.sortDirection = params.sorting.direction;
+    }
 
     if (nextToken) {
       queryParams.nextToken = nextToken;

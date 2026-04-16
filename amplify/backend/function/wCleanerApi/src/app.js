@@ -589,6 +589,8 @@ app.get("/invoices", async function (req, res) {
   try {
     const nextToken = req.query?.nextToken;
     const paginate = req.query?.paginate !== "false";
+    const sortBy = req.query?.sortBy;
+    const sortDirection = req.query?.sortDirection;
     const exclusiveStartKey = parseToken(nextToken);
 
     const groups = req.authData?.groups || [];
@@ -599,11 +601,16 @@ app.get("/invoices", async function (req, res) {
       return;
     }
 
-    const { items: invoicesFromDb, lastEvaluatedKey } = await getInvoices({
-      exclusiveStartKey,
-
-      enabled: paginate,
-    });
+    const { items: invoicesFromDb, lastEvaluatedKey } = await getInvoices(
+      {
+        exclusiveStartKey,
+        enabled: paginate,
+      },
+      {
+        sortBy: sortBy,
+        direction: sortDirection,
+      }
+    );
 
     let invoices = invoicesFromDb.map(mapInvoice);
 
@@ -648,7 +655,7 @@ app.get("/invoices", async function (req, res) {
     throw error;
   }
 });
-//
+
 app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   const { customerId, jobId } = req.params;
   const { date, description, addressId } = req.body;
