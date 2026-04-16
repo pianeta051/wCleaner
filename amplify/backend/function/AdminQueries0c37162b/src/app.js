@@ -13,7 +13,8 @@
  */
 
 const bodyParser = require("body-parser");
-const express = require("serverless-express/express");
+const express = require("express");
+const awsServerlessExpressMiddleware = require("aws-serverless-express/middleware");
 
 const {
   addUserToGroup,
@@ -360,7 +361,9 @@ app.use((err, req, res, next) => {
   res.status(err.statusCode).json({ message: err.message }).end();
 });
 
-app.listen(3000, () => {
+const APP_PORT = process.env.APP_PORT ?? 3000;
+
+app.listen(APP_PORT, () => {
   console.log("App started");
 });
 

@@ -521,12 +521,6 @@ app.delete("/job-type/:jobTypeId", async function (req, res) {
   }
 });
 
-const APP_PORT = process.env.APP_PORT ?? 3000;
-
-app.listen(APP_PORT, function () {
-  console.log("App started");
-});
-
 //FILES
 //Add file
 
@@ -899,6 +893,12 @@ app.get("/customers/:customerId/addresses", async function (req, res) {
   const addresses = items.map(mapCleaningAddress);
 
   res.json({ addresses });
+});
+
+const APP_PORT = process.env.APP_PORT ?? 3000;
+
+app.listen(APP_PORT, function () {
+  console.log("App started");
 });
 
 module.exports = app;
