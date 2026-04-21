@@ -485,6 +485,10 @@ export type InvoicesListParams = {
     sortBy: SortableColumnId;
     direction: SortDirection;
   };
+  filters?: {
+    from?: number;
+    to?: number;
+  };
 };
 
 export const getInvoices = async ({
@@ -504,6 +508,14 @@ export const getInvoices = async ({
     if (params?.sorting) {
       queryParams.sortBy = params.sorting.sortBy;
       queryParams.sortDirection = params.sorting.direction;
+    }
+
+    if (params?.filters?.from !== undefined) {
+      queryParams.from = String(params.filters.from);
+    }
+
+    if (params?.filters?.to !== undefined) {
+      queryParams.to = String(params.filters.to);
     }
 
     if (nextToken) {
@@ -535,7 +547,6 @@ export const getInvoices = async ({
     throw "INTERNAL_ERROR";
   }
 };
-
 ///FINAL INVOICES
 export const editJobType = async (
   jobTypeId: string,
