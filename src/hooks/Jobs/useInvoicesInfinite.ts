@@ -20,7 +20,7 @@ type ErrorResponseShape = {
 };
 
 type InvoicesKey = readonly [
-  string,
+  "invoices",
   string | undefined,
   InvoicesListParams | undefined
 ];
@@ -45,9 +45,12 @@ export const useInvoicesInfinite = (params?: InvoicesListParams) => {
     useSWRInfinite<InvoicesResponse, ErrorResponseShape>(
       getKey,
       (key) => {
-        const [, nextToken, params] = key as InvoicesKey;
+        const [, nextToken, currentParams] = key as InvoicesKey;
 
-        return getInvoices({ nextToken, params });
+        return getInvoices({
+          nextToken,
+          params: currentParams,
+        });
       },
       {
         revalidateFirstPage: false,
