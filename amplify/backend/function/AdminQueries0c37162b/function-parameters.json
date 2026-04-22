@@ -1,8 +1,3 @@
 {
-  "environmentVariableList": [
-    {
-      "cloudFormationParameterName": "forceRedeploy",
-      "environmentVariableName": "FORCE_REDEPLOY"
-    }
-  ]
+  "environmentVariableList": []
 }

@@ -14,9 +14,6 @@
     },
     "s3Key": {
       "Type": "String"
-    },
-    "forceRedeploy": {
-      "Type": "String"
     }
   },
   "Conditions": {
@@ -64,9 +61,6 @@
             "GROUP": "Admin",
             "USERPOOL": {
               "Ref": "authwcleanerUserPoolId"
-            },
-            "FORCE_REDEPLOY": {
-              "Ref": "forceRedeploy"
             }
           }
         },
