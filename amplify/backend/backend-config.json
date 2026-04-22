@@ -176,14 +176,6 @@
         }
       ]
     },
-    "AMPLIFY_function_AdminQueries0c37162b_forceRedeploy": {
-      "usedBy": [
-        {
-          "category": "function",
-          "resourceName": "AdminQueries0c37162b"
-        }
-      ]
-    },
     "AMPLIFY_function_AdminQueries0c37162b_s3Key": {
       "usedBy": [
         {
