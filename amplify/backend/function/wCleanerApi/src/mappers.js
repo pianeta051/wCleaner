@@ -59,6 +59,7 @@ const mapInvoice = (item) => {
     date: item.date?.N ? Number(item.date.N) : 0,
     description: item.description?.S ?? "",
     addressId: item.address_id?.S ?? "",
+    paid: item.paid?.BOOL ?? false,
   };
 };
 

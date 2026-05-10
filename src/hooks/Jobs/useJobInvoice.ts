@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { useMemo } from "react";
 
-import { getJobInvoice } from "../../services/jobs";
+import { getJobInvoice } from "../../services/invoices";
 import { Invoice } from "../../types/types";
 import { extractErrorCode } from "../../services/error";
 

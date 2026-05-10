@@ -41,6 +41,7 @@ const {
   deleteJobType,
   editJobFromCustomer,
   updateJobStatus,
+  updateInvoicePaid,
   deleteJobFromCustomer,
   deleteAddress,
   editCustomer,
@@ -64,6 +65,22 @@ const { generateToken, parseToken } = require("./token");
 const { getAuthData, getJobUsers } = require("./authentication");
 
 const { setCustomerRoutes } = require("./routes/customers");
+
+const MANDATORY_ENV_VARS = ["USER_POOL_ID", "ENV"];
+
+const checkEnvVars = () => {
+  const missingEnvVars = [];
+  for (const envVar of MANDATORY_ENV_VARS) {
+    if (process.env[envVar] === undefined) {
+      missingEnvVars.push(envVar);
+    }
+  }
+  if (missingEnvVars.length > 0) {
+    throw new Error(`Missing required env vars: ${missingEnvVars.join(", ")}`);
+  }
+};
+
+checkEnvVars();
 
 // declare a new express app
 const app = express();
@@ -591,7 +608,19 @@ app.get("/invoices", async function (req, res) {
     const paginate = req.query?.paginate !== "false";
     const sortBy = req.query?.sortBy;
     const sortDirection = req.query?.sortDirection;
+    const from = req.query?.from ? Number(req.query.from) : undefined;
+    const to = req.query?.to ? Number(req.query.to) : undefined;
     const exclusiveStartKey = parseToken(nextToken);
+
+    if (req.query?.from && Number.isNaN(from)) {
+      res.status(400).json({ error: "INVALID_FROM_DATE" });
+      return;
+    }
+
+    if (req.query?.to && Number.isNaN(to)) {
+      res.status(400).json({ error: "INVALID_TO_DATE" });
+      return;
+    }
 
     const groups = req.authData?.groups || [];
     const isAdmin = groups.includes("Admin");
@@ -607,16 +636,19 @@ app.get("/invoices", async function (req, res) {
         enabled: paginate,
       },
       {
-        sortBy: sortBy,
+        sortBy,
         direction: sortDirection,
+      },
+      {
+        from,
+        to,
       }
     );
 
     let invoices = invoicesFromDb.map(mapInvoice);
 
-    // lista de address ids sin duplicados
     const addressIds = Array.from(
-      new Set(invoices.map((invoice) => invoice.addressId))
+      new Set(invoices.map((invoice) => invoice.addressId).filter(Boolean))
     );
 
     const addresses = await Promise.all(
@@ -631,17 +663,15 @@ app.get("/invoices", async function (req, res) {
       })
     );
 
-    // obtener las addresses en batches
-    // {[addressId]: {...address}}
     const addressMap = {};
     addresses.forEach((address) => {
-      addressMap[address.id] = address;
+      if (address) {
+        addressMap[address.id] = address;
+      }
     });
 
     const responseToken = generateToken(lastEvaluatedKey);
 
-    // unir los invoices a la address
-    // invoice.address = addresseMap[invoices.addressId]
     invoices = invoices.map((invoice) => ({
       ...invoice,
       address: addressMap[invoice.addressId],
@@ -655,7 +685,7 @@ app.get("/invoices", async function (req, res) {
     throw error;
   }
 });
-
+//
 app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   const { customerId, jobId } = req.params;
   const { date, description, addressId } = req.body;
@@ -779,6 +809,34 @@ app.get("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   invoice.address = mapCleaningAddress(addressFromDB);
 
   res.json({ invoice });
+});
+
+app.put("/customers/:customerId/jobs/:jobId/invoice/paid", async (req, res) => {
+  const { jobId } = req.params;
+  const { paid } = req.body;
+
+  try {
+    const groups = req.authData?.groups || [];
+    const isAdmin = groups.includes("Admin");
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: "User unauthorized" });
+    }
+
+    if (typeof paid !== "boolean") {
+      return res.status(400).json({ error: "INVALID_PAID_VALUE" });
+    }
+
+    const invoice = await updateInvoicePaid(jobId, paid);
+
+    res.json({ invoice });
+  } catch (err) {
+    if (err === "INVOICE_NOT_FOUND") {
+      return res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+    }
+
+    throw err;
+  }
 });
 
 // Customers Notes

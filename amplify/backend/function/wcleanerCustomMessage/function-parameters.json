@@ -1,6 +1,8 @@
 {
   "trigger": true,
-  "modules": ["custom"],
+  "modules": [
+    "custom"
+  ],
   "parentResource": "wcleaner",
   "functionName": "wcleanerCustomMessage",
   "resourceName": "wcleanerCustomMessage",

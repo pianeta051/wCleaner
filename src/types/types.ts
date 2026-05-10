@@ -54,6 +54,7 @@ export type Invoice = {
   description: string;
   addressId: string;
   address?: CustomerCleaningAddress;
+  paid: boolean;
 };
 
 export type InvoiceWithAddress = Invoice & {

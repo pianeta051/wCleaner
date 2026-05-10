@@ -1643,73 +1643,21 @@ const getInvoiceByJobId = async (jobId) => {
 };
 
 // GET INVOICES
-// const getInvoices = async (pagination = {}, sorting) => {
-//   const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
-//   console.log("SORTING BY : " + JSON.stringify({ sorting }));
-//   const params = {
-//     TableName: TABLE_NAME,
-//     IndexName: sorting?.sortBy === "date" ? "invoice_date" : "invoice_number",
-//     KeyConditionExpression: "#SK = :invoice",
-//     ExpressionAttributeNames: {
-//       "#SK": "SK",
-//     },
-//     ExpressionAttributeValues: {
-//       ":invoice": { S: "invoice" },
-//     },
-//     ScanIndexForward: sorting?.direction === "asc",
-//   };
-
-//   if (enabled) {
-//     params.Limit = limit;
-//     if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
-//       params.ExclusiveStartKey = exclusiveStartKey;
-//     }
-//   }
-
-//   let result = await ddb.query(params).promise();
-//   const items = result.Items || [];
-//   let lastEvaluatedKey = null;
-
-//   if (enabled) {
-//     const nextItem = await ddb
-//       .query({
-//         ...params,
-//         ExclusiveStartKey: result.LastEvaluatedKey,
-//         Limit: 1,
-//       })
-//       .promise();
-
-//     if ((nextItem.Items || []).length > 0) {
-//       lastEvaluatedKey = result.LastEvaluatedKey;
-//     }
-//   } else {
-//     while (result.LastEvaluatedKey) {
-//       result = await ddb
-//         .query({
-//           ...params,
-//           ExclusiveStartKey: result.LastEvaluatedKey,
-//         })
-//         .promise();
-
-//       items.push(...(result.Items || []));
-//     }
-//   }
-
-//   return { items, lastEvaluatedKey };
-// };
-
-const getInvoices = async (pagination = {}, sorting) => {
+const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
   const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
 
-  console.log("SORTING BY : " + JSON.stringify({ sorting }));
-  console.log("PAGINATION : " + JSON.stringify({ pagination }));
+  const { sortBy = "invoiceNumber", direction = "desc" } = sorting;
 
-  const sortBy = sorting?.sortBy ?? "invoiceNumber";
-  const direction = sorting?.direction ?? "desc";
+  const { from, to } = filters;
+
+  const isSortingByDate = sortBy === "invoiceDate";
+  const hasFrom = from !== undefined;
+  const hasTo = to !== undefined;
+  const hasDateFilter = hasFrom || hasTo;
 
   const params = {
     TableName: TABLE_NAME,
-    IndexName: sortBy === "invoiceDate" ? "invoice_date" : "invoice_number",
+    IndexName: isSortingByDate ? "invoice_date" : "invoice_number",
     KeyConditionExpression: "#SK = :invoice",
     ExpressionAttributeNames: {
       "#SK": "SK",
@@ -1722,8 +1670,45 @@ const getInvoices = async (pagination = {}, sorting) => {
 
   if (enabled) {
     params.Limit = limit;
+
     if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
       params.ExclusiveStartKey = exclusiveStartKey;
+    }
+  }
+
+  if (hasDateFilter) {
+    params.ExpressionAttributeNames["#d"] = "date";
+  }
+
+  if (hasFrom) {
+    params.ExpressionAttributeValues[":from"] = {
+      N: String(from),
+    };
+  }
+
+  if (hasTo) {
+    params.ExpressionAttributeValues[":to"] = {
+      N: String(to),
+    };
+  }
+
+  if (hasFrom && hasTo) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d BETWEEN :from AND :to`;
+    } else {
+      params.FilterExpression = "#d BETWEEN :from AND :to";
+    }
+  } else if (hasFrom) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d >= :from`;
+    } else {
+      params.FilterExpression = "#d >= :from";
+    }
+  } else if (hasTo) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d <= :to`;
+    } else {
+      params.FilterExpression = "#d <= :to";
     }
   }
 
@@ -1732,18 +1717,16 @@ const getInvoices = async (pagination = {}, sorting) => {
   let lastEvaluatedKey = null;
 
   if (enabled) {
-    if (result.LastEvaluatedKey) {
-      const nextItem = await ddb
-        .query({
-          ...params,
-          ExclusiveStartKey: result.LastEvaluatedKey,
-          Limit: 1,
-        })
-        .promise();
+    const nextItem = await ddb
+      .query({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: 1,
+      })
+      .promise();
 
-      if ((nextItem.Items || []).length > 0) {
-        lastEvaluatedKey = result.LastEvaluatedKey;
-      }
+    if ((nextItem.Items || []).length > 0) {
+      lastEvaluatedKey = result.LastEvaluatedKey;
     }
   } else {
     while (result.LastEvaluatedKey) {
@@ -1760,6 +1743,7 @@ const getInvoices = async (pagination = {}, sorting) => {
 
   return { items, lastEvaluatedKey };
 };
+
 const createInvoiceAuto = async (customerId, jobId, invoiceData) => {
   if (!customerId) {
     throw "CUSTOMER_NOT_FOUND";
@@ -1823,9 +1807,10 @@ const createInvoiceAuto = async (customerId, jobId, invoiceData) => {
                 SK: { S: "invoice" },
                 customer_id: { S: customerId },
                 invoice_number: { N: String(free.raw) },
-                date: { N: String(invoiceData.date) },
+                date: { S: String(invoiceData.date) },
                 description: { S: invoiceData.description },
                 address_id: { S: invoiceData.addressId },
+                paid: { BOOL: false },
               },
               ConditionExpression: "attribute_not_exists(PK)",
             },
@@ -1855,7 +1840,7 @@ const createInvoiceAuto = async (customerId, jobId, invoiceData) => {
         SK: { S: "invoice" },
         customer_id: { S: customerId },
         invoice_number: { N: String(next) },
-        date: { N: String(invoiceData.date) },
+        date: { S: String(invoiceData.date) },
         description: { S: invoiceData.description },
         address_id: { S: invoiceData.addressId },
       },
@@ -1884,8 +1869,7 @@ const editInvoiceContent = async (jobId, invoiceData) => {
 
   if (invoiceData.date !== undefined) {
     names["#D"] = "date";
-    values[":date"] = { N: String(invoiceData.date) };
-
+    values[":date"] = { S: "" + invoiceData.date };
     updateExpr.push("#D = :date");
   }
   if (invoiceData.description !== undefined) {
@@ -1911,6 +1895,32 @@ const editInvoiceContent = async (jobId, invoiceData) => {
       UpdateExpression: `SET ${updateExpr.join(", ")}`,
       ExpressionAttributeNames: names,
       ExpressionAttributeValues: values,
+    })
+    .promise();
+
+  return await getInvoiceByJobId(jobId);
+};
+const updateInvoicePaid = async (jobId, paid) => {
+  const existing = await getInvoiceByJobId(jobId);
+
+  if (!existing) {
+    throw "INVOICE_NOT_FOUND";
+  }
+
+  await ddb
+    .updateItem({
+      TableName: TABLE_NAME,
+      Key: {
+        PK: { S: `job_id_${jobId}` },
+        SK: { S: "invoice" },
+      },
+      UpdateExpression: "SET #paid = :paid",
+      ExpressionAttributeNames: {
+        "#paid": "paid",
+      },
+      ExpressionAttributeValues: {
+        ":paid": { BOOL: paid },
+      },
     })
     .promise();
 
@@ -1988,6 +1998,7 @@ module.exports = {
   deleteInvoice,
   editJobFromCustomer,
   updateJobStatus,
+  updateInvoicePaid,
   deleteJobFromCustomer,
   addFile,
 };

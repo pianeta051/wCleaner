@@ -21,7 +21,7 @@
       "function": {
         "AdminQueries0c37162b": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/AdminQueries0c37162b-3750657a33734f703254-build.zip"
+          "s3Key": "amplify-builds/AdminQueries0c37162b-305a654b432f532b776d-build.zip"
         },
         "wcleanerCustomMessage": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
@@ -30,7 +30,7 @@
         },
         "wCleanerApi": {
           "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
-          "s3Key": "amplify-builds/wCleanerApi-78776d395342557a576b-build.zip",
+          "s3Key": "amplify-builds/wCleanerApi-676336564a6d71595232-build.zip",
           "userPoolId": "eu-west-2_nRfe1m5kq"
         },
         "wcleaner": {}
@@ -77,17 +77,17 @@
       "function": {
         "AdminQueries0c37162b": {
           "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
-          "s3Key": "amplify-builds/AdminQueries0c37162b-3157465451775a565a68-build.zip"
+          "s3Key": "amplify-builds/AdminQueries0c37162b-64776178626c7145796e-build.zip"
         },
         "wCleanerApi": {
           "userPoolId": "eu-west-2_LtQEoHXvZ",
           "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
-          "s3Key": "amplify-builds/wCleanerApi-37594d2b4d486e686332-build.zip"
+          "s3Key": "amplify-builds/wCleanerApi-5345614b707666753741-build.zip"
         },
         "wcleanerCustomMessage": {
-          "redirectTo": "https://w-cleaner.com",
           "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
-          "s3Key": "amplify-builds/wcleanerCustomMessage-472f392f316b6d793879-build.zip"
+          "s3Key": "amplify-builds/wcleanerCustomMessage-472f392f316b6d793879-build.zip",
+          "redirectTo": "https://w-cleaner.com"
         },
         "wcleaner": {}
       },

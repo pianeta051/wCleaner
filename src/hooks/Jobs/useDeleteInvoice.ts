@@ -1,7 +1,7 @@
 import useSWRMutation from "swr/mutation";
 import { useSWRConfig } from "swr";
 import { extractErrorCode } from "../../services/error";
-import { deleteJobInvoice } from "../../services/jobs";
+import { deleteJobInvoice } from "../../services/invoices";
 
 export const useDeleteInvoice = (customerId?: string, jobId?: string) => {
   const { mutate } = useSWRConfig();
