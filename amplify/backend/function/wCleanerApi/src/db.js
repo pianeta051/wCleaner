@@ -923,15 +923,6 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
       items.push(...result.Items);
     }
   }
-  // for (let i = 0; i < items.length; i++) {
-  //   const job = items[i];
-  //   const customerId = job.PK.S.replace("customer_", "");
-  //   const customer = await getCustomerById(customerId);
-  //   items[i] = {
-  //     ...job,
-  //     customer,
-  //   };
-  // }
 
   return { items, lastEvaluatedKey };
 };
