@@ -68,16 +68,19 @@ const getJob = async (jobId) => {
 };
 
 const addInvoiceToJob = async (customerId, jobId, invoiceData) => {
-  const { invoiceDescription, invoiceNumber } = invoiceData;
+  const { addressId, date, invoiceDescription, invoiceNumber } = invoiceData;
   const params = {
     TableName: TABLE_NAME,
     Key: {
       PK: { S: `customer_${customerId}` },
       SK: { S: `job_${jobId}` },
     },
-    UpdateExpression: "SET #ID = :description, #IN = :number, #JPIK = :jpik",
+    UpdateExpression:
+      "SET #ID = :description, #IN = :number, #JPIK = :jpik, #IA = :address_id, #IDT = :date",
     ExpressionAttributeNames: {
+      "#IA": "invoice_address_id",
       "#ID": "invoice_description",
+      "#IDT": "invoice_date",
       "#IN": "invoice_number",
       "#JPIK": "job_invoice_pk",
     },
@@ -85,6 +88,8 @@ const addInvoiceToJob = async (customerId, jobId, invoiceData) => {
       ":description": { S: invoiceDescription },
       ":number": { N: invoiceNumber },
       ":jpik": { N: "1" },
+      ":address_id": { S: addressId },
+      ":date": { N: date },
     },
   };
 
@@ -101,9 +106,13 @@ const addInvoiceToJob = async (customerId, jobId, invoiceData) => {
       const jobId = invoice.PK.S.replace("job_id_", "");
       const invoiceDescription = invoice.description.S;
       const invoiceNumber = invoice.invoice_number.N;
+      const addressId = invoice.address_id.S;
+      const date = invoice.date?.N ?? "0";
       const job = await getJob(jobId);
       const customerId = job.PK.S.replace("customer_", "");
       await addInvoiceToJob(customerId, jobId, {
+        addressId,
+        date,
         invoiceDescription,
         invoiceNumber,
       });

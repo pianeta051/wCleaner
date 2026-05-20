@@ -56,9 +56,9 @@ const mapInvoice = (item) => {
     customerId: item.PK.S.replace("customer_", ""),
     invoiceNumber: raw !== undefined ? formatInvoiceNumber(raw) : "",
     invoiceNumberRaw: raw,
-    date: item.start?.N ? Number(item.start.N) : 0,
+    date: item.invoice_date?.N ? Number(item.invoice_date.N) : 0,
     description: item.invoice_description?.S ?? "",
-    addressId: item.address_id?.S ?? "",
+    addressId: item.invoice_address_id?.S ?? "",
     paid: item.payment_method?.S !== "none",
   };
 };

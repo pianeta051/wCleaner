@@ -1657,6 +1657,8 @@ const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
     ScanIndexForward: direction === "asc",
   };
 
+  console.log(JSON.stringify(params, null, 2));
+
   if (enabled) {
     params.Limit = limit;
 
@@ -1746,9 +1748,13 @@ const createInvoice = async (customerId, jobId, invoiceData) => {
     throw "MISSING_INVOICE_DESCRIPTION";
   }
 
-  // if (!invoiceData?.addressId) {
-  //   throw "MISSING_INVOICE_ADDRESS";
-  // }
+  if (!invoiceData?.addressId) {
+    throw "MISSING_INVOICE_ADDRESS";
+  }
+
+  if (!invoiceData?.date) {
+    throw "MISSING_INVOICE_DATE";
+  }
 
   const existing = await getInvoice(customerId, jobId);
   if (existing) {
@@ -1768,9 +1774,11 @@ const createInvoice = async (customerId, jobId, invoiceData) => {
               SK: { S: `job_${jobId}` },
             },
             UpdateExpression:
-              "SET #ID = :description, #IN = :number, #JPIK = :jpik",
+              "SET #ID = :description, #IN = :number, #JPIK = :jpik, #IA = :address_id, #IDT = :date",
             ExpressionAttributeNames: {
+              "#IA": "invoice_address_id",
               "#ID": "invoice_description",
+              "#IDT": "invoice_date",
               "#IN": "invoice_number",
               "#JPIK": "job_invoice_pk",
             },
@@ -1778,6 +1786,8 @@ const createInvoice = async (customerId, jobId, invoiceData) => {
               ":description": { S: invoiceData.description },
               ":number": { N: "" + next },
               ":jpik": { N: "1" },
+              ":address_id": { S: invoiceData.addressId },
+              ":date": { N: "" + invoiceData.date },
             },
           },
         },
@@ -1892,11 +1902,13 @@ const deleteInvoice = async (customerId, jobId) => {
               SK: { S: `job_${jobId}` },
             },
             ExpressionAttributeNames: {
+              "#IA": "invoice_address_id",
               "#ID": "invoice_description",
+              "#IDT": "invoice_date",
               "#IN": "invoice_number",
               "#JPIK": "job_invoice_pk",
             },
-            UpdateExpression: "REMOVE #ID, #IN, #JPIK",
+            UpdateExpression: "REMOVE #IA, #ID, #IN, #JPIK, #IDT",
           },
         },
         {
