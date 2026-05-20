@@ -52,14 +52,14 @@ const mapInvoice = (item) => {
   const raw = item.invoice_number ? Number(item.invoice_number.N) : undefined;
 
   return {
-    jobId: item.PK.S.replace("job_id_", ""),
-    customerId: item.customer_id?.S,
+    jobId: item.SK.S.replace("job_", ""),
+    customerId: item.PK.S.replace("customer_", ""),
     invoiceNumber: raw !== undefined ? formatInvoiceNumber(raw) : "",
     invoiceNumberRaw: raw,
-    date: item.date?.N ? Number(item.date.N) : 0,
-    description: item.description?.S ?? "",
+    date: item.start?.N ? Number(item.start.N) : 0,
+    description: item.invoice_description?.S ?? "",
     addressId: item.address_id?.S ?? "",
-    paid: item.paid?.BOOL ?? false,
+    paid: item.payment_method?.S !== "none",
   };
 };
 

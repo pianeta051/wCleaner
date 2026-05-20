@@ -22,7 +22,7 @@ const {
   addCustomerJob,
   addCustomerNote,
   addJobType,
-  createInvoiceAuto,
+  createInvoice,
   getAddressesForJobs,
   getCleaningAddress,
   getCleaningAddressById,
@@ -34,7 +34,7 @@ const {
   getJobType,
   getJobTypes,
   getInvoices,
-  getInvoiceByJobId,
+  getInvoice,
   getOutcodes,
   deleteCustomerNote,
   deleteInvoice,
@@ -92,6 +92,7 @@ app.use(async function (req, res, next) {
   req.authData = await getAuthData(req);
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
+  res.header("Access-Control-Allow-Methods", "*");
   next();
 });
 
@@ -122,6 +123,8 @@ app.post("/customers/:customerId/address", async function (req, res) {
 
     let createdCustomerAddress = null;
     try {
+      const customerAddress = { name, address, postcode };
+
       createdCustomerAddress = await addCustomerAddress(
         customerId,
         customerAddress
@@ -714,7 +717,7 @@ app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
       return;
     }
 
-    const invoice = await createInvoiceAuto(customerId, jobId, {
+    const invoice = await createInvoice(customerId, jobId, {
       date,
       description,
       addressId,
@@ -749,9 +752,10 @@ app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
     throw err;
   }
 });
+
 //EDIT INVOICE CONTENT
 app.put("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-  const { jobId } = req.params;
+  const { customerId, jobId } = req.params;
   const { date, description, addressId } = req.body;
 
   try {
@@ -759,7 +763,7 @@ app.put("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
     const isAdmin = groups.includes("Admin");
     if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
 
-    const invoice = await editInvoiceContent(jobId, {
+    const invoice = await editInvoiceContent(customerId, jobId, {
       date,
       description,
       addressId,
@@ -778,14 +782,14 @@ app.put("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
 //DELETE INVOICE AND REALISE NUMBER
 
 app.delete("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-  const { jobId } = req.params;
+  const { customerId, jobId } = req.params;
 
   try {
     const groups = req.authData?.groups || [];
     const isAdmin = groups.includes("Admin");
     if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
 
-    await deleteInvoice(jobId);
+    await deleteInvoice(customerId, jobId);
     res.json({ message: "INVOICE_DELETED" });
   } catch (err) {
     if (err === "INVOICE_NOT_FOUND")
@@ -799,20 +803,24 @@ app.delete("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
 app.get("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
   const { jobId, customerId } = req.params;
 
-  const invoice = await getInvoiceByJobId(jobId);
+  const invoice = await getInvoice(customerId, jobId);
 
   if (!invoice) {
     res.status(404).json({ error: "INVOICE_NOT_FOUND" });
     return;
   }
-  const addressFromDB = await getCleaningAddress(customerId, invoice.addressId);
-  invoice.address = mapCleaningAddress(addressFromDB);
+  const addressFromDB = invoice.addressId
+    ? await getCleaningAddress(customerId, invoice.addressId)
+    : undefined;
 
+  invoice.address = addressFromDB
+    ? mapCleaningAddress(addressFromDB)
+    : undefined;
   res.json({ invoice });
 });
 
 app.put("/customers/:customerId/jobs/:jobId/invoice/paid", async (req, res) => {
-  const { jobId } = req.params;
+  const { jobId, customerId } = req.params;
   const { paid } = req.body;
 
   try {
@@ -827,7 +835,7 @@ app.put("/customers/:customerId/jobs/:jobId/invoice/paid", async (req, res) => {
       return res.status(400).json({ error: "INVALID_PAID_VALUE" });
     }
 
-    const invoice = await updateInvoicePaid(jobId, paid);
+    const invoice = await updateInvoicePaid(customerId, jobId, paid);
 
     res.json({ invoice });
   } catch (err) {
