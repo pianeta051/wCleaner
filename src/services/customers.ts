@@ -1,4 +1,3 @@
-import { API } from "aws-amplify";
 import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
 import { Customer, CustomerCleaningAddress } from "../types/types";
 import { isErrorResponse } from "./error";
