@@ -1,6 +1,7 @@
 import { FC } from "react";
 import {
   Alert,
+  Button,
   CardContent,
   Chip,
   Divider,
@@ -26,7 +27,7 @@ import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined
 import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import dayjs from "dayjs";
-
+import { Link as RouterLink } from "react-router-dom";
 import { InvoiceWithAddress } from "../../types/types";
 import { theme } from "../../theme";
 import { TableCellWrap } from "../CustomersTable/CustomerTable.style";
@@ -370,6 +371,15 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                       }}
                     />
                   ) : null}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{ marginLeft: "5px" }}
+                    to={`/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}`}
+                    component={RouterLink}
+                  >
+                    See job
+                  </Button>
                 </TableCell>
               </TableRow>
             );

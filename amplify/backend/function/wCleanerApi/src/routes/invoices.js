@@ -20,6 +20,7 @@ const setInvoicesRoutes = (app) => {
       const sortDirection = req.query?.sortDirection;
       const from = req.query?.from ? Number(req.query.from) : undefined;
       const to = req.query?.to ? Number(req.query.to) : undefined;
+      const paid = req?.query?.paid ? req?.query?.paid === "true" : undefined;
       const exclusiveStartKey = parseToken(nextToken);
 
       if (req.query?.from && Number.isNaN(from)) {
@@ -52,6 +53,7 @@ const setInvoicesRoutes = (app) => {
         {
           from,
           to,
+          paid,
         }
       );
 

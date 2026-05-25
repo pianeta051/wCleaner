@@ -1637,7 +1637,7 @@ const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
 
   const { sortBy = "invoiceNumber", direction = "desc" } = sorting;
 
-  const { from, to } = filters;
+  const { from, to, paid } = filters;
 
   const isSortingByDate = sortBy === "invoiceDate";
   const hasFrom = from !== undefined;
@@ -1656,6 +1656,8 @@ const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
     },
     ScanIndexForward: direction === "asc",
   };
+
+  const filterExpressions = [];
 
   console.log(JSON.stringify(params, null, 2));
 
@@ -1687,19 +1689,41 @@ const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
     if (isSortingByDate) {
       params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d BETWEEN :from AND :to`;
     } else {
-      params.FilterExpression = "#d BETWEEN :from AND :to";
+      filterExpressions.push("#d BETWEEN :from AND :to");
     }
   } else if (hasFrom) {
     if (isSortingByDate) {
       params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d >= :from`;
     } else {
-      params.FilterExpression = "#d >= :from";
+      filterExpressions.push("#d >= :from");
     }
   } else if (hasTo) {
     if (isSortingByDate) {
       params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d <= :to`;
     } else {
-      params.FilterExpression = "#d <= :to";
+      filterExpressions.push("#d <= :to");
+    }
+  }
+
+  if (paid !== undefined) {
+    params.ExpressionAttributeNames["#PM"] = "payment_method";
+    params.ExpressionAttributeValues[":none"] = {
+      S: "none",
+    };
+    if (paid) {
+      filterExpressions.push("#PM <> :none");
+    } else {
+      filterExpressions.push("#PM = :none");
+    }
+  }
+
+  if (filterExpressions.length > 0) {
+    if (filterExpressions.length === 1) {
+      params.FilterExpression = filterExpressions[0];
+    } else {
+      params.FilterExpression = filterExpressions
+        .map((expression) => `(${expression})`)
+        .join(" AND ");
     }
   }
 
