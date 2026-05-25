@@ -3,6 +3,7 @@ const {
   getCleaningAddress,
   getCleaningAddressById,
   getInvoices,
+  getCustomerInvoices,
   getInvoice,
   deleteInvoice,
   updateInvoicePaid,
@@ -92,6 +93,45 @@ const setInvoicesRoutes = (app) => {
         invoices,
         nextToken: responseToken,
       });
+    } catch (error) {
+      throw error;
+    }
+  });
+
+  app.get("/customers/:customerId/invoices", async function (req, res) {
+    try {
+      const nextToken = req.query?.nextToken;
+      const limit = req.query?.limit ? +req.query?.limit : 50;
+
+      const { customerId } = req.params;
+
+      const groups = req.authData?.groups || [];
+      const isAdmin = groups.includes("Admin");
+
+      if (!isAdmin) {
+        res.status(403).json({ error: "User unauthorized" });
+        return;
+      }
+      const paginationEnabled = req.query?.paginationDisabled !== "true";
+
+      const exclusiveStartKey =
+        nextToken && typeof nextToken === "string" && nextToken.trim().length
+          ? parseToken(nextToken)
+          : undefined;
+
+      const { items, lastEvaluatedKey } = await getCustomerInvoices(
+        customerId,
+        {
+          exclusiveStartKey,
+          limit,
+          enabled: paginationEnabled,
+        }
+      );
+      const invoices = items.map(mapInvoice);
+
+      const responseToken = generateToken(lastEvaluatedKey);
+
+      res.json({ invoices, nextToken: responseToken });
     } catch (error) {
       throw error;
     }

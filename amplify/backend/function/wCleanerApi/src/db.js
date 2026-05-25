@@ -1735,6 +1735,56 @@ const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
   return { items, lastEvaluatedKey };
 };
 
+const getCustomerInvoices = async (customerId, pagination) => {
+  const { exclusiveStartKey, limit, enabled } = pagination;
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "#PK = :pk AND begins_with(#SK, :jobPrefix)",
+    FilterExpression: "attribute_exists(#IN)",
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#IN": "invoice_number",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":jobPrefix": { S: "job_" },
+    },
+  };
+  if (enabled) {
+    params.Limit = limit;
+    if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
+      params.ExclusiveStartKey = exclusiveStartKey;
+    }
+  }
+
+  const result = await ddb.query(params).promise();
+  const items = result.Items || [];
+  let lastEvaluatedKey = null;
+
+  if (enabled) {
+    const nextJobParams = {
+      ...params,
+      ExclusiveStartKey: lastEvaluatedKey,
+      Limit: 1,
+    };
+    const nextItem = await ddb.query(params).promise();
+    lastEvaluatedKey = nextItem?.Items?.length ? result.LastEvaluatedKey : null;
+  }
+  while (result.LastEvaluatedKey && items.length < limit) {
+    params = {
+      ...params,
+      ExclusiveStartKey: result.LastEvaluatedKey,
+      Limit: limit - items.length,
+    };
+
+    result = await ddb.scan(params).promise();
+    items.push(...(result.Items || []));
+  }
+
+  return { items, lastEvaluatedKey };
+};
+
 const createInvoice = async (customerId, jobId, invoiceData) => {
   if (!customerId) {
     throw "CUSTOMER_NOT_FOUND";
@@ -1953,6 +2003,7 @@ module.exports = {
   getCustomerJobs,
   getInvoice,
   getInvoices,
+  getCustomerInvoices,
   getJob,
   getJobCustomers,
   getJobs,

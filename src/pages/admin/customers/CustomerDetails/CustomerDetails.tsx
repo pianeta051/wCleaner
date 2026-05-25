@@ -48,11 +48,13 @@ import { useEditCustomer } from "../../../../hooks/Customers/useEditCustomer";
 
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
+import { CustomerInvoices } from "../../../../components/CustomerInvoices/CustomerInvoices";
 
 const sections = [
   { id: "details", label: "Details" },
   { id: "notes", label: "Notes" },
   { id: "jobs", label: "Jobs" },
+  { id: "invoices", label: "Invoices" },
   { id: "files", label: "Files" },
 ] as const;
 
@@ -247,6 +249,11 @@ export const CustomerDetails: FC = () => {
 
             <section id="jobs" style={{ scrollMarginTop: scrollOffset }}>
               <CustomerJobs customer={customer} />
+            </section>
+            <Divider sx={{ my: 4 }} />
+
+            <section id="invoices" style={{ scrollMarginTop: scrollOffset }}>
+              <CustomerInvoices customerId={customer.id} />
             </section>
 
             <Divider sx={{ my: 4 }} />

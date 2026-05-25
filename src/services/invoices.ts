@@ -11,7 +11,7 @@ import {
 // GENERAL FUNCTIONS
 const get = async (
   path: string,
-  queryParams: { [param: string]: string | undefined | number } = {}
+  queryParams: { [param: string]: string | undefined | number | boolean } = {}
 ) => {
   if (API_URL) return localFetch("GET", path, { queryParams });
   return API.get("wCleanerApi", path, {
@@ -254,6 +254,45 @@ export const getInvoices = async ({
 
       if (status === 403) {
         throw "UNAUTHORIZED";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const getCustomerInvoices = async (
+  customerId: string,
+  pagination: {
+    nextToken?: string;
+    disabled?: boolean;
+  }
+): Promise<{ invoices: Invoice[]; nextToken?: string }> => {
+  try {
+    const { nextToken, disabled } = pagination;
+    const response = await get(`/customers/${customerId}/invoices`, {
+      nextToken,
+      paginationDisabled: disabled,
+    });
+
+    const invoices = response.invoices as Invoice[];
+    const responseToken = response.nextToken as string | undefined;
+
+    if (!Array.isArray(invoices) || !invoices.every(isInvoice)) {
+      throw "INTERNAL_ERROR";
+    }
+
+    return { invoices, nextToken: responseToken };
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response.status;
+
+      if (status === 403) {
+        throw "UNAUTHORIZED";
+      }
+
+      if (status === 404) {
+        throw "CUSTOMER_NOT_FOUND";
       }
     }
 

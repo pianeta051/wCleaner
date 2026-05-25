@@ -106,7 +106,8 @@
         "wcleanerstorage": {}
       },
       "custom": {
-        "sesEmail": {}
+        "sesEmail": {},
+        "monitoring": {}
       }
     }
   }

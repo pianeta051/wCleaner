@@ -107,7 +107,7 @@ const addInvoiceToJob = async (customerId, jobId, invoiceData) => {
       const invoiceDescription = invoice.description.S;
       const invoiceNumber = invoice.invoice_number.N;
       const addressId = invoice.address_id.S;
-      const date = invoice.date?.N ?? "0";
+      const date = invoice.date?.N ?? invoice.date?.S ?? "0";
       const job = await getJob(jobId);
       const customerId = job.PK.S.replace("customer_", "");
       await addInvoiceToJob(customerId, jobId, {
