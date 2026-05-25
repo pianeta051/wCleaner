@@ -57,24 +57,24 @@
       }
     },
     {
-      "name": "invoice_number",
+      "name": "invoice_date",
       "partitionKey": {
-        "fieldName": "SK",
-        "fieldType": "string"
+        "fieldName": "job_invoice_pk",
+        "fieldType": "number"
       },
       "sortKey": {
-        "fieldName": "invoice_number",
+        "fieldName": "invoice_date",
         "fieldType": "number"
       }
     },
     {
-      "name": "invoice_date",
+      "name": "invoice_number",
       "partitionKey": {
-        "fieldName": "SK",
-        "fieldType": "string"
+        "fieldName": "job_invoice_pk",
+        "fieldType": "number"
       },
       "sortKey": {
-        "fieldName": "date",
+        "fieldName": "invoice_number",
         "fieldType": "number"
       }
     }

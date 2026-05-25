@@ -1,7 +1,7 @@
 import useSWRMutation from "swr/mutation";
 
 import { extractErrorCode } from "../../services/error";
-import { generateJobInvoice } from "../../services/jobs";
+import { generateJobInvoice } from "../../services/invoices";
 import { Invoice } from "../../types/types";
 import { InvoiceFormValues } from "../../components/InvoiceForm/InvoiceForm";
 

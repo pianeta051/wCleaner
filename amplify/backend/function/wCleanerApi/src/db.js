@@ -11,7 +11,6 @@ const {
 
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = 50;
-//INVOICES CONST
 const INVOICE_ALLOCATOR_PK = "invoice_allocator";
 
 const generateSlug = async (email, name) => {
@@ -923,15 +922,6 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
       items.push(...result.Items);
     }
   }
-  // for (let i = 0; i < items.length; i++) {
-  //   const job = items[i];
-  //   const customerId = job.PK.S.replace("customer_", "");
-  //   const customer = await getCustomerById(customerId);
-  //   items[i] = {
-  //     ...job,
-  //     customer,
-  //   };
-  // }
 
   return { items, lastEvaluatedKey };
 };
@@ -1563,10 +1553,10 @@ const isInvoiceNumberInUse = async (rawNumber) => {
     .query({
       TableName: TABLE_NAME,
       IndexName: "invoice_number",
-      KeyConditionExpression: "#SK = :sk AND invoice_number = :n",
-      ExpressionAttributeNames: { "#SK": "SK" },
+      KeyConditionExpression: "#JPIK = :sk AND invoice_number = :n",
+      ExpressionAttributeNames: { "#JPIK": "job_invoice_pk" },
       ExpressionAttributeValues: {
-        ":sk": { S: "invoice" },
+        ":sk": { N: "1" },
         ":n": { N: String(rawNumber) },
       },
       Limit: 1,
@@ -1599,21 +1589,20 @@ const takeSmallestFreeNumber = async () => {
   };
 };
 
-const makeFreeItemKey = (rawNumber) => ({
-  PK: { S: INVOICE_ALLOCATOR_PK },
-  SK: { S: `free_${padInvoice(rawNumber)}` },
-});
-
 const getNextInvoiceNumber = async () => {
+  const smallestFree = await takeSmallestFreeNumber();
+  if (smallestFree) {
+    return smallestFree.raw;
+  }
   const params = {
     TableName: TABLE_NAME,
     IndexName: "invoice_number",
-    KeyConditionExpression: "#SK = :invoice",
+    KeyConditionExpression: "#JPIK = :one",
     ExpressionAttributeNames: {
-      "#SK": "SK",
+      "#JPIK": "job_invoice_pk",
     },
     ExpressionAttributeValues: {
-      ":invoice": { S: "invoice" },
+      ":one": { N: "1" },
     },
     Limit: 1,
     ScanIndexForward: false,
@@ -1628,102 +1617,89 @@ const getNextInvoiceNumber = async () => {
   return Number(result.Items[0].invoice_number.N) + 1;
 };
 
-const getInvoiceByJobId = async (jobId) => {
+const getInvoice = async (customerId, jobId) => {
   const res = await ddb
     .getItem({
       TableName: TABLE_NAME,
       Key: {
-        PK: { S: `job_id_${jobId}` },
-        SK: { S: "invoice" },
+        SK: { S: `job_${jobId}` },
+        PK: { S: `customer_${customerId}` },
       },
     })
     .promise();
 
-  return res.Item ? mapInvoice(res.Item) : null;
+  return res.Item?.invoice_number ? mapInvoice(res.Item) : null;
 };
 
 // GET INVOICES
-// const getInvoices = async (pagination = {}, sorting) => {
-//   const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
-//   console.log("SORTING BY : " + JSON.stringify({ sorting }));
-//   const params = {
-//     TableName: TABLE_NAME,
-//     IndexName: sorting?.sortBy === "date" ? "invoice_date" : "invoice_number",
-//     KeyConditionExpression: "#SK = :invoice",
-//     ExpressionAttributeNames: {
-//       "#SK": "SK",
-//     },
-//     ExpressionAttributeValues: {
-//       ":invoice": { S: "invoice" },
-//     },
-//     ScanIndexForward: sorting?.direction === "asc",
-//   };
-
-//   if (enabled) {
-//     params.Limit = limit;
-//     if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
-//       params.ExclusiveStartKey = exclusiveStartKey;
-//     }
-//   }
-
-//   let result = await ddb.query(params).promise();
-//   const items = result.Items || [];
-//   let lastEvaluatedKey = null;
-
-//   if (enabled) {
-//     const nextItem = await ddb
-//       .query({
-//         ...params,
-//         ExclusiveStartKey: result.LastEvaluatedKey,
-//         Limit: 1,
-//       })
-//       .promise();
-
-//     if ((nextItem.Items || []).length > 0) {
-//       lastEvaluatedKey = result.LastEvaluatedKey;
-//     }
-//   } else {
-//     while (result.LastEvaluatedKey) {
-//       result = await ddb
-//         .query({
-//           ...params,
-//           ExclusiveStartKey: result.LastEvaluatedKey,
-//         })
-//         .promise();
-
-//       items.push(...(result.Items || []));
-//     }
-//   }
-
-//   return { items, lastEvaluatedKey };
-// };
-
-const getInvoices = async (pagination = {}, sorting) => {
+const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
   const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
 
-  console.log("SORTING BY : " + JSON.stringify({ sorting }));
-  console.log("PAGINATION : " + JSON.stringify({ pagination }));
+  const { sortBy = "invoiceNumber", direction = "desc" } = sorting;
 
-  const sortBy = sorting?.sortBy ?? "invoiceNumber";
-  const direction = sorting?.direction ?? "desc";
+  const { from, to } = filters;
+
+  const isSortingByDate = sortBy === "invoiceDate";
+  const hasFrom = from !== undefined;
+  const hasTo = to !== undefined;
+  const hasDateFilter = hasFrom || hasTo;
 
   const params = {
     TableName: TABLE_NAME,
-    IndexName: sortBy === "invoiceDate" ? "invoice_date" : "invoice_number",
-    KeyConditionExpression: "#SK = :invoice",
+    IndexName: isSortingByDate ? "invoice_date" : "invoice_number",
+    KeyConditionExpression: "#JIPK = :one",
     ExpressionAttributeNames: {
-      "#SK": "SK",
+      "#JIPK": "job_invoice_pk",
     },
     ExpressionAttributeValues: {
-      ":invoice": { S: "invoice" },
+      ":one": { N: "1" },
     },
     ScanIndexForward: direction === "asc",
   };
 
+  console.log(JSON.stringify(params, null, 2));
+
   if (enabled) {
     params.Limit = limit;
+
     if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
       params.ExclusiveStartKey = exclusiveStartKey;
+    }
+  }
+
+  if (hasDateFilter) {
+    params.ExpressionAttributeNames["#d"] = "start";
+  }
+
+  if (hasFrom) {
+    params.ExpressionAttributeValues[":from"] = {
+      N: String(from),
+    };
+  }
+
+  if (hasTo) {
+    params.ExpressionAttributeValues[":to"] = {
+      N: String(to),
+    };
+  }
+
+  if (hasFrom && hasTo) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d BETWEEN :from AND :to`;
+    } else {
+      params.FilterExpression = "#d BETWEEN :from AND :to";
+    }
+  } else if (hasFrom) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d >= :from`;
+    } else {
+      params.FilterExpression = "#d >= :from";
+    }
+  } else if (hasTo) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d <= :to`;
+    } else {
+      params.FilterExpression = "#d <= :to";
     }
   }
 
@@ -1732,18 +1708,16 @@ const getInvoices = async (pagination = {}, sorting) => {
   let lastEvaluatedKey = null;
 
   if (enabled) {
-    if (result.LastEvaluatedKey) {
-      const nextItem = await ddb
-        .query({
-          ...params,
-          ExclusiveStartKey: result.LastEvaluatedKey,
-          Limit: 1,
-        })
-        .promise();
+    const nextItem = await ddb
+      .query({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: 1,
+      })
+      .promise();
 
-      if ((nextItem.Items || []).length > 0) {
-        lastEvaluatedKey = result.LastEvaluatedKey;
-      }
+    if ((nextItem.Items || []).length > 0) {
+      lastEvaluatedKey = result.LastEvaluatedKey;
     }
   } else {
     while (result.LastEvaluatedKey) {
@@ -1760,17 +1734,14 @@ const getInvoices = async (pagination = {}, sorting) => {
 
   return { items, lastEvaluatedKey };
 };
-const createInvoiceAuto = async (customerId, jobId, invoiceData) => {
+
+const createInvoice = async (customerId, jobId, invoiceData) => {
   if (!customerId) {
     throw "CUSTOMER_NOT_FOUND";
   }
 
   if (!jobId) {
     throw "JOB_NOT_FOUND";
-  }
-
-  if (!invoiceData?.date) {
-    throw "MISSING_INVOICE_DATE";
   }
 
   if (!invoiceData?.description) {
@@ -1781,85 +1752,54 @@ const createInvoiceAuto = async (customerId, jobId, invoiceData) => {
     throw "MISSING_INVOICE_ADDRESS";
   }
 
-  const existing = await getInvoiceByJobId(jobId);
-  if (existing) {
-    throw "INVOICE_ALREADY_EXISTS";
+  if (!invoiceData?.date) {
+    throw "MISSING_INVOICE_DATE";
   }
 
-  const free = await takeSmallestFreeNumber();
-
-  if (free) {
-    if (await isInvoiceNumberInUse(free.raw)) {
-      await ddb
-        .deleteItem({
-          TableName: TABLE_NAME,
-          Key: {
-            PK: { S: INVOICE_ALLOCATOR_PK },
-            SK: { S: free.freeSk },
-          },
-        })
-        .promise();
-
-      return createInvoiceAuto(customerId, jobId, invoiceData);
-    }
-
-    await ddb
-      .transactWriteItems({
-        TransactItems: [
-          {
-            Delete: {
-              TableName: TABLE_NAME,
-              Key: {
-                PK: { S: INVOICE_ALLOCATOR_PK },
-                SK: { S: free.freeSk },
-              },
-            },
-          },
-          {
-            Put: {
-              TableName: TABLE_NAME,
-              Item: {
-                PK: { S: `job_id_${jobId}` },
-                SK: { S: "invoice" },
-                customer_id: { S: customerId },
-                invoice_number: { N: String(free.raw) },
-                date: { N: String(invoiceData.date) },
-                description: { S: invoiceData.description },
-                address_id: { S: invoiceData.addressId },
-              },
-              ConditionExpression: "attribute_not_exists(PK)",
-            },
-          },
-        ],
-      })
-      .promise();
-
-    return {
-      jobId,
-      customerId,
-      invoiceNumber: formatInvoiceNumber(free.raw),
-      invoiceNumberRaw: free.raw,
-      date: invoiceData.date,
-      description: invoiceData.description,
-      addressId: invoiceData.addressId,
-    };
+  const existing = await getInvoice(customerId, jobId);
+  if (existing) {
+    throw "INVOICE_ALREADY_EXISTS";
   }
 
   const next = await getNextInvoiceNumber();
 
   await ddb
-    .putItem({
-      TableName: TABLE_NAME,
-      Item: {
-        PK: { S: `job_id_${jobId}` },
-        SK: { S: "invoice" },
-        customer_id: { S: customerId },
-        invoice_number: { N: String(next) },
-        date: { N: String(invoiceData.date) },
-        description: { S: invoiceData.description },
-        address_id: { S: invoiceData.addressId },
-      },
-      ConditionExpression: "attribute_not_exists(PK)",
+    .transactWriteItems({
+      TransactItems: [
+        {
+          Update: {
+            TableName: TABLE_NAME,
+            Key: {
+              PK: { S: `customer_${customerId}` },
+              SK: { S: `job_${jobId}` },
+            },
+            UpdateExpression:
+              "SET #ID = :description, #IN = :number, #JPIK = :jpik, #IA = :address_id, #IDT = :date",
+            ExpressionAttributeNames: {
+              "#IA": "invoice_address_id",
+              "#ID": "invoice_description",
+              "#IDT": "invoice_date",
+              "#IN": "invoice_number",
+              "#JPIK": "job_invoice_pk",
+            },
+            ExpressionAttributeValues: {
+              ":description": { S: invoiceData.description },
+              ":number": { N: "" + next },
+              ":jpik": { N: "1" },
+              ":address_id": { S: invoiceData.addressId },
+              ":date": { N: "" + invoiceData.date },
+            },
+          },
+        },
+        {
+          Delete: {
+            TableName: TABLE_NAME,
+            Key: {
+              ...makeFreeItemKey(next),
+            },
+          },
+        },
+      ],
     })
     .promise();
 
@@ -1874,30 +1814,29 @@ const createInvoiceAuto = async (customerId, jobId, invoiceData) => {
   };
 };
 
-const editInvoiceContent = async (jobId, invoiceData) => {
-  const existing = await getInvoiceByJobId(jobId);
+const editInvoiceContent = async (customerId, jobId, invoiceData) => {
+  const existing = await getInvoice(customerId, jobId);
   if (!existing) throw "INVOICE_NOT_FOUND";
 
   const updateExpr = [];
   const names = {};
   const values = {};
 
-  if (invoiceData.date !== undefined) {
-    names["#D"] = "date";
-    values[":date"] = { N: String(invoiceData.date) };
-
-    updateExpr.push("#D = :date");
-  }
+  // if (invoiceData.date !== undefined) {
+  //   names["#D"] = "date";
+  //   values[":date"] = { S: "" + invoiceData.date };
+  //   updateExpr.push("#D = :date");
+  // }
   if (invoiceData.description !== undefined) {
     names["#DESC"] = "description";
     values[":desc"] = { S: invoiceData.description };
     updateExpr.push("#DESC = :desc");
   }
-  if (invoiceData.addressId !== undefined) {
-    names["#AID"] = "address_id";
-    values[":aid"] = { S: invoiceData.addressId };
-    updateExpr.push("#AID = :aid");
-  }
+  // if (invoiceData.addressId !== undefined) {
+  //   names["#AID"] = "address_id";
+  //   values[":aid"] = { S: invoiceData.addressId };
+  //   updateExpr.push("#AID = :aid");
+  // }
 
   if (!updateExpr.length) return existing;
 
@@ -1905,8 +1844,8 @@ const editInvoiceContent = async (jobId, invoiceData) => {
     .updateItem({
       TableName: TABLE_NAME,
       Key: {
-        PK: { S: `job_id_${jobId}` },
-        SK: { S: "invoice" },
+        PK: { S: `customer_${customerId}` },
+        SK: { S: `job_${jobId}` },
       },
       UpdateExpression: `SET ${updateExpr.join(", ")}`,
       ExpressionAttributeNames: names,
@@ -1914,12 +1853,39 @@ const editInvoiceContent = async (jobId, invoiceData) => {
     })
     .promise();
 
-  return await getInvoiceByJobId(jobId);
+  return await getInvoice(customerId, jobId);
 };
 
-const deleteInvoice = async (jobId) => {
+const updateInvoicePaid = async (customerId, jobId, paid) => {
+  const existing = await getInvoice(customerId, jobId);
+
+  if (!existing) {
+    throw "INVOICE_NOT_FOUND";
+  }
+
+  await ddb
+    .updateItem({
+      TableName: TABLE_NAME,
+      Key: {
+        PK: { S: `customer_${customerId}` },
+        SK: { S: `job_${jobId}` },
+      },
+      UpdateExpression: "SET #PM = :payment",
+      ExpressionAttributeNames: {
+        "#PM": "payment_method",
+      },
+      ExpressionAttributeValues: {
+        ":payment": { S: paid ? "bank_transfer" : "none" },
+      },
+    })
+    .promise();
+
+  return await getInvoice(customerId, jobId);
+};
+
+const deleteInvoice = async (customerId, jobId) => {
   // Need raw number to free it
-  const existing = await getInvoiceByJobId(jobId);
+  const existing = await getInvoice(customerId, jobId);
   if (!existing) throw "INVOICE_NOT_FOUND";
 
   const raw =
@@ -1929,12 +1895,20 @@ const deleteInvoice = async (jobId) => {
     .transactWriteItems({
       TransactItems: [
         {
-          Delete: {
+          Update: {
             TableName: TABLE_NAME,
             Key: {
-              PK: { S: `job_id_${jobId}` },
-              SK: { S: "invoice" },
+              PK: { S: `customer_${customerId}` },
+              SK: { S: `job_${jobId}` },
             },
+            ExpressionAttributeNames: {
+              "#IA": "invoice_address_id",
+              "#ID": "invoice_description",
+              "#IDT": "invoice_date",
+              "#IN": "invoice_number",
+              "#JPIK": "job_invoice_pk",
+            },
+            UpdateExpression: "REMOVE #IA, #ID, #IN, #JPIK, #IDT",
           },
         },
         {
@@ -1951,13 +1925,18 @@ const deleteInvoice = async (jobId) => {
     .promise();
 };
 
+const makeFreeItemKey = (rawNumber) => ({
+  PK: { S: INVOICE_ALLOCATOR_PK },
+  SK: { S: `free_${padInvoice(rawNumber)}` },
+});
+
 module.exports = {
   addCustomer,
   addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
-  createInvoiceAuto,
+  createInvoice,
   deleteAddress,
   editAddress,
   editCustomer,
@@ -1972,13 +1951,13 @@ module.exports = {
   getCustomerById,
   getCustomers,
   getCustomerJobs,
+  getInvoice,
   getInvoices,
   getJob,
   getJobCustomers,
   getJobs,
   getJobType,
   getJobTypes,
-  getInvoiceByJobId,
   getNextInvoiceNumber,
   getOutcodes,
   queryCustomersByEmail,
@@ -1988,6 +1967,7 @@ module.exports = {
   deleteInvoice,
   editJobFromCustomer,
   updateJobStatus,
+  updateInvoicePaid,
   deleteJobFromCustomer,
   addFile,
 };

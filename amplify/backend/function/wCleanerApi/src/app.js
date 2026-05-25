@@ -22,7 +22,7 @@ const {
   addCustomerJob,
   addCustomerNote,
   addJobType,
-  createInvoiceAuto,
+  createInvoice,
   getAddressesForJobs,
   getCleaningAddress,
   getCleaningAddressById,
@@ -34,13 +34,14 @@ const {
   getJobType,
   getJobTypes,
   getInvoices,
-  getInvoiceByJobId,
+  getInvoice,
   getOutcodes,
   deleteCustomerNote,
   deleteInvoice,
   deleteJobType,
   editJobFromCustomer,
   updateJobStatus,
+  updateInvoicePaid,
   deleteJobFromCustomer,
   deleteAddress,
   editCustomer,
@@ -64,6 +65,23 @@ const { generateToken, parseToken } = require("./token");
 const { getAuthData, getJobUsers } = require("./authentication");
 
 const { setCustomerRoutes } = require("./routes/customers");
+const { setInvoicesRoutes } = require("./routes/invoices");
+
+const MANDATORY_ENV_VARS = ["USER_POOL_ID", "ENV"];
+
+const checkEnvVars = () => {
+  const missingEnvVars = [];
+  for (const envVar of MANDATORY_ENV_VARS) {
+    if (process.env[envVar] === undefined) {
+      missingEnvVars.push(envVar);
+    }
+  }
+  if (missingEnvVars.length > 0) {
+    throw new Error(`Missing required env vars: ${missingEnvVars.join(", ")}`);
+  }
+};
+
+checkEnvVars();
 
 // declare a new express app
 const app = express();
@@ -75,10 +93,12 @@ app.use(async function (req, res, next) {
   req.authData = await getAuthData(req);
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
+  res.header("Access-Control-Allow-Methods", "*");
   next();
 });
 
 setCustomerRoutes(app);
+setInvoicesRoutes(app);
 
 // Get outcodes
 app.get("/outcodes", async function (req, res) {
@@ -105,6 +125,8 @@ app.post("/customers/:customerId/address", async function (req, res) {
 
     let createdCustomerAddress = null;
     try {
+      const customerAddress = { name, address, postcode };
+
       createdCustomerAddress = await addCustomerAddress(
         customerId,
         customerAddress
@@ -583,207 +605,6 @@ app.put("/customers/:customerId/files", async function (req, res) {
     }
   }
 });
-
-//GET INVOICES
-app.get("/invoices", async function (req, res) {
-  try {
-    const nextToken = req.query?.nextToken;
-    const paginate = req.query?.paginate !== "false";
-    const sortBy = req.query?.sortBy;
-    const sortDirection = req.query?.sortDirection;
-    const exclusiveStartKey = parseToken(nextToken);
-
-    const groups = req.authData?.groups || [];
-    const isAdmin = groups.includes("Admin");
-
-    if (!isAdmin) {
-      res.status(403).json({ error: "User unauthorized" });
-      return;
-    }
-
-    const { items: invoicesFromDb, lastEvaluatedKey } = await getInvoices(
-      {
-        exclusiveStartKey,
-        enabled: paginate,
-      },
-      {
-        sortBy: sortBy,
-        direction: sortDirection,
-      }
-    );
-
-    let invoices = invoicesFromDb.map(mapInvoice);
-
-    // lista de address ids sin duplicados
-    const addressIds = Array.from(
-      new Set(invoices.map((invoice) => invoice.addressId))
-    );
-
-    const addresses = await Promise.all(
-      addressIds.map(async (addressId) => {
-        try {
-          const addressFromDb = await getCleaningAddressById(addressId);
-          return addressFromDb ? mapCleaningAddress(addressFromDb) : undefined;
-        } catch (error) {
-          console.error(error);
-          return undefined;
-        }
-      })
-    );
-
-    // obtener las addresses en batches
-    // {[addressId]: {...address}}
-    const addressMap = {};
-    addresses.forEach((address) => {
-      addressMap[address.id] = address;
-    });
-
-    const responseToken = generateToken(lastEvaluatedKey);
-
-    // unir los invoices a la address
-    // invoice.address = addresseMap[invoices.addressId]
-    invoices = invoices.map((invoice) => ({
-      ...invoice,
-      address: addressMap[invoice.addressId],
-    }));
-
-    res.json({
-      invoices,
-      nextToken: responseToken,
-    });
-  } catch (error) {
-    throw error;
-  }
-});
-
-app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-  const { customerId, jobId } = req.params;
-  const { date, description, addressId } = req.body;
-
-  try {
-    const groups = req.authData?.groups || [];
-    const isAdmin = groups.includes("Admin");
-
-    if (!isAdmin) {
-      res.status(403).json({ error: "User unauthorized" });
-      return;
-    }
-
-    if (!date) {
-      res.status(400).json({ error: "MISSING_INVOICE_DATE" });
-      return;
-    }
-
-    if (!description) {
-      res.status(400).json({ error: "MISSING_INVOICE_DESCRIPTION" });
-      return;
-    }
-
-    if (!addressId) {
-      res.status(400).json({ error: "MISSING_INVOICE_ADDRESS" });
-      return;
-    }
-
-    const invoice = await createInvoiceAuto(customerId, jobId, {
-      date,
-      description,
-      addressId,
-    });
-
-    res.json({ invoice });
-  } catch (err) {
-    if (err === "INVOICE_ALREADY_EXISTS") {
-      res.status(400).json({ error: "INVOICE_ALREADY_EXISTS" });
-      return;
-    }
-    if (err === "INVOICE_NUMBER_IN_USE") {
-      res.status(400).json({ error: "INVOICE_NUMBER_IN_USE" });
-      return;
-    }
-    if (err === "INVOICE_NUMBER_OUT_OF_RANGE") {
-      res.status(400).json({ error: "INVOICE_NUMBER_OUT_OF_RANGE" });
-      return;
-    }
-    if (err === "INVALID_INVOICE_NUMBER") {
-      res.status(400).json({ error: "INVALID_INVOICE_NUMBER" });
-      return;
-    }
-    if (err === "CUSTOMER_NOT_FOUND") {
-      res.status(404).json({ error: "CUSTOMER_NOT_FOUND" });
-      return;
-    }
-    if (err === "JOB_NOT_FOUND") {
-      res.status(404).json({ error: "JOB_NOT_FOUND" });
-      return;
-    }
-    throw err;
-  }
-});
-//EDIT INVOICE CONTENT
-app.put("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-  const { jobId } = req.params;
-  const { date, description, addressId } = req.body;
-
-  try {
-    const groups = req.authData?.groups || [];
-    const isAdmin = groups.includes("Admin");
-    if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
-
-    const invoice = await editInvoiceContent(jobId, {
-      date,
-      description,
-      addressId,
-    });
-    res.json({ invoice });
-  } catch (err) {
-    if (err === "INVOICE_NOT_FOUND") {
-      res.status(404).json({ error: "INVOICE_NOT_FOUND" });
-      return;
-    }
-
-    throw err;
-  }
-});
-
-//DELETE INVOICE AND REALISE NUMBER
-
-app.delete("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-  const { jobId } = req.params;
-
-  try {
-    const groups = req.authData?.groups || [];
-    const isAdmin = groups.includes("Admin");
-    if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
-
-    await deleteInvoice(jobId);
-    res.json({ message: "INVOICE_DELETED" });
-  } catch (err) {
-    if (err === "INVOICE_NOT_FOUND")
-      return res.status(404).json({ error: "INVOICE_NOT_FOUND" });
-
-    throw err;
-  }
-});
-
-//GET INVOICE
-app.get("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
-  const { jobId, customerId } = req.params;
-
-  const invoice = await getInvoiceByJobId(jobId);
-
-  if (!invoice) {
-    res.status(404).json({ error: "INVOICE_NOT_FOUND" });
-    return;
-  }
-  const addressFromDB = await getCleaningAddress(customerId, invoice.addressId);
-  invoice.address = mapCleaningAddress(addressFromDB);
-
-  res.json({ invoice });
-});
-
-// Customers Notes
-
-//Add customer note
 
 app.post("/customers/:customerId/note", async function (req, res) {
   try {

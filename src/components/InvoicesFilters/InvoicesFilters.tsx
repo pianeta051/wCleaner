@@ -15,6 +15,7 @@ type InvoicesFiltersProps = {
   onDateFromChange: (value: Dayjs | null) => void;
   onDateToChange: (value: Dayjs | null) => void;
   onClear: () => void;
+  hasInvalidRange?: boolean;
 };
 
 export const InvoicesFilters: FC<InvoicesFiltersProps> = ({
@@ -23,6 +24,7 @@ export const InvoicesFilters: FC<InvoicesFiltersProps> = ({
   onDateFromChange,
   onDateToChange,
   onClear,
+  hasInvalidRange = false,
 }) => {
   return (
     <FiltersWrapper>
@@ -35,6 +37,7 @@ export const InvoicesFilters: FC<InvoicesFiltersProps> = ({
             textField: {
               size: "small",
               sx: datePickerTextFieldSx,
+              error: hasInvalidRange,
             },
           }}
         />
@@ -47,6 +50,7 @@ export const InvoicesFilters: FC<InvoicesFiltersProps> = ({
             textField: {
               size: "small",
               sx: datePickerTextFieldSx,
+              error: hasInvalidRange,
             },
           }}
         />

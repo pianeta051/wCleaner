@@ -34,6 +34,22 @@ const {
   listUsersWithGroups,
 } = require("./cognitoActions");
 
+const MANDATORY_ENV_VARS = ["USERPOOL"];
+
+const checkEnvVars = () => {
+  const missingEnvVars = [];
+  for (const envVar of MANDATORY_ENV_VARS) {
+    if (process.env[envVar] === undefined) {
+      missingEnvVars.push(envVar);
+    }
+  }
+  if (missingEnvVars.length > 0) {
+    throw new Error(`Missing required env vars: ${missingEnvVars.join(", ")}`);
+  }
+};
+
+checkEnvVars();
+
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

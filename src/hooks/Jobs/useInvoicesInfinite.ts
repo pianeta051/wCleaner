@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import useSWRInfinite from "swr/infinite";
 
-import { getInvoices, InvoicesListParams } from "../../services/jobs";
+import { getInvoices, InvoicesListParams } from "../../services/invoices";
 import { extractErrorCode } from "../../services/error";
 import { InvoiceWithAddress } from "../../types/types";
 
