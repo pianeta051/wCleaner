@@ -260,7 +260,11 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
     const jobType = await getJobType(job.jobTypeId);
     job.jobTypeName = mapJobType(jobType).name;
     const addresses = await getAddressesForJobs([job]);
-    job.address = addresses[job.id];
+    const address = addresses[`${job.customerId}_${job.addressId}`];
+
+    job.address = address?.address ?? address?.name ?? "Unknown";
+    job.postcode = address?.postcode ?? "";
+
     res.json({ job });
   } catch (e) {
     if (e === "JOB_NOT_FOUND") {

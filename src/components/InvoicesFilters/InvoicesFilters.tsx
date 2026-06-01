@@ -8,6 +8,8 @@ import {
   FiltersWrapper,
   datePickerTextFieldSx,
 } from "./InvoicesFilters.style";
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { PaidFilter } from "../../pages/admin/invoices/InvoicesList/InvoicesList";
 
 type InvoicesFiltersProps = {
   dateFrom: Dayjs | null;
@@ -16,6 +18,8 @@ type InvoicesFiltersProps = {
   onDateToChange: (value: Dayjs | null) => void;
   onClear: () => void;
   hasInvalidRange?: boolean;
+  paidFilter: PaidFilter;
+  onPaidFilterChange: (filter: PaidFilter) => void;
 };
 
 export const InvoicesFilters: FC<InvoicesFiltersProps> = ({
@@ -25,6 +29,8 @@ export const InvoicesFilters: FC<InvoicesFiltersProps> = ({
   onDateToChange,
   onClear,
   hasInvalidRange = false,
+  paidFilter,
+  onPaidFilterChange,
 }) => {
   return (
     <FiltersWrapper>
@@ -54,6 +60,20 @@ export const InvoicesFilters: FC<InvoicesFiltersProps> = ({
             },
           }}
         />
+
+        <FormControl size="small" sx={{ width: 160 }}>
+          <InputLabel id="paid-filter-label">Paid</InputLabel>
+          <Select
+            labelId="paid-filter-label"
+            value={paidFilter}
+            label="Paid"
+            onChange={(event) => onPaidFilterChange(event.target.value)}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="paid">Paid</MenuItem>
+            <MenuItem value="unpaid">Unpaid</MenuItem>
+          </Select>
+        </FormControl>
 
         <ClearButton variant="text" onClick={onClear}>
           Clear filters

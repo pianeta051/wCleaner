@@ -22,7 +22,7 @@ import { InvoicesFilters } from "../../../../components/InvoicesFilters/Invoices
 
 export type SortableColumnId = "invoiceNumber" | "invoiceDate";
 export type SortDirection = "asc" | "desc";
-type PaidFilter = "all" | "paid" | "unpaid";
+export type PaidFilter = "all" | "paid" | "unpaid";
 
 export const InvoicesList: FC = () => {
   const [sortBy, setSortBy] = useState<SortableColumnId>("invoiceNumber");
@@ -68,10 +68,6 @@ export const InvoicesList: FC = () => {
     setSortDirection(newSorting.direction);
   };
 
-  const handlePaidFilterChange = (event: SelectChangeEvent<PaidFilter>) => {
-    setPaidFilter(event.target.value as PaidFilter);
-  };
-
   return (
     <Wrapper>
       <Toolbar />
@@ -96,21 +92,9 @@ export const InvoicesList: FC = () => {
                   setPaidFilter("all");
                 }}
                 hasInvalidRange={hasInvalidRange}
+                paidFilter={paidFilter}
+                onPaidFilterChange={setPaidFilter}
               />
-
-              <FormControl size="small" sx={{ width: 160 }}>
-                <InputLabel id="paid-filter-label">Paid</InputLabel>
-                <Select
-                  labelId="paid-filter-label"
-                  value={paidFilter}
-                  label="Paid"
-                  onChange={handlePaidFilterChange}
-                >
-                  <MenuItem value="all">All</MenuItem>
-                  <MenuItem value="paid">Paid</MenuItem>
-                  <MenuItem value="unpaid">Unpaid</MenuItem>
-                </Select>
-              </FormControl>
             </Stack>
 
             {hasInvalidRange ? (

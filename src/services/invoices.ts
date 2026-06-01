@@ -201,6 +201,7 @@ export type InvoicesListParams = {
   filters?: {
     from?: number;
     to?: number;
+    paid?: boolean;
   };
 };
 
@@ -233,6 +234,10 @@ export const getInvoices = async ({
 
     if (nextToken) {
       queryParams.nextToken = nextToken;
+    }
+
+    if (params?.filters?.paid !== undefined) {
+      queryParams.paid = String(params.filters.paid);
     }
 
     const response = await get("/invoices", queryParams);
