@@ -3,30 +3,33 @@ import { Dialog, DialogTitle } from "@mui/material";
 import { useGenerateInvoice } from "../../hooks/Invoices/useGenerateInvoice";
 import { InvoiceForm, InvoiceFormValues } from "../InvoiceForm/InvoiceForm";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { Job } from "../../types/types";
+import { Invoice, Job } from "../../types/types";
 import dayjs from "dayjs";
+import { useUpdateInvoice } from "../../hooks/Invoices/useUpdateInvoice";
 
-type GenerateInvoiceModalProps = {
+type UpdateInvoiceModalProps = {
   open: boolean;
   onClose: () => void;
   customerId: string;
-  job: Job;
-  onGenerated: () => void;
+  jobId: string;
+  invoice: Invoice;
+  onEdit?: () => void;
 };
 
-export const GenerateInvoiceModal: FC<GenerateInvoiceModalProps> = ({
+export const UpdateInvoiceModal: FC<UpdateInvoiceModalProps> = ({
   open,
   onClose,
   customerId,
-  job,
-  onGenerated,
+  jobId,
+  onEdit,
+  invoice,
 }) => {
-  const { generate, loading, error } = useGenerateInvoice(customerId, job.id);
+  const { updateInvoice, loading, error } = useUpdateInvoice(customerId, jobId);
 
   const handleSubmit = async (formValues: InvoiceFormValues) => {
     try {
-      await generate(formValues);
-      onGenerated();
+      await updateInvoice(formValues);
+      onEdit?.();
       onClose();
     } catch (e) {
       console.error("Failed to generate invoice:", e);
@@ -35,16 +38,16 @@ export const GenerateInvoiceModal: FC<GenerateInvoiceModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Generate Invoice</DialogTitle>
+      <DialogTitle>Edit Invoice</DialogTitle>
 
       <InvoiceForm
         loading={loading}
         onSubmit={handleSubmit}
         onCancel={onClose}
         defaultValues={{
-          date: dayjs(job.date),
-          description: "",
-          addressId: job.addressId as string,
+          date: dayjs(invoice.date),
+          description: invoice.description,
+          addressId: invoice.addressId as string,
         }}
         customerId={customerId}
       />

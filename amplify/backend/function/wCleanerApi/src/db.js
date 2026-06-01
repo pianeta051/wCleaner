@@ -525,7 +525,6 @@ const getCustomers = async (filters, pagination) => {
     };
 
     result = await ddb.scan(params).promise();
-    console.log(JSON.stringify({ result }, null, 2));
     items.push(...(result.Items || []));
   }
 
@@ -1011,13 +1010,11 @@ const getFutureJobsFromAddress = async (addressId) => {
         "#AID = :address_id AND begins_with(#SK, :sk) AND #S > :current_timestamp",
       ExclusiveStartKey,
     };
-    console.log(JSON.stringify(params, null, 2));
 
     const result = await ddb.scan(params).promise();
     ExclusiveStartKey = result.LastEvaluatedKey;
     items = [...items, ...result.Items];
   } while (ExclusiveStartKey);
-  console.log(JSON.stringify(items, null, 2));
   return items;
 };
 
@@ -1656,10 +1653,7 @@ const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
     },
     ScanIndexForward: direction === "asc",
   };
-
   const filterExpressions = [];
-
-  console.log(JSON.stringify(params, null, 2));
 
   if (enabled) {
     params.Limit = limit;
@@ -1896,21 +1890,23 @@ const editInvoiceContent = async (customerId, jobId, invoiceData) => {
   const names = {};
   const values = {};
 
-  // if (invoiceData.date !== undefined) {
-  //   names["#D"] = "date";
-  //   values[":date"] = { S: "" + invoiceData.date };
-  //   updateExpr.push("#D = :date");
-  // }
   if (invoiceData.description !== undefined) {
-    names["#DESC"] = "description";
+    names["#DESC"] = "invoice_description";
     values[":desc"] = { S: invoiceData.description };
     updateExpr.push("#DESC = :desc");
   }
-  // if (invoiceData.addressId !== undefined) {
-  //   names["#AID"] = "address_id";
-  //   values[":aid"] = { S: invoiceData.addressId };
-  //   updateExpr.push("#AID = :aid");
-  // }
+
+  if (invoiceData.addressId !== undefined) {
+    names["#AID"] = "invoice_address_id";
+    values[":aid"] = { S: invoiceData.addressId };
+    updateExpr.push("#AID = :aid");
+  }
+
+  if (invoiceData.addressId !== undefined) {
+    names["#ID"] = "invoice_date";
+    values[":date"] = { N: "" + invoiceData.date };
+    updateExpr.push("#ID = :date");
+  }
 
   if (!updateExpr.length) return existing;
 

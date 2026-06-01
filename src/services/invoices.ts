@@ -338,3 +338,34 @@ export const updateJobInvoicePaid = async (
     throw "INTERNAL_ERROR";
   }
 };
+
+export const updateJobInvoice = async (
+  customerId: string,
+  jobId: string,
+  formValues: InvoiceFormValues
+): Promise<Invoice> => {
+  try {
+    const response = await put(
+      `/customers/${customerId}/jobs/${jobId}/invoice/`,
+      { ...formValues, date: formValues.date?.valueOf() }
+    );
+
+    if (!isInvoice(response.invoice)) {
+      throw "INTERNAL_ERROR";
+    }
+
+    return response.invoice;
+  } catch (error) {
+    if (isErrorResponse(error)) {
+      const status = error.response.status;
+      const code = error.response.data?.error;
+
+      if (status === 403) throw "UNAUTHORIZED";
+      if (status === 404 && code === "INVOICE_NOT_FOUND") {
+        throw "INVOICE_NOT_FOUND";
+      }
+    }
+
+    throw "INTERNAL_ERROR";
+  }
+};

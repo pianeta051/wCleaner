@@ -5,7 +5,7 @@ import { generateJobInvoice } from "../../services/invoices";
 import { Invoice } from "../../types/types";
 import { InvoiceFormValues } from "../../components/InvoiceForm/InvoiceForm";
 
-type ErrorResponseShape = {
+export type ErrorResponseShape = {
   response?: {
     status?: number;
     data?: {

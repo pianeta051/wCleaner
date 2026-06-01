@@ -1,5 +1,6 @@
 const {
   createInvoice,
+  editInvoiceContent,
   getCleaningAddress,
   getCleaningAddressById,
   getInvoices,

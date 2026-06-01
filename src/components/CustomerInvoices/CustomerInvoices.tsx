@@ -12,7 +12,7 @@ import {
 import { Link as RouterLink } from "react-router-dom";
 
 import dayjs from "dayjs";
-import { useCustomerInvoices } from "../../hooks/Jobs/useCustomerInvoices";
+import { useCustomerInvoices } from "../../hooks/Invoices/useCustomerInvoices";
 
 type Props = {
   customerId: string;

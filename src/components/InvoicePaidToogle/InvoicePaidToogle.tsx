@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Chip, CircularProgress } from "@mui/material";
-import { useUpdateInvoicePaid } from "../useUpdateInvoicePaid";
+import { useUpdateInvoicePaid } from "../../hooks/Invoices/useUpdateInvoicePaid";
 
 type InvoicePaidToggleProps = {
   customerId: string;
