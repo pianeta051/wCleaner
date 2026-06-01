@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import {
   Alert,
   Button,
@@ -42,7 +42,8 @@ import {
   SortableColumnId,
   SortDirection,
 } from "../../pages/admin/invoices/InvoicesList/InvoicesList";
-import { InvoicePaidToggle } from "../../hooks/Jobs/InvoicePaidToogle/InvoicePaidToogle";
+import { InvoicePaidToggle } from "../InvoicePaidToogle/InvoicePaidToogle";
+import { UpdateInvoiceModal } from "../UpdateInvoiceModal/UpdateInvoiceModal";
 
 type InvoicesTableProps = {
   invoices: InvoiceWithAddress[];
@@ -92,6 +93,8 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
   onReload,
 }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [editingInvoice, setEditingInvoice] =
+    useState<InvoiceWithAddress | null>(null);
 
   const formatDate = (date: number) => dayjs(date).format("YYYY-MM-DD");
 
@@ -171,185 +174,109 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
     return <Alert severity="warning">No invoices found</Alert>;
   }
 
-  return isMobile ? (
-    <Stack spacing={2}>
-      <FormControl fullWidth size="small">
-        <InputLabel id="mobile-invoice-sort-label">Sort by</InputLabel>
-        <Select
-          labelId="mobile-invoice-sort-label"
-          value={getMobileSortOptionValue()}
-          label="Sort by"
-          onChange={handleMobileSortChange}
-        >
-          <MenuItem value="newest">Newest</MenuItem>
-          <MenuItem value="oldest">Oldest</MenuItem>
-          <MenuItem value="highestInvoiceNumber">
-            Highest invoice number
-          </MenuItem>
-          <MenuItem value="lowestInvoiceNumber">Lowest invoice number</MenuItem>
-        </Select>
-      </FormControl>
+  return (
+    <>
+      {isMobile ? (
+        <Stack spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="mobile-invoice-sort-label">Sort by</InputLabel>
+            <Select
+              labelId="mobile-invoice-sort-label"
+              value={getMobileSortOptionValue()}
+              label="Sort by"
+              onChange={handleMobileSortChange}
+            >
+              <MenuItem value="newest">Newest</MenuItem>
+              <MenuItem value="oldest">Oldest</MenuItem>
+              <MenuItem value="highestInvoiceNumber">
+                Highest invoice number
+              </MenuItem>
+              <MenuItem value="lowestInvoiceNumber">
+                Lowest invoice number
+              </MenuItem>
+            </Select>
+          </FormControl>
 
-      {invoices.map((invoice) => {
-        const customerId = getCustomerId(invoice);
-
-        return (
-          <InvoiceCard key={invoice.jobId} variant="outlined">
-            <CardContent sx={{ pb: 1.5 }}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                gap={2}
-              >
-                <Stack direction="row" alignItems="center" gap={1} minWidth={0}>
-                  <ReceiptLongOutlinedIcon fontSize="small" />
-                  <Typography
-                    variant="h6"
-                    fontWeight={800}
-                    noWrap
-                    title={invoice.invoiceNumber}
-                  >
-                    {invoice.invoiceNumber}
-                  </Typography>
-                </Stack>
-
-                <Chip label="Invoice" size="small" variant="outlined" />
-              </Stack>
-
-              <Stack direction="row" gap={1.25} sx={{ mt: 1.5 }}>
-                <CalendarMonthOutlinedIcon fontSize="small" />
-                <Typography variant="body2" color="text.secondary">
-                  {formatDate(invoice.date)}
-                </Typography>
-              </Stack>
-
-              <Divider sx={{ my: 1.5 }} />
-
-              <Stack direction="row" gap={1.25}>
-                <HomeWorkOutlinedIcon fontSize="small" />
-                <Stack spacing={0.25}>
-                  <Typography variant="caption" color="text.secondary">
-                    Address name
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatAddressName(invoice)}
-                  </Typography>
-
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 0.5 }}
-                  >
-                    Address
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatAddressLine(invoice)}
-                  </Typography>
-                </Stack>
-              </Stack>
-
-              <Divider sx={{ my: 1.5 }} />
-
-              <Stack direction="row" gap={1.25}>
-                <DescriptionOutlinedIcon fontSize="small" />
-                <Stack spacing={0.25}>
-                  <Typography variant="caption" color="text.secondary">
-                    Description
-                  </Typography>
-                  <Typography variant="body2">
-                    {formatMaybe(invoice.description)}
-                  </Typography>
-                </Stack>
-              </Stack>
-
-              <Divider sx={{ my: 1.5 }} />
-
-              {customerId ? (
-                <InvoicePaidToggle
-                  customerId={customerId}
-                  jobId={invoice.jobId}
-                  paid={invoice.paid}
-                  onUpdated={onReload}
-                />
-              ) : null}
-            </CardContent>
-
-            <InvoiceCardActions>
-              {customerId ? (
-                <DownloadInvoiceButton
-                  job={{
-                    id: invoice.jobId,
-                    customerId,
-                  }}
-                />
-              ) : null}
-            </InvoiceCardActions>
-          </InvoiceCard>
-        );
-      })}
-    </Stack>
-  ) : (
-    <TableContainer
-      component={Paper}
-      sx={{ minWidth: 950, maxHeight: 600, overflowX: "auto" }}
-    >
-      <Table stickyHeader aria-label="invoices table">
-        <TableHead>
-          <TableRow>
-            {COLUMN_HEADERS.map(({ label, align, id, sortable }) => (
-              <TableCellWrap key={id} align={align}>
-                {sortable ? (
-                  <TableSortLabel
-                    active={sorting.sortBy === id}
-                    direction={
-                      sorting.sortBy === id ? sorting.direction : "desc"
-                    }
-                    onClick={() => handleSortChange(id as SortableColumnId)}
-                  >
-                    {label}
-                  </TableSortLabel>
-                ) : (
-                  label
-                )}
-              </TableCellWrap>
-            ))}
-          </TableRow>
-        </TableHead>
-
-        <TableBody>
-          {invoices.map((invoice, index) => {
+          {invoices.map((invoice) => {
             const customerId = getCustomerId(invoice);
 
             return (
-              <TableRow
-                key={invoice.jobId}
-                sx={{
-                  backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff",
-                }}
-              >
-                <InvoiceNumberCell component="th" scope="row">
-                  {invoice.invoiceNumber}
-                </InvoiceNumberCell>
+              <InvoiceCard key={invoice.jobId} variant="outlined">
+                <CardContent sx={{ pb: 1.5 }}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    gap={2}
+                  >
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      gap={1}
+                      minWidth={0}
+                    >
+                      <ReceiptLongOutlinedIcon fontSize="small" />
+                      <Typography
+                        variant="h6"
+                        fontWeight={800}
+                        noWrap
+                        title={invoice.invoiceNumber}
+                      >
+                        {invoice.invoiceNumber}
+                      </Typography>
+                    </Stack>
 
-                <TableCell align="left">{formatDate(invoice.date)}</TableCell>
+                    <Chip label="Invoice" size="small" variant="outlined" />
+                  </Stack>
 
-                <TableCell align="left">
-                  <AddressCellContent>
-                    <Typography variant="body2" fontWeight={700}>
-                      {formatAddressName(invoice)}
-                    </Typography>
+                  <Stack direction="row" gap={1.25} sx={{ mt: 1.5 }}>
+                    <CalendarMonthOutlinedIcon fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      {formatAddressLine(invoice)}
+                      {formatDate(invoice.date)}
                     </Typography>
-                  </AddressCellContent>
-                </TableCell>
+                  </Stack>
 
-                <TableCell align="left">
-                  {formatMaybe(invoice.description)}
-                </TableCell>
+                  <Divider sx={{ my: 1.5 }} />
 
-                <TableCell align="left">
+                  <Stack direction="row" gap={1.25}>
+                    <HomeWorkOutlinedIcon fontSize="small" />
+                    <Stack spacing={0.25}>
+                      <Typography variant="caption" color="text.secondary">
+                        Address name
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {formatAddressName(invoice)}
+                      </Typography>
+
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 0.5 }}
+                      >
+                        Address
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatAddressLine(invoice)}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+
+                  <Divider sx={{ my: 1.5 }} />
+
+                  <Stack direction="row" gap={1.25}>
+                    <DescriptionOutlinedIcon fontSize="small" />
+                    <Stack spacing={0.25}>
+                      <Typography variant="caption" color="text.secondary">
+                        Description
+                      </Typography>
+                      <Typography variant="body2">
+                        {formatMaybe(invoice.description)}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+
+                  <Divider sx={{ my: 1.5 }} />
+
                   {customerId ? (
                     <InvoicePaidToggle
                       customerId={customerId}
@@ -357,12 +284,10 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                       paid={invoice.paid}
                       onUpdated={onReload}
                     />
-                  ) : (
-                    "—"
-                  )}
-                </TableCell>
+                  ) : null}
+                </CardContent>
 
-                <TableCell align="right">
+                <InvoiceCardActions>
                   {customerId ? (
                     <DownloadInvoiceButton
                       job={{
@@ -380,12 +305,138 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                   >
                     See job
                   </Button>
-                </TableCell>
-              </TableRow>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{ marginLeft: "5px" }}
+                    onClick={() => setEditingInvoice(invoice)}
+                  >
+                    Edit
+                  </Button>
+                </InvoiceCardActions>
+              </InvoiceCard>
             );
           })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+        </Stack>
+      ) : (
+        <TableContainer
+          component={Paper}
+          sx={{ minWidth: 950, maxHeight: 600, overflowX: "auto" }}
+        >
+          <Table stickyHeader aria-label="invoices table">
+            <TableHead>
+              <TableRow>
+                {COLUMN_HEADERS.map(({ label, align, id, sortable }) => (
+                  <TableCellWrap key={id} align={align}>
+                    {sortable ? (
+                      <TableSortLabel
+                        active={sorting.sortBy === id}
+                        direction={
+                          sorting.sortBy === id ? sorting.direction : "desc"
+                        }
+                        onClick={() => handleSortChange(id as SortableColumnId)}
+                      >
+                        {label}
+                      </TableSortLabel>
+                    ) : (
+                      label
+                    )}
+                  </TableCellWrap>
+                ))}
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {invoices.map((invoice, index) => {
+                const customerId = getCustomerId(invoice);
+
+                return (
+                  <TableRow
+                    key={invoice.jobId}
+                    sx={{
+                      backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff",
+                    }}
+                  >
+                    <InvoiceNumberCell component="th" scope="row">
+                      {invoice.invoiceNumber}
+                    </InvoiceNumberCell>
+
+                    <TableCell align="left">
+                      {formatDate(invoice.date)}
+                    </TableCell>
+
+                    <TableCell align="left">
+                      <AddressCellContent>
+                        <Typography variant="body2" fontWeight={700}>
+                          {formatAddressName(invoice)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {formatAddressLine(invoice)}
+                        </Typography>
+                      </AddressCellContent>
+                    </TableCell>
+
+                    <TableCell align="left">
+                      {formatMaybe(invoice.description)}
+                    </TableCell>
+
+                    <TableCell align="left">
+                      {customerId ? (
+                        <InvoicePaidToggle
+                          customerId={customerId}
+                          jobId={invoice.jobId}
+                          paid={invoice.paid}
+                          onUpdated={onReload}
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+
+                    <TableCell align="right">
+                      {customerId ? (
+                        <DownloadInvoiceButton
+                          job={{
+                            id: invoice.jobId,
+                            customerId,
+                          }}
+                        />
+                      ) : null}
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        sx={{ marginLeft: "5px" }}
+                        to={`/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}`}
+                        component={RouterLink}
+                      >
+                        See job
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        sx={{ marginLeft: "5px" }}
+                        onClick={() => setEditingInvoice(invoice)}
+                      >
+                        Edit
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+      {editingInvoice && (
+        <UpdateInvoiceModal
+          open={!!editingInvoice}
+          invoice={editingInvoice}
+          onClose={() => setEditingInvoice(null)}
+          customerId={editingInvoice.customerId as string}
+          jobId={editingInvoice.jobId}
+          onEdit={onReload}
+        />
+      )}
+    </>
   );
 };

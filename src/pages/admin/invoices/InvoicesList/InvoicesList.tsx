@@ -17,7 +17,7 @@ import { Dayjs } from "dayjs";
 import { InvoicesTable } from "../../../../components/InvoicesTable/InvoicesTable";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 import { Title, Wrapper } from "./InvoicesList.style";
-import { useInvoicesInfinite } from "../../../../hooks/Jobs/useInvoicesInfinite";
+import { useInvoicesInfinite } from "../../../../hooks/Invoices/useInvoicesInfinite";
 import { InvoicesFilters } from "../../../../components/InvoicesFilters/InvoicesFilters";
 
 export type SortableColumnId = "invoiceNumber" | "invoiceDate";

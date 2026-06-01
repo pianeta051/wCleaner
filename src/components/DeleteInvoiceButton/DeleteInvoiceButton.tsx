@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
-import { useDeleteInvoice } from "../../hooks/Jobs/useDeleteInvoice";
+import { useDeleteInvoice } from "../../hooks/Invoices/useDeleteInvoice";
 
 type DeleteInvoiceButtonProps = {
   customerId: string;

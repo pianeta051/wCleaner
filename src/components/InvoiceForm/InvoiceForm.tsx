@@ -98,7 +98,7 @@ export const InvoiceForm: FC<InvoiceFormProps> = ({
         </Button>
 
         <Button variant="contained" disabled={loading} type="submit">
-          {loading ? "Generating..." : "Generate Invoice"}
+          {loading ? "Saving..." : "Save Invoice"}
         </Button>
       </DialogActions>
     </Form>

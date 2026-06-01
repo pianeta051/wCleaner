@@ -11,7 +11,7 @@ import {
   PdfContainer,
   ButtonDownload,
 } from "./InvoicePreviewPage.style";
-import { useJobInvoice } from "../../../../hooks/Jobs/useJobInvoice";
+import { useJobInvoice } from "../../../../hooks/Invoices/useJobInvoice";
 
 type Params = {
   jobId: string;

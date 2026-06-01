@@ -29,7 +29,7 @@ import { useAuth } from "../../context/AuthContext";
 import { transformToFormValues } from "../../helpers/job";
 import { capitalize } from "lodash";
 import { JobToggleStatusButton } from "../JobToggleStatusButton/JobToggleStatusButton";
-import { useJobInvoice } from "../../hooks/Jobs/useJobInvoice";
+import { useJobInvoice } from "../../hooks/Invoices/useJobInvoice";
 import { InvoiceActionButtons } from "../InvoiceActionButtons/InvoiceActionButtons";
 
 type JobInfoDisplayProps = {
