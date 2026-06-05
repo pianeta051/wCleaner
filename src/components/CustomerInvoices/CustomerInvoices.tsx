@@ -3,11 +3,15 @@ import {
   Alert,
   Button,
   CircularProgress,
+  IconButton,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
 
 import { Link as RouterLink } from "react-router-dom";
 
@@ -41,19 +45,41 @@ export const CustomerInvoices: FC<Props> = ({ customerId }) => {
       ) : (
         <>
           <List>
-            {invoices.map((invoice) => (
-              <ListItemButton
-                key={invoice.jobId}
-                component={RouterLink}
-                to={`/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}/invoice`}
-                target="_blank"
-              >
-                <ListItemText
-                  primary={invoice.invoiceNumber}
-                  secondary={dayjs(invoice.date).format("DD MMM YYYY")}
-                />
-              </ListItemButton>
-            ))}
+            {invoices.map((invoice) => {
+              const invoiceUrl = `/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}/invoice`;
+
+              return (
+                <ListItem
+                  key={invoice.jobId}
+                  disablePadding
+                  secondaryAction={
+                    <Tooltip title="Download invoice">
+                      <IconButton
+                        edge="end"
+                        component="a"
+                        href={invoiceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="primary"
+                      >
+                        <DownloadIcon />
+                      </IconButton>
+                    </Tooltip>
+                  }
+                >
+                  <ListItemButton
+                    component={RouterLink}
+                    to={invoiceUrl}
+                    target="_blank"
+                  >
+                    <ListItemText
+                      primary={invoice.invoiceNumber}
+                      secondary={dayjs(invoice.date).format("DD MMM YYYY")}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
           </List>
           {moreToLoad && (
             <Button variant="outlined" onClick={loadMore} loading={loadingMore}>

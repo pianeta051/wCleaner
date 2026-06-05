@@ -6,6 +6,7 @@ import {
   Chip,
   Divider,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Paper,
@@ -19,6 +20,7 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
+  Tooltip,
   Typography,
   useMediaQuery,
 } from "@mui/material";
@@ -44,7 +46,8 @@ import {
 } from "../../pages/admin/invoices/InvoicesList/InvoicesList";
 import { InvoicePaidToggle } from "../InvoicePaidToogle/InvoicePaidToogle";
 import { UpdateInvoiceModal } from "../UpdateInvoiceModal/UpdateInvoiceModal";
-
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
 type InvoicesTableProps = {
   invoices: InvoiceWithAddress[];
   onReload?: () => void;
@@ -296,23 +299,25 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                       }}
                     />
                   ) : null}
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    sx={{ marginLeft: "5px" }}
-                    to={`/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}`}
-                    component={RouterLink}
-                  >
-                    See job
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    sx={{ marginLeft: "5px" }}
-                    onClick={() => setEditingInvoice(invoice)}
-                  >
-                    Edit
-                  </Button>
+                  <Tooltip title="View job">
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      component={RouterLink}
+                      to={`/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}`}
+                    >
+                      <VisibilityIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit invoice">
+                    <IconButton
+                      color="primary"
+                      size="small"
+                      onClick={() => setEditingInvoice(invoice)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
                 </InvoiceCardActions>
               </InvoiceCard>
             );
@@ -411,14 +416,15 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                       >
                         See job
                       </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        sx={{ marginLeft: "5px" }}
-                        onClick={() => setEditingInvoice(invoice)}
-                      >
-                        Edit
-                      </Button>
+                      <Tooltip title="Edit invoice">
+                        <IconButton
+                          color="primary"
+                          size="small"
+                          onClick={() => setEditingInvoice(invoice)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 );

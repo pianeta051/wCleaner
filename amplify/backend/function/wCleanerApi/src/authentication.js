@@ -1,18 +1,21 @@
-const { CognitoIdentityServiceProvider } = require("aws-sdk");
-
-const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider();
+const {
+  CognitoIdentityProviderClient,
+  AdminListGroupsForUserCommand,
+  AdminGetUserCommand,
+} = require("@aws-sdk/client-cognito-identity-provider");
 
 const userPoolId = process.env.USER_POOL_ID;
+const cognitoClient = new CognitoIdentityProviderClient();
 
 console.log("USER POOL ID : " + userPoolId);
+
 const getGroups = async (userSub) => {
   const params = {
     UserPoolId: userPoolId,
     Username: userSub,
   };
-  const result = await cognitoIdentityServiceProvider
-    .adminListGroupsForUser(params)
-    .promise();
+  const command = new AdminListGroupsForUserCommand(params);
+  const result = await cognitoClient.send(command);
   if (result) {
     return result.Groups?.map((g) => g.GroupName);
   }
@@ -49,9 +52,8 @@ const getUserInfo = async (userSub) => {
     UserPoolId: userPoolId,
     Username: userSub,
   };
-  const response = await cognitoIdentityServiceProvider
-    .adminGetUser(params)
-    .promise();
+  const command = new AdminGetUserCommand(params);
+  const response = await cognitoClient.send(command);
   return response.UserAttributes.reduce((acc, { Name, Value }) => {
     if (USER_ATTRIBUTES.includes(Name)) {
       const attrName = Name.startsWith("custom:") ? Name.split(":")[1] : Name;
