@@ -31,11 +31,7 @@ export const SearchBar: FC<SearchBarProps> = ({
   return (
     <Form onSubmit={handleSubmit}>
       <SearchBox>
-        <FormControl
-          variant="outlined"
-          size="small"
-          sx={{ width: "100%", maxWidth: 400 }}
-        >
+        <FormControl variant="outlined" sx={{ width: "100%" }}>
           <InputLabel htmlFor="search-customer">Search customer</InputLabel>
           <OutlinedInput
             id="search-customer"
@@ -44,6 +40,10 @@ export const SearchBar: FC<SearchBarProps> = ({
             onChange={handleChange}
             onBlur={handleSubmit}
             label="Search customer"
+            sx={{
+              height: 56,
+              borderRadius: 2,
+            }}
             endAdornment={
               <InputAdornment position="end">
                 <IconButton

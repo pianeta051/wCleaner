@@ -20,7 +20,7 @@ const dynamoClient = new DynamoDBClient({ region: "eu-west-2" });
 const uuid = require("node-uuid");
 
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
-const PAGE_SIZE = 50;
+const PAGE_SIZE = process.env.PAGE_SIZE ?? 50;
 const INVOICE_ALLOCATOR_PK = "invoice_allocator";
 
 const generateSlug = async (email, name) => {
@@ -431,7 +431,7 @@ const findAddressesByName = async (customerId, addressName) => {
 };
 
 const getCustomers = async (filters, pagination) => {
-  const { exclusiveStartKey, limit, enabled } = pagination;
+  const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
   const { searchInput, outcodeFilter } = filters;
 
   const filterExpressions = [
@@ -455,80 +455,97 @@ const getCustomers = async (filters, pagination) => {
 
   if (enabled) {
     params.Limit = limit;
+
     if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
       params.ExclusiveStartKey = exclusiveStartKey;
     }
   }
 
   if (searchInput?.length) {
-    const searchParams = {
-      ExpressionAttributeNames: {
-        "#NL": "name_lowercase",
-        "#EL": "email_lowercase",
-        "#AL": "address_lowercase",
-        "#PL": "postcode_lowercase",
-        ...params.ExpressionAttributeNames,
-      },
-      ExpressionAttributeValues: {
-        ":name": { S: searchInput.toLowerCase() },
-        ":email": { S: searchInput.toLowerCase() },
-        ":address": { S: searchInput.toLowerCase() },
-        ":postcode": { S: searchInput.toLowerCase() },
-        ...params.ExpressionAttributeValues,
-      },
+    params.ExpressionAttributeNames = {
+      ...params.ExpressionAttributeNames,
+      "#NL": "name_lowercase",
+      "#EL": "email_lowercase",
+      "#AL": "address_lowercase",
+      "#PL": "postcode_lowercase",
+    };
+
+    params.ExpressionAttributeValues = {
+      ...params.ExpressionAttributeValues,
+      ":name": { S: searchInput.toLowerCase() },
+      ":email": { S: searchInput.toLowerCase() },
+      ":address": { S: searchInput.toLowerCase() },
+      ":postcode": { S: searchInput.toLowerCase() },
     };
 
     filterExpressions.push(
       "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#AL, :address) OR contains(#PL, :postcode))"
     );
-    params = { ...params, ...searchParams };
   }
 
   if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
-    const expressionAttributeNames = {
+    params.ExpressionAttributeNames = {
       ...params.ExpressionAttributeNames,
       "#OC": "outcode",
     };
 
-    const expressionAttributesValues = { ...params.ExpressionAttributeValues };
-
     for (let i = 0; i < outcodeFilter.length; i++) {
-      expressionAttributesValues[`:outcode${i}`] = { S: outcodeFilter[i] };
+      params.ExpressionAttributeValues[`:outcode${i}`] = {
+        S: outcodeFilter[i],
+      };
     }
 
     filterExpressions.push(
       `#OC IN (${outcodeFilter.map((_v, i) => `:outcode${i}`).join(", ")})`
     );
-
-    params = {
-      ...params,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributesValues,
-    };
   }
 
   params.FilterExpression = filterExpressions.join(" AND ");
 
-  const command = new ScanCommand(params);
-  const result = await dynamoClient.send(command);
-  const items = result.Items || [];
+  let command = new ScanCommand(params);
+  let result = await dynamoClient.send(command);
 
+  const items = result.Items || [];
   let lastEvaluatedKey = null;
 
-  if (enabled) {
-    const nextItem = await getNextCustomer(result.LastEvaluatedKey);
-    lastEvaluatedKey = nextItem ? result.LastEvaluatedKey : null;
-  }
-  while (result.LastEvaluatedKey && items.length < limit) {
+  while (enabled && result.LastEvaluatedKey && items.length < limit) {
     params = {
       ...params,
       ExclusiveStartKey: result.LastEvaluatedKey,
       Limit: limit - items.length,
     };
 
+    command = new ScanCommand(params);
     result = await dynamoClient.send(command);
 
     items.push(...(result.Items || []));
+  }
+
+  if (enabled && result.LastEvaluatedKey) {
+    params = {
+      ...params,
+      ExclusiveStartKey: result.LastEvaluatedKey,
+      Limit: 50,
+    };
+    command = new ScanCommand(params);
+    const nextOne = await dynamoClient.send(command);
+    if (nextOne.Items?.length > 0) {
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+  }
+
+  if (!enabled) {
+    while (result.LastEvaluatedKey) {
+      params = {
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+      };
+
+      command = new ScanCommand(params);
+      result = await dynamoClient.send(command);
+
+      items.push(...(result.Items || []));
+    }
   }
 
   return { items, lastEvaluatedKey };
