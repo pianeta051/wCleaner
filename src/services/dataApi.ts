@@ -1,4 +1,12 @@
-import { API } from "aws-amplify";
+import {
+  get as amplifyGet,
+  post as amplifyPost,
+  put as amplifyPut,
+  del as amplifyDelete,
+} from "aws-amplify/api";
+
+import { DocumentType } from "@aws-amplify/core/internals/utils";
+
 export const API_URL = import.meta.env.VITE_API_URL as string | undefined;
 // export const API_URL = undefined;
 export const localFetch = async (
@@ -32,30 +40,45 @@ export const get = async (
   queryParams: { [param: string]: string | undefined | number | boolean } = {}
 ) => {
   if (API_URL) return localFetch("GET", path, { queryParams });
-  return API.get("wCleanerApi", path, {
-    queryStringParameters: queryParams,
+  const restOperation = amplifyGet({
+    apiName: "wCleanerApi",
+    path,
+    options: { queryParams: queryParams as Record<string, string> },
   });
+  return (await restOperation.response).body.json();
 };
 
-export const post = async <TBody = unknown, TResponse = unknown>(
+export const post = async (
   path: string,
-  body: TBody
-): Promise<TResponse> => {
+  body: FormData | DocumentType | undefined
+) => {
   if (API_URL) return localFetch("POST", path, { body });
-  return API.post("wCleanerApi", path, {
-    body,
+  const restOperation = amplifyPost({
+    apiName: "wCleanerApi",
+    path,
+    options: { body },
   });
+  return (await restOperation.response).body.json();
 };
 
 export const remove = async (path: string) => {
   if (API_URL) return localFetch("DELETE", path);
-  return API.del("wCleanerApi", path, {});
+  const restOperation = amplifyDelete({
+    apiName: "wCleanerApi",
+    path,
+  });
+  return (await restOperation.response).body.json();
 };
 
-export const put = async <TBody = unknown, TResponse = unknown>(
+export const put = async (
   path: string,
-  body: TBody
-): Promise<TResponse> => {
+  body: FormData | DocumentType | undefined
+) => {
   if (API_URL) return localFetch("PUT", path, { body });
-  return API.put("wCleanerApi", path, { body });
+  const restOperation = amplifyPut({
+    apiName: "wCleanerApi",
+    path,
+    options: { body },
+  });
+  return (await restOperation.response).body.json();
 };

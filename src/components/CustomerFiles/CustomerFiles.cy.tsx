@@ -1,7 +1,7 @@
 import { CustomerFiles } from "./CustomerFiles";
 import { ThemeProvider } from "@mui/material";
 import { theme } from "../../theme";
-import { Storage } from "aws-amplify";
+import * as Storage from "aws-amplify/storage";
 import "cypress-file-upload";
 import { Customer } from "../../types/types";
 let fileUrls: string[] = [];
@@ -27,8 +27,8 @@ const mountCustomerFiles = (initialFileUrls: string[] = []) => {
 
 describe("CustomerFiles Component", () => {
   beforeEach(() => {
-    cy.stub(Storage, "get").callsFake(async (key: string) => key);
-    cy.stub(Storage, "put").resolves({});
+    cy.stub(Storage, "downloadData").callsFake(async (key: string) => key);
+    cy.stub(Storage, "uploadData").resolves({});
   });
 
   it("calls onEdit when the file uploader generates new files", () => {

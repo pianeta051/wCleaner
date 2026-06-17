@@ -2,7 +2,7 @@ import { NewCustomerModal } from "./NewCustomerModal";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@mui/material";
 import { theme } from "../../../../theme";
-import { API } from "aws-amplify";
+import * as API from "aws-amplify/api";
 import { customerFactory } from "../../../../factories/customers";
 import { CustomerFormValues } from "../../CustomerForm/CustomerForm";
 
