@@ -2,103 +2,129 @@ const {
   createInvoice,
   editInvoiceContent,
   getCleaningAddress,
-  getCleaningAddressById,
   getInvoices,
   getCustomerInvoices,
   getInvoice,
   deleteInvoice,
   updateInvoicePaid,
+  updateInvoiceSettings,
+  getInvoiceSettings,
+  getAddressesForJobs,
 } = require("../db");
-const { mapCleaningAddress, mapInvoice } = require("../mappers");
+
+const {
+  mapCleaningAddress,
+  mapInvoice,
+  mapInvoiceSettings,
+} = require("../mappers");
+
 const { generateToken, parseToken } = require("../token");
 
+const DEFAULT_INVOICE_SETTINGS = {
+  companyName: "LOGO",
+  logoUrl: "",
+  companyAddressLines: ["123 Business Street", "London, UK"],
+  companyPhone: "020 7000 0000",
+  companyEmail: "",
+  companyWebsite: "www.website.co.uk",
+  bankDetails: "Bank: Barclays | Sort Code: 00-00-00 | Acc: 12345678",
+  paymentInfo: "Payment due within 14 days. Thank you for your business!",
+  footerNotes: "",
+};
+
 const setInvoicesRoutes = (app) => {
+  app.get("/settings/invoice", async function (_req, res) {
+    const item = await getInvoiceSettings();
+
+    res.json({
+      settings: item ? mapInvoiceSettings(item) : DEFAULT_INVOICE_SETTINGS,
+    });
+  });
+
+  app.put("/settings/invoice", async function (req, res) {
+    const groups = req.authData?.groups ?? [];
+    const isAdmin = groups.includes("Admin");
+
+    if (!isAdmin) {
+      res.status(403).json({ error: "UNAUTHORIZED" });
+      return;
+    }
+
+    const settings = {
+      ...DEFAULT_INVOICE_SETTINGS,
+      ...req.body,
+    };
+
+    const updatedSettings = await updateInvoiceSettings(settings);
+
+    res.json({ settings: updatedSettings });
+  });
+
   app.get("/invoices", async function (req, res) {
-    try {
-      const nextToken = req.query?.nextToken;
-      const paginate = req.query?.paginate !== "false";
-      const sortBy = req.query?.sortBy;
-      const sortDirection = req.query?.sortDirection;
-      const from = req.query?.from ? Number(req.query.from) : undefined;
-      const to = req.query?.to ? Number(req.query.to) : undefined;
-      const paid = req?.query?.paid ? req?.query?.paid === "true" : undefined;
-      const exclusiveStartKey = parseToken(nextToken);
+    const nextToken = req.query?.nextToken;
+    const paginate = req.query?.paginate !== "false";
 
-      if (req.query?.from && Number.isNaN(from)) {
-        res.status(400).json({ error: "INVALID_FROM_DATE" });
-        return;
+    const sortBy = req.query?.sortBy ?? "invoiceNumber";
+    const direction = req.query?.sortDirection ?? "desc";
+
+    const from = req.query?.from ? Number(req.query.from) : undefined;
+    const to = req.query?.to ? Number(req.query.to) : undefined;
+
+    const paid =
+      req.query?.paid === undefined ? undefined : req.query.paid === "true";
+
+    const exclusiveStartKey =
+      nextToken && typeof nextToken === "string" && nextToken.trim().length
+        ? parseToken(nextToken)
+        : undefined;
+
+    const { items, lastEvaluatedKey } = await getInvoices(
+      {
+        exclusiveStartKey,
+        enabled: paginate,
+      },
+      {
+        sortBy,
+        direction,
+      },
+      {
+        from,
+        to,
+        paid,
       }
+    );
 
-      if (req.query?.to && Number.isNaN(to)) {
-        res.status(400).json({ error: "INVALID_TO_DATE" });
-        return;
-      }
+    let invoices = items.map(mapInvoice);
 
-      const groups = req.authData?.groups || [];
-      const isAdmin = groups.includes("Admin");
-
-      if (!isAdmin) {
-        res.status(403).json({ error: "User unauthorized" });
-        return;
-      }
-
-      const { items: invoicesFromDb, lastEvaluatedKey } = await getInvoices(
-        {
-          exclusiveStartKey,
-          enabled: paginate,
-        },
-        {
-          sortBy,
-          direction: sortDirection,
-        },
-        {
-          from,
-          to,
-          paid,
-        }
-      );
-
-      let invoices = invoicesFromDb.map(mapInvoice);
-
-      const addressIds = Array.from(
-        new Set(invoices.map((invoice) => invoice.addressId).filter(Boolean))
-      );
-
-      const addresses = await Promise.all(
-        addressIds.map(async (addressId) => {
-          try {
-            const addressFromDb = await getCleaningAddressById(addressId);
-            return addressFromDb
-              ? mapCleaningAddress(addressFromDb)
-              : undefined;
-          } catch (error) {
-            console.error(error);
-            return undefined;
-          }
-        })
-      );
-
-      const addressMap = {};
-      addresses.forEach((address) => {
-        if (address) {
-          addressMap[address.id] = address;
-        }
-      });
-
-      const responseToken = generateToken(lastEvaluatedKey);
-
-      invoices = invoices.map((invoice) => ({
-        ...invoice,
-        address: addressMap[invoice.addressId],
+    const addressPairs = invoices
+      .filter((invoice) => invoice.customerId && invoice.addressId)
+      .map((invoice) => ({
+        customerId: invoice.customerId,
+        addressId: invoice.addressId,
       }));
 
-      res.json({
-        invoices,
-        nextToken: responseToken,
-      });
-    } catch (error) {
-      throw error;
+    const addresses = {};
+
+    for (const pair of addressPairs) {
+      const addressFromDB = await getCleaningAddress(
+        pair.customerId,
+        pair.addressId
+      );
+
+      if (addressFromDB) {
+        const address = mapCleaningAddress(addressFromDB);
+        addresses[`${pair.customerId}_${pair.addressId}`] = address;
+      }
     }
+
+    invoices = invoices.map((invoice) => ({
+      ...invoice,
+      address: addresses[`${invoice.customerId}_${invoice.addressId}`],
+    }));
+
+    const responseToken = generateToken(lastEvaluatedKey);
+
+    res.json({ invoices, nextToken: responseToken });
   });
 
   app.get("/customers/:customerId/invoices", async function (req, res) {
@@ -115,6 +141,7 @@ const setInvoicesRoutes = (app) => {
         res.status(403).json({ error: "User unauthorized" });
         return;
       }
+
       const paginationEnabled = req.query?.paginationDisabled !== "true";
 
       const exclusiveStartKey =
@@ -130,8 +157,8 @@ const setInvoicesRoutes = (app) => {
           enabled: paginationEnabled,
         }
       );
-      const invoices = items.map(mapInvoice);
 
+      const invoices = items.map(mapInvoice);
       const responseToken = generateToken(lastEvaluatedKey);
 
       res.json({ invoices, nextToken: responseToken });
@@ -211,13 +238,18 @@ const setInvoicesRoutes = (app) => {
     try {
       const groups = req.authData?.groups || [];
       const isAdmin = groups.includes("Admin");
-      if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
+
+      if (!isAdmin) {
+        res.status(403).json({ error: "User unauthorized" });
+        return;
+      }
 
       const invoice = await editInvoiceContent(customerId, jobId, {
         date,
         description,
         addressId,
       });
+
       res.json({ invoice });
     } catch (err) {
       if (err === "INVOICE_NOT_FOUND") {
@@ -235,13 +267,19 @@ const setInvoicesRoutes = (app) => {
     try {
       const groups = req.authData?.groups || [];
       const isAdmin = groups.includes("Admin");
-      if (!isAdmin) return res.status(403).json({ error: "User unauthorized" });
+
+      if (!isAdmin) {
+        res.status(403).json({ error: "User unauthorized" });
+        return;
+      }
 
       await deleteInvoice(customerId, jobId);
       res.json({ message: "INVOICE_DELETED" });
     } catch (err) {
-      if (err === "INVOICE_NOT_FOUND")
-        return res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+      if (err === "INVOICE_NOT_FOUND") {
+        res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+        return;
+      }
 
       throw err;
     }
@@ -256,6 +294,7 @@ const setInvoicesRoutes = (app) => {
       res.status(404).json({ error: "INVOICE_NOT_FOUND" });
       return;
     }
+
     const addressFromDB = invoice.addressId
       ? await getCleaningAddress(customerId, invoice.addressId)
       : undefined;
@@ -263,6 +302,7 @@ const setInvoicesRoutes = (app) => {
     invoice.address = addressFromDB
       ? mapCleaningAddress(addressFromDB)
       : undefined;
+
     res.json({ invoice });
   });
 
@@ -277,11 +317,13 @@ const setInvoicesRoutes = (app) => {
         const isAdmin = groups.includes("Admin");
 
         if (!isAdmin) {
-          return res.status(403).json({ error: "User unauthorized" });
+          res.status(403).json({ error: "User unauthorized" });
+          return;
         }
 
         if (typeof paid !== "boolean") {
-          return res.status(400).json({ error: "INVALID_PAID_VALUE" });
+          res.status(400).json({ error: "INVALID_PAID_VALUE" });
+          return;
         }
 
         const invoice = await updateInvoicePaid(customerId, jobId, paid);
@@ -289,7 +331,8 @@ const setInvoicesRoutes = (app) => {
         res.json({ invoice });
       } catch (err) {
         if (err === "INVOICE_NOT_FOUND") {
-          return res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+          res.status(404).json({ error: "INVOICE_NOT_FOUND" });
+          return;
         }
 
         throw err;

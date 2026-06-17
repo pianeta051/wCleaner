@@ -9,6 +9,7 @@ import {
   ListItemText,
   Avatar,
   Typography,
+  Collapse,
 } from "@mui/material";
 import { useMediaQuery, useTheme } from "@mui/material";
 
@@ -21,11 +22,14 @@ import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ReceiptIcon from "@mui/icons-material/Receipt";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
-import ReceiptIcon from "@mui/icons-material/Receipt";
 
 import {
   Bar,
@@ -67,6 +71,8 @@ type Page = {
 export const TopBar: FC = () => {
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -106,6 +112,7 @@ export const TopBar: FC = () => {
 
   const openUserMenu = (e: React.MouseEvent<HTMLElement>) =>
     setAnchorElUser(e.currentTarget);
+
   const closeUserMenu = () => setAnchorElUser(null);
 
   const go = (url: string) => {
@@ -115,6 +122,12 @@ export const TopBar: FC = () => {
 
   const toProfile = () => {
     navigate("/admin/profile");
+    closeUserMenu();
+    setMobileOpen(false);
+  };
+
+  const toInvoiceSettings = () => {
+    navigate("/admin/settings/invoice");
     closeUserMenu();
     setMobileOpen(false);
   };
@@ -236,6 +249,34 @@ export const TopBar: FC = () => {
             <DrawerItemText>Profile</DrawerItemText>
           </DrawerItemButton>
 
+          <DrawerItemButton onClick={() => setSettingsOpen((v) => !v)}>
+            <DrawerItemIcon>
+              <SettingsIcon fontSize="small" />
+            </DrawerItemIcon>
+
+            <DrawerItemText>Settings</DrawerItemText>
+
+            {settingsOpen ? (
+              <ExpandLessIcon fontSize="small" />
+            ) : (
+              <ExpandMoreIcon fontSize="small" />
+            )}
+          </DrawerItemButton>
+
+          <Collapse in={settingsOpen}>
+            <DrawerItemButton
+              sx={{ pl: 6 }}
+              onClick={toInvoiceSettings}
+              $active={isActive("/admin/settings/invoice")}
+            >
+              <DrawerItemIcon>
+                <ReceiptIcon fontSize="small" />
+              </DrawerItemIcon>
+
+              <DrawerItemText>Invoice</DrawerItemText>
+            </DrawerItemButton>
+          </Collapse>
+
           <DrawerItemButton onClick={logOutHandler}>
             <DrawerItemIcon>
               <LogoutIcon fontSize="small" />
@@ -308,6 +349,44 @@ export const TopBar: FC = () => {
                   }}
                 />
               </UserActionButton>
+
+              <UserActionButton onClick={() => setSettingsOpen((v) => !v)}>
+                <UserActionIcon>
+                  <SettingsIcon fontSize="small" />
+                </UserActionIcon>
+
+                <ListItemText
+                  primary="Settings"
+                  slotProps={{
+                    primary: {
+                      fontWeight: 700,
+                    },
+                  }}
+                />
+
+                {settingsOpen ? (
+                  <ExpandLessIcon fontSize="small" />
+                ) : (
+                  <ExpandMoreIcon fontSize="small" />
+                )}
+              </UserActionButton>
+
+              <Collapse in={settingsOpen}>
+                <UserActionButton onClick={toInvoiceSettings} sx={{ pl: 5 }}>
+                  <UserActionIcon>
+                    <ReceiptIcon fontSize="small" />
+                  </UserActionIcon>
+
+                  <ListItemText
+                    primary="Invoice"
+                    slotProps={{
+                      primary: {
+                        fontWeight: 500,
+                      },
+                    }}
+                  />
+                </UserActionButton>
+              </Collapse>
 
               <UserActionButton onClick={toCalendarMonth}>
                 <UserActionIcon>

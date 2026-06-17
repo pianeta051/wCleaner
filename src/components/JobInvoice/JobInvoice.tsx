@@ -1,7 +1,7 @@
 import { FC, useMemo } from "react";
 import { Document, Page, View, Text } from "@react-pdf/renderer";
 import dayjs from "dayjs";
-import { Customer, Invoice, Job } from "../../types/types";
+import { Customer, Invoice, InvoiceSettings, Job } from "../../types/types";
 import {
   pageStyles,
   headerStyles,
@@ -16,15 +16,21 @@ export type JobInvoiceProps = {
   job: Job;
   invoice: Invoice;
   customer: Customer;
+  settings: InvoiceSettings;
   addresses?: string;
   discount?: number;
 };
 
-export const JobInvoice: FC<JobInvoiceProps> = ({ job, invoice, customer }) => {
+export const JobInvoice: FC<JobInvoiceProps> = ({
+  job,
+  invoice,
+  customer,
+  settings,
+}) => {
   const invoiceNumber = invoice?.invoiceNumber ?? "N/A";
   const invoiceDate = invoice?.date
-    ? dayjs(Number(invoice?.date)).format("DD/MM/YYYY")
-    : dayjs(invoice?.date).format("DD/MM/YYYY");
+    ? dayjs(Number(invoice.date)).format("DD/MM/YYYY")
+    : "";
 
   const price = Number(job.price) || 0;
 
@@ -36,18 +42,34 @@ export const JobInvoice: FC<JobInvoiceProps> = ({ job, invoice, customer }) => {
         total: price,
       },
     ],
-    [job, price]
+    [invoice?.description, price]
   );
 
   return (
     <Document>
       <Page size="A4" style={pageStyles.page}>
         <View style={headerStyles.container}>
-          <Text style={headerStyles.companyName}>LOGO</Text>
-          <Text style={headerStyles.companyLine}>123 Business Street</Text>
-          <Text style={headerStyles.companyLine}>London, UK</Text>
-          <Text style={headerStyles.companyLine}>Tel: 020 7000 0000</Text>
-          <Text style={headerStyles.companyLine}>www.website.co.uk</Text>
+          <Text style={headerStyles.companyName}>
+            {settings.companyName || "Company Name"}
+          </Text>
+
+          {settings.companyAddressLines?.map((line, index) => (
+            <Text key={`${line}-${index}`} style={headerStyles.companyLine}>
+              {line}
+            </Text>
+          ))}
+
+          {settings.companyPhone && (
+            <Text style={headerStyles.companyLine}>
+              Tel: {settings.companyPhone}
+            </Text>
+          )}
+
+          {settings.companyWebsite && (
+            <Text style={headerStyles.companyLine}>
+              {settings.companyWebsite}
+            </Text>
+          )}
         </View>
 
         <View style={titleStyles.titleContainer}>
@@ -61,16 +83,19 @@ export const JobInvoice: FC<JobInvoiceProps> = ({ job, invoice, customer }) => {
         <View style={billToStyles.container}>
           <Text style={billToStyles.label}>Bill To:</Text>
           <Text style={billToStyles.customerLine}>{customer.name}</Text>
+
           {invoice?.address?.address && (
             <Text style={billToStyles.customerLine}>
               {invoice.address.address}
             </Text>
           )}
+
           {invoice?.address?.postcode && (
             <Text style={billToStyles.customerLine}>
               {invoice.address.postcode}
             </Text>
           )}
+
           {customer.email && (
             <Text style={billToStyles.customerLine}>{customer.email}</Text>
           )}
@@ -88,6 +113,7 @@ export const JobInvoice: FC<JobInvoiceProps> = ({ job, invoice, customer }) => {
                 <Text style={tableStyles.descriptionTitle}>
                   Work Description
                 </Text>
+
                 {row.description.split(/\r?\n/).map((line, index) => (
                   <Text key={index} style={tableStyles.descriptionLine}>
                     • {line.trim()}
@@ -103,6 +129,7 @@ export const JobInvoice: FC<JobInvoiceProps> = ({ job, invoice, customer }) => {
             <Text>Subtotal:</Text>
             <Text>£ {price.toFixed(2)}</Text>
           </View>
+
           <View style={[totalsStyles.row, totalsStyles.bold]}>
             <Text>Grand Total:</Text>
             <Text>£ {price.toFixed(2)}</Text>
@@ -110,8 +137,8 @@ export const JobInvoice: FC<JobInvoiceProps> = ({ job, invoice, customer }) => {
         </View>
 
         <View style={footerStyles.footer}>
-          <Text>Bank: Barclays | Sort Code: 00-00-00 | Acc: 12345678</Text>
-          <Text>Payment due within 14 days. Thank you for your business!</Text>
+          {settings.bankDetails && <Text>{settings.bankDetails}</Text>}
+          {settings.paymentInfo && <Text>{settings.paymentInfo}</Text>}
         </View>
       </Page>
     </Document>

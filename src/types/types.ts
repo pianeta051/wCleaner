@@ -60,6 +60,18 @@ export type Invoice = {
 export type InvoiceWithAddress = Invoice & {
   address: CustomerCleaningAddress;
 };
+
+export type InvoiceSettings = {
+  companyName: string;
+  logoUrl?: string;
+  companyAddressLines: string[];
+  companyPhone: string;
+  companyEmail?: string;
+  companyWebsite: string;
+  bankDetails: string;
+  paymentInfo: string;
+  footerNotes?: string;
+};
 export type RawInvoiceResponse = {
   invoice: {
     invoice_number: { N: string };

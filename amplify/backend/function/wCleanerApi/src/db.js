@@ -1719,7 +1719,15 @@ const getInvoice = async (customerId, jobId) => {
 
 // GET INVOICES
 const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
-  const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
+  const {
+    exclusiveStartKey,
+    limit: rawLimit = PAGE_SIZE,
+    enabled: rawEnabled = true,
+  } = pagination;
+
+  const limit = isNaN(+rawLimit) ? PAGE_SIZE : Number(rawLimit);
+  const enabled = rawEnabled === true || rawEnabled === "true";
+
   const { sortBy = "invoiceNumber", direction = "desc" } = sorting;
   const { from, to, paid } = filters;
 
@@ -1838,6 +1846,48 @@ const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
   return { items, lastEvaluatedKey };
 };
 
+const getInvoiceSettings = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: "settings" },
+      SK: { S: "invoice" },
+    },
+  };
+
+  const command = new GetItemCommand(params);
+  const result = await dynamoClient.send(command);
+
+  return result.Item;
+};
+
+const updateInvoiceSettings = async (settings) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: "settings" },
+      SK: { S: "invoice" },
+      company_name: { S: settings.companyName ?? "" },
+      logo_url: { S: settings.logoUrl ?? "" },
+      company_address_lines: {
+        L: (settings.companyAddressLines ?? []).map((line) => ({
+          S: line,
+        })),
+      },
+      company_phone: { S: settings.companyPhone ?? "" },
+      company_email: { S: settings.companyEmail ?? "" },
+      company_website: { S: settings.companyWebsite ?? "" },
+      bank_details: { S: settings.bankDetails ?? "" },
+      payment_info: { S: settings.paymentInfo ?? "" },
+      footer_notes: { S: settings.footerNotes ?? "" },
+    },
+  };
+
+  const command = new PutItemCommand(params);
+  await dynamoClient.send(command);
+
+  return settings;
+};
 const getCustomerInvoices = async (customerId, pagination) => {
   const { exclusiveStartKey, limit, enabled } = pagination;
 
@@ -2130,6 +2180,7 @@ module.exports = {
   getCustomers,
   getCustomerJobs,
   getInvoice,
+  getInvoiceSettings,
   getInvoices,
   getCustomerInvoices,
   getJob,
@@ -2147,6 +2198,7 @@ module.exports = {
   editJobFromCustomer,
   updateJobStatus,
   updateInvoicePaid,
+  updateInvoiceSettings,
   deleteJobFromCustomer,
   addFile,
 };

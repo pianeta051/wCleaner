@@ -12,6 +12,7 @@ import {
   ButtonDownload,
 } from "./InvoicePreviewPage.style";
 import { useJobInvoice } from "../../../../hooks/Invoices/useJobInvoice";
+import { useInvoiceSettings } from "../../../../hooks/Invoices/useInvoiceSettings";
 
 type Params = {
   jobId: string;
@@ -20,23 +21,31 @@ type Params = {
 
 export const InvoicePreviewPage: FC = () => {
   const { jobId, customerId } = useParams<Params>();
+
   const {
     invoice,
     loading: loadingInvoice,
     error: errorInvoice,
   } = useJobInvoice(customerId, jobId);
+
   const {
     job,
     loading: loadingJob,
     error: errorJob,
   } = useJobCustomer(customerId, jobId);
 
+  const {
+    settings,
+    loading: loadingSettings,
+    error: errorSettings,
+  } = useInvoiceSettings();
+
   if (!jobId || !customerId) {
     return <ErrorMessage code="INTERNAL_ERROR" />;
   }
 
-  const loading = loadingInvoice || loadingJob;
-  const error = errorInvoice ?? errorJob;
+  const loading = loadingInvoice || loadingJob || loadingSettings;
+  const error = errorInvoice ?? errorJob ?? errorSettings;
 
   const fileName = useMemo(() => {
     if (!invoice?.invoiceNumber) return "invoice.pdf";
@@ -50,7 +59,8 @@ export const InvoicePreviewPage: FC = () => {
       </FullScreenWrapper>
     );
   }
-  if (error || !job || !job.customer || !invoice) {
+
+  if (error || !job || !job.customer || !invoice || !settings) {
     return <ErrorMessage code={error ?? "INTERNAL_ERROR"} />;
   }
 
@@ -60,6 +70,7 @@ export const InvoicePreviewPage: FC = () => {
       invoice={invoice}
       customer={job.customer}
       addresses={job.address}
+      settings={settings}
     />
   );
 
