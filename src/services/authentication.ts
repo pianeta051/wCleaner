@@ -10,6 +10,9 @@ import {
   fetchAuthSession,
   confirmSignIn,
   signOut,
+  confirmResetPassword,
+  updatePassword as amplifyUpdatePassword,
+  updateUserAttributes,
 } from "aws-amplify/auth";
 
 type UserAttribute = { Name: string; Value: string };
@@ -343,7 +346,11 @@ export const resetPassword = async (
   newPassword: string
 ) => {
   try {
-    // await Auth.forgotPasswordSubmit(email, code, newPassword);
+    await confirmResetPassword({
+      username: email,
+      confirmationCode: code,
+      newPassword,
+    });
   } catch (error) {
     if (hasName(error)) {
       if (error.name === "UserNotFoundException") {
@@ -391,7 +398,7 @@ export const updateColor = async (
   newColor: string
 ): Promise<CognitoUserWithAttributes> => {
   try {
-    // await Auth.updateUserAttributes(user, { "custom:color": newColor });
+    updateUserAttributes({ userAttributes: { "custom:color": newColor } });
     const newUser: CognitoUserWithAttributes = user;
     newUser.attributes = {
       ...user.attributes,
@@ -407,7 +414,7 @@ export const updateName = async (
   newName: string
 ): Promise<CognitoUserWithAttributes> => {
   try {
-    // await Auth.updateUserAttributes(user, { name: newName });
+    updateUserAttributes({ userAttributes: { name: newName } });
     const newUser: CognitoUserWithAttributes = user;
     newUser.attributes = {
       ...user.attributes,
@@ -425,7 +432,7 @@ export const updatePassword = async (
   newPassword: string
 ) => {
   try {
-    // await Auth.changePassword(user, oldPassword, newPassword);
+    amplifyUpdatePassword({ oldPassword, newPassword });
   } catch (error) {
     if (hasName(error)) {
       if (error.name === "NotAuthorizedException") {
