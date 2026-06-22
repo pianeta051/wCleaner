@@ -42,6 +42,7 @@ export const ERROR_CODES = [
   "MISSING_INVOICE_DESCRIPTION",
   "MISSING_INVOICE_ADDRESS",
   "NO_INVOICES_FOUND",
+  "NEW_PASSWORD_REQUIRED",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number];
 export const isErrorCode = (parameter: unknown): parameter is ErrorCode =>

@@ -81,7 +81,7 @@ const getJobUsers = async (jobs) => {
       const user = await getUserInfo(item);
       users.push(user);
     } catch (error) {
-      if (error.code === "UserNotFoundException") {
+      if (error.name === "UserNotFoundException") {
         users.push({
           sub: item,
           name: "Deleted user",

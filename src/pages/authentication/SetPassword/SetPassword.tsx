@@ -30,39 +30,35 @@ export const SetPassword: FC<SetPasswordProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
 
-  const { user, logIn } = useAuth();
+  const { logIn } = useAuth();
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState(initialValues);
   const submitHandler = () => {
-    if (user) {
-      setLoading(true);
-      setError(null);
-      setPassword(user, formData.password)
-        .then((user) => {
-          if (logIn) {
-            logIn(user);
-          }
-          setLoading(false);
-          if (isAdmin) {
-            navigate("/admin/customers");
-          } else {
-            navigate("/");
-          }
-        })
-        .catch((error) => {
-          setLoading(false);
-          if (isErrorCode(error)) {
-            setError(error);
-          } else {
-            setError("INTERNAL_ERROR");
-          }
-        });
-    } else {
-      navigate("/log-in");
-    }
+    setLoading(true);
+    setError(null);
+    setPassword(formData.password)
+      .then((user) => {
+        if (logIn) {
+          logIn(user);
+        }
+        setLoading(false);
+        if (isAdmin) {
+          navigate("/admin/customers");
+        } else {
+          navigate("/");
+        }
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (isErrorCode(error)) {
+          setError(error);
+        } else {
+          setError("INTERNAL_ERROR");
+        }
+      });
   };
 
   const changeHandler = (password: string) => {

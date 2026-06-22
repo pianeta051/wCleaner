@@ -1,6 +1,6 @@
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Login } from "./Login";
-import { Auth } from "aws-amplify";
+import * as Auth from "aws-amplify/auth";
 
 const logInWith = (error: { code: string; message?: string }) => {
   cy.stub(Auth, "signIn").rejects(error);

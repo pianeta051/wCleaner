@@ -25,24 +25,26 @@ export const Login: FC = () => {
     serviceLogin(formValues.email, formValues.password)
       .then((user) => {
         setLoading(false);
-        if (user.challengeName === "NEW_PASSWORD_REQUIRED") {
-          if (setUser) {
-            setUser(user);
-          }
-          navigate("/set-password");
-        } else if (logIn) {
-          logIn(user);
-          if (isAdmin) {
-            navigate("/admin/customers");
-          } else {
-            navigate("/");
+        if (user) {
+          setUser?.(user);
+          if (logIn) {
+            logIn(user);
+            if (isAdmin) {
+              navigate("/admin/customers");
+            } else {
+              navigate("/");
+            }
           }
         }
       })
       .catch((error) => {
         setLoading(false);
         if (isErrorCode(error)) {
-          setErrorCode(error);
+          if (error === "NEW_PASSWORD_REQUIRED") {
+            navigate("/set-password");
+          } else {
+            setErrorCode(error);
+          }
         } else {
           setErrorCode("INTERNAL_ERROR");
         }

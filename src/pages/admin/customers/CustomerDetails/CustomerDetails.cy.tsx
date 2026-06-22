@@ -2,7 +2,7 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { CustomerDetails } from "./CustomerDetails";
 
 import { customerFactory } from "../../../../factories/customers";
-import { API } from "aws-amplify";
+import * as API from "aws-amplify/api";
 
 describe("CustomerDetails", () => {
   it("renders 404 page when the URL parameter url is not defined", () => {

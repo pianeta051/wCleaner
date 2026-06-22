@@ -1,19 +1,27 @@
-import { Storage } from "aws-amplify";
+import { getUrl, uploadData, remove } from "aws-amplify/storage";
 
 export const uploadFile = async (file: File, path: string): Promise<string> => {
-  await Storage.put(path, file, {
-    level: "public",
+  await uploadData({
+    key: path,
+    data: file,
+    options: {
+      accessLevel: "guest",
+    },
   });
 
   return path;
 };
 
 export const getFileUrl = async (key: string): Promise<string> => {
-  return await Storage.get(key);
+  const response = await getUrl({ key });
+  return response.url.toString();
 };
 
 export const deleteFile = async (key: string): Promise<void> => {
-  await Storage.remove(key, {
-    level: "public",
+  await remove({
+    key,
+    options: {
+      accessLevel: "guest",
+    },
   });
 };
