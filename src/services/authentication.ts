@@ -8,6 +8,8 @@ import {
   signIn,
   fetchUserAttributes,
   fetchAuthSession,
+  confirmSignIn,
+  signOut,
 } from "aws-amplify/auth";
 
 type UserAttribute = { Name: string; Value: string };
@@ -136,8 +138,8 @@ export const forgotPassword = async (email: string) => {
       },
     });
   } catch (error) {
-    if (hasCode(error)) {
-      if (error.code === "UserNotFoundException") {
+    if (hasName(error)) {
+      if (error.name === "UserNotFoundException") {
         throw "USER_NOT_EXISTS";
       }
     }
@@ -177,14 +179,14 @@ export const getUsers = async (): Promise<User[]> => {
   }
 };
 
-const hasCode = (
+const hasName = (
   value: unknown
 ): value is {
   message: string;
-  code: string;
+  name: string;
 } =>
   typeof value === "object" &&
-  (value as Record<string, unknown>).code !== undefined;
+  (value as Record<string, unknown>).name !== undefined;
 
 const hasResponseMessage = (
   value: unknown
@@ -239,22 +241,31 @@ export const logIn = async (
   password: string
 ): Promise<CognitoUserWithAttributes> => {
   try {
-    await signIn({ username: email, password });
+    const response = await signIn({ username: email, password });
+    if (
+      response.nextStep?.signInStep ===
+      "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED"
+    ) {
+      throw { name: "NEW_PASSWORD_REQUIRED" };
+    }
     const user = await getAuthenticatedUser();
     if (!user) {
       throw "INTERNAL_ERROR";
     }
     return user;
   } catch (error) {
-    if (hasCode(error)) {
-      if (error?.code === "UserNotFoundException") {
+    if (hasName(error)) {
+      if (error.name === "UserNotFoundException") {
         throw "USER_NOT_EXISTS";
       }
-      if (error.code === "NotAuthorizedException") {
+      if (error.name === "NotAuthorizedException") {
         if (error.message === "Password attempts exceeded") {
           throw "TOO_MANY_TRIES";
         }
         throw "INCORRECT_PASSWORD";
+      }
+      if (error.name === "NEW_PASSWORD_REQUIRED") {
+        throw "NEW_PASSWORD_REQUIRED";
       }
     }
     throw "INTERNAL_ERROR";
@@ -274,7 +285,7 @@ export const makeUserAdmin = async (id: string) => {
 
 export const logOut = async () => {
   try {
-    // await Auth.signOut();
+    await signOut();
   } catch {
     throw "INTERNAL_ERROR";
   }
@@ -334,20 +345,20 @@ export const resetPassword = async (
   try {
     // await Auth.forgotPasswordSubmit(email, code, newPassword);
   } catch (error) {
-    if (hasCode(error)) {
-      if (error?.code === "UserNotFoundException") {
+    if (hasName(error)) {
+      if (error.name === "UserNotFoundException") {
         throw "USER_NOT_EXISTS";
       }
-      if (error?.code === "InvalidPasswordException") {
+      if (error.name === "InvalidPasswordException") {
         throw "INVALID_PASSWORD";
       }
-      if (error?.code === "CodeMismatchException") {
+      if (error.name === "CodeMismatchException") {
         throw "INVALID_RESET_PASSWORD_LINK";
       }
-      if (error?.code === "LimitExceededException") {
+      if (error.name === "LimitExceededException") {
         throw "TOO_MANY_TRIES";
       }
-      if (error?.code === "ExpiredCodeException") {
+      if (error.name === "ExpiredCodeException") {
         throw "EXPIRED_LINK";
       }
     }
@@ -356,15 +367,17 @@ export const resetPassword = async (
   }
 };
 
-export const setPassword = async (
-  user: CognitoUserWithAttributes,
-  newPassword: string
-) => {
+export const setPassword = async (newPassword: string) => {
   try {
-    // await Auth.completeNewPassword(user, newPassword);
+    await confirmSignIn({ challengeResponse: newPassword });
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      throw "INTERNAL_ERROR";
+    }
+    return user;
   } catch (error) {
-    if (hasCode(error)) {
-      if (error?.code === "InvalidPasswordException") {
+    if (hasName(error)) {
+      if (error.name === "InvalidPasswordException") {
         throw "INVALID_PASSWORD";
       }
     }
@@ -414,14 +427,14 @@ export const updatePassword = async (
   try {
     // await Auth.changePassword(user, oldPassword, newPassword);
   } catch (error) {
-    if (hasCode(error)) {
-      if (error.code === "NotAuthorizedException") {
+    if (hasName(error)) {
+      if (error.name === "NotAuthorizedException") {
         throw "INCORRECT_PASSWORD";
       }
-      if (error.code === "InvalidPasswordException") {
+      if (error.name === "InvalidPasswordException") {
         throw "INVALID_PASSWORD";
       }
-      if (error.code === "LimitExceededException") {
+      if (error.name === "LimitExceededException") {
         throw "TOO_MANY_TRIES";
       }
     }

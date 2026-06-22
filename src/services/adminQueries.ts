@@ -45,9 +45,7 @@ export const get = async (
     options: {
       headers: {
         "Content-Type": "application/json",
-        // Authorization: `${(await Auth.currentSession())
-        //   .getAccessToken()
-        //   .getJwtToken()}`,
+        Authorization: (await getAccessToken()) ?? "",
       },
       queryParams,
     },
