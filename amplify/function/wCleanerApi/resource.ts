@@ -10,7 +10,7 @@ export const wCleanerApi = defineFunction({
   memoryMB: 128,
   environment: {
     ENV: `${branchName}`,
-    USER_POOL_ID: 'eu-west-2_nRfe1m5kq',
+    USER_POOL_ID: 'eu-west-2_nlvZhm5ao',
     REGION: 'eu-west-2',
   },
   runtime: 24,
