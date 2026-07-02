@@ -1,0 +1,83 @@
+{
+  "resourceName": "wcleaner",
+  "tableName": "wcleaner",
+  "partitionKey": {
+    "fieldName": "PK",
+    "fieldType": "string"
+  },
+  "sortKey": {
+    "fieldName": "SK",
+    "fieldType": "string"
+  },
+  "gsi": [
+    {
+      "name": "customer_email",
+      "partitionKey": {
+        "fieldName": "email",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "customer_slug",
+      "partitionKey": {
+        "fieldName": "slug",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "job_start_time",
+      "partitionKey": {
+        "fieldName": "job_start_time_pk",
+        "fieldType": "number"
+      },
+      "sortKey": {
+        "fieldName": "start",
+        "fieldType": "number"
+      }
+    },
+    {
+      "name": "job_type_name",
+      "partitionKey": {
+        "fieldName": "name_lowercase",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "job_type_color",
+      "partitionKey": {
+        "fieldName": "color",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "job_type_id",
+      "partitionKey": {
+        "fieldName": "job_type_id",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "invoice_date",
+      "partitionKey": {
+        "fieldName": "job_invoice_pk",
+        "fieldType": "number"
+      },
+      "sortKey": {
+        "fieldName": "invoice_date",
+        "fieldType": "number"
+      }
+    },
+    {
+      "name": "invoice_number",
+      "partitionKey": {
+        "fieldName": "job_invoice_pk",
+        "fieldType": "number"
+      },
+      "sortKey": {
+        "fieldName": "invoice_number",
+        "fieldType": "number"
+      }
+    }
+  ],
+  "triggerFunctions": []
+}

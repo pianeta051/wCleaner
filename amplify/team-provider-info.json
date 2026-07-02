@@ -1,0 +1,57 @@
+{
+  "migration": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wcleaner-migration-beb54-authRole",
+      "UnauthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-migration-beb54-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-migration-beb54-authRole",
+      "Region": "eu-west-2",
+      "DeploymentBucketName": "amplify-wcleaner-migration-beb54-deployment",
+      "UnauthRoleName": "amplify-wcleaner-migration-beb54-unauthRole",
+      "StackName": "amplify-wcleaner-migration-beb54",
+      "StackId": "arn:aws:cloudformation:eu-west-2:295621520330:stack/amplify-wcleaner-migration-beb54/a29fc050-6e55-11f1-ac17-062780a8f16d",
+      "AmplifyAppId": "d2r3wluo8x2tk9",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-wcleaner-migration-beb54-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json",
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-migration-beb54-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json"
+    },
+    "categories": {
+      "function": {
+        "wCleanerApi": {
+          "deploymentBucketName": "amplify-wcleaner-migration-beb54-deployment",
+          "s3Key": "amplify-builds/wCleanerApi-4e4a334e4e69484e4961-build.zip",
+          "userPoolId": "eu-west-2_nlvZhm5ao"
+        },
+        "wcleanerCustomMessage": {
+          "redirectTo": "https://develop.d2r3wluo8x2tk9.amplifyapp.com",
+          "deploymentBucketName": "amplify-wcleaner-migration-beb54-deployment",
+          "s3Key": "amplify-builds/wcleanerCustomMessage-472f392f316b6d793879-build.zip"
+        },
+        "AdminQueries0c37162b": {
+          "deploymentBucketName": "amplify-wcleaner-migration-beb54-deployment",
+          "s3Key": "amplify-builds/AdminQueries0c37162b-305a654b432f532b776d-build.zip"
+        }
+      },
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d2r3wluo8x2tk9",
+          "type": "cicd"
+        }
+      },
+      "auth": {
+        "wcleaner": {},
+        "userPoolGroups": {}
+      },
+      "storage": {
+        "wcleaner": {},
+        "wcleanerstorage": {}
+      },
+      "api": {
+        "AdminQueries": {},
+        "wCleanerApi": {}
+      },
+      "custom": {
+        "monitoring": {},
+        "sesEmail": {}
+      }
+    }
+  }
+}
