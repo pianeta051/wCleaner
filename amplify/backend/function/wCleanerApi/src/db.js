@@ -1130,6 +1130,21 @@ const getAddressesForJobs = async (jobs) => {
   return addresses;
 };
 
+const getAddressesForInvoices = async (invoices) => {
+  const customerAndAddressIds = Array.from(
+    new Set(
+      invoices
+        .map((invoice) => `${invoice.customerId}_${invoice.addressId}`)
+        .filter(Boolean)
+    )
+  ).map((concatenated) => {
+    const [customerId, addressId] = concatenated.split("_");
+    return { customerId, addressId };
+  });
+  const addresses = await batchGetAddresses(customerAndAddressIds);
+  return addresses;
+};
+
 //EDIT JOB TYPE
 const editJobType = async (jobTypeId, updatedJobType) => {
   if (!updatedJobType.name?.length) {
@@ -2172,6 +2187,7 @@ module.exports = {
   editJobType,
   editInvoiceContent,
   getAddressesForJobs,
+  getAddressesForInvoices,
   getCleaningAddress,
   getCleaningAddressById,
   getCleaningAddresses,

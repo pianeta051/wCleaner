@@ -10,6 +10,7 @@ const {
   updateInvoiceSettings,
   getInvoiceSettings,
   getAddressesForJobs,
+  getAddressesForInvoices,
 } = require("../db");
 
 const {
@@ -96,26 +97,7 @@ const setInvoicesRoutes = (app) => {
 
     let invoices = items.map(mapInvoice);
 
-    const addressPairs = invoices
-      .filter((invoice) => invoice.customerId && invoice.addressId)
-      .map((invoice) => ({
-        customerId: invoice.customerId,
-        addressId: invoice.addressId,
-      }));
-
-    const addresses = {};
-
-    for (const pair of addressPairs) {
-      const addressFromDB = await getCleaningAddress(
-        pair.customerId,
-        pair.addressId
-      );
-
-      if (addressFromDB) {
-        const address = mapCleaningAddress(addressFromDB);
-        addresses[`${pair.customerId}_${pair.addressId}`] = address;
-      }
-    }
+    const addresses = await getAddressesForInvoices(invoices);
 
     invoices = invoices.map((invoice) => ({
       ...invoice,
