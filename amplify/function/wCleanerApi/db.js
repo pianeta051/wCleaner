@@ -569,7 +569,7 @@ const getOutcodes = async () => {
   };
 
   const command = new ScanCommand(params);
-  const result = await dynamoClient.send(command);
+  let result = await dynamoClient.send(command);
   const items = result.Items;
 
   while (result.LastEvaluatedKey) {
