@@ -3,7 +3,6 @@ import { Construct } from "constructs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { Construct } from "constructs";
 import type { Backend } from "../../backend";
 const branchName = process.env.AWS_BRANCH ?? "sandbox";
 const projectName = "wCleaner";
