@@ -25,7 +25,7 @@ const modules = moduleNames.map((name) => require(`./${name}`));
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
  *
  */
-export async function handler(event, context) {
+exports.handler = async (event, context) => {
   /**
    * Instead of naively iterating over all handlers, run them concurrently with
    * `await Promise.all(...)`. This would otherwise just be determined by the
@@ -33,4 +33,4 @@ export async function handler(event, context) {
    */
   await Promise.all(modules.map((module) => module.handler(event, context)));
   return event;
-}
+};

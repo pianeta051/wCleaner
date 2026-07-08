@@ -3,18 +3,17 @@ import { Construct } from "constructs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as iam from "aws-cdk-lib/aws-iam";
-
+import { Construct } from "constructs";
 import type { Backend } from "../../backend";
 const branchName = process.env.AWS_BRANCH ?? "sandbox";
 const projectName = "wCleaner";
-
 export class Monitoring extends Construct {
   constructor(scope: Construct, id: string, backend: Backend) {
-    console.log(JSON.stringify({ backend }, null, 2));
     super(scope, id);
-    const isDevCondition = new cdk.CfnCondition(this, "IsDevEnvironment", {
-      expression: cdk.Fn.conditionEquals(envParameter, "dev"),
-    });
+    console.log(JSON.stringify({ backend }, null, 2));
+    // const isDevCondition = new cdk.CfnCondition(this, "IsDevEnvironment", {
+    //   expression: cdk.Fn.conditionEquals(envParameter, "dev"),
+    // });
     // Get the API IDs and Deployment IDs from the dependencies
     const wCleanerApiId = backend.data.resources.ApiId;
     const wCleanerApiDeploymentId = backend.data.resources.DeploymentId;
@@ -55,7 +54,7 @@ export class Monitoring extends Construct {
         cloudWatchRoleArn: apiGatewayLogsRole.roleArn,
       }
     );
-    apiGatewayAccount.cfnOptions.condition = isDevCondition;
+    // apiGatewayAccount.cfnOptions.condition = isDevCondition;
     // Access log format
     const accessLogFormat = JSON.stringify({
       requestId: "$context.requestId",
