@@ -1,22 +1,22 @@
-import { defineFunction } from '@aws-amplify/backend';
-import type { Backend } from '../../backend';
+import { defineFunction } from "@aws-amplify/backend";
+import type { Backend } from "../../backend";
 
-const branchName = process.env.AWS_BRANCH ?? 'sandbox';
+const branchName = process.env.AWS_BRANCH ?? "sandbox";
 
 export const wcleanerCustomMessage = defineFunction({
-  entry: './index.js',
+  entry: "./index.js",
   name: `wcleanerCustomMessage-${branchName}`,
   timeoutSeconds: 25,
   memoryMB: 128,
   environment: {
-    EMAILSUBJECT: '',
-    MODULES: 'custom',
-    REDIRECTURL: '',
-    RESOURCENAME: 'wcleanerCustomMessage',
-    REDIRECT_TO: 'https://develop.d2r3wluo8x2tk9.amplifyapp.com',
+    EMAILSUBJECT: "",
+    MODULES: "custom",
+    REDIRECTURL: "",
+    RESOURCENAME: "wcleanerCustomMessage",
+    REDIRECT_TO: "https://develop.d2r3wluo8x2tk9.amplifyapp.com",
     ENV: `${branchName}`,
-    EMAILMESSAGE: '',
-    REGION: 'eu-west-2',
+    EMAILMESSAGE: "",
+    REGION: "eu-west-2",
   },
   runtime: 24,
 });

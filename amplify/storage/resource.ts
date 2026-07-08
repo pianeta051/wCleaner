@@ -1,32 +1,32 @@
-import { defineStorage } from '@aws-amplify/backend';
-import { CfnResource } from 'aws-cdk-lib';
-import type { Backend } from '../backend';
+import { defineStorage } from "@aws-amplify/backend";
+import { CfnResource } from "aws-cdk-lib";
+import type { Backend } from "../backend";
 
-const branchName = process.env.AWS_BRANCH ?? 'sandbox';
+const branchName = process.env.AWS_BRANCH ?? "sandbox";
 /**
  * TODO: Your project uses group permissions. Group permissions have changed in Gen 2. In order to grant permissions to groups in Gen 2, please refer to https://docs.amplify.aws/react/build-a-backend/storage/authorization/#for-gen-1-public-protected-and-private-access-pattern. */
 
 export const storage = defineStorage({
   name: `wcleanerstoragebeb54-${branchName}`,
   access: (allow) => ({
-    'public/*': [
-      allow.authenticated.to(['write', 'read', 'delete']),
-      allow.groups(['Admin']).to(['write', 'read', 'delete']),
+    "public/*": [
+      allow.authenticated.to(["write", "read", "delete"]),
+      allow.groups(["Admin"]).to(["write", "read", "delete"]),
     ],
-    'protected/{entity_id}/*': [
-      allow.authenticated.to(['write', 'read', 'delete']),
-      allow.groups(['Admin']).to(['write', 'read', 'delete']),
+    "protected/{entity_id}/*": [
+      allow.authenticated.to(["write", "read", "delete"]),
+      allow.groups(["Admin"]).to(["write", "read", "delete"]),
     ],
-    'private/{entity_id}/*': [
-      allow.authenticated.to(['write', 'read', 'delete']),
-      allow.groups(['Admin']).to(['write', 'read', 'delete']),
+    "private/{entity_id}/*": [
+      allow.authenticated.to(["write", "read", "delete"]),
+      allow.groups(["Admin"]).to(["write", "read", "delete"]),
     ],
   }),
 });
 
 export function postRefactor(backend: Backend) {
   const s3Bucket = backend.storage.resources.cfnResources.cfnBucket;
-  s3Bucket.bucketName = 'wcleanerstoragebeb54-migration';
+  s3Bucket.bucketName = "wcleanerstoragebeb54-migration";
 }
 
 export function applyEscapeHatches(backend: Backend) {
@@ -35,7 +35,7 @@ export function applyEscapeHatches(backend: Backend) {
     serverSideEncryptionConfiguration: [
       {
         serverSideEncryptionByDefault: {
-          sseAlgorithm: 'AES256',
+          sseAlgorithm: "AES256",
         },
         bucketKeyEnabled: false,
       },
@@ -46,11 +46,11 @@ export function applyEscapeHatches(backend: Backend) {
     .filter(
       (c) =>
         CfnResource.isCfnResource(c) &&
-        ['AWS::S3::Bucket', 'Custom::S3AutoDeleteObjects'].includes(
+        ["AWS::S3::Bucket", "Custom::S3AutoDeleteObjects"].includes(
           c.cfnResourceType
         )
     )) {
-    (cfnResource as CfnResource).addOverride('UpdateReplacePolicy', 'Retain');
-    (cfnResource as CfnResource).addOverride('DeletionPolicy', 'Retain');
+    (cfnResource as CfnResource).addOverride("UpdateReplacePolicy", "Retain");
+    (cfnResource as CfnResource).addOverride("DeletionPolicy", "Retain");
   }
 }

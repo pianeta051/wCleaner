@@ -1,13 +1,13 @@
-import { defineAuth } from '@aws-amplify/backend';
-import { wcleanerCustomMessage } from '../function/wcleanerCustomMessage/resource';
-import { CfnResource, Duration } from 'aws-cdk-lib';
-import type { Backend } from '../backend';
+import { defineAuth } from "@aws-amplify/backend";
+import { wcleanerCustomMessage } from "../function/wcleanerCustomMessage/resource";
+import { CfnResource, Duration } from "aws-cdk-lib";
+import type { Backend } from "../backend";
 
 export const auth = defineAuth({
   loginWith: {
     email: {
-      verificationEmailSubject: 'Your verification code',
-      verificationEmailBody: () => 'Your verification code is {####}',
+      verificationEmailSubject: "Your verification code",
+      verificationEmailBody: () => "Your verification code is {####}",
     },
   },
   userAttributes: {
@@ -15,23 +15,23 @@ export const auth = defineAuth({
       required: true,
       mutable: true,
     },
-    'custom:color': {
+    "custom:color": {
       mutable: true,
-      dataType: 'String',
+      dataType: "String",
     },
   },
-  groups: ['Admin'],
+  groups: ["Admin"],
   triggers: {
     customMessage: wcleanerCustomMessage,
   },
   multifactor: {
-    mode: 'OFF',
+    mode: "OFF",
   },
 });
 
 export function applyEscapeHatches(backend: Backend) {
   const cfnUserPool = backend.auth.resources.cfnResources.cfnUserPool;
-  cfnUserPool.usernameAttributes = ['email'];
+  cfnUserPool.usernameAttributes = ["email"];
   cfnUserPool.policies = {
     passwordPolicy: {
       minimumLength: 8,
@@ -43,7 +43,7 @@ export function applyEscapeHatches(backend: Backend) {
     },
   };
   const userPool = backend.auth.resources.userPool;
-  const nativeUserPoolClient = userPool.addClient('NativeAppClient', {
+  const nativeUserPoolClient = userPool.addClient("NativeAppClient", {
     refreshTokenValidity: Duration.days(30),
     enableTokenRevocation: true,
     enablePropagateAdditionalUserContextData: false,
@@ -66,16 +66,16 @@ export function applyEscapeHatches(backend: Backend) {
       (c) =>
         CfnResource.isCfnResource(c) &&
         [
-          'AWS::Cognito::UserPool',
-          'AWS::Cognito::IdentityPool',
-          'AWS::Cognito::UserPoolClient',
-          'AWS::Cognito::IdentityPoolRoleAttachment',
-          'AWS::Cognito::UserPoolGroup',
-          'AWS::Cognito::UserPoolDomain',
-          'AWS::Cognito::UserPoolIdentityProvider',
+          "AWS::Cognito::UserPool",
+          "AWS::Cognito::IdentityPool",
+          "AWS::Cognito::UserPoolClient",
+          "AWS::Cognito::IdentityPoolRoleAttachment",
+          "AWS::Cognito::UserPoolGroup",
+          "AWS::Cognito::UserPoolDomain",
+          "AWS::Cognito::UserPoolIdentityProvider",
         ].includes(c.cfnResourceType)
     )) {
-    (cfnResource as CfnResource).addOverride('UpdateReplacePolicy', 'Retain');
-    (cfnResource as CfnResource).addOverride('DeletionPolicy', 'Retain');
+    (cfnResource as CfnResource).addOverride("UpdateReplacePolicy", "Retain");
+    (cfnResource as CfnResource).addOverride("DeletionPolicy", "Retain");
   }
 }
