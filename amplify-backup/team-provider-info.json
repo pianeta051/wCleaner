@@ -1,0 +1,114 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wcleaner-dev-153252-authRole",
+      "UnauthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-dev-153252-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-dev-153252-authRole",
+      "Region": "eu-west-2",
+      "DeploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+      "UnauthRoleName": "amplify-wcleaner-dev-153252-unauthRole",
+      "StackName": "amplify-wcleaner-dev-153252",
+      "StackId": "arn:aws:cloudformation:eu-west-2:295621520330:stack/amplify-wcleaner-dev-153252/5d0e45c0-a0b3-11ed-b595-0a649fe12144",
+      "AmplifyAppId": "d2r3wluo8x2tk9",
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json"
+    },
+    "categories": {
+      "auth": {
+        "wcleaner": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "AdminQueries0c37162b": {
+          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+          "s3Key": "amplify-builds/AdminQueries0c37162b-31634f7554572b644e36-build.zip"
+        },
+        "wcleanerCustomMessage": {
+          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+          "s3Key": "amplify-builds/wcleanerCustomMessage-472f392f316b6d793879-build.zip",
+          "redirectTo": "https://develop.d2r3wluo8x2tk9.amplifyapp.com"
+        },
+        "wCleanerApi": {
+          "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+          "s3Key": "amplify-builds/wCleanerApi-6a7333427a57444a7572-build.zip",
+          "userPoolId": "eu-west-2_nRfe1m5kq"
+        },
+        "wcleaner": {}
+      },
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d2r3wluo8x2tk9",
+          "type": "cicd"
+        }
+      },
+      "api": {
+        "AdminQueries": {},
+        "wCleanerApi": {}
+      },
+      "storage": {
+        "wcleaner": {},
+        "wcleanerstorage": {}
+      },
+      "custom": {
+        "sesEmail": {},
+        "monitoring": {}
+      }
+    }
+  },
+  "prod": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wcleaner-prod-4c21b-authRole",
+      "UnauthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-prod-4c21b-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-prod-4c21b-authRole",
+      "Region": "eu-west-2",
+      "DeploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
+      "UnauthRoleName": "amplify-wcleaner-prod-4c21b-unauthRole",
+      "StackName": "amplify-wcleaner-prod-4c21b",
+      "StackId": "arn:aws:cloudformation:eu-west-2:295621520330:stack/amplify-wcleaner-prod-4c21b/31457bc0-2121-11f0-9140-06d2f463a703",
+      "AmplifyAppId": "d2r3wluo8x2tk9",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-wcleaner-prod-4c21b-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json",
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-prod-4c21b-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json"
+    },
+    "categories": {
+      "auth": {
+        "wcleaner": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "AdminQueries0c37162b": {
+          "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
+          "s3Key": "amplify-builds/AdminQueries0c37162b-64776178626c7145796e-build.zip"
+        },
+        "wCleanerApi": {
+          "userPoolId": "eu-west-2_LtQEoHXvZ",
+          "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
+          "s3Key": "amplify-builds/wCleanerApi-5345614b707666753741-build.zip"
+        },
+        "wcleanerCustomMessage": {
+          "deploymentBucketName": "amplify-wcleaner-prod-4c21b-deployment",
+          "s3Key": "amplify-builds/wcleanerCustomMessage-472f392f316b6d793879-build.zip",
+          "redirectTo": "https://w-cleaner.com"
+        },
+        "wcleaner": {}
+      },
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d2r3wluo8x2tk9",
+          "type": "cicd"
+        }
+      },
+      "api": {
+        "AdminQueries": {},
+        "wCleanerApi": {}
+      },
+      "storage": {
+        "wcleaner": {},
+        "wcleanerstorage": {}
+      },
+      "custom": {
+        "sesEmail": {},
+        "monitoring": {}
+      }
+    }
+  }
+}
