@@ -2,7 +2,7 @@ import * as AdminQueries from "./api/AdminQueries/resource";
 import * as wCleanerApi from "./api/wCleanerApi/resource";
 import * as auth from "./auth/resource";
 import * as monitoring from "./custom/monitoring/resource";
-import * as sesEmail from "./custom/sesEmail/resource";
+// import * as sesEmail from "./custom/sesEmail/resource";
 import * as AdminQueries0c37162b from "./function/AdminQueries0c37162b/resource";
 import * as wCleanerApiFunction from "./function/wCleanerApi/resource";
 import * as wcleanerCustomMessage from "./function/wcleanerCustomMessage/resource";
@@ -25,7 +25,7 @@ const wcleaner = storageWcleaner.defineStorageWcleaner(backend);
 AdminQueries.defineAdminQueriesApi(backend);
 wCleanerApi.defineWCleanerApiApi(backend);
 monitoring.defineMonitoring(backend);
-sesEmail.defineSesEmail(backend);
+// sesEmail.defineSesEmail(backend);
 
 auth.applyEscapeHatches(backend);
 AdminQueries0c37162b.applyEscapeHatches(backend);
