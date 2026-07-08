@@ -10,7 +10,6 @@ const projectName = "wCleaner";
 
 export class Monitoring extends Construct {
   constructor(scope: Construct, id: string, backend: Backend) {
-    console.log(JSON.stringify({ backend }, null, 2));
     super(scope, id);
     const isDevCondition = new cdk.CfnCondition(this, "IsDevEnvironment", {
       expression: cdk.Fn.conditionEquals(envParameter, "dev"),

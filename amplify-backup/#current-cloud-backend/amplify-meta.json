@@ -1,0 +1,361 @@
+{
+  "providers": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wcleaner-dev-153252-authRole",
+      "UnauthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-dev-153252-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::295621520330:role/amplify-wcleaner-dev-153252-authRole",
+      "Region": "eu-west-2",
+      "DeploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+      "UnauthRoleName": "amplify-wcleaner-dev-153252-unauthRole",
+      "StackName": "amplify-wcleaner-dev-153252",
+      "StackId": "arn:aws:cloudformation:eu-west-2:295621520330:stack/amplify-wcleaner-dev-153252/5d0e45c0-a0b3-11ed-b595-0a649fe12144",
+      "AmplifyAppId": "d2r3wluo8x2tk9",
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json",
+      "APIGatewayAuthURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/api/APIGatewayAuthStack.json"
+    }
+  },
+  "api": {
+    "AdminQueries": {
+      "authorizationType": "AMAZON_COGNITO_USER_POOLS",
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "wcleaner"
+        },
+        {
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
+          "category": "function",
+          "resourceName": "AdminQueries0c37162b"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway",
+      "output": {
+        "ApiName": "AdminQueries",
+        "RootUrl": "https://gfoowaqhs5.execute-api.eu-west-2.amazonaws.com/dev",
+        "ApiId": "gfoowaqhs5"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/api/AdminQueries-cloudformation-template.json",
+        "logicalId": "apiAdminQueries"
+      },
+      "lastPushDirHash": "3bVsKKVciQrDGwRbsUSb8qNPnrY="
+    },
+    "wCleanerApi": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "wCleanerApi"
+        },
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "wcleaner"
+        },
+        {
+          "attributes": [
+            "AdminGroupRole"
+          ],
+          "category": "auth",
+          "resourceName": "userPoolGroups"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway",
+      "output": {
+        "DeploymentId": "4gada3",
+        "ApiName": "wCleanerApi",
+        "RootUrl": "https://ysspvy8prf.execute-api.eu-west-2.amazonaws.com/dev",
+        "ApiId": "ysspvy8prf"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/api/wCleanerApi-cloudformation-template.json",
+        "logicalId": "apiwCleanerApi"
+      },
+      "lastPushDirHash": "nNBWxYs0YUxyllQh1DA8QlmJVdI="
+    }
+  },
+  "auth": {
+    "userPoolGroups": {
+      "dependsOn": [
+        {
+          "category": "auth",
+          "resourceName": "wcleaner",
+          "attributes": [
+            "UserPoolId",
+            "AppClientIDWeb",
+            "AppClientID",
+            "IdentityPoolId"
+          ]
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito-UserPool-Groups",
+      "output": {
+        "AdminGroupRole": "arn:aws:iam::295621520330:role/eu-west-2_nRfe1m5kq-AdminGroupRole"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/auth/userPoolGroups-cloudformation-template.json",
+        "logicalId": "authuserPoolGroups"
+      },
+      "lastPushDirHash": "5G4uAlMxN8rsFD1jyeLTya9ahFM="
+    },
+    "wcleaner": {
+      "customAuth": false,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
+          "category": "function",
+          "resourceName": "wcleanerCustomMessage",
+          "triggerProvider": "Cognito"
+        }
+      ],
+      "frontendAuthConfig": {
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyCharacters": [
+            "REQUIRES_LOWERCASE",
+            "REQUIRES_UPPERCASE",
+            "REQUIRES_NUMBERS",
+            "REQUIRES_SYMBOLS"
+          ],
+          "passwordPolicyMinLength": 8
+        },
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "socialProviders": [],
+        "usernameAttributes": [
+          "EMAIL"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito",
+      "output": {
+        "UserPoolId": "eu-west-2_nRfe1m5kq",
+        "AppClientIDWeb": "6fcljbrjdndmckq6k0phjlo88r",
+        "AppClientID": "3ro87ff8254601g34hmpd3mpo9",
+        "IdentityPoolId": "eu-west-2:3c554b7e-1cb3-44b3-a7d5-e16dce2a2fd5",
+        "UserPoolArn": "arn:aws:cognito-idp:eu-west-2:295621520330:userpool/eu-west-2_nRfe1m5kq",
+        "IdentityPoolName": "wcleaner_identity_pool__dev",
+        "UserPoolName": "wcleaner_user_pool"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/auth/wcleaner-cloudformation-template.json",
+        "logicalId": "authwcleaner"
+      },
+      "lastPushDirHash": "yi13TDJeWEdZSp1l+vqH+JzG0qI="
+    }
+  },
+  "custom": {
+    "monitoring": {
+      "dependsOn": [
+        {
+          "category": "api",
+          "resourceName": "wCleanerApi",
+          "attributes": [
+            "RootUrl",
+            "ApiName",
+            "ApiId",
+            "DeploymentId"
+          ]
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "customCDK",
+      "output": {},
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/custom/monitoring-cloudformation-template.json",
+        "logicalId": "custommonitoring"
+      },
+      "lastPushDirHash": "FnZttisQ+ukXS7XEN9fbKEqadfs="
+    },
+    "sesEmail": {
+      "providerPlugin": "awscloudformation",
+      "service": "customCDK",
+      "output": {},
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/custom/sesEmail-cloudformation-template.json",
+        "logicalId": "customsesEmail"
+      },
+      "lastPushDirHash": "owJ66yAXKCrCc99Nr0qNWWd1mco="
+    }
+  },
+  "function": {
+    "AdminQueries0c37162b": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "wcleaner"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda",
+      "output": {
+        "LambdaExecutionRoleArn": "arn:aws:iam::295621520330:role/AdminQueries0c37162bLambdaRole-dev",
+        "Region": "eu-west-2",
+        "Arn": "arn:aws:lambda:eu-west-2:295621520330:function:AdminQueries0c37162b-dev",
+        "Name": "AdminQueries0c37162b-dev",
+        "LambdaExecutionRole": "AdminQueries0c37162bLambdaRole-dev"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/function/AdminQueries0c37162b-cloudformation-template.json",
+        "logicalId": "functionAdminQueries0c37162b"
+      },
+      "s3Bucket": {
+        "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+        "s3Key": "amplify-builds/AdminQueries0c37162b-31634f7554572b644e36-build.zip"
+      },
+      "lastBuildTimeStamp": "2026-07-02T15:44:50.939Z",
+      "lastBuildType": "PROD",
+      "lastPackageTimeStamp": "2026-07-02T15:44:53.991Z",
+      "distZipFilename": "AdminQueries0c37162b-31634f7554572b644e36-build.zip",
+      "lastPushDirHash": "D82gZ/gzyqWas2z48MZJUcVx4rQ="
+    },
+    "wCleanerApi": {
+      "build": true,
+      "dependsOn": [],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda",
+      "output": {
+        "LambdaExecutionRoleArn": "arn:aws:iam::295621520330:role/wcleanerLambdaRole1c9d4827-dev",
+        "Region": "eu-west-2",
+        "Arn": "arn:aws:lambda:eu-west-2:295621520330:function:wCleanerApi-dev",
+        "Name": "wCleanerApi-dev",
+        "LambdaExecutionRole": "wcleanerLambdaRole1c9d4827-dev"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/function/wCleanerApi-cloudformation-template.json",
+        "logicalId": "functionwCleanerApi"
+      },
+      "lastBuildTimeStamp": "2026-07-02T15:44:57.002Z",
+      "lastBuildType": "PROD",
+      "lastPackageTimeStamp": "2026-07-02T15:44:59.481Z",
+      "distZipFilename": "wCleanerApi-6b6f633470684f6a6157-build.zip",
+      "s3Bucket": {
+        "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+        "s3Key": "amplify-builds/wCleanerApi-6b6f633470684f6a6157-build.zip"
+      },
+      "lastPushDirHash": "MQD2+OhXOCoITg0GDv9BQ2spuUo="
+    },
+    "wcleanerCustomMessage": {
+      "build": true,
+      "dependsOn": [],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda",
+      "output": {
+        "LambdaExecutionRoleArn": "arn:aws:iam::295621520330:role/wcleanerCustomMessage-dev",
+        "Region": "eu-west-2",
+        "Arn": "arn:aws:lambda:eu-west-2:295621520330:function:wcleanerCustomMessage-dev",
+        "Name": "wcleanerCustomMessage-dev",
+        "LambdaExecutionRole": "wcleanerCustomMessage-dev"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/function/wcleanerCustomMessage-cloudformation-template.json",
+        "logicalId": "functionwcleanerCustomMessage"
+      },
+      "s3Bucket": {
+        "deploymentBucketName": "amplify-wcleaner-dev-153252-deployment",
+        "s3Key": "amplify-builds/wcleanerCustomMessage-472f392f316b6d793879-build.zip"
+      },
+      "lastBuildTimeStamp": "2026-07-02T15:45:00.067Z",
+      "lastBuildType": "PROD",
+      "lastPackageTimeStamp": "2026-07-02T15:45:00.077Z",
+      "distZipFilename": "wcleanerCustomMessage-472f392f316b6d793879-build.zip",
+      "lastPushDirHash": "878CFAETh9dwEuETNZ+JIhmbaSw="
+    }
+  },
+  "hosting": {
+    "amplifyhosting": {
+      "lastPushTimeStamp": "2023-01-30T15:41:59.188Z",
+      "service": "amplifyhosting",
+      "type": "cicd"
+    }
+  },
+  "storage": {
+    "wcleaner": {
+      "providerPlugin": "awscloudformation",
+      "service": "DynamoDB",
+      "output": {
+        "PartitionKeyName": "PK",
+        "SortKeyName": "SK",
+        "SortKeyType": "S",
+        "Region": "eu-west-2",
+        "Arn": "arn:aws:dynamodb:eu-west-2:295621520330:table/wcleaner-dev",
+        "StreamArn": "arn:aws:dynamodb:eu-west-2:295621520330:table/wcleaner-dev/stream/2024-04-11T15:11:20.916",
+        "PartitionKeyType": "S",
+        "Name": "wcleaner-dev"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/storage/wcleaner-cloudformation-template.json",
+        "logicalId": "storagewcleaner"
+      },
+      "lastPushDirHash": "SRtAPLvzsPQtxMkrPu80UKDuFfw="
+    },
+    "wcleanerstorage": {
+      "dependsOn": [
+        {
+          "category": "auth",
+          "resourceName": "wcleaner",
+          "attributes": [
+            "UserPoolId"
+          ]
+        },
+        {
+          "category": "auth",
+          "resourceName": "userPoolGroups",
+          "attributes": [
+            "AdminGroupRole"
+          ]
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "S3",
+      "output": {
+        "BucketName": "wcleanerstorage153252-dev",
+        "Region": "eu-west-2"
+      },
+      "lastPushTimeStamp": "2026-07-02T15:48:09.350Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-wcleaner-dev-153252-deployment/amplify-cfn-templates/storage/cloudformation-template.json",
+        "logicalId": "storagewcleanerstorage"
+      },
+      "lastPushDirHash": "ExhOfWGom0Oa6lUn5OSZsnCUDuk="
+    }
+  }
+}

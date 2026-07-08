@@ -1,0 +1,31 @@
+{
+  "bucketName": "wcleanerstorage",
+  "selectedGuestPermissions": [],
+  "selectedAuthenticatedPermissions": [
+    "s3:PutObject",
+    "s3:GetObject",
+    "s3:ListBucket",
+    "s3:DeleteObject"
+  ],
+  "unauthRoleName": {
+    "Ref": "UnauthRoleName"
+  },
+  "authRoleName": {
+    "Ref": "AuthRoleName"
+  },
+  "s3PrivatePolicy": "Private_policy_3b04f69a",
+  "s3ProtectedPolicy": "Protected_policy_3b04f69a",
+  "s3PublicPolicy": "Public_policy_3b04f69a",
+  "s3ReadPolicy": "read_policy_3b04f69a",
+  "s3UploadsPolicy": "Uploads_policy_3b04f69a",
+  "authPolicyName": "s3_amplify_3b04f69a",
+  "unauthPolicyName": "s3_amplify_3b04f69a",
+  "AuthenticatedAllowList": "ALLOW",
+  "GuestAllowList": "DISALLOW",
+  "s3PermissionsAuthenticatedPrivate": "s3:PutObject,s3:GetObject,s3:DeleteObject",
+  "s3PermissionsAuthenticatedProtected": "s3:PutObject,s3:GetObject,s3:DeleteObject",
+  "s3PermissionsAuthenticatedPublic": "s3:PutObject,s3:GetObject,s3:DeleteObject",
+  "s3PermissionsAuthenticatedUploads": "s3:PutObject",
+  "s3PermissionsGuestPublic": "DISALLOW",
+  "s3PermissionsGuestUploads": "DISALLOW"
+}

@@ -1,0 +1,2204 @@
+const {
+  DynamoDBClient,
+  PutItemCommand,
+  UpdateItemCommand,
+  ScanCommand,
+  QueryCommand,
+  GetItemCommand,
+  DeleteItemCommand,
+  BatchGetItemCommand,
+  TransactWriteItemsCommand,
+} = require("@aws-sdk/client-dynamodb");
+const { mapCustomer, mapInvoice, mapCleaningAddress } = require("./mappers");
+const {
+  formatInvoiceNumber,
+  parseInvoiceNumber,
+  padInvoice,
+} = require("./utils/invoiceNumber");
+
+const dynamoClient = new DynamoDBClient({ region: "eu-west-2" });
+const uuid = require("node-uuid");
+
+const TABLE_NAME = `wcleaner-${process.env.ENV}`;
+const PAGE_SIZE = process.env.PAGE_SIZE ?? 50;
+const INVOICE_ALLOCATOR_PK = "invoice_allocator";
+
+const generateSlug = async (email, name) => {
+  const nameSlug = name
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "")
+    .split(" ")
+    .join("-");
+  const emailSlug = email?.split("@")[0].toLowerCase();
+  const baseSlug = emailSlug?.length ? emailSlug : nameSlug;
+
+  let slug = baseSlug;
+  let counter = 2;
+
+  // Check if slug already exists
+  while (await slugExists(slug)) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+
+  return slug;
+};
+
+const slugExists = async (slug) => {
+  const existingCustomer = await getCustomerBySlug(slug);
+  return !!existingCustomer;
+};
+
+const addCustomer = async (customer) => {
+  if (!customer.name?.length) {
+    throw "NAME_CANNOT_BE_EMPTY";
+  }
+
+  const postcodeParts = customer.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+
+  const outcode = postcodeParts[0];
+
+  if (customer.email) {
+    const emailExisting = await queryCustomersByEmail(customer.email);
+    if (emailExisting.length > 0) {
+      throw "EMAIL_ALREADY_EXISTS";
+    }
+  }
+
+  const id = uuid.v1();
+  const slug = await generateSlug(customer.email, customer.name);
+
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: {
+        S: `customer_${id}`,
+      },
+      SK: {
+        S: "profile",
+      },
+      name: {
+        S: customer.name,
+      },
+      name_lowercase: {
+        S: customer.name?.toLowerCase(),
+      },
+      address: {
+        S: customer.address,
+      },
+      postcode: {
+        S: customer.postcode,
+      },
+      outcode: {
+        S: outcode.toUpperCase(),
+      },
+      mainTelephone: {
+        S: customer.mainTelephone,
+      },
+      secondTelephone: {
+        S: customer.secondTelephone,
+      },
+      slug: {
+        S: slug,
+      },
+      status: {
+        S: "active",
+      },
+      address_lowercase: {
+        S: customer.address.toLowerCase(),
+      },
+      postcode_lowercase: {
+        S: customer.postcode.toLowerCase(),
+      },
+    },
+  };
+
+  if (customer.email) {
+    params.Item["email"] = {
+      S: customer.email,
+    };
+    params.Item["email_lowercase"] = {
+      S: customer.email.toLowerCase(),
+    };
+  }
+  const command = new PutItemCommand(params);
+  await dynamoClient.send(command);
+  return {
+    ...customer,
+    id,
+    slug,
+  };
+};
+
+const addJobType = async (jobType) => {
+  if (!jobType.name?.length) {
+    throw "NAME_CANNOT_BE_EMPTY";
+  }
+  if (!jobType.color?.length) {
+    throw "COLOR_CANNOT_BE_EMPTY";
+  }
+  const nameExisting = await queryJobTypeByName(jobType.name);
+  if (nameExisting.length > 0) {
+    throw "NAME_ALREADY_EXISTS";
+  }
+  const colorExisting = await queryJobTypeByColor(jobType.color);
+
+  if (colorExisting.length > 0) {
+    throw "COLOR_ALREADY_EXISTS";
+  }
+
+  const id = uuid.v1();
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: {
+        S: `job_type_${id}`,
+      },
+      SK: {
+        S: "definition",
+      },
+      name: {
+        S: jobType.name,
+      },
+      name_lowercase: {
+        S: jobType.name.toLowerCase(),
+      },
+      color: {
+        S: jobType.color,
+      },
+    },
+  };
+  const command = new PutItemCommand(params);
+  await dynamoClient.send(command);
+  return {
+    ...jobType,
+    id,
+  };
+};
+
+const editAddress = async (customerId, customerAddress) => {
+  const postcodeParts = customerAddress.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+  const outcode = postcodeParts[0];
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${customerAddress.id}` },
+    },
+    ExpressionAttributeValues: {
+      ":name": { S: customerAddress.name },
+      ":address": { S: customerAddress.address },
+      ":postcode": { S: customerAddress.postcode },
+      ":outcode": { S: outcode },
+    },
+    ExpressionAttributeNames: {
+      "#name": "name",
+      "#address": "address",
+      "#postcode": "postcode",
+      "#outcode": "outcode",
+    },
+    UpdateExpression:
+      "SET #name = :name, #address = :address, #postcode = :postcode, #outcode = :outcode",
+  };
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+
+  return customerAddress;
+};
+
+const deleteAddress = async (customerId, addressId) => {
+  const addresses = await getCleaningAddresses(customerId);
+  if (addresses.length === 1) {
+    throw "Deleting last address";
+  }
+  const futureJobs = await getFutureJobsFromAddress(addressId);
+  if (futureJobs.length) {
+    throw "There are pending jobs";
+  }
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${addressId}` },
+    },
+    ExpressionAttributeNames: {
+      "#A": "address",
+      "#S": "status",
+    },
+    UpdateExpression: "SET #S = :status REMOVE #A",
+    ExpressionAttributeValues: {
+      ":status": {
+        S: "deleted",
+      },
+    },
+  };
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+};
+
+const editCustomer = async (id, editedCustomer) => {
+  const existing = await getCustomerById(id);
+  if (!existing) {
+    throw "NOT_EXISTING_CUSTOMER";
+  }
+
+  const updateExprParts = [];
+  const exprAttrNames = {};
+  const exprAttrValues = {};
+
+  if (editedCustomer.name !== undefined) {
+    exprAttrNames["#N"] = "name";
+    exprAttrNames["#NL"] = "name_lowercase";
+    exprAttrValues[":name"] = { S: editedCustomer.name };
+    exprAttrValues[":name_lowercase"] = {
+      S: editedCustomer.name.toLowerCase(),
+    };
+    updateExprParts.push("#N = :name", "#NL = :name_lowercase");
+  }
+
+  if (editedCustomer.address !== undefined) {
+    exprAttrNames["#A"] = "address";
+    exprAttrNames["#AL"] = "address_lowercase";
+    exprAttrValues[":address"] = { S: editedCustomer.address };
+    exprAttrValues[":address_lowercase"] = {
+      S: editedCustomer.address.toLowerCase(),
+    };
+    updateExprParts.push("#A = :address", "#AL = :address_lowercase");
+  }
+
+  if (editedCustomer.postcode !== undefined) {
+    const postcodeParts = editedCustomer.postcode.split(/\s/g);
+    if (postcodeParts.filter((part) => !!part).length !== 2) {
+      throw "INVALID_POSTCODE";
+    }
+    const outcode = postcodeParts[0];
+
+    exprAttrNames["#P"] = "postcode";
+    exprAttrNames["#PL"] = "postcode_lowercase";
+    exprAttrNames["#OC"] = "outcode";
+    exprAttrValues[":postcode"] = { S: editedCustomer.postcode };
+    exprAttrValues[":postcode_lowercase"] = {
+      S: editedCustomer.postcode.toLowerCase(),
+    };
+    exprAttrValues[":outcode"] = { S: outcode.toUpperCase() };
+
+    updateExprParts.push(
+      "#P = :postcode",
+      "#PL = :postcode_lowercase",
+      "#OC = :outcode"
+    );
+  }
+  if (editedCustomer.mainTelephone !== undefined) {
+    exprAttrNames["#MP"] = "mainTelephone";
+    exprAttrValues[":mainTelephone"] = { S: editedCustomer.mainTelephone };
+    updateExprParts.push("#MP = :mainTelephone");
+  }
+
+  if (editedCustomer.secondTelephone !== undefined) {
+    exprAttrNames["#SP"] = "secondTelephone";
+    exprAttrValues[":secondTelephone"] = { S: editedCustomer.secondTelephone };
+    updateExprParts.push("#SP = :secondTelephone");
+  }
+
+  if (editedCustomer.email) {
+    exprAttrNames["#E"] = "email";
+    exprAttrNames["#EL"] = "email_lowercase";
+    exprAttrValues[":email"] = { S: editedCustomer.email };
+    exprAttrValues[":email_lowercase"] = {
+      S: editedCustomer.email.toLowerCase(),
+    };
+    updateExprParts.push("#E = :email", "#EL = :email_lowercase");
+  }
+
+  if (editedCustomer.slug !== undefined) {
+    exprAttrNames["#SL"] = "slug";
+    exprAttrValues[":slug"] = { S: editedCustomer.slug };
+    updateExprParts.push("#SL = :slug");
+  }
+
+  if (editedCustomer.fileUrls !== undefined) {
+    if (!Array.isArray(editedCustomer.fileUrls)) {
+      throw "FILEURLS_MUST_BE_ARRAY";
+    }
+    exprAttrNames["#F"] = "fileUrls";
+    exprAttrValues[":fileUrls"] = {
+      L: editedCustomer.fileUrls.map((url) => ({ S: url })),
+    };
+    updateExprParts.push("#F = :fileUrls");
+  }
+
+  if (updateExprParts.length === 0) {
+    throw "NO_VALID_FIELDS_TO_UPDATE";
+  }
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${id}` },
+      SK: { S: "profile" },
+    },
+    UpdateExpression: `SET ${updateExprParts.join(", ")}`,
+    ExpressionAttributeNames: exprAttrNames,
+    ExpressionAttributeValues: exprAttrValues,
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+  return {
+    id,
+    ...editedCustomer,
+  };
+};
+const addCustomerAddress = async (customerId, customerAddress) => {
+  if (!customerId) {
+    throw new Error("CUSTOMER_NOT_FOUND");
+  }
+
+  if (
+    !customerAddress.name ||
+    !customerAddress.address ||
+    !customerAddress.postcode
+  ) {
+    console.error("Invalid Address:" + JSON.stringify({ customerAddress }));
+    throw new Error("INVALID_ADDRESS");
+  }
+
+  const addressWithSameName = await findAddressesByName(
+    customerId,
+    customerAddress.name
+  );
+
+  if (addressWithSameName?.length) {
+    throw new Error("DUPLICATED_ADDRESS_NAME");
+  }
+
+  const customerAddressId = uuid.v1();
+  const postcodeParts = customerAddress.postcode.split(/\s/g);
+  if (postcodeParts.filter((part) => !!part).length !== 2) {
+    throw "INVALID_POSTCODE";
+  }
+
+  const outcode = postcodeParts[0];
+
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${customerAddressId}` },
+      name: { S: customerAddress.name },
+      address: { S: customerAddress.address },
+      postcode: { S: customerAddress.postcode },
+      outcode: { S: outcode },
+      status: { S: "active" },
+    },
+  };
+
+  const command = new PutItemCommand(params);
+  await dynamoClient.send(command);
+
+  return {
+    id: customerAddressId,
+    ...customerAddress,
+  };
+};
+
+const findAddressesByName = async (customerId, addressName) => {
+  const params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#N": "name",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":sk": { S: "address" },
+      ":n": { S: addressName },
+    },
+    FilterExpression: "#PK = :pk AND begins_with(#SK, :sk) AND #N = :n",
+  };
+  const command = new ScanCommand(params);
+  const response = await dynamoClient.send(command);
+  const items = response.Items;
+  return items;
+};
+
+const getCustomers = async (filters, pagination) => {
+  const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
+  const { searchInput, outcodeFilter } = filters;
+
+  const filterExpressions = [
+    "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
+  ];
+
+  let params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#ST": "status",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: "customer_" },
+      ":sk": { S: "profile" },
+      ":status": { S: "active" },
+    },
+    IndexName: "status-index",
+  };
+
+  if (enabled) {
+    params.Limit = limit;
+
+    if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
+      params.ExclusiveStartKey = exclusiveStartKey;
+    }
+  }
+
+  if (searchInput?.length) {
+    params.ExpressionAttributeNames = {
+      ...params.ExpressionAttributeNames,
+      "#NL": "name_lowercase",
+      "#EL": "email_lowercase",
+      "#AL": "address_lowercase",
+      "#PL": "postcode_lowercase",
+    };
+
+    params.ExpressionAttributeValues = {
+      ...params.ExpressionAttributeValues,
+      ":name": { S: searchInput.toLowerCase() },
+      ":email": { S: searchInput.toLowerCase() },
+      ":address": { S: searchInput.toLowerCase() },
+      ":postcode": { S: searchInput.toLowerCase() },
+    };
+
+    filterExpressions.push(
+      "(contains(#NL, :name) OR contains(#EL, :email) OR contains(#AL, :address) OR contains(#PL, :postcode))"
+    );
+  }
+
+  if (Array.isArray(outcodeFilter) && outcodeFilter.length > 0) {
+    params.ExpressionAttributeNames = {
+      ...params.ExpressionAttributeNames,
+      "#OC": "outcode",
+    };
+
+    for (let i = 0; i < outcodeFilter.length; i++) {
+      params.ExpressionAttributeValues[`:outcode${i}`] = {
+        S: outcodeFilter[i],
+      };
+    }
+
+    filterExpressions.push(
+      `#OC IN (${outcodeFilter.map((_v, i) => `:outcode${i}`).join(", ")})`
+    );
+  }
+
+  params.FilterExpression = filterExpressions.join(" AND ");
+
+  let command = new ScanCommand(params);
+  let result = await dynamoClient.send(command);
+
+  const items = result.Items || [];
+  let lastEvaluatedKey = null;
+
+  while (enabled && result.LastEvaluatedKey && items.length < limit) {
+    params = {
+      ...params,
+      ExclusiveStartKey: result.LastEvaluatedKey,
+      Limit: limit - items.length,
+    };
+
+    command = new ScanCommand(params);
+    result = await dynamoClient.send(command);
+
+    items.push(...(result.Items || []));
+  }
+
+  if (enabled && result.LastEvaluatedKey) {
+    params = {
+      ...params,
+      ExclusiveStartKey: result.LastEvaluatedKey,
+      Limit: 50,
+    };
+    command = new ScanCommand(params);
+    const nextOne = await dynamoClient.send(command);
+    if (nextOne.Items?.length > 0) {
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+  }
+
+  if (!enabled) {
+    while (result.LastEvaluatedKey) {
+      params = {
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+      };
+
+      command = new ScanCommand(params);
+      result = await dynamoClient.send(command);
+
+      items.push(...(result.Items || []));
+    }
+  }
+
+  return { items, lastEvaluatedKey };
+};
+
+const getOutcodes = async () => {
+  let params = {
+    TableName: TABLE_NAME,
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#ST": "status",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: "customer_" },
+      ":sk": { S: "profile" },
+      ":status": { S: "active" },
+    },
+    IndexName: "status-index",
+  };
+
+  const command = new ScanCommand(params);
+  let result = await dynamoClient.send(command);
+  const items = result.Items;
+
+  while (result.LastEvaluatedKey) {
+    const exclusiveStartKey = result.LastEvaluatedKey;
+    params = {
+      ...params,
+      ExclusiveStartKey: exclusiveStartKey,
+      Limit: limit - items.length,
+    };
+    result = await dynamoClient.send(command);
+    items.push(...result.Items);
+  }
+
+  const outcodes = [];
+  for (let index = 0; index < items.length; index++) {
+    const outcode = items[index].outcode?.S;
+    if (outcode && !outcodes.includes(outcode)) {
+      outcodes.push(outcode);
+    }
+  }
+
+  return {
+    outcodes,
+  };
+};
+
+const getCleaningAddress = async (customerId, addressId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${addressId}` },
+    },
+  };
+
+  const command = new GetItemCommand(params);
+  const address = await dynamoClient.send(command);
+  return address.Item;
+};
+
+const getCleaningAddressById = async (addressId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    FilterExpression: "#SK = :SK",
+    ExpressionAttributeValues: {
+      ":SK": { S: `address_${addressId}` },
+    },
+    ExpressionAttributeNames: {
+      "#SK": "SK",
+    },
+  };
+
+  const command = new ScanCommand(params);
+  const result = await dynamoClient.send(command);
+
+  if (!result.Items?.length) {
+    return null;
+  }
+
+  const address = result.Items[0];
+  return address;
+};
+
+const getCleaningAddresses = async (customerId) => {
+  let items = [];
+  let ExclusiveStartKey;
+  do {
+    const params = {
+      TableName: TABLE_NAME,
+      ExpressionAttributeNames: {
+        "#PK": "PK",
+        "#SK": "SK",
+        "#S": "status",
+      },
+      FilterExpression: "begins_with(#SK, :sk) AND #PK = :pk AND #S = :status",
+      ExpressionAttributeValues: {
+        ":pk": { S: `customer_${customerId}` },
+        ":sk": { S: "address_" },
+        ":status": { S: "active" },
+      },
+      ExclusiveStartKey,
+    };
+
+    const command = new ScanCommand(params);
+    const result = await dynamoClient.send(command);
+
+    ExclusiveStartKey = result.LastEvaluatedKey;
+    items = [...items, ...result.Items];
+  } while (ExclusiveStartKey);
+  return items;
+};
+
+const getCustomerBySlug = async (slug) => {
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "customer_slug",
+    KeyConditionExpression: "slug = :slug",
+    ExpressionAttributeValues: {
+      ":slug": { S: slug },
+    },
+  };
+
+  const command = new QueryCommand(params);
+  const result = await dynamoClient.send(command);
+
+  if (!result.Items?.length) {
+    return null;
+  }
+  const customer = result.Items[0];
+  return customer;
+};
+
+const getCustomerById = async (id) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${id}` },
+      SK: { S: "profile" },
+    },
+  };
+
+  const command = new GetItemCommand(params);
+  const customer = await dynamoClient.send(command);
+
+  return customer.Item;
+};
+
+const getNextCustomer = async (lastEvaluatedKey) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Limit: 5,
+    ExclusiveStartKey: lastEvaluatedKey,
+    IndexName: "status-index",
+  };
+
+  const command = new ScanCommand(params);
+  const result = await dynamoClient.send(command);
+
+  if (result.Items.length) {
+    const item = result.Items[0];
+    return item;
+  }
+  return null;
+};
+
+const queryCustomersByEmail = async (email) => {
+  const params = {
+    ExpressionAttributeValues: {
+      ":email": { S: email },
+    },
+    KeyConditionExpression: "email = :email",
+    TableName: TABLE_NAME,
+    IndexName: "customer_email",
+  };
+
+  const command = new QueryCommand(params);
+  const result = await dynamoClient.send(command);
+
+  return result.Items;
+};
+
+const queryJobTypeByName = async (name) => {
+  const params = {
+    ExpressionAttributeNames: {
+      "#N": "name_lowercase",
+      "#PK": "PK",
+      "#SK": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":name": { S: name.toLowerCase() },
+      ":pk": { S: "job_type_" },
+      ":sk": { S: "definition" },
+    },
+    KeyConditionExpression: "#N = :name",
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
+    TableName: TABLE_NAME,
+    IndexName: "job_type_name",
+  };
+
+  const command = new QueryCommand(params);
+  const result = await dynamoClient.send(command);
+
+  return result.Items;
+};
+
+const queryJobTypeByColor = async (color) => {
+  const params = {
+    ExpressionAttributeValues: {
+      ":color": { S: color },
+    },
+    KeyConditionExpression: "color = :color",
+    TableName: TABLE_NAME,
+    IndexName: "job_type_color",
+  };
+
+  const command = new QueryCommand(params);
+  const result = await dynamoClient.send(command);
+
+  return result.Items;
+};
+
+const deleteCustomer = async (id) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${id}` },
+      SK: { S: "profile" },
+    },
+    UpdateExpression: `
+      SET #status = :status,
+          #address = :address,
+          #mainTelephone = :mainTelephone,
+          #secondTelephone = :secondTelephone
+      REMOVE #email
+    `,
+    ExpressionAttributeNames: {
+      "#status": "status",
+      "#address": "address",
+      "#email": "email",
+      "#mainTelephone": "mainTelephone",
+      "#secondTelephone": "secondTelephone",
+    },
+    ExpressionAttributeValues: {
+      ":status": { S: "deleted" },
+      ":mainTelephone": { S: "" },
+      ":secondTelephone": { S: "" },
+      ":address": { S: "" },
+    },
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+
+  const addresses = await getCleaningAddresses(id);
+  for (const address of addresses) {
+    const addressId = address.SK.S.replace("address_", "");
+    await deleteAddress(id, addressId);
+  }
+};
+/// JOBS
+
+//ADD JOB TO CUSTOMER
+
+const addCustomerJob = async (customerId, job, assignedTo) => {
+  if (!(await getCustomerById(customerId))) {
+    throw "CUSTOMER_NOT_FOUND";
+  }
+
+  const jobId = uuid.v1();
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+      assigned_to: {
+        S: assignedTo,
+      },
+      start: {
+        N: job.start.toString(),
+      },
+      end: {
+        N: job.end.toString(),
+      },
+      price: { N: job.price.toString() },
+      job_start_time_pk: {
+        N: "1",
+      },
+      job_type_id: { S: job.jobTypeId },
+      address_id: { S: job.addressId },
+
+      status: { S: job.status || "pending" },
+      payment_method: { S: job.paymentMethod || "none" },
+    },
+  };
+
+  const command = new PutItemCommand(params);
+  await dynamoClient.send(command);
+
+  return { ...job, id: jobId, assignedTo: { sub: assignedTo } };
+};
+
+//GET JOBS
+
+const getJob = async (customerId, jobId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+  };
+
+  const command = new GetItemCommand(params);
+  const job = await dynamoClient.send(command);
+
+  if (!job.Item) {
+    throw "JOB_NOT_FOUND";
+  }
+  const customer = await getCustomerById(customerId);
+
+  const item = {
+    ...job.Item,
+    customer,
+  };
+  return item;
+};
+const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
+  const { start, end, assignedTo } = filters;
+  const DEFAULT_FILTER_EXPRESSION = "begins_with(#SK, :sk)";
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "job_start_time",
+    ScanIndexForward: order !== "desc",
+    ExpressionAttributeNames: {
+      "#SK": "SK",
+      "#JSTPK": "job_start_time_pk",
+    },
+    ExpressionAttributeValues: {
+      ":sk": { S: "job_" },
+      ":aggregator": { N: "1" },
+    },
+    FilterExpression: DEFAULT_FILTER_EXPRESSION,
+    KeyConditionExpression: "#JSTPK = :aggregator",
+  };
+
+  if (paginate) {
+    params.ExclusiveStartKey = exclusiveStartKey;
+    params.Limit = PAGE_SIZE;
+  }
+
+  const filterExpressions = [];
+
+  if (assignedTo) {
+    params.ExpressionAttributeNames["#AT"] = "assigned_to";
+    params.ExpressionAttributeValues[":assigned_to"] = { S: assignedTo };
+    filterExpressions.push("#AT = :assigned_to");
+  }
+
+  if (start && end) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":start"] = { N: start.toString() };
+    params.ExpressionAttributeValues[":end"] = { N: end.toString() };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S BETWEEN :start AND :end`;
+  } else if (start) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":start"] = { N: start.toString() };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S >= :start`;
+  } else if (end) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":end"] = { N: end.toString() };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S <= :end`;
+  }
+
+  if (filterExpressions.length) {
+    params.FilterExpression = [...filterExpressions, DEFAULT_FILTER_EXPRESSION]
+      .map((e) => `(${e})`)
+      .join(" AND ");
+  }
+
+  let command = new QueryCommand(params);
+  let result = await dynamoClient.send(command);
+
+  const items = result.Items || [];
+  let lastEvaluatedKey;
+
+  if (paginate) {
+    while (result.LastEvaluatedKey && items.length < PAGE_SIZE) {
+      command = new QueryCommand({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: PAGE_SIZE - items.length,
+      });
+
+      result = await dynamoClient.send(command);
+      items.push(...(result.Items || []));
+    }
+
+    command = new QueryCommand({
+      ...params,
+      ExclusiveStartKey: result.LastEvaluatedKey,
+      Limit: 1,
+    });
+
+    const nextItem = await dynamoClient.send(command);
+
+    if ((nextItem.Items || []).length > 0) {
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+  } else {
+    while (result.LastEvaluatedKey && result.Items.length > 0) {
+      command = new QueryCommand({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+      });
+
+      result = await dynamoClient.send(command);
+      items.push(...(result.Items || []));
+    }
+  }
+
+  return { items, lastEvaluatedKey };
+};
+const chunk = (arr, size) =>
+  Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+    arr.slice(i * size, i * size + size)
+  );
+
+const batchGetCustomersByIds = async (customerIds) => {
+  const customerBatches = chunk(customerIds, 100);
+  const customers = {};
+
+  for (const customerIdsBatch of customerBatches) {
+    const params = {
+      RequestItems: {
+        [TABLE_NAME]: {
+          Keys: customerIdsBatch.map((customerId) => ({
+            PK: { S: `customer_${customerId}` },
+            SK: { S: "profile" },
+          })),
+        },
+      },
+    };
+
+    const command = new BatchGetItemCommand(params);
+    const result = await dynamoClient.send(command);
+
+    const customersBatch = (result.Responses?.[TABLE_NAME] ?? []).map(
+      mapCustomer
+    );
+
+    for (const customer of customersBatch) {
+      customers[customer.id] = customer;
+    }
+  }
+
+  return customers;
+};
+
+const batchGetAddresses = async (customerAndAddressId) => {
+  const addressBatches = chunk(customerAndAddressId, 100);
+  const addresses = {};
+
+  for (const addressIdsBatch of addressBatches) {
+    const params = {
+      RequestItems: {
+        [TABLE_NAME]: {
+          Keys: addressIdsBatch.map(({ customerId, addressId }) => ({
+            PK: { S: `customer_${customerId}` },
+            SK: { S: `address_${addressId}` },
+          })),
+        },
+      },
+    };
+    const command = new BatchGetItemCommand(params);
+    const result = await dynamoClient.send(command);
+
+    const addressesBatch = (result.Responses?.[TABLE_NAME] ?? []).map(
+      mapCleaningAddress
+    );
+
+    for (const address of addressesBatch) {
+      addresses[`${address.customerId}_${address.id}`] = address;
+    }
+  }
+
+  return addresses;
+};
+
+const getFutureJobsFromAddress = async (addressId) => {
+  let items = [];
+  let ExclusiveStartKey;
+  const currentDate = `${+new Date()}`;
+
+  do {
+    const params = {
+      TableName: TABLE_NAME,
+      ExpressionAttributeNames: {
+        "#SK": "SK",
+        "#AID": "address_id",
+        "#S": "start",
+      },
+      ExpressionAttributeValues: {
+        ":sk": { S: "job_" },
+        ":address_id": { S: addressId },
+        ":current_timestamp": { N: currentDate },
+      },
+      FilterExpression:
+        "#AID = :address_id AND begins_with(#SK, :sk) AND #S > :current_timestamp",
+      ExclusiveStartKey,
+    };
+
+    const command = new ScanCommand(params);
+    const result = await dynamoClient.send(command);
+
+    ExclusiveStartKey = result.LastEvaluatedKey;
+    items = [...items, ...(result.Items || [])];
+  } while (ExclusiveStartKey);
+
+  return items;
+};
+
+//GET JOB TYPES
+const getJobType = async (jobTypeId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `job_type_${jobTypeId}` },
+      SK: { S: "definition" },
+    },
+  };
+
+  const command = new GetItemCommand(params);
+  const job = await dynamoClient.send(command);
+
+  return job.Item;
+};
+const getJobTypes = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+    },
+    ExpressionAttributeValues: {
+      ":sk": { S: "definition" },
+      ":pk": { S: "job_type" },
+    },
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk",
+  };
+
+  const command = new ScanCommand(params);
+  const result = await dynamoClient.send(command);
+  const items = result.Items;
+
+  return {
+    items,
+  };
+};
+
+const getJobCustomers = async (jobs) => {
+  const customerIds = Array.from(
+    new Set(jobs.map((j) => j.customerId).filter(Boolean))
+  );
+
+  const customers = await batchGetCustomersByIds(customerIds);
+
+  return customers;
+};
+
+const getAddressesForJobs = async (jobs) => {
+  const customerAndAddressIds = Array.from(
+    new Set(jobs.map((j) => `${j.customerId}_${j.addressId}`).filter(Boolean))
+  ).map((concatenated) => {
+    const [customerId, addressId] = concatenated.split("_");
+    return { customerId, addressId };
+  });
+  const addresses = await batchGetAddresses(customerAndAddressIds);
+  return addresses;
+};
+
+//EDIT JOB TYPE
+const editJobType = async (jobTypeId, updatedJobType) => {
+  if (!updatedJobType.name?.length) {
+    throw "NAME_CANNOT_BE_EMPTY";
+  }
+  if (!updatedJobType.color?.length) {
+    throw "COLOR_CANNOT_BE_EMPTY";
+  }
+  const nameExisting = await queryJobTypeByName(updatedJobType.name);
+  if (nameExisting.length > 0) {
+    if (nameExisting[0].PK.S !== `job_type_${jobTypeId}`) {
+      throw "NAME_ALREADY_EXISTS";
+    }
+  }
+
+  const colorExisting = await queryJobTypeByColor(updatedJobType.color);
+  if (colorExisting.length > 0) {
+    if (colorExisting[0].PK.S !== `job_type_${jobTypeId}`) {
+      throw "COLOR_ALREADY_EXISTS";
+    }
+  }
+
+  const params = {
+    ExpressionAttributeNames: {
+      "#N": "name",
+      "#C": "color",
+    },
+    ExpressionAttributeValues: {
+      ":name": {
+        S: updatedJobType.name,
+      },
+      ":color": {
+        S: updatedJobType.color,
+      },
+    },
+    Key: {
+      PK: {
+        S: `job_type_${jobTypeId}`,
+      },
+      SK: {
+        S: `definition`,
+      },
+    },
+    TableName: TABLE_NAME,
+    UpdateExpression: "SET #N = :name, #C = :color",
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+
+  return updatedJobType;
+};
+
+// GET CUSTOMER JOBS
+const getCustomerJobs = async (customerId, filters, order) => {
+  const { start, end, assignedTo } = filters;
+  const DEFAULT_FILTER_EXPRESSION = "#PK = :pk AND begins_with(#SK, :sk)";
+
+  const params = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#JSTPK": "job_start_time_pk",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":sk": { S: "job_" },
+      ":aggregator": { N: "1" },
+    },
+    IndexName: "job_start_time",
+    KeyConditionExpression: "#JSTPK = :aggregator",
+    FilterExpression: DEFAULT_FILTER_EXPRESSION,
+    ScanIndexForward: order === "asc",
+  };
+
+  const filterExpressions = [];
+
+  if (assignedTo) {
+    params.ExpressionAttributeNames["#AT"] = "assigned_to";
+    params.ExpressionAttributeValues[":assigned_to"] = { S: assignedTo };
+    filterExpressions.push("#AT = :assigned_to");
+  }
+
+  if (start && end) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":start"] = { N: start.toString() };
+    params.ExpressionAttributeValues[":end"] = { N: end.toString() };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S BETWEEN :start AND :end`;
+  } else if (start) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":start"] = { N: start.toString() };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S >= :start`;
+  } else if (end) {
+    params.ExpressionAttributeNames["#S"] = "start";
+    params.ExpressionAttributeValues[":end"] = { N: end.toString() };
+    params.KeyConditionExpression = `${params.KeyConditionExpression} AND #S <= :end`;
+  }
+
+  if (filterExpressions.length) {
+    params.FilterExpression = [...filterExpressions, DEFAULT_FILTER_EXPRESSION]
+      .map((e) => `(${e})`)
+      .join(" AND ");
+  }
+
+  let items = [];
+  let ExclusiveStartKey;
+
+  do {
+    const command = new QueryCommand({
+      ...params,
+      ExclusiveStartKey,
+    });
+
+    const result = await dynamoClient.send(command);
+    ExclusiveStartKey = result.LastEvaluatedKey;
+
+    const normalized = (result.Items || []).map((job) => ({
+      ...job,
+      status: job.status ?? { S: "pending" },
+      payment_method: job.payment_method ?? { S: "none" },
+    }));
+
+    items = [...items, ...normalized];
+  } while (ExclusiveStartKey);
+
+  return { items };
+};
+
+//EDIT JOB
+
+const editJobFromCustomer = async (customerId, jobId, updatedJob) => {
+  const params = {
+    ExpressionAttributeNames: {},
+    ExpressionAttributeValues: {},
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+    TableName: TABLE_NAME,
+    UpdateExpression: "SET",
+  };
+
+  const updates = [];
+
+  if (updatedJob.start) {
+    updates.push("#ST = :start");
+    params.ExpressionAttributeValues[":start"] = {
+      N: updatedJob.start.toString(),
+    };
+    params.ExpressionAttributeNames["#ST"] = "start";
+  }
+
+  if (updatedJob.end) {
+    updates.push("#ET = :end");
+    params.ExpressionAttributeValues[":end"] = {
+      N: updatedJob.end.toString(),
+    };
+    params.ExpressionAttributeNames["#ET"] = "end";
+  }
+
+  if (updatedJob.price) {
+    updates.push("#P = :price");
+    params.ExpressionAttributeValues[":price"] = {
+      N: updatedJob.price.toString(),
+    };
+    params.ExpressionAttributeNames["#P"] = "price";
+  }
+
+  if (updatedJob.assignedTo) {
+    updates.push("#A = :assigned_to");
+    params.ExpressionAttributeValues[":assigned_to"] = {
+      S: updatedJob.assignedTo,
+    };
+    params.ExpressionAttributeNames["#A"] = "assigned_to";
+  }
+
+  if (updatedJob.jobTypeId) {
+    updates.push("#JT = :job_type_id");
+    params.ExpressionAttributeValues[":job_type_id"] = {
+      S: updatedJob.jobTypeId,
+    };
+    params.ExpressionAttributeNames["#JT"] = "job_type_id";
+  }
+
+  if (updatedJob.addressId) {
+    updates.push("#AD = :address_id");
+    params.ExpressionAttributeValues[":address_id"] = {
+      S: updatedJob.addressId,
+    };
+    params.ExpressionAttributeNames["#AD"] = "address_id";
+  }
+
+  if (updatedJob.status) {
+    updates.push("#STT = :status");
+    params.ExpressionAttributeValues[":status"] = {
+      S: updatedJob.status,
+    };
+    params.ExpressionAttributeNames["#STT"] = "status";
+  }
+
+  if (updatedJob.paymentMethod) {
+    updates.push("#PM = :payment_method");
+    params.ExpressionAttributeValues[":payment_method"] = {
+      S: updatedJob.paymentMethod,
+    };
+    params.ExpressionAttributeNames["#PM"] = "payment_method";
+  }
+
+  params.UpdateExpression += " " + updates.join(", ");
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+
+  return updatedJob;
+};
+
+// EDITTING STATUS FROM JOB
+
+const updateJobStatus = async (customerId, jobId, status) => {
+  if (!customerId || !jobId) {
+    throw "INVALID_JOB";
+  }
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+  };
+
+  let command = new GetItemCommand(params);
+  const job = await dynamoClient.send(command);
+
+  if (!job.Item) {
+    throw "JOB_NOT_FOUND";
+  }
+
+  const updateParams = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+    UpdateExpression: "SET #ST = :status",
+    ExpressionAttributeNames: {
+      "#ST": "status",
+    },
+    ExpressionAttributeValues: {
+      ":status": { S: status },
+    },
+  };
+
+  command = new UpdateItemCommand(updateParams);
+  await dynamoClient.send(command);
+};
+
+//DELETE JOB
+const deleteJobFromCustomer = async (customerId, jobId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+  };
+  const command = new DeleteItemCommand(params);
+  await dynamoClient.send(command);
+};
+
+const deleteJobType = async (jobTypeId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `job_type_${jobTypeId}` },
+      SK: { S: "definition" },
+    },
+  };
+  let command = new DeleteItemCommand(params);
+  await dynamoClient.send(command);
+
+  const queryParams = {
+    TableName: TABLE_NAME,
+    ExpressionAttributeNames: {
+      "#JTI": "job_type_id",
+    },
+    ExpressionAttributeValues: {
+      ":job_type_id": {
+        S: jobTypeId,
+      },
+    },
+    KeyConditionExpression: "#JTI = :job_type_id",
+    IndexName: "job_type_id",
+  };
+
+  command = new QueryCommand(queryParams);
+  const result = await dynamoClient.send(command);
+
+  if (Array.isArray(result?.Items)) {
+    for (const jobItem of result.Items) {
+      const updateParams = {
+        ExpressionAttributeNames: {
+          "#JTI": "job_type_id",
+        },
+        Key: {
+          PK: {
+            S: jobItem.PK.S,
+          },
+          SK: {
+            S: jobItem.SK.S,
+          },
+        },
+        TableName: TABLE_NAME,
+        UpdateExpression: "REMOVE #JTI",
+      };
+
+      command = new UpdateItemCommand(updateParams);
+      await dynamoClient.send(command);
+    }
+  }
+};
+
+//FILES
+//ADD FILE
+
+const addFile = async (fileBuffer, path) => {
+  if (!fileBuffer || !fileBuffer.length) {
+    throw "FILE_CANNOT_BE_EMPTY";
+  }
+
+  if (!path?.length) {
+    throw "PATH_CANNOT_BE_EMPTY";
+  }
+
+  const id = uuid.v1();
+  const timestamp = new Date().toISOString();
+
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: `file_${id}` },
+      SK: { S: "meta" },
+      path: { S: path },
+      size: { N: String(fileBuffer.length) },
+      uploadedAt: { S: timestamp },
+    },
+  };
+
+  const command = new PutItemCommand(params);
+  await dynamoClient.send(command);
+
+  return {
+    id,
+    path,
+    size: fileBuffer.length,
+    uploadedAt: timestamp,
+  };
+};
+//CUSTOMER NOTES
+const addCustomerNote = async (customerId, note) => {
+  const customer = await getCustomerById(customerId);
+  if (!customer) {
+    throw new Error("CUSTOMER_NOT_FOUND");
+  }
+
+  if (!note.title || !note.content || !note.author || !note.timestamp) {
+    throw new Error(
+      "Invalid note: missing required fields. " + JSON.stringify({ note })
+    );
+  }
+
+  const noteId = uuid.v1();
+
+  const dynamoNote = {
+    id: { S: noteId },
+    title: { S: note.title },
+    content: { S: note.content },
+    author: { S: note.author },
+    timestamp: { N: note.timestamp.toString() },
+    isFavourite: { BOOL: note.isFavourite },
+    updatedAt: { N: note.timestamp.toString() },
+    updatedBy: { S: note.author },
+  };
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "profile" },
+    },
+    UpdateExpression:
+      "SET notes = list_append(if_not_exists(notes, :empty_list), :new_note)",
+    ExpressionAttributeValues: {
+      ":empty_list": { L: [] },
+      ":new_note": { L: [{ M: dynamoNote }] },
+    },
+    ReturnValues: "UPDATED_NEW",
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+
+  return {
+    id: noteId,
+    ...note,
+    updatedAt: note.timestamp,
+    updatedBy: note.author,
+  };
+};
+
+const editCustomerNote = async (customerId, noteId, note) => {
+  const customer = mapCustomer(await getCustomerById(customerId));
+
+  if (!customer.notes?.length) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+
+  const index = customer.notes.findIndex((note) => note.id === noteId);
+
+  if (index === -1) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+
+  const existingNote = customer.notes[index];
+
+  const dynamoNote = {
+    id: { S: noteId },
+    title: { S: note.title },
+    content: { S: note.content },
+    author: { S: existingNote.author },
+    timestamp: { N: existingNote.timestamp.toString() },
+    isFavourite: { BOOL: note.isFavourite },
+    updatedAt: { N: Date.now().toString() },
+    updatedBy: { S: note.updatedBy },
+  };
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "profile" },
+    },
+    UpdateExpression: `SET notes[${index}] = :new_note`,
+    ExpressionAttributeValues: {
+      ":new_note": { M: dynamoNote },
+    },
+    ReturnValues: "UPDATED_NEW",
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+
+  return {
+    id: noteId,
+    ...existingNote,
+    ...note,
+    updatedAt: Date.now(),
+    updatedBy: note.author,
+  };
+};
+const deleteCustomerNote = async (customerId, noteId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "profile" },
+    },
+    ProjectionExpression: "notes",
+  };
+
+  let command = new GetItemCommand(params);
+  const result = await dynamoClient.send(command);
+
+  if (!result.Item || !result.Item.notes || !result.Item.notes.L) {
+    throw "NOTE_NOT_FOUND";
+  }
+
+  const notes = result.Item.notes.L;
+
+  const indexToRemove = notes.findIndex((n) => n.M?.id?.S === noteId);
+
+  if (indexToRemove === -1) {
+    throw "NOTE_NOT_FOUND";
+  }
+
+  const updateParams = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: "profile" },
+    },
+    UpdateExpression: `REMOVE notes[${indexToRemove}]`,
+  };
+
+  command = new UpdateItemCommand(updateParams);
+  await dynamoClient.send(command);
+};
+
+//INVOICES
+
+const isInvoiceNumberInUse = async (rawNumber) => {
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "invoice_number",
+    KeyConditionExpression: "#JPIK = :sk AND invoice_number = :n",
+    ExpressionAttributeNames: { "#JPIK": "job_invoice_pk" },
+    ExpressionAttributeValues: {
+      ":sk": { N: "1" },
+      ":n": { N: String(rawNumber) },
+    },
+    Limit: 1,
+  };
+
+  const command = new QueryCommand(params);
+  const response = await dynamoClient.send(command);
+
+  return (response.Items?.length ?? 0) > 0;
+};
+const takeSmallestFreeNumber = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "PK = :pk AND begins_with(SK, :prefix)",
+    ExpressionAttributeValues: {
+      ":pk": { S: INVOICE_ALLOCATOR_PK },
+      ":prefix": { S: "free_" },
+    },
+    Limit: 1,
+    ScanIndexForward: true,
+  };
+
+  const command = new QueryCommand(params);
+  const response = await dynamoClient.send(command);
+
+  const item = response.Items?.[0];
+  if (!item) return null;
+
+  return {
+    raw: Number(item.invoice_number?.N ?? item.number?.N),
+    freeSk: item.SK.S,
+  };
+};
+const getNextInvoiceNumber = async () => {
+  const smallestFree = await takeSmallestFreeNumber();
+
+  if (smallestFree) {
+    return smallestFree.raw;
+  }
+
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "invoice_number",
+    KeyConditionExpression: "#JPIK = :one",
+    ExpressionAttributeNames: {
+      "#JPIK": "job_invoice_pk",
+    },
+    ExpressionAttributeValues: {
+      ":one": { N: "1" },
+    },
+    Limit: 1,
+    ScanIndexForward: false,
+  };
+
+  const command = new QueryCommand(params);
+  const result = await dynamoClient.send(command);
+
+  if (!result.Items || result.Items.length === 0) {
+    return 1;
+  }
+
+  return Number(result.Items[0].invoice_number.N) + 1;
+};
+const getInvoice = async (customerId, jobId) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      SK: { S: `job_${jobId}` },
+      PK: { S: `customer_${customerId}` },
+    },
+  };
+
+  const command = new GetItemCommand(params);
+  const res = await dynamoClient.send(command);
+
+  return res.Item?.invoice_number ? mapInvoice(res.Item) : null;
+};
+
+// GET INVOICES
+const getInvoices = async (pagination = {}, sorting = {}, filters = {}) => {
+  const {
+    exclusiveStartKey,
+    limit: rawLimit = PAGE_SIZE,
+    enabled: rawEnabled = true,
+  } = pagination;
+
+  const limit = isNaN(+rawLimit) ? PAGE_SIZE : Number(rawLimit);
+  const enabled = rawEnabled === true || rawEnabled === "true";
+
+  const { sortBy = "invoiceNumber", direction = "desc" } = sorting;
+  const { from, to, paid } = filters;
+
+  const isSortingByDate = sortBy === "invoiceDate";
+  const hasFrom = from !== undefined;
+  const hasTo = to !== undefined;
+  const hasDateFilter = hasFrom || hasTo;
+
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: isSortingByDate ? "invoice_date" : "invoice_number",
+    KeyConditionExpression: "#JIPK = :one",
+    ExpressionAttributeNames: {
+      "#JIPK": "job_invoice_pk",
+    },
+    ExpressionAttributeValues: {
+      ":one": { N: "1" },
+    },
+    ScanIndexForward: direction === "asc",
+  };
+
+  const filterExpressions = [];
+
+  if (enabled) {
+    params.Limit = limit;
+
+    if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
+      params.ExclusiveStartKey = exclusiveStartKey;
+    }
+  }
+
+  if (hasDateFilter) {
+    params.ExpressionAttributeNames["#d"] = "start";
+  }
+
+  if (hasFrom) {
+    params.ExpressionAttributeValues[":from"] = { N: String(from) };
+  }
+
+  if (hasTo) {
+    params.ExpressionAttributeValues[":to"] = { N: String(to) };
+  }
+
+  if (hasFrom && hasTo) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d BETWEEN :from AND :to`;
+    } else {
+      filterExpressions.push("#d BETWEEN :from AND :to");
+    }
+  } else if (hasFrom) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d >= :from`;
+    } else {
+      filterExpressions.push("#d >= :from");
+    }
+  } else if (hasTo) {
+    if (isSortingByDate) {
+      params.KeyConditionExpression = `${params.KeyConditionExpression} AND #d <= :to`;
+    } else {
+      filterExpressions.push("#d <= :to");
+    }
+  }
+
+  if (paid !== undefined) {
+    params.ExpressionAttributeNames["#PM"] = "payment_method";
+    params.ExpressionAttributeValues[":none"] = { S: "none" };
+
+    if (paid) {
+      filterExpressions.push("#PM <> :none");
+    } else {
+      filterExpressions.push("#PM = :none");
+    }
+  }
+
+  if (filterExpressions.length > 0) {
+    params.FilterExpression =
+      filterExpressions.length === 1
+        ? filterExpressions[0]
+        : filterExpressions
+            .map((expression) => `(${expression})`)
+            .join(" AND ");
+  }
+
+  let command = new QueryCommand(params);
+  let result = await dynamoClient.send(command);
+
+  const items = result.Items || [];
+  let lastEvaluatedKey = null;
+
+  if (enabled) {
+    if (result.LastEvaluatedKey) {
+      command = new QueryCommand({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: 1,
+      });
+
+      const nextItem = await dynamoClient.send(command);
+
+      if ((nextItem.Items || []).length > 0) {
+        lastEvaluatedKey = result.LastEvaluatedKey;
+      }
+    }
+  } else {
+    while (result.LastEvaluatedKey) {
+      command = new QueryCommand({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+      });
+
+      result = await dynamoClient.send(command);
+      items.push(...(result.Items || []));
+    }
+  }
+
+  return { items, lastEvaluatedKey };
+};
+
+const getInvoiceSettings = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: "settings" },
+      SK: { S: "invoice" },
+    },
+  };
+
+  const command = new GetItemCommand(params);
+  const result = await dynamoClient.send(command);
+
+  return result.Item;
+};
+
+const updateInvoiceSettings = async (settings) => {
+  const params = {
+    TableName: TABLE_NAME,
+    Item: {
+      PK: { S: "settings" },
+      SK: { S: "invoice" },
+      company_name: { S: settings.companyName ?? "" },
+      logo_url: { S: settings.logoUrl ?? "" },
+      company_address_lines: {
+        L: (settings.companyAddressLines ?? []).map((line) => ({
+          S: line,
+        })),
+      },
+      company_phone: { S: settings.companyPhone ?? "" },
+      company_email: { S: settings.companyEmail ?? "" },
+      company_website: { S: settings.companyWebsite ?? "" },
+      bank_details: { S: settings.bankDetails ?? "" },
+      payment_info: { S: settings.paymentInfo ?? "" },
+      footer_notes: { S: settings.footerNotes ?? "" },
+    },
+  };
+
+  const command = new PutItemCommand(params);
+  await dynamoClient.send(command);
+
+  return settings;
+};
+const getCustomerInvoices = async (customerId, pagination) => {
+  const { exclusiveStartKey, limit, enabled } = pagination;
+
+  let params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "#PK = :pk AND begins_with(#SK, :jobPrefix)",
+    FilterExpression: "attribute_exists(#IN)",
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#IN": "invoice_number",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: `customer_${customerId}` },
+      ":jobPrefix": { S: "job_" },
+    },
+  };
+
+  if (enabled) {
+    params.Limit = limit;
+
+    if (exclusiveStartKey && Object.keys(exclusiveStartKey).length > 0) {
+      params.ExclusiveStartKey = exclusiveStartKey;
+    }
+  }
+
+  let command = new QueryCommand(params);
+  let result = await dynamoClient.send(command);
+
+  const items = result.Items || [];
+  let lastEvaluatedKey = null;
+
+  if (enabled) {
+    if (result.LastEvaluatedKey) {
+      command = new QueryCommand({
+        ...params,
+        ExclusiveStartKey: result.LastEvaluatedKey,
+        Limit: 1,
+      });
+
+      const nextItem = await dynamoClient.send(command);
+      lastEvaluatedKey = (nextItem.Items || []).length
+        ? result.LastEvaluatedKey
+        : null;
+    }
+  }
+
+  while (result.LastEvaluatedKey && items.length < limit) {
+    params = {
+      ...params,
+      ExclusiveStartKey: result.LastEvaluatedKey,
+      Limit: limit - items.length,
+    };
+
+    command = new QueryCommand(params);
+    result = await dynamoClient.send(command);
+
+    items.push(...(result.Items || []));
+  }
+
+  return { items, lastEvaluatedKey };
+};
+
+const createInvoice = async (customerId, jobId, invoiceData) => {
+  if (!customerId) {
+    throw "CUSTOMER_NOT_FOUND";
+  }
+
+  if (!jobId) {
+    throw "JOB_NOT_FOUND";
+  }
+
+  if (!invoiceData?.description) {
+    throw "MISSING_INVOICE_DESCRIPTION";
+  }
+
+  if (!invoiceData?.addressId) {
+    throw "MISSING_INVOICE_ADDRESS";
+  }
+
+  if (!invoiceData?.date) {
+    throw "MISSING_INVOICE_DATE";
+  }
+
+  const existing = await getInvoice(customerId, jobId);
+
+  if (existing) {
+    throw "INVOICE_ALREADY_EXISTS";
+  }
+
+  const next = await getNextInvoiceNumber();
+
+  const params = {
+    TransactItems: [
+      {
+        Update: {
+          TableName: TABLE_NAME,
+          Key: {
+            PK: { S: `customer_${customerId}` },
+            SK: { S: `job_${jobId}` },
+          },
+          UpdateExpression:
+            "SET #ID = :description, #IN = :number, #JPIK = :jpik, #IA = :address_id, #IDT = :date",
+          ExpressionAttributeNames: {
+            "#IA": "invoice_address_id",
+            "#ID": "invoice_description",
+            "#IDT": "invoice_date",
+            "#IN": "invoice_number",
+            "#JPIK": "job_invoice_pk",
+          },
+          ExpressionAttributeValues: {
+            ":description": { S: invoiceData.description },
+            ":number": { N: String(next) },
+            ":jpik": { N: "1" },
+            ":address_id": { S: invoiceData.addressId },
+            ":date": { N: String(invoiceData.date) },
+          },
+        },
+      },
+      {
+        Delete: {
+          TableName: TABLE_NAME,
+          Key: {
+            ...makeFreeItemKey(next),
+          },
+        },
+      },
+    ],
+  };
+
+  const command = new TransactWriteItemsCommand(params);
+  await dynamoClient.send(command);
+
+  return {
+    jobId,
+    customerId,
+    invoiceNumber: formatInvoiceNumber(next),
+    invoiceNumberRaw: next,
+    date: invoiceData.date,
+    description: invoiceData.description,
+    addressId: invoiceData.addressId,
+  };
+};
+const editInvoiceContent = async (customerId, jobId, invoiceData) => {
+  const existing = await getInvoice(customerId, jobId);
+
+  if (!existing) {
+    throw "INVOICE_NOT_FOUND";
+  }
+
+  const updateExpr = [];
+  const names = {};
+  const values = {};
+
+  if (invoiceData.description !== undefined) {
+    names["#DESC"] = "invoice_description";
+    values[":desc"] = { S: invoiceData.description };
+    updateExpr.push("#DESC = :desc");
+  }
+
+  if (invoiceData.addressId !== undefined) {
+    names["#AID"] = "invoice_address_id";
+    values[":aid"] = { S: invoiceData.addressId };
+    updateExpr.push("#AID = :aid");
+  }
+
+  if (invoiceData.date !== undefined) {
+    names["#ID"] = "invoice_date";
+    values[":date"] = { N: String(invoiceData.date) };
+    updateExpr.push("#ID = :date");
+  }
+
+  if (!updateExpr.length) {
+    return existing;
+  }
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+    UpdateExpression: `SET ${updateExpr.join(", ")}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+
+  return await getInvoice(customerId, jobId);
+};
+
+const updateInvoicePaid = async (customerId, jobId, paid) => {
+  const existing = await getInvoice(customerId, jobId);
+
+  if (!existing) {
+    throw "INVOICE_NOT_FOUND";
+  }
+
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `job_${jobId}` },
+    },
+    UpdateExpression: "SET #PM = :payment",
+    ExpressionAttributeNames: {
+      "#PM": "payment_method",
+    },
+    ExpressionAttributeValues: {
+      ":payment": { S: paid ? "bank_transfer" : "none" },
+    },
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+
+  return await getInvoice(customerId, jobId);
+};
+const deleteInvoice = async (customerId, jobId) => {
+  const existing = await getInvoice(customerId, jobId);
+
+  if (!existing) {
+    throw "INVOICE_NOT_FOUND";
+  }
+
+  const raw =
+    existing.invoiceNumberRaw ?? parseInvoiceNumber(existing.invoiceNumber);
+
+  const params = {
+    TransactItems: [
+      {
+        Update: {
+          TableName: TABLE_NAME,
+          Key: {
+            PK: { S: `customer_${customerId}` },
+            SK: { S: `job_${jobId}` },
+          },
+          ExpressionAttributeNames: {
+            "#IA": "invoice_address_id",
+            "#ID": "invoice_description",
+            "#IDT": "invoice_date",
+            "#IN": "invoice_number",
+            "#JPIK": "job_invoice_pk",
+          },
+          UpdateExpression: "REMOVE #IA, #ID, #IN, #JPIK, #IDT",
+        },
+      },
+      {
+        Put: {
+          TableName: TABLE_NAME,
+          Item: {
+            ...makeFreeItemKey(raw),
+            invoice_number: { N: String(raw) },
+          },
+        },
+      },
+    ],
+  };
+
+  const command = new TransactWriteItemsCommand(params);
+  await dynamoClient.send(command);
+};
+
+const makeFreeItemKey = (rawNumber) => ({
+  PK: { S: INVOICE_ALLOCATOR_PK },
+  SK: { S: `free_${padInvoice(rawNumber)}` },
+});
+
+module.exports = {
+  addCustomer,
+  addCustomerAddress,
+  addCustomerJob,
+  addCustomerNote,
+  addJobType,
+  createInvoice,
+  deleteAddress,
+  editAddress,
+  editCustomer,
+  editCustomerNote,
+  editJobType,
+  editInvoiceContent,
+  getAddressesForJobs,
+  getCleaningAddress,
+  getCleaningAddressById,
+  getCleaningAddresses,
+  getCustomerBySlug,
+  getCustomerById,
+  getCustomers,
+  getCustomerJobs,
+  getInvoice,
+  getInvoiceSettings,
+  getInvoices,
+  getCustomerInvoices,
+  getJob,
+  getJobCustomers,
+  getJobs,
+  getJobType,
+  getJobTypes,
+  getNextInvoiceNumber,
+  getOutcodes,
+  queryCustomersByEmail,
+  deleteCustomer,
+  deleteJobType,
+  deleteCustomerNote,
+  deleteInvoice,
+  editJobFromCustomer,
+  updateJobStatus,
+  updateInvoicePaid,
+  updateInvoiceSettings,
+  deleteJobFromCustomer,
+  addFile,
+};
