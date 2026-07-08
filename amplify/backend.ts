@@ -29,7 +29,7 @@ monitoring.defineMonitoring(backend);
 
 auth.applyEscapeHatches(backend);
 AdminQueries0c37162b.applyEscapeHatches(backend);
-wCleanerApi.applyEscapeHatches(backend);
+wCleanerApiFunction.applyEscapeHatches(backend);
 wcleanerCustomMessage.applyEscapeHatches(backend);
 storage.applyEscapeHatches(backend);
 
