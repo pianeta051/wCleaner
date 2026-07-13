@@ -1,0 +1,114 @@
+{
+  "Parameters": {
+    "env": {
+      "Type": "String",
+      "Description": "Current Amplify CLI env name"
+    },
+    "Domain": {
+      "Type": "String"
+    },
+    "HostedZoneId": {
+      "Type": "String"
+    }
+  },
+  "Conditions": {
+    "IsDevEnvironment": {
+      "Fn::Equals": [
+        {
+          "Ref": "env"
+        },
+        "dev"
+      ]
+    }
+  },
+  "Resources": {
+    "DomainIdentity": {
+      "Type": "AWS::SES::EmailIdentity",
+      "Properties": {
+        "DkimAttributes": {
+          "SigningEnabled": true
+        },
+        "EmailIdentity": {
+          "Ref": "Domain"
+        }
+      },
+      "Condition": "IsDevEnvironment"
+    },
+    "Dkim1": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": {
+          "Ref": "HostedZoneId"
+        },
+        "Name": {
+          "Fn::GetAtt": [
+            "DomainIdentity",
+            "DkimDNSTokenName1"
+          ]
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "DomainIdentity",
+              "DkimDNSTokenValue1"
+            ]
+          }
+        ],
+        "TTL": "300",
+        "Type": "CNAME"
+      },
+      "Condition": "IsDevEnvironment"
+    },
+    "Dkim2": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": {
+          "Ref": "HostedZoneId"
+        },
+        "Name": {
+          "Fn::GetAtt": [
+            "DomainIdentity",
+            "DkimDNSTokenName2"
+          ]
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "DomainIdentity",
+              "DkimDNSTokenValue2"
+            ]
+          }
+        ],
+        "TTL": "300",
+        "Type": "CNAME"
+      },
+      "Condition": "IsDevEnvironment"
+    },
+    "Dkim3": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": {
+          "Ref": "HostedZoneId"
+        },
+        "Name": {
+          "Fn::GetAtt": [
+            "DomainIdentity",
+            "DkimDNSTokenName3"
+          ]
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "DomainIdentity",
+              "DkimDNSTokenValue3"
+            ]
+          }
+        ],
+        "TTL": "300",
+        "Type": "CNAME"
+      },
+      "Condition": "IsDevEnvironment"
+    }
+  },
+  "Description": "{\"createdOn\":\"Linux\",\"createdBy\":\"Amplify\",\"createdWith\":\"14.5.0\",\"stackType\":\"custom-customCDK\",\"metadata\":{\"whyContinueWithGen1\":\"\"}}"
+}

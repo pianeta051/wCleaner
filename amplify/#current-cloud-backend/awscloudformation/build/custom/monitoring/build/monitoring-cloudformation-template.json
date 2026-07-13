@@ -1,0 +1,128 @@
+{
+  "Parameters": {
+    "env": {
+      "Type": "String",
+      "Description": "Current Amplify CLI env name"
+    },
+    "apiwCleanerApiRootUrl": {
+      "Type": "String"
+    },
+    "apiwCleanerApiApiName": {
+      "Type": "String"
+    },
+    "apiwCleanerApiApiId": {
+      "Type": "String"
+    },
+    "apiwCleanerApiDeploymentId": {
+      "Type": "String"
+    }
+  },
+  "Conditions": {
+    "IsDevEnvironment": {
+      "Fn::Equals": [
+        {
+          "Ref": "env"
+        },
+        "dev"
+      ]
+    }
+  },
+  "Resources": {
+    "WCleanerApiAccessLogs9A89BE95": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/apigateway/wCleaner-api-wcleanerApi-",
+              {
+                "Ref": "env"
+              }
+            ]
+          ]
+        },
+        "RetentionInDays": 7
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete"
+    },
+    "ApiGatewayLogsRoleA66F4CEE": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    "ApiGatewayAccount": {
+      "Type": "AWS::ApiGateway::Account",
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "ApiGatewayLogsRoleA66F4CEE",
+            "Arn"
+          ]
+        }
+      },
+      "Condition": "IsDevEnvironment"
+    },
+    "WCleanerApiStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "AccessLogSetting": {
+          "DestinationArn": {
+            "Fn::GetAtt": [
+              "WCleanerApiAccessLogs9A89BE95",
+              "Arn"
+            ]
+          },
+          "Format": "{\"requestId\":\"$context.requestId\",\"extendedRequestId\":\"$context.extendedRequestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"requestTime\":\"$context.requestTime\",\"httpMethod\":\"$context.httpMethod\",\"resourcePath\":\"$context.resourcePath\",\"path\":\"$context.path\",\"status\":\"$context.status\",\"protocol\":\"$context.protocol\",\"responseLength\":\"$context.responseLength\",\"responseLatency\":\"$context.responseLatency\",\"integrationLatency\":\"$context.integrationLatency\",\"integrationStatus\":\"$context.integrationStatus\",\"errorMessage\":\"$context.error.message\",\"errorType\":\"$context.error.responseType\"}"
+        },
+        "DeploymentId": {
+          "Ref": "apiwCleanerApiDeploymentId"
+        },
+        "MethodSettings": [
+          {
+            "DataTraceEnabled": true,
+            "HttpMethod": "*",
+            "LoggingLevel": "INFO",
+            "MetricsEnabled": true,
+            "ResourcePath": "/*"
+          }
+        ],
+        "RestApiId": {
+          "Ref": "apiwCleanerApiApiId"
+        },
+        "StageName": {
+          "Ref": "env"
+        },
+        "TracingEnabled": true
+      }
+    }
+  },
+  "Description": "{\"createdOn\":\"Linux\",\"createdBy\":\"Amplify\",\"createdWith\":\"14.5.0\",\"stackType\":\"custom-customCDK\",\"metadata\":{\"whyContinueWithGen1\":\"\"}}"
+}

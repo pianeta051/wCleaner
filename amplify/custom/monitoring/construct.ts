@@ -10,7 +10,6 @@ const projectName = "wCleaner";
 export class Monitoring extends Construct {
   constructor(scope: Construct, id: string, backend: Backend) {
     super(scope, id);
-    console.log(backend);
     const bucket = new s3.Bucket(this, "carlos-bucket-para-borrar-forever");
     // const isDevCondition = new cdk.CfnCondition(this, "IsDevEnvironment", {
     //   expression: cdk.Fn.conditionEquals(envParameter, "dev"),

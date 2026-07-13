@@ -1,0 +1,736 @@
+/*
+Copyright 2017 - 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
+    http://aws.amazon.com/apache2.0/
+or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations under the License.
+*/
+/*
+Copyright 2017 - 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
+    http://aws.amazon.com/apache2.0/
+or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations under the License.
+*/
+
+const express = require("express");
+const bodyParser = require("body-parser");
+const awsServerlessExpressMiddleware = require("aws-serverless-express/middleware");
+
+const {
+  addCustomerAddress,
+  addCustomerJob,
+  addCustomerNote,
+  addJobType,
+  createInvoice,
+  getAddressesForJobs,
+  getCleaningAddress,
+  getCleaningAddressById,
+  getCleaningAddresses,
+  getCustomerJobs,
+  getJob,
+  getJobs,
+  getJobCustomers,
+  getJobType,
+  getJobTypes,
+  getInvoices,
+  getInvoice,
+  getOutcodes,
+  deleteCustomerNote,
+  deleteInvoice,
+  deleteJobType,
+  editJobFromCustomer,
+  updateJobStatus,
+  updateInvoicePaid,
+  deleteJobFromCustomer,
+  deleteAddress,
+  editCustomer,
+  editCustomerNote,
+  editJobType,
+  addFile,
+} = require("./db");
+
+const {
+  mapCleaningAddress,
+  mapCustomerJobs,
+  mapInvoice,
+  mapJob,
+  mapJobFromRequestBody,
+  mapJobTypeFromRequestBody,
+  mapJobTemporalFilters,
+  mapJobType,
+} = require("./mappers");
+
+const { generateToken, parseToken } = require("./token");
+const { getAuthData, getJobUsers } = require("./authentication");
+
+const { setCustomerRoutes } = require("./routes/customers");
+const { setInvoicesRoutes } = require("./routes/invoices");
+
+const MANDATORY_ENV_VARS = ["USER_POOL_ID", "ENV"];
+
+const checkEnvVars = () => {
+  const missingEnvVars = [];
+  for (const envVar of MANDATORY_ENV_VARS) {
+    if (process.env[envVar] === undefined) {
+      missingEnvVars.push(envVar);
+    }
+  }
+  if (missingEnvVars.length > 0) {
+    throw new Error(`Missing required env vars: ${missingEnvVars.join(", ")}`);
+  }
+};
+
+checkEnvVars();
+
+// declare a new express app
+const app = express();
+app.use(bodyParser.json());
+app.use(awsServerlessExpressMiddleware.eventContext());
+
+// Enable CORS for all methods
+app.use(async function (req, res, next) {
+  req.authData = await getAuthData(req);
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "*");
+  res.header("Access-Control-Allow-Methods", "*");
+  next();
+});
+
+setCustomerRoutes(app);
+setInvoicesRoutes(app);
+
+// Get outcodes
+app.get("/outcodes", async function (req, res) {
+  const { outcodes } = await getOutcodes();
+  res.json({ outcodes });
+});
+
+app.post("/customers/:customerId/address", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const { name, address, postcode } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: "Name cannot be empty" });
+    }
+
+    if (!address) {
+      return res.status(400).json({ error: "Address cannot be empty" });
+    }
+
+    if (!postcode) {
+      return res.status(400).json({ error: "postcode cannot be empty" });
+    }
+
+    let createdCustomerAddress = null;
+    try {
+      const customerAddress = { name, address, postcode };
+
+      createdCustomerAddress = await addCustomerAddress(
+        customerId,
+        customerAddress
+      );
+    } catch (e) {
+      if (e.message === "CUSTOMER_NOT_FOUND") {
+        return res.status(404).json({ error: "The customer does not exist" });
+      }
+      throw e;
+    }
+
+    res.json({
+      customerAddress: {
+        ...createdCustomerAddress,
+        customerId,
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    throw error;
+  }
+});
+
+app.delete(
+  "/customers/:customerId/address/:addressId",
+  async function (req, res) {
+    try {
+      const customerId = req.params.customerId;
+      const addressId = req.params.addressId;
+      await deleteAddress(customerId, addressId);
+      res.json({ message: "Address deleted" });
+    } catch (e) {
+      if (e === "Deleting last address") {
+        res.status(400).json({ error: "The last address cannot be deleted" });
+        return;
+      }
+      if (e === "There are pending jobs") {
+        res.status(400).json({ error: "This address has pending jobs" });
+        return;
+      }
+      // throw so we can see it on cloudwatch
+      throw e;
+    }
+  }
+);
+
+//JOBS
+
+// Get all JOBS
+
+app.get("/jobs", async function (req, res) {
+  const nextToken = req.query?.nextToken;
+  const startParameter = req.query?.start;
+  const endParameter = req.query?.end;
+  const paginate = req.query?.paginate !== "false";
+  const { start, end } = mapJobTemporalFilters(startParameter, endParameter);
+  const order = req.query?.order;
+  const exclusiveStartKey = parseToken(nextToken);
+  const userSub = req.authData?.userSub;
+  const groups = req.authData?.groups;
+  const isAdmin = groups.includes("Admin");
+  const { items: jobsFromDB, lastEvaluatedKey } = await getJobs(
+    {
+      start,
+      end,
+      assignedTo: isAdmin ? undefined : userSub,
+    },
+    order,
+    exclusiveStartKey,
+    paginate
+  );
+
+  const responseToken = generateToken(lastEvaluatedKey);
+
+  let jobs = jobsFromDB.map(mapJob);
+
+  const [customers, jobUsers, addresses] = await Promise.all([
+    getJobCustomers(jobs),
+    isAdmin ? getJobUsers(jobsFromDB) : {},
+    getAddressesForJobs(jobs),
+  ]);
+
+  // merge all async data
+  jobs = jobs.map((job) => {
+    const address = addresses[`${job.customerId}_${job.addressId}`];
+    return {
+      ...job,
+      customer: customers[job.customerId],
+      address: address?.address ?? address?.name ?? "Unknown",
+      postcode: address?.postcode ?? "",
+      assignedTo: jobUsers[job.id],
+    };
+  });
+
+  res.json({ jobs, nextToken: responseToken });
+});
+
+app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
+  const customerId = req.params.customerId;
+  const jobId = req.params.jobId;
+  try {
+    const jobFromDb = await getJob(customerId, jobId);
+    let job = mapJob(jobFromDb);
+    const groups = req.authData?.groups;
+    const isAdmin = groups.includes("Admin");
+    if (isAdmin) {
+      const assignedTo = await getJobUsers([jobFromDb]);
+      job.assignedTo = assignedTo[job.id];
+    } else {
+      const userSub = req.authData?.userSub;
+      const assignedTo = jobFromDb.assigned_to?.S;
+      if (assignedTo !== userSub) {
+        res.status(401).json({ message: "User not allowed to visit this job" });
+        return;
+      }
+
+      const restrictedCustomer = {
+        id: job.customer.id,
+        slug: job.customer.slug,
+        name: job.customer.name,
+        address: job.customer.address,
+        postcode: job.customer.postcode,
+        fileUrls: job.customer.fileUrls,
+        notes: job.customer.notes,
+      };
+      job.customer = restrictedCustomer;
+    }
+    const jobType = await getJobType(job.jobTypeId);
+    job.jobTypeName = mapJobType(jobType).name;
+    const addresses = await getAddressesForJobs([job]);
+    const address = addresses[`${job.customerId}_${job.addressId}`];
+
+    job.address = address?.address ?? address?.name ?? "Unknown";
+    job.postcode = address?.postcode ?? "";
+
+    res.json({ job });
+  } catch (e) {
+    if (e === "JOB_NOT_FOUND") {
+      res.status(404).json({ message: "The job doesn't exist" });
+    }
+  }
+});
+
+// Get a single customer's Job
+app.get("/customers/:customerId/jobs", async function (req, res) {
+  const id = req.params.customerId;
+  const startParameter = req.query?.start;
+  const endParameter = req.query?.end;
+  const { start, end } = mapJobTemporalFilters(startParameter, endParameter);
+  const userSub = req.authData?.userSub;
+  const groups = req.authData?.groups;
+  const order = req.query?.order;
+  const isAdmin = groups.includes("Admin");
+
+  const { items } = await getCustomerJobs(
+    id,
+    { start, end, assignedTo: isAdmin ? undefined : userSub },
+    order
+  );
+  let jobs = items.map(mapCustomerJobs);
+  let jobUsers = {};
+  if (isAdmin) {
+    jobUsers = await getJobUsers(items);
+  }
+  const addresses = await getAddressesForJobs(jobs);
+  jobs = jobs.map((job) => {
+    const address = addresses[`${job.customerId}_${job.addressId}`];
+    return {
+      ...job,
+      address: address?.address ?? address?.name ?? "Unknown",
+      postcode: address?.postcode ?? "",
+      assignedTo: jobUsers[job.id],
+    };
+  });
+
+  try {
+    res.json({ jobs });
+  } catch (e) {
+    if (e.message === "Customer not found") {
+      res.status(404).json({ error: e.message });
+      return;
+    }
+    throw e;
+  }
+});
+
+//Create a Job
+app.post("/customers/:customerId/job", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const job = mapJobFromRequestBody(req.body);
+    const userSub = req.authData?.userSub;
+    const email = req.authData?.userInfo?.email;
+    const name = req.authData?.userInfo?.name;
+    const color = req.authData?.userInfo?.color;
+    const groups = req.authData?.groups;
+    const isAdmin = groups?.includes("Admin");
+
+    let assignedTo = userSub;
+    if (isAdmin && job?.assignedTo) {
+      assignedTo = job.assignedTo;
+    }
+    const createdJob = await addCustomerJob(customerId, job, assignedTo);
+    res.json({
+      job: {
+        ...createdJob,
+        customerId,
+        assignedTo: {
+          sub: assignedTo,
+          email,
+          name,
+          color,
+        },
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({
+        error: "Customer not registered!",
+      });
+    } else {
+      throw error;
+    }
+  }
+});
+
+app.put("/customers/:customerId/jobs/:jobId", async function (req, res) {
+  const groups = req.authData?.groups;
+  const isAdmin = groups.includes("Admin");
+  if (!isAdmin) {
+    res.status(401).json({ error: "User unauthorized" });
+    return;
+  }
+
+  try {
+    const { customerId, jobId } = req.params;
+    let updatedJob = req.body;
+    updatedJob = mapJobFromRequestBody(req.body);
+    const jobUpdated = await editJobFromCustomer(customerId, jobId, updatedJob);
+
+    res.json({ job: { ...jobUpdated, assignedTo: undefined, id: jobId } });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({
+        error: "Customer not registered!",
+      });
+    } else {
+      throw error;
+    }
+  }
+});
+
+//Edit job status
+
+app.put("/customers/:customerId/jobs/:jobId/status", async function (req, res) {
+  const { customerId, jobId } = req.params;
+  const { status } = req.body;
+
+  if (!status) {
+    res.status(400).json({ error: "Missing status value" });
+    return;
+  }
+
+  try {
+    const groups = req.authData?.groups || [];
+    const userSub = req.authData?.userSub;
+    const isAdmin = groups.includes("Admin");
+
+    const jobFromDb = await getJob(customerId, jobId);
+    const assignedTo = jobFromDb?.assigned_to?.S;
+
+    if (!jobFromDb) {
+      res.status(404).json({ error: "Job not found" });
+      return;
+    }
+
+    if (!isAdmin && assignedTo !== userSub) {
+      res.status(403).json({ error: "User unauthorized" });
+      return;
+    }
+
+    if (status === "cancelled") {
+      res.status(400).json({
+        error: "Status 'cancelled' cannot be updated via this endpoint",
+      });
+      return;
+    }
+
+    await updateJobStatus(customerId, jobId, status);
+
+    res.json({ status });
+  } catch (error) {
+    if (error === "JOB_NOT_FOUND") {
+      res.status(404).json({ error: "Job not found" });
+      return;
+    }
+    throw error;
+  }
+});
+
+app.delete("/customers/:customerId/job/:jobId", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const jobId = req.params.jobId;
+    await deleteJobFromCustomer(customerId, jobId);
+    res.json({ message: "Job Deleted" });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      res.status(404).json({
+        error: "Customer not registered!",
+      });
+    } else {
+      throw error;
+    }
+  }
+});
+
+//JOB TYPE FUNCTIONS
+
+app.post("/job-type", async function (req, res) {
+  const groups = req.authData?.groups;
+  const isAdmin = groups?.includes("Admin");
+  if (!isAdmin) {
+    res.status(403).json({ error: "You must be Admin" });
+    return;
+  }
+  const jobType = req.body;
+  try {
+    const createJobType = await addJobType(jobType);
+    res.json({ jobType: createJobType });
+  } catch (error) {
+    if (error === "NAME_CANNOT_BE_EMPTY") {
+      res.status(400).json({
+        error: "Name cannot be empty",
+      });
+    } else if (error === "COLOR_CANNOT_BE_EMPTY") {
+      res.status(400).json({
+        error: "Color cannot be empty",
+      });
+    } else if (error === "NAME_ALREADY_EXISTS") {
+      res.status(400).json({
+        error: "Name cannot be duplicated",
+      });
+    } else if (error === "COLOR_ALREADY_EXISTS") {
+      res.status(400).json({
+        error: "Color cannot be duplicated",
+      });
+    } else {
+      throw error;
+    }
+  }
+});
+
+//Get job types
+app.get("/job-types", async function (req, res) {
+  const { items } = await getJobTypes();
+  const jobTypes = items.map(mapJobType);
+  res.json({ jobTypes });
+});
+
+// Update Job Type
+app.put("/job-type/:jobTypeId", async function (req, res) {
+  const groups = req.authData?.groups;
+
+  const isAdmin = groups?.includes("Admin");
+  try {
+    const jobTypeId = req.params.jobTypeId;
+    const updatedJobType = req.body;
+    if (!isAdmin) {
+      throw "User unauthorized";
+    }
+    const jobTypeUpdated = await editJobType(
+      jobTypeId,
+      mapJobTypeFromRequestBody(updatedJobType)
+    );
+
+    res.json({ jobType: jobTypeUpdated });
+  } catch (error) {
+    {
+      if (error === "NAME_CANNOT_BE_EMPTY") {
+        res.status(400).json({
+          error: "Name cannot be empty",
+        });
+      } else if (error === "COLOR_CANNOT_BE_EMPTY") {
+        res.status(400).json({
+          error: "Color cannot be empty",
+        });
+      } else if (error === "NAME_ALREADY_EXISTS") {
+        res.status(400).json({
+          error: "Name cannot be duplicated",
+        });
+      } else if (error === "COLOR_ALREADY_EXISTS") {
+        res.status(400).json({
+          error: "Color cannot be duplicated",
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+});
+
+app.delete("/job-type/:jobTypeId", async function (req, res) {
+  const groups = req.authData?.groups;
+  const isAdmin = groups?.includes("Admin");
+  try {
+    if (!isAdmin) {
+      throw "User unauthorized";
+    }
+    const jobTypeId = req.params.jobTypeId;
+    await deleteJobType(jobTypeId);
+    res.json({ message: "Job Type Deleted" });
+  } catch (error) {
+    throw error;
+  }
+});
+
+//FILES
+//Add file
+
+app.post("/files", async function (req, res) {
+  try {
+    const file = req.file;
+    const path = req.body.path;
+
+    if (!file) {
+      return res.status(400).json({ error: "File is required" });
+    }
+
+    if (!path) {
+      return res.status(400).json({ error: "Path is required" });
+    }
+
+    const uploadedPath = await addFile(file.buffer, path);
+
+    res.json({ path: uploadedPath });
+  } catch (error) {
+    if (error === "INVALID_FILE_TYPE") {
+      res.status(400).json({ error: "Invalid file type" });
+    } else if (error === "FILE_TOO_LARGE") {
+      res.status(413).json({ error: "File too large" });
+    } else {
+      throw error;
+    }
+  }
+});
+
+// Replace fileUrls on a customer
+app.put("/customers/:customerId/files", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const { fileUrls } = req.body;
+
+    if (!Array.isArray(fileUrls)) {
+      return res
+        .status(400)
+        .json({ error: "FileUrls must be an array of strings" });
+    }
+
+    // Check all elements are strings
+    if (!fileUrls.every((url) => typeof url === "string")) {
+      return res
+        .status(400)
+        .json({ error: "FileUrls must contain only strings" });
+    }
+
+    const updatedCustomer = await editCustomer(customerId, {
+      fileUrls,
+    });
+
+    res.json({ customer: updatedCustomer });
+  } catch (error) {
+    if (error === "NOT_EXISTING_CUSTOMER") {
+      res.status(404).json({ error: "Not existing customer" });
+    } else {
+      throw error;
+    }
+  }
+});
+
+app.post("/customers/:customerId/note", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const { title, content, isFavourite = false } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: "Title cannot be empty" });
+    }
+
+    if (!content) {
+      return res.status(400).json({ error: "Content cannot be empty" });
+    }
+
+    const author = req.authData?.userInfo?.name;
+    const timestamp = Date.now();
+
+    const note = {
+      title,
+      content,
+      author,
+      timestamp,
+      isFavourite,
+    };
+
+    let createdNote = null;
+    try {
+      createdNote = await addCustomerNote(customerId, note);
+    } catch (e) {
+      if (e.message === "CUSTOMER_NOT_FOUND") {
+        return res.status(404).json({ error: "The customer does not exist" });
+      }
+      throw e;
+    }
+
+    res.json({
+      note: {
+        ...createdNote,
+        customerId,
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    throw error;
+  }
+});
+
+app.put("/customers/:customerId/note/:noteId", async function (req, res) {
+  try {
+    const customerId = req.params.customerId;
+    const noteId = req.params.noteId;
+    const { title, content, isFavourite = false } = req.body;
+    const updatedBy =
+      req.authData?.userInfo?.name ??
+      req.authData?.userInfo?.email ??
+      req.authData?.userInfo?.userSub;
+
+    if (!title) {
+      return res.status(400).json({ error: "Title cannot be empty" });
+    }
+
+    if (!content) {
+      return res.status(400).json({ error: "Content cannot be empty" });
+    }
+
+    const note = {
+      title,
+      content,
+      isFavourite,
+      updatedBy,
+    };
+
+    let updatedNote = null;
+    try {
+      updatedNote = await editCustomerNote(customerId, noteId, note);
+    } catch (e) {
+      if (e.message === "CUSTOMER_NOT_FOUND") {
+        return res.status(404).json({ error: "The customer does not exist" });
+      }
+      if (e.message === "NOTE_NOT_FOUND") {
+        return res.status(404).json({ error: "The note does not exist" });
+      }
+      throw e;
+    }
+
+    res.json({
+      note: {
+        ...updatedNote,
+        customerId,
+      },
+    });
+  } catch (error) {
+    if (error.message === "CUSTOMER_NOT_FOUND") {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    throw error;
+  }
+});
+
+app.delete("/customers/:customerId/note/:noteId", async function (req, res) {
+  const noteId = req.params.noteId;
+  const customerId = req.params.customerId;
+  await deleteCustomerNote(customerId, noteId);
+  res.json({ message: "Note Deleted" });
+});
+
+app.get("/customers/:customerId/addresses", async function (req, res) {
+  const id = req.params.customerId;
+  const items = await getCleaningAddresses(id);
+  const addresses = items.map(mapCleaningAddress);
+
+  res.json({ addresses });
+});
+
+const APP_PORT = process.env.APP_PORT ?? 3000;
+
+app.listen(APP_PORT, function () {
+  console.log("App started");
+});
+
+module.exports = app;
