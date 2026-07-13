@@ -64,6 +64,7 @@ export type InvoiceWithAddress = Invoice & {
 export type InvoiceSettings = {
   companyName: string;
   logoUrl?: string;
+  logoSignedUrl?: string;
   companyAddressLines: string[];
   companyPhone: string;
   companyEmail?: string;

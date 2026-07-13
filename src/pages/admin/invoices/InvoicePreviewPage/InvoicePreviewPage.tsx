@@ -1,18 +1,21 @@
 import { FC, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { CircularProgress } from "@mui/material";
-import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
+import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
-import { useJobCustomer } from "../../../../hooks/Jobs/useJobCustomer";
 import { JobInvoice } from "../../../../components/JobInvoice/JobInvoice";
+import { useJobCustomer } from "../../../../hooks/Jobs/useJobCustomer";
+import { useJobInvoice } from "../../../../hooks/Invoices/useJobInvoice";
+import { useInvoiceSettings } from "../../../../hooks/Invoices/useInvoiceSettings";
+
 import {
   FullScreenWrapper,
   TopBar,
   PdfContainer,
   ButtonDownload,
 } from "./InvoicePreviewPage.style";
-import { useJobInvoice } from "../../../../hooks/Invoices/useJobInvoice";
-import { useInvoiceSettings } from "../../../../hooks/Invoices/useInvoiceSettings";
+import { useFileUrl } from "../../../../hooks/Invoices/useFileUrl";
 
 type Params = {
   jobId: string;
@@ -40,17 +43,28 @@ export const InvoicePreviewPage: FC = () => {
     error: errorSettings,
   } = useInvoiceSettings();
 
+  const {
+    fileUrl: logoSignedUrl,
+    loading: loadingLogo,
+    error: errorLogo,
+  } = useFileUrl(settings?.logoUrl);
+
+  const fileName = useMemo(() => {
+    if (!invoice?.invoiceNumber) {
+      return "invoice.pdf";
+    }
+
+    return `${invoice.invoiceNumber}.pdf`;
+  }, [invoice?.invoiceNumber]);
+
   if (!jobId || !customerId) {
     return <ErrorMessage code="INTERNAL_ERROR" />;
   }
 
-  const loading = loadingInvoice || loadingJob || loadingSettings;
-  const error = errorInvoice ?? errorJob ?? errorSettings;
+  const loading =
+    loadingInvoice || loadingJob || loadingSettings || loadingLogo;
 
-  const fileName = useMemo(() => {
-    if (!invoice?.invoiceNumber) return "invoice.pdf";
-    return `${invoice.invoiceNumber}.pdf`;
-  }, [invoice?.invoiceNumber]);
+  const error = errorInvoice ?? errorJob ?? errorSettings ?? errorLogo;
 
   if (loading) {
     return (
@@ -64,23 +78,30 @@ export const InvoicePreviewPage: FC = () => {
     return <ErrorMessage code={error ?? "INTERNAL_ERROR"} />;
   }
 
-  const doc = (
+  const document = (
     <JobInvoice
       job={job}
       invoice={invoice}
       customer={job.customer}
       addresses={job.address}
-      settings={settings}
+      settings={{
+        ...settings,
+        logoSignedUrl,
+      }}
     />
   );
 
   return (
     <FullScreenWrapper>
       <TopBar>
-        <PDFDownloadLink document={doc} fileName={fileName}>
-          {({ loading }) => (
-            <ButtonDownload variant="contained" size="small">
-              {loading ? "Preparing..." : "Download PDF"}
+        <PDFDownloadLink document={document} fileName={fileName}>
+          {({ loading: preparingPdf }) => (
+            <ButtonDownload
+              variant="contained"
+              size="small"
+              disabled={preparingPdf}
+            >
+              {preparingPdf ? "Preparing..." : "Download PDF"}
             </ButtonDownload>
           )}
         </PDFDownloadLink>
@@ -88,7 +109,7 @@ export const InvoicePreviewPage: FC = () => {
 
       <PdfContainer>
         <PDFViewer width="100%" height="100%">
-          {doc}
+          {document}
         </PDFViewer>
       </PdfContainer>
     </FullScreenWrapper>

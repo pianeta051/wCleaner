@@ -1,5 +1,5 @@
 import { FC, useMemo } from "react";
-import { Document, Page, View, Text } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image } from "@react-pdf/renderer";
 import dayjs from "dayjs";
 import { Customer, Invoice, InvoiceSettings, Job } from "../../types/types";
 import {
@@ -49,9 +49,13 @@ export const JobInvoice: FC<JobInvoiceProps> = ({
     <Document>
       <Page size="A4" style={pageStyles.page}>
         <View style={headerStyles.container}>
-          <Text style={headerStyles.companyName}>
-            {settings.companyName || "Company Name"}
-          </Text>
+          {settings.logoSignedUrl ? (
+            <Image src={settings.logoSignedUrl} style={headerStyles.logo} />
+          ) : (
+            <Text style={headerStyles.companyName}>
+              {settings.companyName || "Company Name"}
+            </Text>
+          )}
 
           {settings.companyAddressLines?.map((line, index) => (
             <Text key={`${line}-${index}`} style={headerStyles.companyLine}>

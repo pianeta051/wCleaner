@@ -11,11 +11,13 @@ import {
   Typography,
 } from "@mui/material";
 import { InvoiceSettings } from "../../../../types/types";
-import { updateInvoiceSettings } from "../../../../services/setting";
+import { getFileUrl, uploadFile } from "../../../../services/files";
 import { useInvoiceSettings } from "../../../../hooks/Invoices/useInvoiceSettings";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useUpdateInvoiceSettings } from "../../../../hooks/Invoices/useUpdateInvoiceSettings";
+import { useFileUrl } from "../../../../hooks/Invoices/useFileUrl";
+import { LogoImageInput } from "../../../../components/LogoImageInput/LogoImageInput";
 
 type InvoiceSettingsFormValues = Omit<
   InvoiceSettings,
@@ -105,7 +107,6 @@ export const InvoiceSettingsPage: FC = () => {
   }
 
   const error = loadError ?? saveError;
-
   return (
     <>
       <Toolbar />
@@ -156,12 +157,17 @@ export const InvoiceSettingsPage: FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                label="Logo URL"
+              <LogoImageInput
+                label="Logo"
+                error={!!(formik.touched.logoUrl && formik.errors.logoUrl)}
+                helperText={
+                  formik.touched.logoUrl
+                    ? (formik.errors.logoUrl as string)
+                    : ""
+                }
+                name="logoUrl"
                 value={formik.values.logoUrl}
                 onChange={formik.handleChange}
-                name="logoUrl"
-                fullWidth
               />
             </Grid>
 
