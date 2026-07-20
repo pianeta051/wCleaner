@@ -1,6 +1,15 @@
 import { ChangeEventHandler, FC, useState } from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  FormHelperText,
+  Stack,
+  Typography,
+} from "@mui/material";
+
 import { useFileUrl } from "../../hooks/Invoices/useFileUrl";
-import { Alert, Box, Button, CircularProgress } from "@mui/material";
 import { uploadFile } from "../../services/files";
 
 type LogoImageInputProps = {
@@ -9,43 +18,70 @@ type LogoImageInputProps = {
   helperText?: string;
   name?: string;
   value?: string;
-  // target.value debe tener la key, que es lo que guardamos
-  onChange?: (event: { target: { value: string; name?: string } }) => void;
+  onChange?: (event: {
+    target: {
+      value: string;
+      name?: string;
+    };
+  }) => void;
 };
 
 export const LogoImageInput: FC<LogoImageInputProps> = ({
-  label,
-  error,
+  label = "Logo",
+  error = false,
   helperText,
   name,
   value,
   onChange,
 }) => {
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(false);
 
-  const changeHandler: ChangeEventHandler<HTMLInputElement> = (event) => {
+  const changeHandler: ChangeEventHandler<HTMLInputElement> = async (event) => {
     const file = event.target.files?.[0];
 
-    if (!file) return;
-    setUploading(true);
+    if (!file) {
+      return;
+    }
 
-    const path = `uploads/settings/invoice/logo-${Date.now()}-${file.name}`;
-    uploadFile(file, path)
-      .then((uploadedPath: string) => {
-        onChange?.({ target: { value: uploadedPath, name } });
-      })
-      .finally(() => setUploading(false));
+    try {
+      setUploading(true);
+      setUploadError(false);
+
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+      const path = `uploads/settings/invoice/logo-${Date.now()}-${safeFileName}`;
+
+      const uploadedPath = await uploadFile(file, path);
+
+      onChange?.({
+        target: {
+          name,
+          value: uploadedPath,
+        },
+      });
+    } catch {
+      setUploadError(true);
+    } finally {
+      setUploading(false);
+
+      // Permite volver a seleccionar el mismo archivo.
+      event.target.value = "";
+    }
   };
 
   return (
-    <>
-      <Button
-        variant="outlined"
+    <Stack spacing={1} alignItems="flex-start">
+      <Typography
         component="label"
-        disabled={uploading}
-        loading={uploading}
+        variant="body2"
+        color={error ? "error" : "text.secondary"}
       >
+        {label}
+      </Typography>
+
+      <Button variant="outlined" component="label" disabled={uploading}>
         {uploading ? "Uploading..." : "Select logo"}
+
         <input
           hidden
           type="file"
@@ -53,8 +89,17 @@ export const LogoImageInput: FC<LogoImageInputProps> = ({
           onChange={changeHandler}
         />
       </Button>
+
+      {helperText && (
+        <FormHelperText error={error}>{helperText}</FormHelperText>
+      )}
+
+      {uploadError && (
+        <Alert severity="error">Could not upload the logo.</Alert>
+      )}
+
       <LogoImagePreview s3Key={value} />
-    </>
+    </Stack>
   );
 };
 
@@ -74,15 +119,11 @@ const LogoImagePreview: FC<LogoImagePreviewProps> = ({ s3Key }) => {
   }
 
   if (loadingPreview) {
-    return <CircularProgress />;
+    return <CircularProgress size={24} />;
   }
 
-  if (errorPreview) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        Could not load image preview.
-      </Alert>
-    );
+  if (errorPreview || !previewUrl) {
+    return <Alert severity="error">Could not load image preview.</Alert>;
   }
 
   return (
@@ -92,11 +133,13 @@ const LogoImagePreview: FC<LogoImagePreviewProps> = ({ s3Key }) => {
       alt="Invoice logo preview"
       sx={{
         display: "block",
-        mt: 2,
+        mt: 1,
+        width: "100%",
         maxWidth: 180,
-        maxHeight: 90,
+        height: 90,
         objectFit: "contain",
-        border: "1px solid #ddd",
+        border: "1px solid",
+        borderColor: "divider",
         borderRadius: 1,
         p: 1,
       }}

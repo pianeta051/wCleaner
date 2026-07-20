@@ -1,4 +1,4 @@
-import { ChangeEventHandler, FC, useState } from "react";
+import { FC, useState } from "react";
 import {
   Alert,
   Box,
@@ -11,12 +11,11 @@ import {
   Typography,
 } from "@mui/material";
 import { InvoiceSettings } from "../../../../types/types";
-import { getFileUrl, uploadFile } from "../../../../services/files";
 import { useInvoiceSettings } from "../../../../hooks/Invoices/useInvoiceSettings";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useUpdateInvoiceSettings } from "../../../../hooks/Invoices/useUpdateInvoiceSettings";
-import { useFileUrl } from "../../../../hooks/Invoices/useFileUrl";
+
 import { LogoImageInput } from "../../../../components/LogoImageInput/LogoImageInput";
 
 type InvoiceSettingsFormValues = Omit<
@@ -159,15 +158,15 @@ export const InvoiceSettingsPage: FC = () => {
             <Grid size={{ xs: 12, md: 6 }}>
               <LogoImageInput
                 label="Logo"
+                name="logoUrl"
+                value={formik.values.logoUrl}
+                onChange={formik.handleChange}
                 error={!!(formik.touched.logoUrl && formik.errors.logoUrl)}
                 helperText={
                   formik.touched.logoUrl
                     ? (formik.errors.logoUrl as string)
                     : ""
                 }
-                name="logoUrl"
-                value={formik.values.logoUrl}
-                onChange={formik.handleChange}
               />
             </Grid>
 

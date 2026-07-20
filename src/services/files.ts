@@ -1,13 +1,15 @@
 import { getUrl, uploadData, remove } from "aws-amplify/storage";
 
 export const uploadFile = async (file: File, path: string): Promise<string> => {
-  await uploadData({
+  const uploadTask = uploadData({
     key: path,
     data: file,
     options: {
       accessLevel: "guest",
     },
   });
+
+  await uploadTask.result;
 
   return path;
 };
