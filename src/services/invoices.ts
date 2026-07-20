@@ -1,5 +1,4 @@
-import { API } from "aws-amplify";
-import { API_URL, localFetch } from "./dataApi";
+import { API_URL, get, localFetch, post, put, remove } from "./dataApi";
 import { Invoice, InvoiceWithAddress } from "../types/types";
 import { InvoiceFormValues } from "../components/InvoiceForm/InvoiceForm";
 import { isErrorResponse } from "./error";
@@ -7,36 +6,6 @@ import {
   SortableColumnId,
   SortDirection,
 } from "../pages/admin/invoices/InvoicesList/InvoicesList";
-
-// GENERAL FUNCTIONS
-const get = async (
-  path: string,
-  queryParams: { [param: string]: string | undefined | number | boolean } = {}
-) => {
-  if (API_URL) return localFetch("GET", path, { queryParams });
-  return API.get("wCleanerApi", path, {
-    queryStringParameters: queryParams,
-  });
-};
-
-const post = async (path: string, body: { [param: string]: unknown } = {}) => {
-  if (API_URL) return localFetch("POST", path, { body });
-  return API.post("wCleanerApi", path, {
-    body,
-  });
-};
-
-const remove = async (path: string) => {
-  if (API_URL) return localFetch("DELETE", path);
-  return API.del("wCleanerApi", path, {});
-};
-
-const put = async (path: string, body: { [param: string]: unknown } = {}) => {
-  if (API_URL) return localFetch("PUT", path, { body });
-  return API.put("wCleanerApi", path, {
-    body,
-  });
-};
 
 const isInvoice = (value: unknown): value is Invoice => {
   if (!value) {
@@ -100,7 +69,7 @@ export const generateJobInvoice = async (
   formValues: InvoiceFormValues & { invoiceNumber?: string }
 ): Promise<Invoice> => {
   try {
-    const payload: Record<string, unknown> = {
+    const payload = {
       ...formValues,
       date: formValues.date?.valueOf(),
       description: formValues.description.trim(),

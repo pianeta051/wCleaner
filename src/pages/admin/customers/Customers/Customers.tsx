@@ -44,10 +44,15 @@ export const Customers: FC = () => {
   const [outcodesFilter, setOutcodesFilter] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState("");
 
-  const { customers, error, loading, reload } = useCustomers(
-    searchInput,
-    outcodesFilter
-  );
+  const {
+    customers,
+    error,
+    loading,
+    moreToLoad,
+    loadMore,
+    loadingMore,
+    reload,
+  } = useCustomers(searchInput, outcodesFilter);
 
   const { outcodes, loading: loadingOutcodes } = useOutcodes();
   const theme = useTheme();
@@ -81,9 +86,10 @@ export const Customers: FC = () => {
                 <Grid size={12}>
                   <TopBarRow container spacing={2}>
                     <Grid
+                      mt={2}
                       size={{
                         xs: 12,
-                        md: 2,
+                        md: 3,
                       }}
                     >
                       {isMobile ? (
@@ -163,7 +169,28 @@ export const Customers: FC = () => {
                   ) : error ? (
                     <ErrorMessage code={error} />
                   ) : (
-                    <CustomersTable customers={customers} onReload={reload} />
+                    <>
+                      <CustomersTable customers={customers} onReload={reload} />
+
+                      {moreToLoad && (
+                        <Grid
+                          size={12}
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            mt: 2,
+                          }}
+                        >
+                          <NewCustomerButton
+                            variant="outlined"
+                            onClick={loadMore}
+                            disabled={loadingMore}
+                          >
+                            {loadingMore ? "Loading..." : "Load more"}
+                          </NewCustomerButton>
+                        </Grid>
+                      )}
+                    </>
                   )}
                 </Grid>
               </Grid>

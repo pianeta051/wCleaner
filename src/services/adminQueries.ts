@@ -1,5 +1,9 @@
-import { API, Auth } from "aws-amplify";
-
+import {
+  get as amplifyGet,
+  post as amplifyPost,
+  put as amplifyPut,
+} from "aws-amplify/api";
+import { getAccessToken } from "./authentication";
 export const ADMIN_QUERIES_URL = import.meta.env.VITE_ADMIN_QUERIES_URL as
   | string
   | undefined;
@@ -35,15 +39,18 @@ export const get = async (
   queryParams: { [param: string]: string } = {}
 ) => {
   if (ADMIN_QUERIES_URL) return localFetch("GET", path, { queryParams });
-  return API.get("AdminQueries", path, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `${(await Auth.currentSession())
-        .getAccessToken()
-        .getJwtToken()}`,
+  const restOperation = amplifyGet({
+    apiName: "AdminQueries",
+    path,
+    options: {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: (await getAccessToken()) ?? "",
+      },
+      queryParams,
     },
-    queryStringParameters: queryParams,
   });
+  return (await restOperation.response).body.json();
 };
 
 export const post = async (
@@ -51,15 +58,18 @@ export const post = async (
   body: { [param: string]: string } = {}
 ) => {
   if (ADMIN_QUERIES_URL) return localFetch("POST", path, { body });
-  return API.post("AdminQueries", path, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `${(await Auth.currentSession())
-        .getAccessToken()
-        .getJwtToken()}`,
+  const restOperation = amplifyPost({
+    apiName: "AdminQueries",
+    path,
+    options: {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: (await getAccessToken()) ?? "",
+      },
+      body,
     },
-    body,
   });
+  return (await restOperation.response).body.json();
 };
 
 export const put = async (
@@ -67,13 +77,16 @@ export const put = async (
   body: { [param: string]: string } = {}
 ) => {
   if (ADMIN_QUERIES_URL) return localFetch("PUT", path, { body });
-  return API.put("AdminQueries", path, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `${(await Auth.currentSession())
-        .getAccessToken()
-        .getJwtToken()}`,
+  const restOperation = amplifyPut({
+    apiName: "AdminQueries",
+    path,
+    options: {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: (await getAccessToken()) ?? "",
+      },
+      body,
     },
-    body,
   });
+  return (await restOperation.response).body.json();
 };

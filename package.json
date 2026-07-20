@@ -23,7 +23,7 @@
     "@types/react-big-calendar": "^1.8.11",
     "@types/react-color": "^3.0.12",
     "@types/react-dom": "^19.0.0",
-    "aws-amplify": "^5.3.12",
+    "aws-amplify": "6",
     "babel-jest": "^27.4.2",
     "babel-loader": "^8.2.3",
     "babel-plugin-named-asset-import": "^0.3.8",

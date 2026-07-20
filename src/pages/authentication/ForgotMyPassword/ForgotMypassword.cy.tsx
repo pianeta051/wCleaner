@@ -1,10 +1,10 @@
-import { Auth } from "aws-amplify";
+import * as Auth from "aws-amplify/auth";
 import { ForgotMyPassword } from "./ForgotMyPassword";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
 describe("ForgotMyPassword", () => {
   it("shows a success message when the operation is successful", () => {
-    cy.stub(Auth, "forgotPassword").resolves();
+    cy.stub(Auth, "resetPassword").resolves();
     cy.mount(
       <MemoryRouter initialEntries={["/forgotPassword"]}>
         <Routes>
@@ -18,7 +18,7 @@ describe("ForgotMyPassword", () => {
   });
 
   it("render an error message when the operation is not successful", () => {
-    cy.stub(Auth, "forgotPassword").rejects();
+    cy.stub(Auth, "resetPassword").rejects();
     cy.mount(
       <MemoryRouter initialEntries={["/forgotPassword"]}>
         <Routes>

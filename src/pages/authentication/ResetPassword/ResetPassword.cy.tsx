@@ -1,6 +1,6 @@
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { ResetPassword } from "./ResetPassword";
-import { Auth } from "aws-amplify";
+import * as Auth from "aws-amplify/auth";
 
 describe("ResetPassword", () => {
   it("display an error message when email parameter is not set", () => {
@@ -37,7 +37,7 @@ describe("ResetPassword", () => {
   });
 
   it("redirects to log in when reset password is successful", () => {
-    cy.stub(Auth, "forgotPasswordSubmit").resolves();
+    cy.stub(Auth, "confirmResetPassword").resolves();
     cy.mount(
       <MemoryRouter initialEntries={["/reset-password?email=a@p.co&code=1234"]}>
         <Routes>
@@ -51,7 +51,7 @@ describe("ResetPassword", () => {
   });
 
   it("renders an error when reset password has an error", () => {
-    cy.stub(Auth, "forgotPasswordSubmit").rejects();
+    cy.stub(Auth, "confirmResetPassword").rejects();
     cy.mount(
       <MemoryRouter initialEntries={["/reset-password?email=a@p.co&code=1234"]}>
         <Routes>
@@ -64,7 +64,7 @@ describe("ResetPassword", () => {
   });
 
   it("shows an error message when the user does not exist", () => {
-    cy.stub(Auth, "forgotPasswordSubmit").rejects({
+    cy.stub(Auth, "confirmResetPassword").rejects({
       code: "UserNotFoundException",
     });
 

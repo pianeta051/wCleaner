@@ -63,6 +63,19 @@ const mapInvoice = (item) => {
   };
 };
 
+const mapInvoiceSettings = (item) => ({
+  companyName: item?.company_name?.S ?? "",
+  logoUrl: item?.logo_url?.S ?? "",
+  companyAddressLines:
+    item?.company_address_lines?.L?.map((line) => line.S).filter(Boolean) ?? [],
+  companyPhone: item?.company_phone?.S ?? "",
+  companyEmail: item?.company_email?.S ?? "",
+  companyWebsite: item?.company_website?.S ?? "",
+  bankDetails: item?.bank_details?.S ?? "",
+  paymentInfo: item?.payment_info?.S ?? "",
+  footerNotes: item?.footer_notes?.S ?? "",
+});
+
 const mapJob = (jobFromDb) => {
   const startValue = jobFromDb.start?.N ? +jobFromDb.start.N : Date.now();
   const endValue = jobFromDb.end?.N ? +jobFromDb.end.N : startValue + 3600000;
@@ -133,6 +146,7 @@ module.exports = {
   mapCustomer,
   mapCustomerJobs,
   mapInvoice,
+  mapInvoiceSettings,
   mapJob,
   mapJobAddressUpdate,
   mapJobFromRequestBody,

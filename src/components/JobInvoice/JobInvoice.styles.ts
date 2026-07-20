@@ -16,6 +16,12 @@ export const headerStyles = StyleSheet.create({
   container: {
     marginBottom: 20,
   },
+  logo: {
+    width: 120,
+    height: 60,
+    objectFit: "contain",
+    marginBottom: 6,
+  },
   companyName: {
     fontSize: 20,
     fontWeight: "bold",

@@ -143,34 +143,38 @@ export const getCustomers = async (
   pagination: {
     nextToken?: string;
     disabled?: boolean;
+    limit?: number;
   }
 ): Promise<{
   customers: Customer[];
   nextToken?: string;
 }> => {
   const { searchInput, outcodeFilter } = filters;
-  const { nextToken, disabled } = pagination;
+  const { nextToken, disabled, limit = 10 } = pagination;
+
   const response = await get("/customers", {
     nextToken,
+    limit,
     search: searchInput,
     outcodeFilter: outcodeFilter?.join(","),
-    paginationDisabled: disabled,
+    paginationDisabled: disabled ? "true" : "false",
   });
 
-  const customers = response.customers as Customer[];
-  const responseToken = response.nextToken as string | undefined;
   if (!("customers" in response) || !Array.isArray(response.customers)) {
     throw "INTERNAL_ERROR";
   }
+
   for (const customer of response.customers) {
     if (!isCustomer(customer)) {
       throw "INTERNAL_ERROR";
     }
   }
 
-  return { customers, nextToken: responseToken };
+  return {
+    customers: response.customers as Customer[],
+    nextToken: response.nextToken as string | undefined,
+  };
 };
-
 export const getCustomer = async (slug: string): Promise<Customer> => {
   try {
     const response = await get(`/customers/${slug}`);

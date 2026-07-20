@@ -1,6 +1,7 @@
 import { FC } from "react";
-import { Button } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 
 type DownloadInvoiceButtonProps = {
   job: { id: string; customerId: string };
@@ -12,16 +13,18 @@ export const DownloadInvoiceButton: FC<DownloadInvoiceButtonProps> = ({
   const url = `/admin/customers/${job.customerId}/jobs/${job.id}/invoice`;
 
   return (
-    <Button
-      variant="outlined"
-      size="small"
-      startIcon={<DownloadIcon />}
-      component="a"
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Download invoice
-    </Button>
+    <Tooltip title="Download invoice">
+      <IconButton
+        color="primary"
+        component="a"
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        size="small"
+      >
+        <ReceiptLongIcon />
+        <DownloadIcon />
+      </IconButton>
+    </Tooltip>
   );
 };
