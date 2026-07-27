@@ -66,19 +66,27 @@ const isInvoice = (value: unknown): value is Invoice => {
 export const generateJobInvoice = async (
   customerId: string,
   jobId: string,
-  formValues: InvoiceFormValues & { invoiceNumber?: string }
+  formValues: InvoiceFormValues & {
+    invoiceNumber?: string;
+    firstInvoiceNumber?: number;
+  }
 ): Promise<Invoice> => {
   try {
     const payload = {
-      ...formValues,
       date: formValues.date?.valueOf(),
       description: formValues.description.trim(),
       addressId: formValues.addressId,
+      ...(formValues.invoiceNumber?.trim()
+        ? {
+            invoiceNumber: formValues.invoiceNumber.trim().toUpperCase(),
+          }
+        : {}),
+      ...(formValues.firstInvoiceNumber !== undefined
+        ? {
+            firstInvoiceNumber: formValues.firstInvoiceNumber,
+          }
+        : {}),
     };
-
-    if (formValues.invoiceNumber?.trim()) {
-      payload.invoiceNumber = formValues.invoiceNumber.trim().toUpperCase();
-    }
 
     const response = await post(
       `/customers/${customerId}/jobs/${jobId}/invoice`,
@@ -96,21 +104,54 @@ export const generateJobInvoice = async (
       const code = error.response.data?.error;
 
       if (status === 400) {
-        if (code === "INVOICE_ALREADY_EXISTS") throw "INVOICE_ALREADY_EXISTS";
-        if (code === "INVOICE_NUMBER_IN_USE") throw "INVOICE_NUMBER_IN_USE";
-        if (code === "INVOICE_NUMBER_OUT_OF_RANGE")
+        if (code === "FIRST_INVOICE_NUMBER_REQUIRED") {
+          throw "FIRST_INVOICE_NUMBER_REQUIRED";
+        }
+
+        if (code === "INVALID_FIRST_INVOICE_NUMBER") {
+          throw "INVALID_FIRST_INVOICE_NUMBER";
+        }
+
+        if (code === "INVOICE_ALREADY_EXISTS") {
+          throw "INVOICE_ALREADY_EXISTS";
+        }
+
+        if (code === "INVOICE_NUMBER_IN_USE") {
+          throw "INVOICE_NUMBER_IN_USE";
+        }
+
+        if (code === "INVOICE_NUMBER_OUT_OF_RANGE") {
           throw "INVOICE_NUMBER_OUT_OF_RANGE";
-        if (code === "INVALID_INVOICE_NUMBER") throw "INVALID_INVOICE_NUMBER";
-        if (code === "MISSING_INVOICE_DATE") throw "MISSING_INVOICE_DATE";
-        if (code === "MISSING_INVOICE_DESCRIPTION")
+        }
+
+        if (code === "INVALID_INVOICE_NUMBER") {
+          throw "INVALID_INVOICE_NUMBER";
+        }
+
+        if (code === "MISSING_INVOICE_DATE") {
+          throw "MISSING_INVOICE_DATE";
+        }
+
+        if (code === "MISSING_INVOICE_DESCRIPTION") {
           throw "MISSING_INVOICE_DESCRIPTION";
-        if (code === "MISSING_INVOICE_ADDRESS") throw "MISSING_INVOICE_ADDRESS";
+        }
+
+        if (code === "MISSING_INVOICE_ADDRESS") {
+          throw "MISSING_INVOICE_ADDRESS";
+        }
       }
 
-      if (status === 403) throw "UNAUTHORIZED";
-      if (status === 404 && code === "CUSTOMER_NOT_FOUND")
+      if (status === 403) {
+        throw "UNAUTHORIZED";
+      }
+
+      if (status === 404 && code === "CUSTOMER_NOT_FOUND") {
         throw "CUSTOMER_NOT_FOUND";
-      if (status === 404 && code === "JOB_NOT_FOUND") throw "JOB_NOT_FOUND";
+      }
+
+      if (status === 404 && code === "JOB_NOT_FOUND") {
+        throw "JOB_NOT_FOUND";
+      }
     }
 
     throw "INTERNAL_ERROR";

@@ -2,8 +2,7 @@ import useSWRMutation from "swr/mutation";
 
 import { extractErrorCode } from "../../services/error";
 import { generateJobInvoice } from "../../services/invoices";
-import { Invoice } from "../../types/types";
-import { InvoiceFormValues } from "../../components/InvoiceForm/InvoiceForm";
+import { GenerateInvoiceValues, Invoice } from "../../types/types";
 
 export type ErrorResponseShape = {
   response?: {
@@ -24,7 +23,7 @@ export const useGenerateInvoice = (customerId?: string, jobId?: string) => {
     Invoice,
     ErrorResponseShape,
     typeof key,
-    InvoiceFormValues
+    GenerateInvoiceValues
   >(
     key,
     async (_key, { arg }) => {
@@ -40,8 +39,10 @@ export const useGenerateInvoice = (customerId?: string, jobId?: string) => {
   );
 
   const formattedError =
-    error?.response?.data?.error ??
-    (error?.response?.status === 404 ? "INVOICE_NOT_FOUND" : undefined);
+    typeof error === "string"
+      ? error
+      : error?.response?.data?.error ??
+        (error?.response?.status === 404 ? "INVOICE_NOT_FOUND" : undefined);
 
   return {
     generate: trigger,

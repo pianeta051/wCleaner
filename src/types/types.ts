@@ -1,3 +1,5 @@
+import { InvoiceFormValues } from "../components/InvoiceForm/InvoiceForm";
+
 export type CompanySettings = {
   name: string;
   address: string;
@@ -127,4 +129,9 @@ export type JobType = {
   id: string;
   name: string;
   color: string;
+};
+
+export type GenerateInvoiceValues = InvoiceFormValues & {
+  invoiceNumber?: string;
+  firstInvoiceNumber?: number;
 };

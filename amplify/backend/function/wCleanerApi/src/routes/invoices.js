@@ -151,7 +151,8 @@ const setInvoicesRoutes = (app) => {
 
   app.post("/customers/:customerId/jobs/:jobId/invoice", async (req, res) => {
     const { customerId, jobId } = req.params;
-    const { date, description, addressId } = req.body;
+
+    const { date, description, addressId, firstInvoiceNumber } = req.body;
 
     try {
       const groups = req.authData?.groups || [];
@@ -181,34 +182,67 @@ const setInvoicesRoutes = (app) => {
         date,
         description,
         addressId,
+        firstInvoiceNumber,
       });
 
       res.json({ invoice });
     } catch (err) {
+      if (err === "FIRST_INVOICE_NUMBER_REQUIRED") {
+        res.status(400).json({
+          error: "FIRST_INVOICE_NUMBER_REQUIRED",
+        });
+        return;
+      }
+
+      if (err === "INVALID_FIRST_INVOICE_NUMBER") {
+        res.status(400).json({
+          error: "INVALID_FIRST_INVOICE_NUMBER",
+        });
+        return;
+      }
+
       if (err === "INVOICE_ALREADY_EXISTS") {
-        res.status(400).json({ error: "INVOICE_ALREADY_EXISTS" });
+        res.status(400).json({
+          error: "INVOICE_ALREADY_EXISTS",
+        });
         return;
       }
+
       if (err === "INVOICE_NUMBER_IN_USE") {
-        res.status(400).json({ error: "INVOICE_NUMBER_IN_USE" });
+        res.status(400).json({
+          error: "INVOICE_NUMBER_IN_USE",
+        });
         return;
       }
+
       if (err === "INVOICE_NUMBER_OUT_OF_RANGE") {
-        res.status(400).json({ error: "INVOICE_NUMBER_OUT_OF_RANGE" });
+        res.status(400).json({
+          error: "INVOICE_NUMBER_OUT_OF_RANGE",
+        });
         return;
       }
+
       if (err === "INVALID_INVOICE_NUMBER") {
-        res.status(400).json({ error: "INVALID_INVOICE_NUMBER" });
+        res.status(400).json({
+          error: "INVALID_INVOICE_NUMBER",
+        });
         return;
       }
+
       if (err === "CUSTOMER_NOT_FOUND") {
-        res.status(404).json({ error: "CUSTOMER_NOT_FOUND" });
+        res.status(404).json({
+          error: "CUSTOMER_NOT_FOUND",
+        });
         return;
       }
+
       if (err === "JOB_NOT_FOUND") {
-        res.status(404).json({ error: "JOB_NOT_FOUND" });
+        res.status(404).json({
+          error: "JOB_NOT_FOUND",
+        });
         return;
       }
+
       throw err;
     }
   });
