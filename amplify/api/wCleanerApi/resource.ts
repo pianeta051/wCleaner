@@ -235,6 +235,7 @@ export function defineWCleanerApiApi(backend: Backend) {
           resources: [
             wCleanerApiApi.arnForExecuteApi("*", "/customers"),
             wCleanerApiApi.arnForExecuteApi("*", "/customers/*"),
+          ],
         }),
       ],
     })
@@ -245,9 +246,7 @@ export function defineWCleanerApiApi(backend: Backend) {
       statements: [
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
-          resources: [
-            wCleanerApiApi.arnForExecuteApi("*", "*"),
-          ],
+          resources: [wCleanerApiApi.arnForExecuteApi("*", "*")],
         }),
       ],
     })
@@ -257,9 +256,7 @@ export function defineWCleanerApiApi(backend: Backend) {
       statements: [
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
-          resources: [
-            gen1wCleanerApiApi.arnForExecuteApi("*", "*"),
-          ],
+          resources: [gen1wCleanerApiApi.arnForExecuteApi("*", "*")],
         }),
       ],
     })
