@@ -297,6 +297,13 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+  if (code === "FIRST_INVOICE_NUMBER_REQUIRED") {
+    return (
+      <Alert severity="error">
+        <Typography>Insert First Invoice Number</Typography>
+      </Alert>
+    );
+  }
 
   if (code === "NO_INVOICES_FOUND") {
     return (

@@ -22,6 +22,7 @@ const uuid = require("node-uuid");
 const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = process.env.PAGE_SIZE ?? 50;
 const INVOICE_ALLOCATOR_PK = "invoice_allocator";
+const INVOICE_ALLOCATOR_CONFIG_SK = "minimum_invoice_number";
 
 const generateSlug = async (email, name) => {
   const nameSlug = name
@@ -1687,11 +1688,39 @@ const takeSmallestFreeNumber = async () => {
     freeSk: item.SK.S,
   };
 };
-const getNextInvoiceNumber = async () => {
+
+const getConfiguredFirstInvoiceNumber = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: INVOICE_ALLOCATOR_PK },
+      SK: { S: INVOICE_ALLOCATOR_CONFIG_SK },
+    },
+  };
+
+  const command = new GetItemCommand(params);
+  const result = await dynamoClient.send(command);
+
+  const value = result.Item?.first_invoice_number?.N;
+
+  if (value === undefined) {
+    return null;
+  }
+
+  const firstInvoiceNumber = Number(value);
+
+  return Number.isSafeInteger(firstInvoiceNumber) ? firstInvoiceNumber : null;
+};
+
+const getNextInvoiceNumber = async (firstInvoiceNumber) => {
   const smallestFree = await takeSmallestFreeNumber();
 
   if (smallestFree) {
-    return smallestFree.raw;
+    return {
+      raw: smallestFree.raw,
+      freeSk: smallestFree.freeSk,
+      shouldSaveFirstNumber: false,
+    };
   }
 
   const params = {
@@ -1711,11 +1740,51 @@ const getNextInvoiceNumber = async () => {
   const command = new QueryCommand(params);
   const result = await dynamoClient.send(command);
 
-  if (!result.Items || result.Items.length === 0) {
-    return 1;
+  if (result.Items?.length) {
+    return {
+      raw: Number(result.Items[0].invoice_number.N) + 1,
+      shouldSaveFirstNumber: false,
+    };
   }
 
-  return Number(result.Items[0].invoice_number.N) + 1;
+  const configuredFirstNumber = await getConfiguredFirstInvoiceNumber();
+
+  if (configuredFirstNumber !== null) {
+    return {
+      raw: configuredFirstNumber,
+      shouldSaveFirstNumber: false,
+    };
+  }
+
+  if (
+    firstInvoiceNumber === undefined ||
+    firstInvoiceNumber === null ||
+    firstInvoiceNumber === ""
+  ) {
+    throw "FIRST_INVOICE_NUMBER_REQUIRED";
+  }
+
+  const parsedFirstInvoiceNumber = Number(firstInvoiceNumber);
+
+  if (
+    !Number.isSafeInteger(parsedFirstInvoiceNumber) ||
+    parsedFirstInvoiceNumber < 1
+  ) {
+    throw "INVALID_FIRST_INVOICE_NUMBER";
+  }
+
+  const numberAlreadyInUse = await isInvoiceNumberInUse(
+    parsedFirstInvoiceNumber
+  );
+
+  if (numberAlreadyInUse) {
+    throw "INVOICE_NUMBER_IN_USE";
+  }
+
+  return {
+    raw: parsedFirstInvoiceNumber,
+    shouldSaveFirstNumber: true,
+  };
 };
 const getInvoice = async (customerId, jobId) => {
   const params = {
@@ -1993,44 +2062,71 @@ const createInvoice = async (customerId, jobId, invoiceData) => {
     throw "INVOICE_ALREADY_EXISTS";
   }
 
-  const next = await getNextInvoiceNumber();
+  const {
+    raw: next,
+    freeSk,
+    shouldSaveFirstNumber,
+  } = await getNextInvoiceNumber(invoiceData.firstInvoiceNumber);
+
+  const transactItems = [
+    {
+      Update: {
+        TableName: TABLE_NAME,
+        Key: {
+          PK: { S: `customer_${customerId}` },
+          SK: { S: `job_${jobId}` },
+        },
+        UpdateExpression:
+          "SET #ID = :description, #IN = :number, #JPIK = :jpik, #IA = :address_id, #IDT = :date",
+        ExpressionAttributeNames: {
+          "#IA": "invoice_address_id",
+          "#ID": "invoice_description",
+          "#IDT": "invoice_date",
+          "#IN": "invoice_number",
+          "#JPIK": "job_invoice_pk",
+        },
+        ExpressionAttributeValues: {
+          ":description": { S: invoiceData.description },
+          ":number": { N: String(next) },
+          ":jpik": { N: "1" },
+          ":address_id": { S: invoiceData.addressId },
+          ":date": { N: String(invoiceData.date) },
+        },
+        ConditionExpression: "attribute_not_exists(#IN)",
+      },
+    },
+  ];
+
+  if (freeSk) {
+    transactItems.push({
+      Delete: {
+        TableName: TABLE_NAME,
+        Key: {
+          PK: { S: INVOICE_ALLOCATOR_PK },
+          SK: { S: freeSk },
+        },
+      },
+    });
+  }
+
+  if (shouldSaveFirstNumber) {
+    transactItems.push({
+      Put: {
+        TableName: TABLE_NAME,
+        Item: {
+          PK: { S: INVOICE_ALLOCATOR_PK },
+          SK: { S: INVOICE_ALLOCATOR_CONFIG_SK },
+          first_invoice_number: { N: String(next) },
+          created_at: { N: String(Date.now()) },
+        },
+        ConditionExpression:
+          "attribute_not_exists(PK) AND attribute_not_exists(SK)",
+      },
+    });
+  }
 
   const params = {
-    TransactItems: [
-      {
-        Update: {
-          TableName: TABLE_NAME,
-          Key: {
-            PK: { S: `customer_${customerId}` },
-            SK: { S: `job_${jobId}` },
-          },
-          UpdateExpression:
-            "SET #ID = :description, #IN = :number, #JPIK = :jpik, #IA = :address_id, #IDT = :date",
-          ExpressionAttributeNames: {
-            "#IA": "invoice_address_id",
-            "#ID": "invoice_description",
-            "#IDT": "invoice_date",
-            "#IN": "invoice_number",
-            "#JPIK": "job_invoice_pk",
-          },
-          ExpressionAttributeValues: {
-            ":description": { S: invoiceData.description },
-            ":number": { N: String(next) },
-            ":jpik": { N: "1" },
-            ":address_id": { S: invoiceData.addressId },
-            ":date": { N: String(invoiceData.date) },
-          },
-        },
-      },
-      {
-        Delete: {
-          TableName: TABLE_NAME,
-          Key: {
-            ...makeFreeItemKey(next),
-          },
-        },
-      },
-    ],
+    TransactItems: transactItems,
   };
 
   const command = new TransactWriteItemsCommand(params);
