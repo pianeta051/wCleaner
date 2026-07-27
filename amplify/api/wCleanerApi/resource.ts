@@ -233,53 +233,32 @@ export function defineWCleanerApiApi(backend: Backend) {
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/customers"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/customers/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/customers"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/customers/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/customers"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/customers/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/customers"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/customers/*"),
-          ],
+            wCleanerApiApi.arnForExecuteApi("*", "/customers"),
+            wCleanerApiApi.arnForExecuteApi("*", "/customers/*"),
         }),
       ],
     })
   );
   // /customers - Admin group only
   backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "customersAdminPolicy", {
+    new Policy(stack, "adminPolicy", {
       statements: [
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/customers"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/customers/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/customers"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/customers/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/customers"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/customers/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/customers"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/customers/*"),
+            wCleanerApiApi.arnForExecuteApi("*", "*"),
           ],
         }),
       ],
     })
   );
   backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "gen1CustomersAdminPolicy", {
+    new Policy(stack, "gen1AdminPolicy", {
       statements: [
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/customers"),
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/customers/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/customers"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/customers/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/customers"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/customers/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/customers"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/customers/*"),
+            gen1wCleanerApiApi.arnForExecuteApi("*", "*"),
           ],
         }),
       ],
@@ -292,53 +271,8 @@ export function defineWCleanerApiApi(backend: Backend) {
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/customer-by-id"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/customer-by-id/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/customer-by-id"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/customer-by-id/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/customer-by-id"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/customer-by-id/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/customer-by-id"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/customer-by-id/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  // /customer-by-id - Admin group only
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "customerbyidAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/customer-by-id"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/customer-by-id/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/customer-by-id"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/customer-by-id/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/customer-by-id"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/customer-by-id/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/customer-by-id"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/customer-by-id/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "gen1CustomerbyidAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/customer-by-id"),
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/customer-by-id/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/customer-by-id"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/customer-by-id/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/customer-by-id"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/customer-by-id/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/customer-by-id"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/customer-by-id/*"),
+            wCleanerApiApi.arnForExecuteApi("*", "/customer-by-id"),
+            wCleanerApiApi.arnForExecuteApi("*", "/customer-by-id/*"),
           ],
         }),
       ],
@@ -351,53 +285,8 @@ export function defineWCleanerApiApi(backend: Backend) {
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/jobs"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/jobs/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/jobs"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/jobs/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/jobs"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/jobs/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/jobs"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/jobs/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  // /jobs - Admin group only
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "jobsAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/jobs"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/jobs/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/jobs"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/jobs/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/jobs"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/jobs/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/jobs"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/jobs/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "gen1JobsAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/jobs"),
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/jobs/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/jobs"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/jobs/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/jobs"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/jobs/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/jobs"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/jobs/*"),
+            wCleanerApiApi.arnForExecuteApi("*", "/jobs"),
+            wCleanerApiApi.arnForExecuteApi("*", "/jobs/*"),
           ],
         }),
       ],
@@ -410,53 +299,8 @@ export function defineWCleanerApiApi(backend: Backend) {
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/job-type"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/job-type/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/job-type"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/job-type/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/job-type"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/job-type/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/job-type"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/job-type/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  // /job-type - Admin group only
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "jobtypeAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/job-type"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/job-type/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/job-type"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/job-type/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/job-type"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/job-type/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/job-type"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/job-type/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "gen1JobtypeAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/job-type"),
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/job-type/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/job-type"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/job-type/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/job-type"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/job-type/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/job-type"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/job-type/*"),
+            wCleanerApiApi.arnForExecuteApi("*", "/job-type"),
+            wCleanerApiApi.arnForExecuteApi("*", "/job-type/*"),
           ],
         }),
       ],
@@ -469,53 +313,8 @@ export function defineWCleanerApiApi(backend: Backend) {
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/job-types"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/job-types/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/job-types"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/job-types/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/job-types"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/job-types/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/job-types"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/job-types/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  // /job-types - Admin group only
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "jobtypesAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/job-types"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/job-types/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/job-types"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/job-types/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/job-types"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/job-types/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/job-types"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/job-types/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "gen1JobtypesAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/job-types"),
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/job-types/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/job-types"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/job-types/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/job-types"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/job-types/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/job-types"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/job-types/*"),
+            wCleanerApiApi.arnForExecuteApi("*", "/job-types"),
+            wCleanerApiApi.arnForExecuteApi("*", "/job-types/*"),
           ],
         }),
       ],
@@ -528,53 +327,8 @@ export function defineWCleanerApiApi(backend: Backend) {
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/outcodes"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/outcodes/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/outcodes"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/outcodes/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/outcodes"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/outcodes/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/outcodes"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/outcodes/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  // /outcodes - Admin group only
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "outcodesAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/outcodes"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/outcodes/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/outcodes"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/outcodes/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/outcodes"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/outcodes/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/outcodes"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/outcodes/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "gen1OutcodesAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/outcodes"),
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/outcodes/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/outcodes"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/outcodes/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/outcodes"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/outcodes/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/outcodes"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/outcodes/*"),
+            wCleanerApiApi.arnForExecuteApi("*", "/outcodes"),
+            wCleanerApiApi.arnForExecuteApi("*", "/outcodes/*"),
           ],
         }),
       ],
@@ -587,53 +341,8 @@ export function defineWCleanerApiApi(backend: Backend) {
         new PolicyStatement({
           actions: ["execute-api:Invoke"],
           resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/invoices"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/invoices/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/invoices"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/invoices/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/invoices"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/invoices/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/invoices"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/invoices/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  // /invoices - Admin group only
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "invoicesAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            wCleanerApiApi.arnForExecuteApi("POST", "/invoices"),
-            wCleanerApiApi.arnForExecuteApi("POST", "/invoices/*"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/invoices"),
-            wCleanerApiApi.arnForExecuteApi("GET", "/invoices/*"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/invoices"),
-            wCleanerApiApi.arnForExecuteApi("PUT", "/invoices/*"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/invoices"),
-            wCleanerApiApi.arnForExecuteApi("DELETE", "/invoices/*"),
-          ],
-        }),
-      ],
-    })
-  );
-  backend.auth.resources.groups["Admin"].role.attachInlinePolicy(
-    new Policy(stack, "gen1InvoicesAdminPolicy", {
-      statements: [
-        new PolicyStatement({
-          actions: ["execute-api:Invoke"],
-          resources: [
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/invoices"),
-            gen1wCleanerApiApi.arnForExecuteApi("POST", "/invoices/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/invoices"),
-            gen1wCleanerApiApi.arnForExecuteApi("GET", "/invoices/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/invoices"),
-            gen1wCleanerApiApi.arnForExecuteApi("PUT", "/invoices/*"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/invoices"),
-            gen1wCleanerApiApi.arnForExecuteApi("DELETE", "/invoices/*"),
+            wCleanerApiApi.arnForExecuteApi("*", "/invoices"),
+            wCleanerApiApi.arnForExecuteApi("*", "/invoices/*"),
           ],
         }),
       ],
