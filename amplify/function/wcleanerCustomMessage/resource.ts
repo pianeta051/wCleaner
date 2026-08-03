@@ -6,7 +6,7 @@ const branchName = process.env.AWS_BRANCH ?? "sandbox";
 export const wcleanerCustomMessage = defineFunction({
   entry: "./index.js",
   name: `wcleanerCustomMessage-${branchName}`,
-  timeoutSeconds: 25,
+  timeoutSeconds: 50,
   memoryMB: 256,
   environment: {
     EMAILSUBJECT: "",
