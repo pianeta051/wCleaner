@@ -1,3 +1,104 @@
 {
-  "version": "1.4"
+  "auth": {
+    "user_pool_id": "eu-west-2_esmJv7nzp",
+    "aws_region": "eu-west-2",
+    "user_pool_client_id": "2nu8li324jimpkjih2c7q098rt",
+    "identity_pool_id": "eu-west-2:95c731ed-a8b2-48cd-beb1-b51d04a3614d",
+    "mfa_methods": [],
+    "standard_required_attributes": [
+      "email"
+    ],
+    "username_attributes": [
+      "email"
+    ],
+    "user_verification_types": [
+      "email"
+    ],
+    "groups": [
+      {
+        "Admin": {
+          "precedence": 0
+        }
+      }
+    ],
+    "mfa_configuration": "NONE",
+    "password_policy": {
+      "min_length": 8,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_symbols": true,
+      "require_uppercase": true
+    },
+    "unauthenticated_identities_enabled": true
+  },
+  "storage": {
+    "aws_region": "eu-west-2",
+    "bucket_name": "amplify-d2r3wluo8x2tk9-am-wcleanerstoragebeb54ampl-xekxewbmk4yv",
+    "buckets": [
+      {
+        "name": "wcleanerstoragebeb54-amplify-gen-2",
+        "bucket_name": "amplify-d2r3wluo8x2tk9-am-wcleanerstoragebeb54ampl-xekxewbmk4yv",
+        "aws_region": "eu-west-2",
+        "paths": {
+          "public/*": {
+            "authenticated": [
+              "write",
+              "get",
+              "list",
+              "delete"
+            ],
+            "groupsAdmin": [
+              "write",
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          "protected/*": {
+            "authenticated": [
+              "write",
+              "get",
+              "list",
+              "delete"
+            ],
+            "groupsAdmin": [
+              "write",
+              "get",
+              "list",
+              "delete"
+            ]
+          },
+          "private/*": {
+            "authenticated": [
+              "write",
+              "get",
+              "list",
+              "delete"
+            ],
+            "groupsAdmin": [
+              "write",
+              "get",
+              "list",
+              "delete"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "version": "1.4",
+  "custom": {
+    "API": {
+      "AdminQueries-amplify-gen-2": {
+        "endpoint": "https://6j9knqhfcf.execute-api.eu-west-2.amazonaws.com/prod",
+        "region": "eu-west-2",
+        "apiName": "AdminQueries-amplify-gen-2"
+      },
+      "wCleanerApi-amplify-gen-2": {
+        "endpoint": "https://9uag3ehac0.execute-api.eu-west-2.amazonaws.com/prod",
+        "region": "eu-west-2",
+        "apiName": "wCleanerApi-amplify-gen-2"
+      }
+    }
+  }
 }
