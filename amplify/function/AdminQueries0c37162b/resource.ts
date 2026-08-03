@@ -7,7 +7,7 @@ export const AdminQueries0c37162b = defineFunction({
   entry: "./index.js",
   name: `AdminQueries0c37162b-${branchName}`,
   timeoutSeconds: 25,
-  memoryMB: 128,
+  memoryMB: 256,
   environment: {
     GROUP: "Admin",
     USERPOOL: "eu-west-2_nlvZhm5ao",

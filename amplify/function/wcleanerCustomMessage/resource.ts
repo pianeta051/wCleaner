@@ -7,7 +7,7 @@ export const wcleanerCustomMessage = defineFunction({
   entry: "./index.js",
   name: `wcleanerCustomMessage-${branchName}`,
   timeoutSeconds: 25,
-  memoryMB: 128,
+  memoryMB: 256,
   environment: {
     EMAILSUBJECT: "",
     MODULES: "custom",

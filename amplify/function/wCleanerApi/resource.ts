@@ -7,7 +7,7 @@ export const wCleanerApi = defineFunction({
   entry: "./index.js",
   name: `wCleanerApi-${branchName}`,
   timeoutSeconds: 25,
-  memoryMB: 128,
+  memoryMB: 256,
   environment: {
     ENV: `${branchName}`,
     USER_POOL_ID: "eu-west-2_nlvZhm5ao",
