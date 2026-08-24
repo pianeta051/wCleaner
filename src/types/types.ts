@@ -118,6 +118,15 @@ export type Job = {
 export type JobFilters = {
   start?: string;
   end?: string;
+
+  assignedTo?: string;
+
+  jobTypeId?: string;
+
+  addressId?: string;
+
+  minPrice?: number;
+  maxPrice?: number;
 };
 
 export type JobsPaginationArguments = {

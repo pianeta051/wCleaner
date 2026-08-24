@@ -1201,7 +1201,7 @@ const editJobType = async (jobTypeId, updatedJobType) => {
 
 // GET CUSTOMER JOBS
 const getCustomerJobs = async (customerId, filters, order) => {
-  const { start, end, assignedTo } = filters;
+  const { start, end, assignedTo, jobTypeId, addressId } = filters;
   const DEFAULT_FILTER_EXPRESSION = "#PK = :pk AND begins_with(#SK, :sk)";
 
   const params = {
@@ -1228,6 +1228,22 @@ const getCustomerJobs = async (customerId, filters, order) => {
     params.ExpressionAttributeNames["#AT"] = "assigned_to";
     params.ExpressionAttributeValues[":assigned_to"] = { S: assignedTo };
     filterExpressions.push("#AT = :assigned_to");
+  }
+  if (jobTypeId) {
+    params.ExpressionAttributeNames["#JT"] = "job_type_id";
+    params.ExpressionAttributeValues[":job_type_id"] = {
+      S: jobTypeId,
+    };
+
+    filterExpressions.push("#JT = :job_type_id");
+  }
+  if (addressId) {
+    params.ExpressionAttributeNames["#AID"] = "address_id";
+    params.ExpressionAttributeValues[":address_id"] = {
+      S: addressId,
+    };
+
+    filterExpressions.push("#AID = :address_id");
   }
 
   if (start && end) {
