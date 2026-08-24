@@ -5,7 +5,7 @@ import { Wrapper, Title, HeaderRow } from "./CustomerJobs.style";
 import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
 import { EmptyJobs } from "../EmptyJobs/EmptyJobs";
 import { JobsTable } from "../JobTable/JobsTable";
-import { Customer } from "../../types/types";
+import { Customer, JobFilters } from "../../types/types";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
 import { useCustomerJobs } from "../../hooks/Jobs/useCustomerJobs";
 import AddIcon from "@mui/icons-material/Add";
@@ -14,6 +14,7 @@ import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { transformToFormValues } from "../../helpers/job";
 
+import { CustomerJobsFilters } from "../CustomerJobsFilters/CustomerJobsFilters";
 type CustomerJobsProps = {
   customer: Customer;
 };
@@ -24,13 +25,15 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [filters, setFilters] = useState<JobFilters>({});
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+
   const jobId = searchParams.get("jobId");
 
   const { customerJobs, error, loading, reload } = useCustomerJobs(
     customer.id,
-    {},
+    filters,
     "desc"
   );
 
@@ -81,7 +84,15 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     <Wrapper>
       <Title>Jobs</Title>
       {customerJobs.length === 0 ? (
-        <EmptyJobs onCreateNew={() => openHandler()} />
+        filters ? (
+          <CustomerJobsFilters
+            customerId={customer.id}
+            onChange={(filters) => setFilters(filters)}
+            onClear={() => setFilters({})}
+          />
+        ) : (
+          <EmptyJobs onCreateNew={() => openHandler()} />
+        )
       ) : (
         <>
           <HeaderRow>
@@ -94,6 +105,11 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
               New Job
             </Button>
           </HeaderRow>
+          <CustomerJobsFilters
+            customerId={customer.id}
+            onChange={(filters) => setFilters(filters)}
+            onClear={() => setFilters({})}
+          />
 
           <JobsTable
             jobs={displayedJobs}
@@ -127,7 +143,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
               ? {
                   ...transformToFormValues(editingJob),
                   assignedTo:
-                    editingJob.assignedTo?.sub ?? user?.getUsername() ?? "",
+                    editingJob.assignedTo?.sub ?? user?.username ?? "",
                 }
               : undefined
           }

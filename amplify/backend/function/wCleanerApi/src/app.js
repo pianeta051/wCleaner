@@ -278,6 +278,9 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   const id = req.params.customerId;
   const startParameter = req.query?.start;
   const endParameter = req.query?.end;
+  const assignedToParameter = req.query?.assignedTo;
+  const jobTypeIdParameter = req.query?.jobTypeId;
+  const addressIdParameter = req.query?.addressId;
   const { start, end } = mapJobTemporalFilters(startParameter, endParameter);
   const userSub = req.authData?.userSub;
   const groups = req.authData?.groups;
@@ -286,7 +289,13 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
 
   const { items } = await getCustomerJobs(
     id,
-    { start, end, assignedTo: isAdmin ? undefined : userSub },
+    {
+      start,
+      end,
+      assignedTo: isAdmin ? assignedToParameter : userSub,
+      jobTypeId: jobTypeIdParameter,
+      addressId: addressIdParameter,
+    },
     order
   );
   let jobs = items.map(mapCustomerJobs);
