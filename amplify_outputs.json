@@ -5,15 +5,9 @@
     "user_pool_client_id": "2nu8li324jimpkjih2c7q098rt",
     "identity_pool_id": "eu-west-2:95c731ed-a8b2-48cd-beb1-b51d04a3614d",
     "mfa_methods": [],
-    "standard_required_attributes": [
-      "email"
-    ],
-    "username_attributes": [
-      "email"
-    ],
-    "user_verification_types": [
-      "email"
-    ],
+    "standard_required_attributes": ["email"],
+    "username_attributes": ["email"],
+    "user_verification_types": ["email"],
     "groups": [
       {
         "Admin": {
@@ -41,46 +35,16 @@
         "aws_region": "eu-west-2",
         "paths": {
           "public/*": {
-            "authenticated": [
-              "write",
-              "get",
-              "list",
-              "delete"
-            ],
-            "groupsAdmin": [
-              "write",
-              "get",
-              "list",
-              "delete"
-            ]
+            "authenticated": ["write", "get", "list", "delete"],
+            "groupsAdmin": ["write", "get", "list", "delete"]
           },
           "protected/*": {
-            "authenticated": [
-              "write",
-              "get",
-              "list",
-              "delete"
-            ],
-            "groupsAdmin": [
-              "write",
-              "get",
-              "list",
-              "delete"
-            ]
+            "authenticated": ["write", "get", "list", "delete"],
+            "groupsAdmin": ["write", "get", "list", "delete"]
           },
           "private/*": {
-            "authenticated": [
-              "write",
-              "get",
-              "list",
-              "delete"
-            ],
-            "groupsAdmin": [
-              "write",
-              "get",
-              "list",
-              "delete"
-            ]
+            "authenticated": ["write", "get", "list", "delete"],
+            "groupsAdmin": ["write", "get", "list", "delete"]
           }
         }
       }

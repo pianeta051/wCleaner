@@ -1,6 +1,7 @@
 import { defineAuth } from "@aws-amplify/backend";
 import { CfnResource, Duration } from "aws-cdk-lib";
 import type { Backend } from "../backend";
+import { customMessage } from "./custom-message/resource";
 
 export const auth = defineAuth({
   loginWith: {
@@ -22,6 +23,9 @@ export const auth = defineAuth({
   groups: ["Admin"],
   multifactor: {
     mode: "OFF",
+  },
+  triggers: {
+    customMessage,
   },
 });
 
