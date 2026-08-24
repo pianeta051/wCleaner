@@ -1,5 +1,4 @@
 import { defineAuth } from "@aws-amplify/backend";
-import { wcleanerCustomMessage } from "../function/wcleanerCustomMessage/resource";
 import { CfnResource, Duration } from "aws-cdk-lib";
 import type { Backend } from "../backend";
 
@@ -21,9 +20,6 @@ export const auth = defineAuth({
     },
   },
   groups: ["Admin"],
-  triggers: {
-    customMessage: wcleanerCustomMessage,
-  },
   multifactor: {
     mode: "OFF",
   },

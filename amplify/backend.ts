@@ -5,7 +5,6 @@ import * as monitoring from "./custom/monitoring/resource";
 // import * as sesEmail from "./custom/sesEmail/resource";
 import * as AdminQueries0c37162b from "./function/AdminQueries0c37162b/resource";
 import * as wCleanerApiFunction from "./function/wCleanerApi/resource";
-import * as wcleanerCustomMessage from "./function/wcleanerCustomMessage/resource";
 import * as storageWcleaner from "./storage/wcleaner/resource";
 import * as storage from "./storage/resource";
 import { defineBackend } from "@aws-amplify/backend";
@@ -15,7 +14,6 @@ const backend = defineBackend({
   auth: auth.auth,
   AdminQueries0c37162b: AdminQueries0c37162b.AdminQueries0c37162b,
   wCleanerApi: wCleanerApiFunction.wCleanerApi,
-  wcleanerCustomMessage: wcleanerCustomMessage.wcleanerCustomMessage,
   storage: storage.storage,
 });
 
@@ -30,7 +28,6 @@ monitoring.defineMonitoring(backend);
 auth.applyEscapeHatches(backend);
 AdminQueries0c37162b.applyEscapeHatches(backend);
 wCleanerApiFunction.applyEscapeHatches(backend);
-wcleanerCustomMessage.applyEscapeHatches(backend);
 storage.applyEscapeHatches(backend);
 
 export function postRefactor() {
