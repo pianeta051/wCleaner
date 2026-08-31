@@ -133,11 +133,17 @@ const mapJobTypeFromRequestBody = (jobType) => ({
 });
 
 const mapJobTemporalFilters = (start, end) => {
-  const startNumeric = +new Date(start);
-  const endNumeric = +new Date(end);
+  const startDate = start ? dayjs(start) : null;
+  const endDate = end ? dayjs(end) : null;
+
   return {
-    start: startNumeric,
-    end: endNumeric,
+    start:
+      startDate && startDate.isValid()
+        ? startDate.startOf("day").valueOf()
+        : undefined,
+
+    end:
+      endDate && endDate.isValid() ? endDate.endOf("day").valueOf() : undefined,
   };
 };
 

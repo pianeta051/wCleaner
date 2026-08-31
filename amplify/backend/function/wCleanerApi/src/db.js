@@ -1201,7 +1201,8 @@ const editJobType = async (jobTypeId, updatedJobType) => {
 
 // GET CUSTOMER JOBS
 const getCustomerJobs = async (customerId, filters, order) => {
-  const { start, end, assignedTo, jobTypeId, addressId } = filters;
+  const { start, end, assignedTo, jobTypeId, addressId, minPrice, maxPrice } =
+    filters;
   const DEFAULT_FILTER_EXPRESSION = "#PK = :pk AND begins_with(#SK, :sk)";
 
   const params = {
@@ -1244,6 +1245,32 @@ const getCustomerJobs = async (customerId, filters, order) => {
     };
 
     filterExpressions.push("#AID = :address_id");
+  }
+
+  if (minPrice !== undefined && maxPrice !== undefined) {
+    params.ExpressionAttributeNames["#P"] = "price";
+    params.ExpressionAttributeValues[":min_price"] = {
+      N: minPrice.toString(),
+    };
+    params.ExpressionAttributeValues[":max_price"] = {
+      N: maxPrice.toString(),
+    };
+
+    filterExpressions.push("#P BETWEEN :min_price AND :max_price");
+  } else if (minPrice !== undefined) {
+    params.ExpressionAttributeNames["#P"] = "price";
+    params.ExpressionAttributeValues[":min_price"] = {
+      N: minPrice.toString(),
+    };
+
+    filterExpressions.push("#P >= :min_price");
+  } else if (maxPrice !== undefined) {
+    params.ExpressionAttributeNames["#P"] = "price";
+    params.ExpressionAttributeValues[":max_price"] = {
+      N: maxPrice.toString(),
+    };
+
+    filterExpressions.push("#P <= :max_price");
   }
 
   if (start && end) {
