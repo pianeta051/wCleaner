@@ -278,6 +278,8 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   const id = req.params.customerId;
   const startParameter = req.query?.start;
   const endParameter = req.query?.end;
+  const minPriceParameter = req.query?.minPrice;
+  const maxPriceParameter = req.query?.maxPrice;
   const assignedToParameter = req.query?.assignedTo;
   const jobTypeIdParameter = req.query?.jobTypeId;
   const addressIdParameter = req.query?.addressId;
@@ -287,11 +289,19 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   const order = req.query?.order;
   const isAdmin = groups.includes("Admin");
 
+  const minPrice =
+    minPriceParameter !== undefined ? Number(minPriceParameter) : undefined;
+
+  const maxPrice =
+    maxPriceParameter !== undefined ? Number(maxPriceParameter) : undefined;
+
   const { items } = await getCustomerJobs(
     id,
     {
       start,
       end,
+      minPrice,
+      maxPrice,
       assignedTo: isAdmin ? assignedToParameter : userSub,
       jobTypeId: jobTypeIdParameter,
       addressId: addressIdParameter,

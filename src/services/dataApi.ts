@@ -38,15 +38,28 @@ export const localFetch = async (
   return res.json();
 };
 
+const sanitizeQueryParams = (params: {
+  [param: string]: string | undefined | number | boolean;
+}): { [param: string]: string | number | boolean } => {
+  const newParams = { ...params } as {
+    [param: string]: string | number | boolean;
+  };
+  Object.keys(newParams).forEach(
+    (key) => newParams[key] === undefined && delete newParams[key]
+  );
+  return newParams;
+};
+
 export const get = async (
   path: string,
   queryParams: { [param: string]: string | undefined | number | boolean } = {}
 ) => {
-  if (API_URL) return localFetch("GET", path, { queryParams });
+  const sanitizedParams = sanitizeQueryParams(queryParams);
+  if (API_URL) return localFetch("GET", path, { queryParams: sanitizedParams });
   const restOperation = amplifyGet({
     apiName: "wCleanerApi",
     path,
-    options: { queryParams: queryParams as Record<string, string> },
+    options: { queryParams: sanitizedParams as Record<string, string> },
   });
   return (await restOperation.response).body.json();
 };

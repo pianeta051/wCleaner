@@ -36,7 +36,15 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     filters,
     "desc"
   );
+  const handleFiltersChange = (newFilters: JobFilters) => {
+    setFilters(newFilters);
+    setVisibleCount(PAGE_SIZE);
+  };
 
+  const handleClearFilters = () => {
+    setFilters({});
+    setVisibleCount(PAGE_SIZE);
+  };
   const closeHandler = () => {
     setModalOpen(false);
     setEditingJobId(null);
@@ -52,7 +60,7 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     setModalOpen(true);
   };
 
-  if (loading) {
+  if (loading && !customerJobs) {
     return (
       <>
         <Title>Jobs</Title>
@@ -83,34 +91,25 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   return (
     <Wrapper>
       <Title>Jobs</Title>
+      <HeaderRow>
+        <Button
+          startIcon={<AddIcon />}
+          onClick={() => openHandler()}
+          variant="contained"
+          sx={{ width: { xs: "100%", sm: "auto" } }}
+        >
+          New Job
+        </Button>
+      </HeaderRow>
+      <CustomerJobsFilters
+        customerId={customer.id}
+        onChange={handleFiltersChange}
+        onClear={handleClearFilters}
+      />
       {customerJobs.length === 0 ? (
-        filters ? (
-          <CustomerJobsFilters
-            customerId={customer.id}
-            onChange={(filters) => setFilters(filters)}
-            onClear={() => setFilters({})}
-          />
-        ) : (
-          <EmptyJobs onCreateNew={() => openHandler()} />
-        )
+        <EmptyJobs onCreateNew={() => openHandler()} />
       ) : (
         <>
-          <HeaderRow>
-            <Button
-              startIcon={<AddIcon />}
-              onClick={() => openHandler()}
-              variant="contained"
-              sx={{ width: { xs: "100%", sm: "auto" } }}
-            >
-              New Job
-            </Button>
-          </HeaderRow>
-          <CustomerJobsFilters
-            customerId={customer.id}
-            onChange={(filters) => setFilters(filters)}
-            onClear={() => setFilters({})}
-          />
-
           <JobsTable
             jobs={displayedJobs}
             jobIdSelected={jobId}
