@@ -7,11 +7,13 @@ import * as storageWcleaner from "./storage/wcleaner/resource";
 import * as storage from "./storage/resource";
 import { defineBackend } from "@aws-amplify/backend";
 import { Tags } from "aws-cdk-lib";
+import { wCleanerApiFunction } from "./functions/wCleanerApi/resource";
 
 const backend = defineBackend({
   auth: auth.auth,
   AdminQueries0c37162b: AdminQueries0c37162b.AdminQueries0c37162b,
   storage: storage.storage,
+  wCleanerApiFunction,
 });
 
 export type Backend = typeof backend;

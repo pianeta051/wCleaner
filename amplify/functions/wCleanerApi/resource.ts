@@ -1,5 +1,5 @@
 import { defineFunction } from "@aws-amplify/backend";
 
-export const myApiFunction = defineFunction({
+export const wCleanerApiFunction = defineFunction({
   name: "wCleanerApi",
 });
