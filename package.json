@@ -132,6 +132,7 @@
     "@faker-js/faker": "^8.2.0",
     "@testing-library/cypress": "^9.0.0",
     "@types/aws-lambda": "^8.10.92",
+    "@types/aws-serverless-express": "^3.3.10",
     "@types/jest": "^29.1.1",
     "@types/lodash": "^4.17.20",
     "@types/styled-components": "^5.1.26",
