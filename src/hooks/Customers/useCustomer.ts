@@ -1,4 +1,5 @@
 import useSWR from "swr";
+
 import { Customer } from "../../types/types";
 import { getCustomer } from "../../services/customers";
 import { extractErrorCode } from "../../services/error";

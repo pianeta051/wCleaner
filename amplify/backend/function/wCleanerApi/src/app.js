@@ -31,6 +31,7 @@ const {
   getJob,
   getJobs,
   getJobCustomers,
+  getCustomersForInvoices,
   getJobType,
   getJobTypes,
   getInvoices,

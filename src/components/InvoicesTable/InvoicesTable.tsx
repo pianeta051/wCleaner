@@ -28,8 +28,11 @@ import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
 import dayjs from "dayjs";
 import { Link as RouterLink } from "react-router-dom";
+
 import { InvoiceWithAddress } from "../../types/types";
 import { theme } from "../../theme";
 import { TableCellWrap } from "../CustomersTable/CustomerTable.style";
@@ -46,8 +49,7 @@ import {
 } from "../../pages/admin/invoices/InvoicesList/InvoicesList";
 import { InvoicePaidToggle } from "../InvoicePaidToogle/InvoicePaidToogle";
 import { UpdateInvoiceModal } from "../UpdateInvoiceModal/UpdateInvoiceModal";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditIcon from "@mui/icons-material/Edit";
+
 type InvoicesTableProps = {
   invoices: InvoiceWithAddress[];
   onReload?: () => void;
@@ -81,12 +83,38 @@ type MobileSortOption =
   | "lowestInvoiceNumber";
 
 const COLUMN_HEADERS: ColumnHeader[] = [
-  { label: "Invoice #", align: "left", id: "invoiceNumber", sortable: true },
-  { label: "Date", align: "left", id: "invoiceDate", sortable: true },
-  { label: "Address", align: "left", id: "address" },
-  { label: "Description", align: "left", id: "description" },
-  { label: "Paid", align: "left", id: "paid" },
-  { label: "Actions", align: "right", id: "actions" },
+  {
+    label: "Invoice #",
+    align: "left",
+    id: "invoiceNumber",
+    sortable: true,
+  },
+  {
+    label: "Date",
+    align: "left",
+    id: "invoiceDate",
+    sortable: true,
+  },
+  {
+    label: "Address",
+    align: "left",
+    id: "address",
+  },
+  {
+    label: "Description",
+    align: "left",
+    id: "description",
+  },
+  {
+    label: "Paid",
+    align: "left",
+    id: "paid",
+  },
+  {
+    label: "Actions",
+    align: "right",
+    id: "actions",
+  },
 ];
 
 export const InvoicesTable: FC<InvoicesTableProps> = ({
@@ -96,6 +124,7 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
   onReload,
 }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [editingInvoice, setEditingInvoice] =
     useState<InvoiceWithAddress | null>(null);
 
@@ -105,15 +134,26 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
     value && value.trim() ? value : "—";
 
   const getCustomerId = (invoice: InvoiceWithAddress) =>
-    invoice.customerId ?? invoice.address?.customerId;
+    invoice.customerId ?? invoice.address?.customerId ?? invoice.customer?.id;
+
+  const getCustomerSlug = (invoice: InvoiceWithAddress) =>
+    invoice.customer?.slug;
 
   const formatAddressLine = (invoice: InvoiceWithAddress) => {
     const address = invoice.address?.address?.trim();
     const postcode = invoice.address?.postcode?.trim();
 
-    if (address && postcode) return `${address} ${postcode}`;
-    if (address) return address;
-    if (postcode) return postcode;
+    if (address && postcode) {
+      return `${address} ${postcode}`;
+    }
+
+    if (address) {
+      return address;
+    }
+
+    if (postcode) {
+      return postcode;
+    }
 
     return "—";
   };
@@ -127,6 +167,7 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
         sortBy: columnId,
         direction: sorting.direction === "asc" ? "desc" : "asc",
       });
+
       return;
     }
 
@@ -159,19 +200,38 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
 
     switch (option) {
       case "newest":
-        setSorting({ sortBy: "invoiceDate", direction: "desc" });
+        setSorting({
+          sortBy: "invoiceDate",
+          direction: "desc",
+        });
         break;
+
       case "oldest":
-        setSorting({ sortBy: "invoiceDate", direction: "asc" });
+        setSorting({
+          sortBy: "invoiceDate",
+          direction: "asc",
+        });
         break;
+
       case "highestInvoiceNumber":
-        setSorting({ sortBy: "invoiceNumber", direction: "desc" });
+        setSorting({
+          sortBy: "invoiceNumber",
+          direction: "desc",
+        });
         break;
+
       case "lowestInvoiceNumber":
-        setSorting({ sortBy: "invoiceNumber", direction: "asc" });
+        setSorting({
+          sortBy: "invoiceNumber",
+          direction: "asc",
+        });
         break;
     }
   };
+
+  const editingCustomerId = editingInvoice
+    ? getCustomerId(editingInvoice)
+    : undefined;
 
   if (invoices.length === 0) {
     return <Alert severity="warning">No invoices found</Alert>;
@@ -183,6 +243,7 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
         <Stack spacing={2}>
           <FormControl fullWidth size="small">
             <InputLabel id="mobile-invoice-sort-label">Sort by</InputLabel>
+
             <Select
               labelId="mobile-invoice-sort-label"
               value={getMobileSortOptionValue()}
@@ -190,10 +251,13 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
               onChange={handleMobileSortChange}
             >
               <MenuItem value="newest">Newest</MenuItem>
+
               <MenuItem value="oldest">Oldest</MenuItem>
+
               <MenuItem value="highestInvoiceNumber">
                 Highest invoice number
               </MenuItem>
+
               <MenuItem value="lowestInvoiceNumber">
                 Lowest invoice number
               </MenuItem>
@@ -202,9 +266,17 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
 
           {invoices.map((invoice) => {
             const customerId = getCustomerId(invoice);
+            const customerSlug = getCustomerSlug(invoice);
+
+            const jobUrl = customerSlug
+              ? `/admin/customers/${customerSlug}/jobs/${invoice.jobId}`
+              : undefined;
 
             return (
-              <InvoiceCard key={invoice.jobId} variant="outlined">
+              <InvoiceCard
+                key={`${customerId ?? "unknown"}-${invoice.jobId}`}
+                variant="outlined"
+              >
                 <CardContent sx={{ pb: 1.5 }}>
                   <Stack
                     direction="row"
@@ -219,6 +291,7 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                       minWidth={0}
                     >
                       <ReceiptLongOutlinedIcon fontSize="small" />
+
                       <Typography
                         variant="h6"
                         fontWeight={800}
@@ -234,6 +307,7 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
 
                   <Stack direction="row" gap={1.25} sx={{ mt: 1.5 }}>
                     <CalendarMonthOutlinedIcon fontSize="small" />
+
                     <Typography variant="body2" color="text.secondary">
                       {formatDate(invoice.date)}
                     </Typography>
@@ -243,10 +317,12 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
 
                   <Stack direction="row" gap={1.25}>
                     <HomeWorkOutlinedIcon fontSize="small" />
+
                     <Stack spacing={0.25}>
                       <Typography variant="caption" color="text.secondary">
                         Address name
                       </Typography>
+
                       <Typography variant="body2" fontWeight={600}>
                         {formatAddressName(invoice)}
                       </Typography>
@@ -258,6 +334,7 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                       >
                         Address
                       </Typography>
+
                       <Typography variant="body2" color="text.secondary">
                         {formatAddressLine(invoice)}
                       </Typography>
@@ -268,10 +345,12 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
 
                   <Stack direction="row" gap={1.25}>
                     <DescriptionOutlinedIcon fontSize="small" />
+
                     <Stack spacing={0.25}>
                       <Typography variant="caption" color="text.secondary">
                         Description
                       </Typography>
+
                       <Typography variant="body2">
                         {formatMaybe(invoice.description)}
                       </Typography>
@@ -287,28 +366,35 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                       paid={invoice.paid}
                       onUpdated={onReload}
                     />
-                  ) : null}
+                  ) : (
+                    "—"
+                  )}
                 </CardContent>
 
                 <InvoiceCardActions>
-                  {customerId ? (
+                  {customerId && customerSlug && (
                     <DownloadInvoiceButton
                       job={{
                         id: invoice.jobId,
                         customerId,
                       }}
+                      customerSlug={customerSlug}
                     />
-                  ) : null}
-                  <Tooltip title="View job">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      component={RouterLink}
-                      to={`/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}`}
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                  </Tooltip>
+                  )}
+
+                  {jobUrl && (
+                    <Tooltip title="View job">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        component={RouterLink}
+                        to={jobUrl}
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+
                   <Tooltip title="Edit invoice">
                     <IconButton
                       color="primary"
@@ -326,7 +412,11 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
       ) : (
         <TableContainer
           component={Paper}
-          sx={{ minWidth: 950, maxHeight: 600, overflowX: "auto" }}
+          sx={{
+            minWidth: 950,
+            maxHeight: 600,
+            overflowX: "auto",
+          }}
         >
           <Table stickyHeader aria-label="invoices table">
             <TableHead>
@@ -354,10 +444,15 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
             <TableBody>
               {invoices.map((invoice, index) => {
                 const customerId = getCustomerId(invoice);
+                const customerSlug = getCustomerSlug(invoice);
+
+                const jobUrl = customerSlug
+                  ? `/admin/customers/${customerSlug}/jobs/${invoice.jobId}`
+                  : undefined;
 
                 return (
                   <TableRow
-                    key={invoice.jobId}
+                    key={`${customerId ?? "unknown"}-${invoice.jobId}`}
                     sx={{
                       backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#ffffff",
                     }}
@@ -375,6 +470,7 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                         <Typography variant="body2" fontWeight={700}>
                           {formatAddressName(invoice)}
                         </Typography>
+
                         <Typography variant="body2" color="text.secondary">
                           {formatAddressLine(invoice)}
                         </Typography>
@@ -399,23 +495,28 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
                     </TableCell>
 
                     <TableCell align="right">
-                      {customerId ? (
+                      {customerId && customerSlug && (
                         <DownloadInvoiceButton
                           job={{
                             id: invoice.jobId,
                             customerId,
                           }}
+                          customerSlug={customerSlug}
                         />
-                      ) : null}
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        sx={{ marginLeft: "5px" }}
-                        to={`/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}`}
-                        component={RouterLink}
-                      >
-                        See job
-                      </Button>
+                      )}
+
+                      {jobUrl && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          sx={{ marginLeft: "5px" }}
+                          to={jobUrl}
+                          component={RouterLink}
+                        >
+                          See job
+                        </Button>
+                      )}
+
                       <Tooltip title="Edit invoice">
                         <IconButton
                           color="primary"
@@ -433,12 +534,13 @@ export const InvoicesTable: FC<InvoicesTableProps> = ({
           </Table>
         </TableContainer>
       )}
-      {editingInvoice && (
+
+      {editingInvoice && editingCustomerId && (
         <UpdateInvoiceModal
-          open={!!editingInvoice}
+          open
           invoice={editingInvoice}
           onClose={() => setEditingInvoice(null)}
-          customerId={editingInvoice.customerId as string}
+          customerId={editingCustomerId}
           jobId={editingInvoice.jobId}
           onEdit={onReload}
         />

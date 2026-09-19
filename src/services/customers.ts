@@ -23,19 +23,53 @@ export const isCustomer = (value: unknown): value is Customer => {
 export const isCustomerAddress = (
   value: unknown
 ): value is CustomerCleaningAddress => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const typedValue = value as CustomerCleaningAddress;
+
   if (!typedValue.id || typeof typedValue.id !== "string") {
     return false;
   }
+
   if (!typedValue.name || typeof typedValue.name !== "string") {
     return false;
   }
+
   if (!typedValue.address || typeof typedValue.address !== "string") {
     return false;
   }
+
   if (!typedValue.postcode || typeof typedValue.postcode !== "string") {
     return false;
   }
+
+  if (
+    typedValue.frequency !== undefined &&
+    (typeof typedValue.frequency !== "object" ||
+      typedValue.frequency === null ||
+      typeof typedValue.frequency.value !== "number" ||
+      typedValue.frequency.value <= 0 ||
+      !["weeks", "months"].includes(typedValue.frequency.unit))
+  ) {
+    return false;
+  }
+
+  if (
+    typedValue.lastCleaningDate !== undefined &&
+    typeof typedValue.lastCleaningDate !== "number"
+  ) {
+    return false;
+  }
+
+  if (
+    typedValue.nextDueDate !== undefined &&
+    typeof typedValue.nextDueDate !== "number"
+  ) {
+    return false;
+  }
+
   return true;
 };
 

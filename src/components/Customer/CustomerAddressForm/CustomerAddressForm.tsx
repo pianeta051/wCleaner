@@ -1,12 +1,18 @@
 import { FC } from "react";
-import { Grid } from "@mui/material";
+import { FormControl, Grid, InputLabel, MenuItem, Select } from "@mui/material";
 import { Field } from "../CustomerForm/CustomerForm.style";
+
+export type CleaningFrequencyUnit = "weeks" | "months";
 
 export type CustomerAddressFormValues = {
   name: string;
   address: string;
   postcode: string;
   id?: string;
+  frequency?: {
+    value: number;
+    unit: CleaningFrequencyUnit;
+  };
 };
 
 type CustomerAddressFormProps = {
@@ -17,6 +23,7 @@ type CustomerAddressFormProps = {
     name?: string;
     address?: string;
     postcode?: string;
+    frequency?: string;
   };
   disabled?: boolean;
 };
@@ -38,6 +45,45 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
     });
   };
 
+  const frequencyValueChangeHandler: React.ChangeEventHandler<
+    HTMLInputElement
+  > = (event) => {
+    const rawValue = event.target.value;
+
+    if (rawValue === "") {
+      onChange?.({
+        ...(value ?? { name: "", address: "", postcode: "" }),
+        frequency: undefined,
+      });
+
+      return;
+    }
+
+    const frequencyValue = Number(rawValue);
+
+    onChange?.({
+      ...(value ?? { name: "", address: "", postcode: "" }),
+      frequency: {
+        value: frequencyValue,
+        unit: value?.frequency?.unit ?? "weeks",
+      },
+    });
+  };
+
+  const frequencyUnitChangeHandler = (unit: CleaningFrequencyUnit) => {
+    if (!value?.frequency) {
+      return;
+    }
+
+    onChange?.({
+      ...value,
+      frequency: {
+        ...value.frequency,
+        unit,
+      },
+    });
+  };
+
   return (
     <Grid container spacing={2}>
       <Grid size={12}>
@@ -54,6 +100,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           helperText={errors?.name}
         />
       </Grid>
+
       <Grid size={12}>
         <Field
           name="address"
@@ -68,6 +115,7 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           helperText={errors?.address}
         />
       </Grid>
+
       <Grid size={12}>
         <Field
           name="postcode"
@@ -81,6 +129,50 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
           error={!!errors?.postcode}
           helperText={errors?.postcode}
         />
+      </Grid>
+
+      <Grid size={12}>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Field
+              name="frequencyValue"
+              label="Cleaning frequency"
+              type="number"
+              fullWidth
+              disabled={disabled}
+              value={value?.frequency?.value ?? ""}
+              onChange={frequencyValueChangeHandler}
+              onBlur={onBlur}
+              error={!!errors?.frequency}
+              helperText={errors?.frequency}
+              slotProps={{
+                htmlInput: {
+                  min: 1,
+                  step: 1,
+                },
+              }}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormControl fullWidth disabled={disabled || !value?.frequency}>
+              <InputLabel>Frequency unit</InputLabel>
+
+              <Select
+                label="Frequency unit"
+                value={value?.frequency?.unit ?? "weeks"}
+                onChange={(event) =>
+                  frequencyUnitChangeHandler(
+                    event.target.value as CleaningFrequencyUnit
+                  )
+                }
+              >
+                <MenuItem value="weeks">Weeks</MenuItem>
+                <MenuItem value="months">Months</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
       </Grid>
     </Grid>
   );

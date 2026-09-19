@@ -4,13 +4,18 @@ import DownloadIcon from "@mui/icons-material/Download";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 
 type DownloadInvoiceButtonProps = {
-  job: { id: string; customerId: string };
+  job: {
+    id: string;
+    customerId: string;
+  };
+  customerSlug: string;
 };
 
 export const DownloadInvoiceButton: FC<DownloadInvoiceButtonProps> = ({
   job,
+  customerSlug,
 }) => {
-  const url = `/admin/customers/${job.customerId}/jobs/${job.id}/invoice`;
+  const url = `/admin/customers/${customerSlug}/jobs/${job.id}/invoice`;
 
   return (
     <Tooltip title="Download invoice">

@@ -120,6 +120,7 @@ export const JobInfoDisplay: FC<JobInfoDisplayProps> = ({ job, onEdit }) => {
             >
               <InvoiceActionButtons
                 job={job}
+                customerSlug={job.customer?.slug ?? ""}
                 onGenerated={handleGenerated}
                 loading={loading}
                 error={error}

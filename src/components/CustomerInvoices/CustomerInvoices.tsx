@@ -12,17 +12,17 @@ import {
   Typography,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-
 import { Link as RouterLink } from "react-router-dom";
-
 import dayjs from "dayjs";
+
 import { useCustomerInvoices } from "../../hooks/Invoices/useCustomerInvoices";
 
 type Props = {
   customerId: string;
+  customerSlug: string;
 };
 
-export const CustomerInvoices: FC<Props> = ({ customerId }) => {
+export const CustomerInvoices: FC<Props> = ({ customerId, customerSlug }) => {
   const { invoices, loading, error, moreToLoad, loadMore, loadingMore } =
     useCustomerInvoices(customerId);
 
@@ -46,7 +46,9 @@ export const CustomerInvoices: FC<Props> = ({ customerId }) => {
         <>
           <List>
             {invoices.map((invoice) => {
-              const invoiceUrl = `/admin/customers/${invoice.customerId}/jobs/${invoice.jobId}/invoice`;
+              const invoiceUrl =
+                `/admin/customers/${customerSlug}` +
+                `/jobs/${invoice.jobId}/invoice`;
 
               return (
                 <ListItem
@@ -81,6 +83,7 @@ export const CustomerInvoices: FC<Props> = ({ customerId }) => {
               );
             })}
           </List>
+
           {moreToLoad && (
             <Button variant="outlined" onClick={loadMore} loading={loadingMore}>
               Load more

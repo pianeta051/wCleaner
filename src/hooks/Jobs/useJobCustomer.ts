@@ -1,4 +1,5 @@
 import useSWR from "swr";
+
 import { Job } from "../../types/types";
 import { getJob } from "../../services/jobs";
 import { extractErrorCode } from "../../services/error";

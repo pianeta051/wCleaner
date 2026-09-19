@@ -70,7 +70,7 @@ export const JobsTable: FC<Props> = ({
     job.jobTypeId ? jobTypeGetter(job.jobTypeId)?.name ?? "None" : "None";
 
   const jobUrl = (jobId: string) =>
-    `/admin/customers/${customer.id}/jobs/${jobId}`;
+    `/admin/customers/${customer.slug}/jobs/${jobId}`;
 
   const formatPrice = (price?: number | string | null) => {
     if (price === null || price === undefined || price === "") return "—";

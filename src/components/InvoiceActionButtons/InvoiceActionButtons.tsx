@@ -10,6 +10,7 @@ import { ErrorCode } from "../../services/error";
 
 type InvoiceActionButtonsProps = {
   job: Job;
+  customerSlug: string;
   existing: boolean;
   loading: boolean;
   error: ErrorCode | null;
@@ -18,6 +19,7 @@ type InvoiceActionButtonsProps = {
 
 export const InvoiceActionButtons: FC<InvoiceActionButtonsProps> = ({
   job,
+  customerSlug,
   existing,
   loading,
   error,
@@ -39,6 +41,7 @@ export const InvoiceActionButtons: FC<InvoiceActionButtonsProps> = ({
   if (error && error !== "INVOICE_NOT_FOUND") {
     return <ErrorMessage code={error} />;
   }
+
   if (loading && !hasLoaded) {
     return <CircularProgress />;
   }
@@ -49,9 +52,10 @@ export const InvoiceActionButtons: FC<InvoiceActionButtonsProps> = ({
         <GenerateInvoiceButton job={job} onGenerated={onGenerated} />
       ) : (
         <>
-          <DownloadInvoiceButton job={job} />
+          <DownloadInvoiceButton job={job} customerSlug={customerSlug} />
+
           <DeleteInvoiceButton
-            customerId={job.customerId as string}
+            customerId={job.customerId}
             jobId={job.id}
             onDeleted={onGenerated}
           />
