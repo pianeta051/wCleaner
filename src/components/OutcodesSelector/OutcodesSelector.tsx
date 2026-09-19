@@ -1,6 +1,7 @@
-import { Box, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import Autocomplete from "@mui/material/Autocomplete";
 import React, { FC, useMemo } from "react";
+
 import { AutocompleteWrap } from "./OutcodesSelector.style";
 
 type OutcodesSelectorProps = {
@@ -32,14 +33,13 @@ export const OutcodesSelector: FC<OutcodesSelectorProps> = ({
         options={sortedOutcodes}
         value={selected}
         onChange={autocompleteChangeHandler}
+        fullWidth
         renderInput={(params) => (
-          <Box display="flex" flexDirection="column" gap={1}>
-            <TextField
-              {...params}
-              label="Search UK Postcode"
-              variant="outlined"
-            />
-          </Box>
+          <TextField
+            {...params}
+            label="Search UK Postcode"
+            variant="outlined"
+          />
         )}
       />
     </AutocompleteWrap>

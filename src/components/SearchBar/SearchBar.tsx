@@ -1,14 +1,16 @@
-import {
-  FormControl,
-  InputAdornment,
-  OutlinedInput,
-  IconButton,
-  InputLabel,
-} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+
 import { FC, useState } from "react";
+
 import { Form } from "../Form/Form";
-import { SearchBox } from "./SearchBar.style";
+
+import {
+  SearchBox,
+  SearchControl,
+  SearchInput,
+  SearchAdornment,
+  SearchButton,
+} from "./SearchBar.style";
 
 type SearchBarProps = {
   onSearch: (searchTerm: string) => void;
@@ -21,43 +23,39 @@ export const SearchBar: FC<SearchBarProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState(initialValue);
 
-  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (event) =>
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     setSearchTerm(event.target.value);
+  };
 
   const handleSubmit = () => {
-    onSearch(searchTerm);
+    onSearch(searchTerm.trim());
   };
 
   return (
     <Form onSubmit={handleSubmit}>
       <SearchBox>
-        <FormControl variant="outlined" sx={{ width: "100%" }}>
-          <InputLabel htmlFor="search-customer">Search customer</InputLabel>
-          <OutlinedInput
+        <SearchControl variant="outlined">
+          <SearchInput
             id="search-customer"
             type="text"
             value={searchTerm}
             onChange={handleChange}
             onBlur={handleSubmit}
-            label="Search customer"
-            sx={{
-              height: 56,
-              borderRadius: 2,
-            }}
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  edge="end"
+            placeholder="Search customer"
+            startAdornment={
+              <SearchAdornment position="start">
+                <SearchButton
                   type="submit"
-                  aria-label="search"
+                  aria-label="Search customer"
                   size="small"
+                  disableRipple
                 >
                   <SearchIcon />
-                </IconButton>
-              </InputAdornment>
+                </SearchButton>
+              </SearchAdornment>
             }
           />
-        </FormControl>
+        </SearchControl>
       </SearchBox>
     </Form>
   );

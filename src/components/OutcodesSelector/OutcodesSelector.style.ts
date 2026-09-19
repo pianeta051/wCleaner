@@ -1,10 +1,22 @@
 import { Box } from "@mui/material";
 import styledComponents, { styled } from "styled-components";
 
-export const AutocompleteWrap = styledComponents.div({
-  width: 200,
-  marginBottom: 2,
-});
+export const AutocompleteWrap = styledComponents.div`
+  width: 100%;
+  min-width: 0;
+
+  .MuiAutocomplete-root {
+    width: 100%;
+  }
+
+  .MuiTextField-root {
+    width: 100%;
+  }
+
+  .MuiOutlinedInput-root {
+    min-height: 56px;
+  }
+`;
 
 export const CheckBoxWrap = styled(Box)(() => ({
   display: "flex",

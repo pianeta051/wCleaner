@@ -1,4 +1,5 @@
 import { FC, useEffect, useMemo, useState } from "react";
+
 import {
   AlertColor,
   Box,
@@ -32,6 +33,7 @@ import {
   AddressSummaryTitle,
   AddressDeleteButton,
 } from "./CustomerForm.style";
+
 import { useFormik } from "formik";
 import * as yup from "yup";
 
@@ -41,6 +43,7 @@ import {
 } from "../CustomerAddressForm/CustomerAddressForm";
 
 import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
+
 import { AddressModal } from "../../AddressModal/AddressModal";
 
 export type CustomerFormValues = {
@@ -56,15 +59,23 @@ export type CustomerFormValues = {
 
 type CustomerFormProps = {
   onSubmit: (customer: CustomerFormValues) => void;
+
   onCancel?: () => void;
+
   initialValues?: CustomerFormValues;
+
   loading?: boolean;
+
   layout?: "vertical" | "horizontal";
+
   enableCopyAddress?: boolean;
+
   customerId?: string;
+
   onReload?: () => void;
 
   showActions?: boolean;
+
   formId?: string;
 };
 
@@ -97,8 +108,11 @@ const labels: { [x in keyof CustomerFormValues]: string } = {
 
 const validationSchema = yup.object<CustomerFormValues>({
   email: yup.string().email("Invalid email"),
+
   name: yup.string().required("Name is required"),
+
   address: yup.string().required("Address is required"),
+
   postcode: yup
     .string()
     .required("Postcode is required")
@@ -106,17 +120,26 @@ const validationSchema = yup.object<CustomerFormValues>({
       "is-valid-uk-postcode",
       "It must be a valid UK postcode",
       (postcode) => {
-        if (!postcode) return false;
+        if (!postcode) {
+          return false;
+        }
+
         const trimmed = postcode.trim();
+
         return trimmed.length < 5 || ukPostcodeRegex.test(trimmed);
       }
     ),
+
   mainTelephone: yup.string(),
+
   secondTelephone: yup.string(),
+
   cleaningAddresses: yup.array().of(
     yup.object({
       name: yup.string().required("Name is required"),
+
       address: yup.string().required("Address is required"),
+
       postcode: yup
         .string()
         .required("Postcode is required")
@@ -124,8 +147,12 @@ const validationSchema = yup.object<CustomerFormValues>({
           "is-valid-uk-postcode",
           "It must be a valid UK postcode",
           (postcode) => {
-            if (!postcode) return false;
+            if (!postcode) {
+              return false;
+            }
+
             const trimmed = postcode.trim();
+
             return trimmed.length < 5 || ukPostcodeRegex.test(trimmed);
           }
         ),
@@ -136,30 +163,46 @@ const validationSchema = yup.object<CustomerFormValues>({
 export const CustomerForm: FC<CustomerFormProps> = ({
   onSubmit,
   onCancel,
+
   initialValues = INITIAL_VALUES,
+
   loading = false,
+
   layout = "vertical",
+
   enableCopyAddress = true,
+
   customerId,
+
   onReload,
+
   showActions = true,
+
   formId = "customer-form",
 }) => {
   const formik = useFormik<CustomerFormValues>({
     initialValues,
+
     validationSchema,
+
     enableReinitialize: true,
+
     onSubmit,
   });
 
   const [copyAddress, setCopyAddress] = useState(enableCopyAddress);
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
   const [snackbarMessage, setSnackbarMessage] = useState("");
+
   const [snackbarSeverity, setSnackbarSeverity] =
     useState<AlertColor>("success");
 
   const [dialogOpen, setDialogOpen] = useState(false);
+
   const [addressSelectorOpen, setAddressSelectorOpen] = useState(false);
+
   const [addressIdDeleting, setAddressIdDeleting] = useState<string | null>(
     null
   );
@@ -171,6 +214,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   } = useDeleteCustomerAddress(customerId);
 
   const requiredFields = useMemo(() => ["name", "address", "postcode"], []);
+
   const actionBarVariant = layout === "vertical" ? "sticky" : "inline";
 
   useEffect(() => {
@@ -182,18 +226,26 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   }, [errorDeletingAddress]);
 
   useEffect(() => {
-    if (!copyAddress) return;
+    if (!copyAddress) {
+      return;
+    }
 
     const address = (formik.values.address ?? "").trim();
+
     const postcode = (formik.values.postcode ?? "").trim();
 
     if (!address && !postcode) {
       formik.setFieldValue("cleaningAddresses", []);
+
       return;
     }
 
     formik.setFieldValue("cleaningAddresses", [
-      { name: "Home", address, postcode },
+      {
+        name: "Home",
+        address,
+        postcode,
+      },
     ]);
   }, [formik.values.address, formik.values.postcode, copyAddress]);
 
@@ -209,7 +261,12 @@ export const CustomerForm: FC<CustomerFormProps> = ({
   const addAddressHandler = () => {
     formik.setFieldValue("cleaningAddresses", [
       ...formik.values.cleaningAddresses,
-      { name: "", address: "", postcode: "" },
+
+      {
+        name: "",
+        address: "",
+        postcode: "",
+      },
     ]);
   };
 
@@ -220,36 +277,57 @@ export const CustomerForm: FC<CustomerFormProps> = ({
 
     if (!addressId) {
       const copy = [...formik.values.cleaningAddresses];
+
       copy.splice(index, 1);
+
       formik.setFieldValue("cleaningAddresses", copy);
+
       return;
     }
 
     try {
       await deleteCustomerAddress(addressId);
+
       setSnackbarMessage("Address deleted");
+
       setSnackbarSeverity("success");
+
       setSnackbarOpen(true);
+
       onReload?.();
     } catch (_e) {
       setAddressIdDeleting(addressId);
+
       setDialogOpen(true);
     }
   };
 
   return (
-    <Wrapper container spacing={2} enableScroll={layout === "vertical"}>
+    <Wrapper container spacing={2}>
       <Box
         component="form"
         id={formId}
         onSubmit={formik.handleSubmit}
         noValidate
+        sx={{
+          width: "100%",
+          minWidth: 0,
+        }}
       >
-        <Grid container spacing={3} sx={{ overflowX: "hidden" }}>
+        <Grid
+          container
+          spacing={3}
+          sx={{
+            width: "100%",
+            margin: 0,
+            overflowX: "hidden",
+          }}
+        >
           <Grid size={12}>
             <Typography variant="h6" fontWeight={800}>
               Customer Info
             </Typography>
+
             <Typography variant="body2" color="text.secondary">
               Update the customer details.
             </Typography>
@@ -277,6 +355,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
               />
             </Grid>
           ))}
+
           <Grid size={12}>
             <Divider sx={{ my: 2 }} />
           </Grid>
@@ -285,6 +364,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
             <Typography variant="h6" fontWeight={800} mb={1}>
               Cleaning Addresses
             </Typography>
+
             <Typography variant="body2" color="text.secondary">
               Manage cleaning addresses.
             </Typography>
@@ -324,7 +404,12 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                       <AddressDeleteButton
                         size="small"
                         onClick={(e) => {
+                          /*
+                           * Prevent accordion
+                           * from opening.
+                           */
                           e.stopPropagation();
+
                           deleteAddressHandle(index);
                         }}
                       >
@@ -337,9 +422,11 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                 <AddressAccordionDetails>
                   <CustomerAddressForm
                     value={addr}
-                    onChange={(v) => {
+                    onChange={(value) => {
                       const copy = [...formik.values.cleaningAddresses];
-                      copy[index] = v;
+
+                      copy[index] = value;
+
                       formik.setFieldValue("cleaningAddresses", copy);
                     }}
                   />
@@ -363,6 +450,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                     Cancel
                   </Button>
                 )}
+
                 <Button type="submit" variant="contained" loading={loading}>
                   Save
                 </Button>
@@ -371,6 +459,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           )}
         </Grid>
       </Box>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
@@ -378,17 +467,21 @@ export const CustomerForm: FC<CustomerFormProps> = ({
       >
         <Alert severity={snackbarSeverity}>{snackbarMessage}</Alert>
       </Snackbar>
+
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Cannot delete address</DialogTitle>
+
         <DialogContent>
           <DialogContentText>
             This address has pending jobs and cannot be deleted.
           </DialogContentText>
         </DialogContent>
+
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
       {customerId && addressIdDeleting && (
         <AddressModal
           open={addressSelectorOpen}
@@ -397,6 +490,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
           oldAddressId={addressIdDeleting}
           onUpdated={() => {
             onReload?.();
+
             setAddressSelectorOpen(false);
           }}
         />

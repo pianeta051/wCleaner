@@ -8,6 +8,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -20,6 +21,7 @@ import {
   LoadingCenter,
   DesktopOutcodeLoadingBox,
   DesktopOutcodeBox,
+  SearchArea,
   ActionsGrid,
   NewCustomerButton,
 } from "./Customers.style";
@@ -29,19 +31,23 @@ import { CustomersTable } from "../../../../components/CustomersTable/CustomersT
 import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
 import { SearchBar } from "../../../../components/SearchBar/SearchBar";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
+
 import { useCustomers } from "../../../../hooks/Customers/useCustomers";
 import { useOutcodes } from "../../../../hooks/Customers/useOutcodes";
+import { useAddCustomer } from "../../../../hooks/Customers/useAddCustomer";
+
 import { OutcodesSelector } from "../../../../components/OutcodesSelector/OutcodesSelector";
 import { useAuth } from "../../../../context/AuthContext";
-import { useAddCustomer } from "../../../../hooks/Customers/useAddCustomer";
 
 export const Customers: FC = () => {
   const { isInGroup } = useAuth();
+
   const isAdmin = isInGroup("Admin");
 
   const [modalOpen, setModalOpen] = useState(false);
 
   const [outcodesFilter, setOutcodesFilter] = useState<string[]>([]);
+
   const [searchInput, setSearchInput] = useState("");
 
   const {
@@ -55,8 +61,6 @@ export const Customers: FC = () => {
   } = useCustomers(searchInput, outcodesFilter);
 
   const { outcodes, loading: loadingOutcodes } = useOutcodes();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const {
     addCustomer,
@@ -64,16 +68,28 @@ export const Customers: FC = () => {
     error: createError,
   } = useAddCustomer();
 
-  const closeNewModalHandler = () => setModalOpen(false);
-  const openNewModalHandler = () => setModalOpen(true);
+  const theme = useTheme();
 
-  const searchHandler = (value: string) => setSearchInput(value);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const closeNewModalHandler = () => {
+    setModalOpen(false);
+  };
+
+  const openNewModalHandler = () => {
+    setModalOpen(true);
+  };
+
+  const searchHandler = (value: string) => {
+    setSearchInput(value);
+  };
 
   const isEmpty = customers.length === 0 && !loading && searchInput === "";
 
   return (
     <Wrapper>
       <Toolbar />
+
       {isAdmin && (
         <>
           {isEmpty ? (
@@ -82,118 +98,107 @@ export const Customers: FC = () => {
             <>
               <Title>Customers</Title>
 
-              <Grid container spacing={2}>
-                <Grid size={12}>
-                  <TopBarRow container spacing={2}>
-                    <Grid
-                      mt={2}
-                      size={{
-                        xs: 12,
-                        md: 3,
-                      }}
-                    >
-                      {isMobile ? (
-                        <OutcodeAccordion elevation={0}>
-                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <AccordionTitle>Search UK postcode</AccordionTitle>
-                          </AccordionSummary>
+              {isMobile ? (
+                <TopBarRow>
+                  <SearchArea>
+                    <SearchBar
+                      onSearch={searchHandler}
+                      initialValue={searchInput}
+                    />
+                  </SearchArea>
 
-                          <AccordionDetails>
-                            {loadingOutcodes ? (
-                              <LoadingCenter container>
-                                <CircularProgress size={24} />
-                              </LoadingCenter>
-                            ) : (
-                              outcodes && (
-                                <OutcodesSelector
-                                  outcodes={outcodes}
-                                  selected={outcodesFilter}
-                                  onChange={setOutcodesFilter}
-                                />
-                              )
-                            )}
-                          </AccordionDetails>
-                        </OutcodeAccordion>
-                      ) : loadingOutcodes ? (
-                        <DesktopOutcodeLoadingBox container>
+                  <OutcodeAccordion elevation={0}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <AccordionTitle>Search UK postcode</AccordionTitle>
+                    </AccordionSummary>
+
+                    <AccordionDetails>
+                      {loadingOutcodes ? (
+                        <LoadingCenter container>
                           <CircularProgress size={24} />
-                        </DesktopOutcodeLoadingBox>
+                        </LoadingCenter>
                       ) : (
                         outcodes && (
-                          <DesktopOutcodeBox>
-                            <OutcodesSelector
-                              outcodes={outcodes}
-                              selected={outcodesFilter}
-                              onChange={setOutcodesFilter}
-                            />
-                          </DesktopOutcodeBox>
+                          <OutcodesSelector
+                            outcodes={outcodes}
+                            selected={outcodesFilter}
+                            onChange={setOutcodesFilter}
+                          />
                         )
                       )}
-                    </Grid>
+                    </AccordionDetails>
+                  </OutcodeAccordion>
 
-                    <Grid
-                      size={{
-                        xs: 12,
-                        md: 6,
-                      }}
+                  <ActionsGrid>
+                    <NewCustomerButton
+                      startIcon={<AddIcon />}
+                      onClick={openNewModalHandler}
+                      variant="contained"
                     >
-                      <SearchBar
-                        onSearch={searchHandler}
-                        initialValue={searchInput}
-                      />
-                    </Grid>
-
-                    <Grid
-                      size={{
-                        xs: 12,
-                        md: 3,
-                      }}
-                    >
-                      <ActionsGrid>
-                        <NewCustomerButton
-                          startIcon={<AddIcon />}
-                          onClick={openNewModalHandler}
-                          variant="contained"
-                          fullWidth={isMobile}
-                        >
-                          New customer
-                        </NewCustomerButton>
-                      </ActionsGrid>
-                    </Grid>
-                  </TopBarRow>
-                </Grid>
-
-                <Grid size={12}>
-                  {loading ? (
-                    <CircularProgress />
-                  ) : error ? (
-                    <ErrorMessage code={error} />
+                      New customer
+                    </NewCustomerButton>
+                  </ActionsGrid>
+                </TopBarRow>
+              ) : (
+                <TopBarRow>
+                  {loadingOutcodes ? (
+                    <DesktopOutcodeLoadingBox>
+                      <CircularProgress size={24} />
+                    </DesktopOutcodeLoadingBox>
                   ) : (
-                    <>
-                      <CustomersTable customers={customers} onReload={reload} />
-
-                      {moreToLoad && (
-                        <Grid
-                          size={12}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            mt: 2,
-                          }}
-                        >
-                          <NewCustomerButton
-                            variant="outlined"
-                            onClick={loadMore}
-                            disabled={loadingMore}
-                          >
-                            {loadingMore ? "Loading..." : "Load more"}
-                          </NewCustomerButton>
-                        </Grid>
-                      )}
-                    </>
+                    outcodes && (
+                      <DesktopOutcodeBox>
+                        <OutcodesSelector
+                          outcodes={outcodes}
+                          selected={outcodesFilter}
+                          onChange={setOutcodesFilter}
+                        />
+                      </DesktopOutcodeBox>
+                    )
                   )}
+
+                  <SearchArea>
+                    <SearchBar
+                      onSearch={searchHandler}
+                      initialValue={searchInput}
+                    />
+                  </SearchArea>
+
+                  <ActionsGrid>
+                    <NewCustomerButton
+                      startIcon={<AddIcon />}
+                      onClick={openNewModalHandler}
+                      variant="contained"
+                    >
+                      New customer
+                    </NewCustomerButton>
+                  </ActionsGrid>
+                </TopBarRow>
+              )}
+
+              {loading ? (
+                <Grid container justifyContent="center" sx={{ py: 4 }}>
+                  <CircularProgress />
                 </Grid>
-              </Grid>
+              ) : error ? (
+                <ErrorMessage code={error} />
+              ) : (
+                <>
+                  <CustomersTable customers={customers} onReload={reload} />
+
+                  {moreToLoad && (
+                    <Grid container justifyContent="center" sx={{ mt: 2 }}>
+                      <NewCustomerButton
+                        variant="outlined"
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                      >
+                        {loadingMore ? "Loading..." : "Load more"}
+                      </NewCustomerButton>
+                    </Grid>
+                  )}
+                </>
+              )}
             </>
           )}
 
