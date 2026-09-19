@@ -182,32 +182,72 @@ const addJobType = async (jobType) => {
 
 const editAddress = async (customerId, customerAddress) => {
   const postcodeParts = customerAddress.postcode.split(/\s/g);
+
   if (postcodeParts.filter((part) => !!part).length !== 2) {
     throw "INVALID_POSTCODE";
   }
+
+  if (customerAddress.frequency) {
+    const { value, unit } = customerAddress.frequency;
+
+    if (
+      !Number.isInteger(value) ||
+      value <= 0 ||
+      !["weeks", "months"].includes(unit)
+    ) {
+      throw new Error("INVALID_CLEANING_FREQUENCY");
+    }
+  }
+
   const outcode = postcodeParts[0];
+
+  const expressionAttributeValues = {
+    ":name": { S: customerAddress.name },
+    ":address": { S: customerAddress.address },
+    ":postcode": { S: customerAddress.postcode },
+    ":outcode": { S: outcode },
+  };
+
+  const expressionAttributeNames = {
+    "#name": "name",
+    "#address": "address",
+    "#postcode": "postcode",
+    "#outcode": "outcode",
+    "#frequencyValue": "frequency_value",
+    "#frequencyUnit": "frequency_unit",
+  };
+
+  let updateExpression =
+    "SET #name = :name, #address = :address, #postcode = :postcode, #outcode = :outcode";
+
+  if (customerAddress.frequency) {
+    expressionAttributeValues[":frequencyValue"] = {
+      N: customerAddress.frequency.value.toString(),
+    };
+
+    expressionAttributeValues[":frequencyUnit"] = {
+      S: customerAddress.frequency.unit,
+    };
+
+    updateExpression +=
+      ", #frequencyValue = :frequencyValue, #frequencyUnit = :frequencyUnit";
+  } else {
+    updateExpression += " REMOVE #frequencyValue, #frequencyUnit";
+  }
+
   const params = {
     TableName: TABLE_NAME,
     Key: {
       PK: { S: `customer_${customerId}` },
       SK: { S: `address_${customerAddress.id}` },
     },
-    ExpressionAttributeValues: {
-      ":name": { S: customerAddress.name },
-      ":address": { S: customerAddress.address },
-      ":postcode": { S: customerAddress.postcode },
-      ":outcode": { S: outcode },
-    },
-    ExpressionAttributeNames: {
-      "#name": "name",
-      "#address": "address",
-      "#postcode": "postcode",
-      "#outcode": "outcode",
-    },
-    UpdateExpression:
-      "SET #name = :name, #address = :address, #postcode = :postcode, #outcode = :outcode",
+    ExpressionAttributeValues: expressionAttributeValues,
+    ExpressionAttributeNames: expressionAttributeNames,
+    UpdateExpression: updateExpression,
   };
+
   const command = new UpdateItemCommand(params);
+
   await dynamoClient.send(command);
 
   return customerAddress;
@@ -380,25 +420,51 @@ const addCustomerAddress = async (customerId, customerAddress) => {
     throw new Error("DUPLICATED_ADDRESS_NAME");
   }
 
+  if (customerAddress.frequency) {
+    const { value, unit } = customerAddress.frequency;
+
+    if (
+      !Number.isInteger(value) ||
+      value <= 0 ||
+      !["weeks", "months"].includes(unit)
+    ) {
+      throw new Error("INVALID_CLEANING_FREQUENCY");
+    }
+  }
+
   const customerAddressId = uuid.v1();
+
   const postcodeParts = customerAddress.postcode.split(/\s/g);
+
   if (postcodeParts.filter((part) => !!part).length !== 2) {
     throw "INVALID_POSTCODE";
   }
 
   const outcode = postcodeParts[0];
 
+  const item = {
+    PK: { S: `customer_${customerId}` },
+    SK: { S: `address_${customerAddressId}` },
+    name: { S: customerAddress.name },
+    address: { S: customerAddress.address },
+    postcode: { S: customerAddress.postcode },
+    outcode: { S: outcode },
+    status: { S: "active" },
+  };
+
+  if (customerAddress.frequency) {
+    item.frequency_value = {
+      N: customerAddress.frequency.value.toString(),
+    };
+
+    item.frequency_unit = {
+      S: customerAddress.frequency.unit,
+    };
+  }
+
   const params = {
     TableName: TABLE_NAME,
-    Item: {
-      PK: { S: `customer_${customerId}` },
-      SK: { S: `address_${customerAddressId}` },
-      name: { S: customerAddress.name },
-      address: { S: customerAddress.address },
-      postcode: { S: customerAddress.postcode },
-      outcode: { S: outcode },
-      status: { S: "active" },
-    },
+    Item: item,
   };
 
   const command = new PutItemCommand(params);
@@ -1690,6 +1756,13 @@ const deleteCustomerNote = async (customerId, noteId) => {
 
 //INVOICES
 
+const getCustomersForInvoices = async (invoices) => {
+  const customerIds = Array.from(
+    new Set(invoices.map((invoice) => invoice.customerId).filter(Boolean))
+  );
+
+  return batchGetCustomersByIds(customerIds);
+};
 const isInvoiceNumberInUse = async (rawNumber) => {
   const params = {
     TableName: TABLE_NAME,
@@ -2338,6 +2411,7 @@ module.exports = {
   getInvoiceSettings,
   getInvoices,
   getCustomerInvoices,
+  getCustomersForInvoices,
   getJob,
   getJobCustomers,
   getJobs,

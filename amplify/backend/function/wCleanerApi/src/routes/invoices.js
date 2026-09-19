@@ -11,8 +11,8 @@ const {
   getInvoiceSettings,
   getAddressesForJobs,
   getAddressesForInvoices,
+  getCustomersForInvoices,
 } = require("../db");
-
 const {
   mapCleaningAddress,
   mapInvoice,
@@ -97,11 +97,15 @@ const setInvoicesRoutes = (app) => {
 
     let invoices = items.map(mapInvoice);
 
-    const addresses = await getAddressesForInvoices(invoices);
+    const [addresses, customers] = await Promise.all([
+      getAddressesForInvoices(invoices),
+      getCustomersForInvoices(invoices),
+    ]);
 
     invoices = invoices.map((invoice) => ({
       ...invoice,
       address: addresses[`${invoice.customerId}_${invoice.addressId}`],
+      customer: customers[invoice.customerId],
     }));
 
     const responseToken = generateToken(lastEvaluatedKey);

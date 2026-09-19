@@ -28,12 +28,21 @@ export type Customer = {
   cleaningAddresses?: CustomerCleaningAddress[];
 };
 
+export type CleaningFrequencyUnit = "weeks" | "months";
+
+export type CleaningFrequency = {
+  value: number;
+  unit: CleaningFrequencyUnit;
+};
+
 export type CustomerCleaningAddress = {
   id: string;
   name: string;
   address: string;
   postcode: string;
   customerId: string;
+
+  frequency?: CleaningFrequency;
 };
 
 export type CustomerNote = {
@@ -60,7 +69,8 @@ export type Invoice = {
 };
 
 export type InvoiceWithAddress = Invoice & {
-  address: CustomerCleaningAddress;
+  address?: CustomerCleaningAddress;
+  customer?: Pick<Customer, "id" | "slug" | "name">;
 };
 
 export type InvoiceSettings = {

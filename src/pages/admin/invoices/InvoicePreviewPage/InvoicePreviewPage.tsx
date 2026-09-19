@@ -6,8 +6,10 @@ import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
 import { JobInvoice } from "../../../../components/JobInvoice/JobInvoice";
 import { useJobCustomer } from "../../../../hooks/Jobs/useJobCustomer";
+import { useCustomer } from "../../../../hooks/Customers/useCustomer";
 import { useJobInvoice } from "../../../../hooks/Invoices/useJobInvoice";
 import { useInvoiceSettings } from "../../../../hooks/Invoices/useInvoiceSettings";
+import { useFileUrl } from "../../../../hooks/Invoices/useFileUrl";
 
 import {
   FullScreenWrapper,
@@ -15,27 +17,32 @@ import {
   PdfContainer,
   ButtonDownload,
 } from "./InvoicePreviewPage.style";
-import { useFileUrl } from "../../../../hooks/Invoices/useFileUrl";
 
 type Params = {
   jobId: string;
-  customerId?: string;
+  customerSlug: string;
 };
 
 export const InvoicePreviewPage: FC = () => {
-  const { jobId, customerId } = useParams<Params>();
+  const { jobId, customerSlug } = useParams<Params>();
+
+  const {
+    customer,
+    loading: loadingCustomer,
+    error: errorCustomer,
+  } = useCustomer(customerSlug);
 
   const {
     invoice,
     loading: loadingInvoice,
     error: errorInvoice,
-  } = useJobInvoice(customerId, jobId);
+  } = useJobInvoice(customer?.id, jobId);
 
   const {
     job,
     loading: loadingJob,
     error: errorJob,
-  } = useJobCustomer(customerId, jobId);
+  } = useJobCustomer(customer?.id, jobId);
 
   const {
     settings,
@@ -57,14 +64,19 @@ export const InvoicePreviewPage: FC = () => {
     return `${invoice.invoiceNumber}.pdf`;
   }, [invoice?.invoiceNumber]);
 
-  if (!jobId || !customerId) {
+  if (!jobId || !customerSlug) {
     return <ErrorMessage code="INTERNAL_ERROR" />;
   }
 
   const loading =
-    loadingInvoice || loadingJob || loadingSettings || loadingLogo;
+    loadingCustomer ||
+    loadingInvoice ||
+    loadingJob ||
+    loadingSettings ||
+    loadingLogo;
 
-  const error = errorInvoice ?? errorJob ?? errorSettings ?? errorLogo;
+  const error =
+    errorCustomer ?? errorInvoice ?? errorJob ?? errorSettings ?? errorLogo;
 
   if (loading) {
     return (
@@ -74,7 +86,7 @@ export const InvoicePreviewPage: FC = () => {
     );
   }
 
-  if (error || !job || !job.customer || !invoice || !settings) {
+  if (error || !customer || !job || !job.customer || !invoice || !settings) {
     return <ErrorMessage code={error ?? "INTERNAL_ERROR"} />;
   }
 

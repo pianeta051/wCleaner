@@ -13,6 +13,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import { useTheme } from "@mui/material/styles";
 
 import { useJobCustomer } from "../../../hooks/Jobs/useJobCustomer";
+import { useCustomer } from "../../../hooks/Customers/useCustomer";
 import { ErrorMessage } from "../../../components/ErrorMessage/ErrorMessage";
 import { JobInfoDisplay } from "../../../components/JobInfoDisplay/JobInfoDisplay";
 import { JobCustomer } from "../../../components/JobCustomer/JobCustomer";
@@ -26,11 +27,11 @@ import {
 
 type JobDetailsParams = {
   jobId: string;
-  customerId: string;
+  customerSlug: string;
 };
 
 export const JobDetailsPage: FC = () => {
-  const { jobId, customerId } = useParams<JobDetailsParams>();
+  const { jobId, customerSlug } = useParams<JobDetailsParams>();
   const { isInGroup } = useAuth();
   const isAdmin = isInGroup("Admin");
 
@@ -40,26 +41,54 @@ export const JobDetailsPage: FC = () => {
   const stickyTop = useMemo(() => {
     const mh = theme.mixins.toolbar.minHeight;
     const appBarHeight = typeof mh === "number" ? mh : isMdUp ? 64 : 56;
+
     return appBarHeight;
   }, [theme, isMdUp]);
 
-  if (!jobId || !customerId) return <ErrorMessage code="INTERNAL_ERROR" />;
+  const {
+    customer,
+    loading: loadingCustomer,
+    error: customerError,
+  } = useCustomer(customerSlug);
 
-  const { job, loading, error, reload } = useJobCustomer(customerId, jobId);
+  const {
+    job,
+    loading: loadingJob,
+    error: jobError,
+    reload,
+  } = useJobCustomer(customer?.id, jobId);
 
-  if (loading)
+  if (!jobId || !customerSlug) {
+    return <ErrorMessage code="INTERNAL_ERROR" />;
+  }
+
+  const loading = loadingCustomer || loadingJob;
+  const error = customerError ?? jobError;
+
+  if (loading) {
     return (
       <Box textAlign="center" mt={4}>
         <CircularProgress />
       </Box>
     );
+  }
 
-  if (error) return <ErrorMessage code={error} />;
-  if (!job) return <ErrorMessage code="JOB_NOT_EXISTS" />;
+  if (error) {
+    return <ErrorMessage code={error} />;
+  }
+
+  if (!customer) {
+    return <ErrorMessage code="NOT_FOUND" />;
+  }
+
+  if (!job) {
+    return <ErrorMessage code="JOB_NOT_EXISTS" />;
+  }
 
   return (
     <>
       <Toolbar />
+
       {isAdmin && job.customer && (
         <BreadcrumbsContainer $top={stickyTop}>
           <StyledBreadcrumbs aria-label="breadcrumb" separator="›">
@@ -67,8 +96,8 @@ export const JobDetailsPage: FC = () => {
               <PeopleIcon fontSize="small" /> Customers
             </BreadcrumbLink>
 
-            <BreadcrumbLink to={`/admin/customers/${job.customer.slug}`}>
-              <HomeIcon fontSize="small" /> {job.customer.name}
+            <BreadcrumbLink to={`/admin/customers/${customer.slug}`}>
+              <HomeIcon fontSize="small" /> {customer.name}
             </BreadcrumbLink>
 
             <CurrentPageText>
@@ -77,6 +106,7 @@ export const JobDetailsPage: FC = () => {
           </StyledBreadcrumbs>
         </BreadcrumbsContainer>
       )}
+
       <Box
         sx={{
           width: "100%",

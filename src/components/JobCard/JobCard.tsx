@@ -32,6 +32,8 @@ export const JobCard: FC<JobCardProps> = ({ job, onJobChanged }) => {
     [job.customerId, job.customer?.id]
   );
 
+  const customerSlug = job.customer?.slug;
+
   const [localStatus, setLocalStatus] = useState<JobStatus>(
     (job.status ?? "pending") as JobStatus
   );
@@ -54,7 +56,7 @@ export const JobCard: FC<JobCardProps> = ({ job, onJobChanged }) => {
   const phone =
     job.customer?.mainTelephone || job.customer?.secondTelephone || "";
 
-  const canNavigateToDetails = Boolean(job.id && resolvedCustomerId);
+  const canNavigateToDetails = Boolean(job.id && customerSlug);
 
   return (
     <Box sx={{ minWidth: 275 }}>
@@ -114,9 +116,7 @@ export const JobCard: FC<JobCardProps> = ({ job, onJobChanged }) => {
                 component="button"
                 variant="body2"
                 onClick={() => {
-                  navigate(
-                    `/admin/customers/${resolvedCustomerId}/jobs/${job.id}`
-                  );
+                  navigate(`/admin/customers/${customerSlug}/jobs/${job.id}`);
                 }}
               >
                 Read more

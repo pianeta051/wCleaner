@@ -33,6 +33,14 @@ const mapCleaningAddress = (cleaningAddressFromDb) => ({
   address: cleaningAddressFromDb.address?.S,
   postcode: cleaningAddressFromDb.postcode.S,
   customerId: cleaningAddressFromDb.PK.S.replace("customer_", ""),
+  frequency:
+    cleaningAddressFromDb.frequency_value?.N &&
+    cleaningAddressFromDb.frequency_unit?.S
+      ? {
+          value: Number(cleaningAddressFromDb.frequency_value.N),
+          unit: cleaningAddressFromDb.frequency_unit.S,
+        }
+      : undefined,
 });
 
 const mapCustomerJobs = (customerJob) => ({

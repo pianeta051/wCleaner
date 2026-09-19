@@ -253,7 +253,10 @@ export const CustomerDetails: FC = () => {
             <Divider sx={{ my: 4 }} />
 
             <section id="invoices" style={{ scrollMarginTop: scrollOffset }}>
-              <CustomerInvoices customerId={customer.id} />
+              <CustomerInvoices
+                customerId={customer.id}
+                customerSlug={customer.slug}
+              />
             </section>
 
             <Divider sx={{ my: 4 }} />
