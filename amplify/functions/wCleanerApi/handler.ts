@@ -1,8 +1,7 @@
 import type { APIGatewayProxyHandler } from "aws-lambda";
 import awsServerlessExpress from "aws-serverless-express";
-import express from "express";
+import app from "./app";
 
-const app = express();
 const server = awsServerlessExpress.createServer(app);
 
 export const handler: APIGatewayProxyHandler = async (event, context) => {
