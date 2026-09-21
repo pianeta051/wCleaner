@@ -1,6 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import awsServerlessExpressMiddleware from "aws-serverless-express/middleware";
+import { getAuthData } from "./authentication";
 
 const MANDATORY_ENV_VARS = ["USER_POOL_ID", "ENV"];
 
@@ -20,7 +21,7 @@ checkEnvVars();
 
 const app = express();
 app.use(bodyParser.json());
-//app.use(awsServerlessExpressMiddleware.eventContext());
+app.use(awsServerlessExpressMiddleware.eventContext());
 
 const APP_PORT = process.env.APP_PORT ?? 3000;
 
@@ -29,7 +30,7 @@ app.listen(APP_PORT, function () {
 });
 
 app.use(async function (req, res, next) {
-  //req.authData = await getAuthData(req);
+  req.authData = await getAuthData(req);
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
   res.header("Access-Control-Allow-Methods", "*");
