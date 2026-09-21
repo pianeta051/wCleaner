@@ -61,14 +61,11 @@ export const AppRoutes: FC = () => {
           <Route path="customers" element={<AdminLayoutFullWidth />}>
             <Route index element={<Customers />} />
             <Route path=":slug" element={<CustomerDetails />} />
-            <Route
-              path=":customerSlug/jobs/:jobId/invoice"
-              element={<InvoicePreviewPage />}
-            />
             <Route path=":customerSlug">
               <Route path="jobs">
                 <Route path=":jobId">
                   <Route index element={<JobDetailsPage />} />
+                  <Route path="invoice" element={<InvoicePreviewPage />} />
                 </Route>
               </Route>
             </Route>
@@ -79,7 +76,6 @@ export const AppRoutes: FC = () => {
               <Route path="jobs">
                 <Route path=":jobId">
                   <Route index element={<JobDetailsPage />} />
-                  <Route path="invoice" element={<InvoicePreviewPage />} />
                 </Route>
               </Route>
             </Route>
