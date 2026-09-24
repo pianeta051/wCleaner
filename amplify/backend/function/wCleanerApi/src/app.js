@@ -34,8 +34,7 @@ const {
   getCustomersForInvoices,
   getJobType,
   getJobTypes,
-  getInvoices,
-  getInvoice,
+  getLastCleaningDate,
   getOutcodes,
   deleteCustomerNote,
   deleteInvoice,
@@ -744,6 +743,13 @@ app.get("/customers/:customerId/addresses", async function (req, res) {
   const id = req.params.customerId;
   const items = await getCleaningAddresses(id);
   const addresses = items.map(mapCleaningAddress);
+  for (let i = 0; i < addresses.length; i++) {
+    const address = addresses[i];
+    const lastCleaningDate = await getLastCleaningDate(id, address.id);
+    if (lastCleaningDate) {
+      addresses[i].lastCleaningDate = lastCleaningDate;
+    }
+  }
 
   res.json({ addresses });
 });

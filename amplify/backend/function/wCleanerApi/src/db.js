@@ -729,6 +729,38 @@ const getCleaningAddresses = async (customerId) => {
   return items;
 };
 
+const getLastCleaningDate = async (customerId, addressId) => {
+  // Busca el job con la date mas alta que no esta cancelled
+  if (!customerId || !addressId) {
+    return;
+  }
+
+  // hacer un bucle de query hasta encontrar 1 resultado
+  // en cuanto se encuentra1 resultado, se devuleve
+  // solo se hace return sin resultado cuando se han recorrido todas las paginas
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "job_start_time",
+    ScanIndexForward: false,
+    ExpressionAttributeNames: {
+      "#JSTPK": "job_start_time_pk",
+      "#PK": "PK",
+      "#AI": "address_id",
+      "#ST": "status",
+    },
+    ExpressionAttributeValues: {
+      ":aggregator": { N: "1" },
+      ":pk": { S: `customer_${customerId}` },
+      ":address_id": { S: `${addressId}` },
+      ":status": { S: "cancelled" },
+    },
+    FilterExpression: "#PK = :pk AND #AI = address_id AND #ST <> :status",
+    KeyConditionExpression: "#JSTPK = :aggregator",
+  };
+
+  // devolver el primero de la lista, solo su valor de +start.N
+};
+
 const getCustomerBySlug = async (slug) => {
   const params = {
     TableName: TABLE_NAME,
@@ -2417,6 +2449,7 @@ module.exports = {
   getJobs,
   getJobType,
   getJobTypes,
+  getLastCleaningDate,
   getNextInvoiceNumber,
   getOutcodes,
   queryCustomersByEmail,
