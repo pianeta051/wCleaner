@@ -13,31 +13,11 @@ export const isValidCalendarView = (value: string | null): value is View => {
 };
 
 export const parseCalendarDate = (value: string | null): Dayjs | null => {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
 
   const parsed = dayjs(value, "DD-MM-YYYY", true);
 
   return parsed.isValid() ? parsed : null;
-};
-
-const startOfMondayWeek = (date: Dayjs): Dayjs => {
-  const day = date.day();
-
-  const daysSinceMonday = day === 0 ? 6 : day - 1;
-
-  return date.subtract(daysSinceMonday, "day").startOf("day");
-};
-
-export const normalizeCalendarDate = (date: Dayjs, view: View): Dayjs => {
-  switch (view) {
-    case Views.MONTH:
-      return date.startOf("month");
-
-    case Views.WEEK:
-      return startOfMondayWeek(date);
-
-    case Views.DAY:
-    default:
-      return date.startOf("day");
-  }
 };
