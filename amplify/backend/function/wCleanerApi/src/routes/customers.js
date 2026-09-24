@@ -5,6 +5,7 @@ const {
   getCustomers,
   getCustomerBySlug,
   getCustomerById,
+  getLastCleaningDate,
   deleteCustomer,
   editAddress,
   editCustomer,
@@ -57,6 +58,16 @@ const setCustomerRoutes = (app) => {
     const customer = mapCustomer(customerFromDb);
     const cleaningAddresses = await getCleaningAddresses(customer.id);
     customer.cleaningAddresses = cleaningAddresses.map(mapCleaningAddress);
+    for (let i = 0; i < customer.cleaningAddresses.length; i++) {
+      const address = customer.cleaningAddresses[i];
+      const lastCleaningDate = await getLastCleaningDate(
+        customer.id,
+        address.id
+      );
+      if (lastCleaningDate) {
+        customer.cleaningAddresses[i].lastCleaningDate = lastCleaningDate;
+      }
+    }
     res.json({ customer });
   });
 
@@ -98,6 +109,10 @@ const setCustomerRoutes = (app) => {
       } else if (error === "INVALID_ADDRESS") {
         res.status(400).json({
           error: "One of the cleaning addresses is invalid",
+        });
+      } else if (error.message === "INVALID_CLEANING_FREQUENCY") {
+        res.status(422).json({
+          error: "Invalid cleaning frequency",
         });
       } else {
         throw error;
@@ -142,6 +157,10 @@ const setCustomerRoutes = (app) => {
       } else if (error.message === "DUPLICATED_ADDRESS_NAME") {
         res.status(409).json({
           error: "Address name already exists",
+        });
+      } else if (error.message === "INVALID_CLEANING_FREQUENCY") {
+        res.status(422).json({
+          error: "Invalid cleaning frequency",
         });
       } else {
         throw error;

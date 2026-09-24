@@ -312,5 +312,13 @@ export const ErrorMessage: FC<ErrorMessageProps> = ({ code }) => {
       </Alert>
     );
   }
+
+  if (code === "INVALID_CLEANING_FREQUENCY") {
+    return (
+      <Alert severity="error">
+        <Typography>Invalid cleaning frequency</Typography>
+      </Alert>
+    );
+  }
   return <Alert severity="error">Internal error</Alert>;
 };

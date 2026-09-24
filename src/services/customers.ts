@@ -77,10 +77,7 @@ export const addCustomer = async (
   formValues: CustomerFormValues
 ): Promise<Customer> => {
   try {
-    const response = await post<CustomerFormValues, { customer: Customer }>(
-      "/customers",
-      formValues
-    );
+    const response = await post("/customers", formValues);
 
     if (!isCustomer(response.customer)) {
       throw "INTERNAL_ERROR";
@@ -98,6 +95,9 @@ export const addCustomer = async (
         if (error.response.data?.error === "Name cannot be empty") {
           throw "NAME_CANNOT_BE_EMPTY";
         }
+      }
+      if (error.response.status === 422) {
+        throw "INVALID_CLEANING_FREQUENCYE";
       }
     }
 
@@ -137,10 +137,7 @@ export const editCustomer = async (
   formValues: Partial<CustomerFormValues>
 ): Promise<Customer> => {
   try {
-    const response = await put<
-      Partial<CustomerFormValues>,
-      { customer: Customer }
-    >(`/customers/${id}`, formValues);
+    const response = await put(`/customers/${id}`, formValues);
 
     if (!isCustomer(response.customer)) {
       throw "INTERNAL_ERROR";
@@ -162,6 +159,9 @@ export const editCustomer = async (
       }
       if (error.response.status === 404) {
         throw "CUSTOMER_NOT_EXISTS";
+      }
+      if (error.response.status === 422) {
+        throw "INVALID_CLEANING_FREQUENCY";
       }
     }
 
@@ -326,10 +326,7 @@ export const replaceCustomerFiles = async (
   fileUrls: string[]
 ): Promise<{ fileUrls: string[]; id: string }> => {
   try {
-    const response = await put<
-      { fileUrls: string[] },
-      { customer: { fileUrls: string[]; id: string } }
-    >(`/customers/${customerId}/files`, { fileUrls });
+    const response = await put(`/customers/${customerId}/files`, { fileUrls });
 
     return response.customer;
   } catch (error) {
