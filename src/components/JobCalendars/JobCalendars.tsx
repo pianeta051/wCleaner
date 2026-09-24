@@ -97,11 +97,16 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
   const isAdmin = isInGroup("Admin");
 
   const open = Boolean(anchorEl);
-  const handlePopoverClose = () => setAnchorEl(null);
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
 
   const getColor = useCallback(
     (job: Job) => {
-      if (job.status === "cancelled") return CANCELED_COLOR;
+      if (job.status === "cancelled") {
+        return CANCELED_COLOR;
+      }
 
       if (colorLegendView === "users") {
         return job.assignedTo?.color ?? DEFAULT_COLOR;
@@ -123,17 +128,29 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
       .second(0)
       .millisecond(0)
       .toDate();
-    if (view !== Views.DAY) return fallback;
+
+    if (view !== Views.DAY) {
+      return fallback;
+    }
 
     const dayStr = dayjs(date).format("YYYY-MM-DD");
-    const jobsForDay = jobs.filter((j) => j.date === dayStr);
-    if (jobsForDay.length === 0) return fallback;
+
+    const jobsForDay = jobs.filter((job) => job.date === dayStr);
+
+    if (jobsForDay.length === 0) {
+      return fallback;
+    }
 
     let earliest = dayjs(`${dayStr}T${jobsForDay[0].startTime}`);
-    for (const j of jobsForDay) {
-      const t = dayjs(`${dayStr}T${j.startTime}`);
-      if (t.isBefore(earliest)) earliest = t;
+
+    for (const job of jobsForDay) {
+      const jobTime = dayjs(`${dayStr}T${job.startTime}`);
+
+      if (jobTime.isBefore(earliest)) {
+        earliest = jobTime;
+      }
     }
+
     return earliest.toDate();
   }, [view, jobs, date, rangeStart]);
 
@@ -165,11 +182,14 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
   const eventClickHandler = (
     event: CalendarEvent,
-    e: React.SyntheticEvent<HTMLElement>
+    eventElement: React.SyntheticEvent<HTMLElement>
   ) => {
-    if (!event.resource) return;
+    if (!event.resource) {
+      return;
+    }
+
     setEventJob(event.resource);
-    setAnchorEl(e.currentTarget);
+    setAnchorEl(eventElement.currentTarget);
   };
 
   const calendarClickHandler = (slotInfo: SlotInfo) => {
@@ -181,7 +201,10 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
   const eventPropGetter = (event: CalendarEvent) => {
     const resource = event.resource;
-    if (!resource) return {};
+
+    if (!resource) {
+      return {};
+    }
 
     return {
       style: {
@@ -200,14 +223,9 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
             localizer={localizer}
             events={events}
             showAllEvents={false}
-            popup={true}
-            onShowMore={(_events, d) => {
-              onViewChange(Views.DAY);
-              onNavigate(d);
-            }}
+            popup
             drilldownView={Views.DAY}
             timeslots={2}
-            defaultView={isMobile ? Views.DAY : Views.WEEK}
             views={
               isMobile
                 ? [Views.DAY, Views.MONTH]
@@ -241,8 +259,14 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
           anchorEl={anchorEl}
           open={open}
           onClose={handlePopoverClose}
-          anchorOrigin={{ vertical: "top", horizontal: "left" }}
-          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          anchorOrigin={{
+            vertical: "top",
+            horizontal: "left",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
         >
           <JobCard job={eventJob} onJobChanged={onJobsChanged} />
         </Popover>
@@ -275,7 +299,10 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
 const CustomEvent: FC<EventProps<CalendarEvent>> = ({ event, title }) => {
   const resource = event.resource;
-  if (!resource) return null;
+
+  if (!resource) {
+    return null;
+  }
 
   const isCompleted = resource.status === "completed";
   const isMonthView = resource.calendarView === Views.MONTH;
@@ -302,7 +329,12 @@ const CustomEvent: FC<EventProps<CalendarEvent>> = ({ event, title }) => {
       {isCompleted && (
         <CheckWrapper isMonthlyView={isMonthView}>
           <CheckCircle>
-            <CheckIcon sx={{ height: "inherit", width: "inherit" }} />
+            <CheckIcon
+              sx={{
+                height: "inherit",
+                width: "inherit",
+              }}
+            />
           </CheckCircle>
         </CheckWrapper>
       )}

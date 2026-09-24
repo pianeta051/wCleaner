@@ -1,9 +1,9 @@
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { View, Views } from "react-big-calendar";
 import { Button, Typography, useMediaQuery, useTheme } from "@mui/material";
 import isoWeek from "dayjs/plugin/isoWeek";
 import dayjs from "dayjs";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { JobCalendars } from "../../../components/JobCalendars/JobCalendars";
 import { JobCalendarColorLegend } from "../../../components/JobCalendarColorLegend/JobCalendarColorLegend";
@@ -12,7 +12,6 @@ import { GenericJobModal } from "../../../components/GenericJobModal/GenericJobM
 import {
   DEFAULT_CALENDAR_VIEW,
   isValidCalendarView,
-  normalizeCalendarDate,
   parseCalendarDate,
 } from "../../../components/JobCalendars/JobCalendar.utils";
 import { CalendarContainer, PageContainer, PageHeader } from "./Jobs.style";
@@ -53,11 +52,6 @@ const getRangeForView = (date: Date, view: View) => {
   };
 };
 
-type CalendarState = {
-  view?: string;
-  date?: string;
-};
-
 export const JobsPage: FC = () => {
   const [legendView, setLegendView] = useState<"users" | "jobTypes">(
     "jobTypes"
@@ -76,32 +70,18 @@ export const JobsPage: FC = () => {
     const viewParam = searchParams.get("view");
 
     if (isValidCalendarView(viewParam)) {
-      setSearchParams((params) => ({
-        ...params,
-        view: viewParam,
-      }));
       return viewParam;
     }
 
-    setSearchParams((params) => ({
-      ...params,
-      view: undefined,
-    }));
-
-    return isMobile ? Views.DAY : DEFAULT_CALENDAR_VIEW;
+    return isMobile ? Views.MONTH : DEFAULT_CALENDAR_VIEW;
   }, [isMobile, searchParams]);
 
   const initialDate = useMemo<Date>(() => {
     const dateParam = searchParams.get("date");
     const parsedDate = parseCalendarDate(dateParam);
 
-    setSearchParams((params) => ({
-      ...params,
-      date: parsedDate ? (dateParam as string) : undefined,
-    }));
-
-    return normalizeCalendarDate(parsedDate ?? dayjs(), initialView).toDate();
-  }, [searchParams, initialView]);
+    return (parsedDate ?? dayjs()).toDate();
+  }, [searchParams]);
 
   const [view, setView] = useState<View>(initialView);
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
@@ -121,35 +101,25 @@ export const JobsPage: FC = () => {
   );
 
   const updateCalendarUrl = (nextView: View, nextDate: Date) => {
-    const normalizedDate = normalizeCalendarDate(dayjs(nextDate), nextView);
-
     setSearchParams({
       view: viewToParam(nextView),
-      date: normalizedDate.format("DD-MM-YYYY"),
+      date: dayjs(nextDate).format("DD-MM-YYYY"),
     });
   };
 
   const handleViewChange = (nextView: View) => {
-    const normalizedDate = normalizeCalendarDate(
-      dayjs(currentDate),
-      nextView
-    ).toDate();
+    const today = new Date();
 
     setView(nextView);
-    setCurrentDate(normalizedDate);
+    setCurrentDate(today);
 
-    updateCalendarUrl(nextView, normalizedDate);
+    updateCalendarUrl(nextView, today);
   };
 
   const handleNavigate = (nextDate: Date) => {
-    const normalizedDate = normalizeCalendarDate(
-      dayjs(nextDate),
-      view
-    ).toDate();
+    setCurrentDate(nextDate);
 
-    setCurrentDate(normalizedDate);
-
-    updateCalendarUrl(view, normalizedDate);
+    updateCalendarUrl(view, nextDate);
   };
 
   const handleNewJob = () => {
@@ -157,10 +127,8 @@ export const JobsPage: FC = () => {
   };
 
   const handleCloseNewJob = () => {
-    const normalizedDate = normalizeCalendarDate(dayjs(currentDate), view);
-
     navigate(
-      `/admin/jobs?view=${viewToParam(view)}&date=${normalizedDate.format(
+      `/admin/jobs?view=${viewToParam(view)}&date=${dayjs(currentDate).format(
         "DD-MM-YYYY"
       )}`
     );
