@@ -43,8 +43,8 @@ export type CustomerCleaningAddress = {
   customerId: string;
 
   frequency?: CleaningFrequency;
-  lastCleaningDate?: number;
-  nextDueDate?: number;
+  lastCleaningDate?: string;
+  dueDate?: string;
 };
 
 export type CustomerNote = {
