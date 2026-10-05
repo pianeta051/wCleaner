@@ -58,14 +58,14 @@ export const isCustomerAddress = (
 
   if (
     typedValue.lastCleaningDate !== undefined &&
-    typeof typedValue.lastCleaningDate !== "number"
+    typeof typedValue.lastCleaningDate !== "string"
   ) {
     return false;
   }
 
   if (
-    typedValue.nextDueDate !== undefined &&
-    typeof typedValue.nextDueDate !== "number"
+    typedValue.dueDate !== undefined &&
+    typeof typedValue.dueDate !== "string"
   ) {
     return false;
   }
@@ -97,7 +97,7 @@ export const addCustomer = async (
         }
       }
       if (error.response.status === 422) {
-        throw "INVALID_CLEANING_FREQUENCYE";
+        throw "INVALID_CLEANING_FREQUENCY";
       }
     }
 

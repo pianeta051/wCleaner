@@ -11,6 +11,8 @@ const {
   editCustomer,
 } = require("../db");
 
+const { calculateDueDate } = require("../utils/addressDueDate");
+
 const { mapCleaningAddress, mapCustomer } = require("../mappers");
 
 const { generateToken, parseToken } = require("../token");
@@ -51,23 +53,42 @@ const setCustomerRoutes = (app) => {
   app.get("/customers/:slug", async function (req, res) {
     const slug = req.params.slug;
     const customerFromDb = await getCustomerBySlug(slug);
+
     if (!customerFromDb || customerFromDb.status.S === "deleted") {
       res.status(404).json({ message: "This customer does not exist" });
       return;
     }
+
     const customer = mapCustomer(customerFromDb);
     const cleaningAddresses = await getCleaningAddresses(customer.id);
-    customer.cleaningAddresses = cleaningAddresses.map(mapCleaningAddress);
-    for (let i = 0; i < customer.cleaningAddresses.length; i++) {
-      const address = customer.cleaningAddresses[i];
-      const lastCleaningDate = await getLastCleaningDate(
-        customer.id,
-        address.id
-      );
-      if (lastCleaningDate) {
-        customer.cleaningAddresses[i].lastCleaningDate = lastCleaningDate;
-      }
-    }
+
+    customer.cleaningAddresses = await Promise.all(
+      cleaningAddresses.map(async (addressFromDb) => {
+        const addressId = addressFromDb.SK.S.replace("address_", "");
+        const lastCleaningDate = await getLastCleaningDate(
+          customer.id,
+          addressId
+        );
+
+        const dueDate =
+          addressFromDb.frequency_value && addressFromDb.frequency_unit
+            ? calculateDueDate(
+                lastCleaningDate,
+                Number(addressFromDb.frequency_value.N),
+                addressFromDb.frequency_unit.S
+              )
+            : undefined;
+
+        const address = mapCleaningAddress({
+          ...addressFromDb,
+          lastCleaningDate,
+          dueDate,
+        });
+
+        return address;
+      })
+    );
+
     res.json({ customer });
   });
 
@@ -140,7 +161,9 @@ const setCustomerRoutes = (app) => {
           await editAddress(editedCustomer.id, address);
         }
       }
-      const editedCleaningAddresses = await getCleaningAddresses(customer.id);
+      const editedCleaningAddresses = await getCleaningAddresses(
+        editedCustomer.id
+      );
       editedCustomer.cleaningAddresses =
         editedCleaningAddresses.map(mapCleaningAddress);
 

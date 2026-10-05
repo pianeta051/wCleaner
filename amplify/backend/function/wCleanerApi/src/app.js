@@ -22,26 +22,20 @@ const {
   addCustomerJob,
   addCustomerNote,
   addJobType,
-  createInvoice,
   getAddressesForJobs,
-  getCleaningAddress,
-  getCleaningAddressById,
   getCleaningAddresses,
   getCustomerJobs,
   getJob,
   getJobs,
   getJobCustomers,
-  getCustomersForInvoices,
   getJobType,
   getJobTypes,
   getLastCleaningDate,
   getOutcodes,
   deleteCustomerNote,
-  deleteInvoice,
   deleteJobType,
   editJobFromCustomer,
   updateJobStatus,
-  updateInvoicePaid,
   deleteJobFromCustomer,
   deleteAddress,
   editCustomer,
@@ -53,7 +47,7 @@ const {
 const {
   mapCleaningAddress,
   mapCustomerJobs,
-  mapInvoice,
+
   mapJob,
   mapJobFromRequestBody,
   mapJobTypeFromRequestBody,
@@ -66,6 +60,8 @@ const { getAuthData, getJobUsers } = require("./authentication");
 
 const { setCustomerRoutes } = require("./routes/customers");
 const { setInvoicesRoutes } = require("./routes/invoices");
+
+const { calculateDueDate } = require("./utils/addressDueDate");
 
 const MANDATORY_ENV_VARS = ["USER_POOL_ID", "ENV"];
 
@@ -742,18 +738,33 @@ app.delete("/customers/:customerId/note/:noteId", async function (req, res) {
 app.get("/customers/:customerId/addresses", async function (req, res) {
   const id = req.params.customerId;
   const items = await getCleaningAddresses(id);
-  const addresses = items.map(mapCleaningAddress);
-  for (let i = 0; i < addresses.length; i++) {
-    const address = addresses[i];
-    const lastCleaningDate = await getLastCleaningDate(id, address.id);
+
+  for (let i = 0; i < items.length; i++) {
+    const address = items[i];
+    const addressId = address.SK.S.replace("address_", "");
+    const lastCleaningDate = await getLastCleaningDate(id, addressId);
+
     if (lastCleaningDate) {
-      addresses[i].lastCleaningDate = lastCleaningDate;
+      items[i].lastCleaningDate = lastCleaningDate;
+
+      if (address.frequency_value && address.frequency_unit) {
+        const dueDate = calculateDueDate(
+          lastCleaningDate,
+          Number(address.frequency_value.N),
+          address.frequency_unit.S
+        );
+
+        if (dueDate) {
+          items[i].dueDate = dueDate;
+        }
+      }
     }
   }
 
+  const addresses = items.map(mapCleaningAddress);
+
   res.json({ addresses });
 });
-
 const APP_PORT = process.env.APP_PORT ?? 3000;
 
 app.listen(APP_PORT, function () {

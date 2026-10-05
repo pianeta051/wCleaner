@@ -1,5 +1,6 @@
 const dayjs = require("dayjs");
 const { formatInvoiceNumber } = require("./utils/invoiceNumber");
+const { getLastCleaningDate } = require("./db");
 
 const mapCustomer = (customerFromDb) => ({
   id: customerFromDb.PK.S.replace("customer_", ""),
@@ -41,6 +42,12 @@ const mapCleaningAddress = (cleaningAddressFromDb) => ({
           unit: cleaningAddressFromDb.frequency_unit.S,
         }
       : undefined,
+  lastCleaningDate: cleaningAddressFromDb.lastCleaningDate
+    ? dayjs(cleaningAddressFromDb.lastCleaningDate).format("YYYY-MM-DD")
+    : undefined,
+  dueDate: cleaningAddressFromDb.dueDate
+    ? dayjs(cleaningAddressFromDb.dueDate).format("YYYY-MM-DD")
+    : undefined,
 });
 
 const mapCustomerJobs = (customerJob) => ({

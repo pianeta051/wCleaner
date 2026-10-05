@@ -9,6 +9,7 @@ const {
   BatchGetItemCommand,
   TransactWriteItemsCommand,
 } = require("@aws-sdk/client-dynamodb");
+
 const { mapCustomer, mapInvoice, mapCleaningAddress } = require("./mappers");
 const {
   formatInvoiceNumber,
@@ -736,29 +737,43 @@ const getLastCleaningDate = async (customerId, addressId) => {
   }
 
   // hacer un bucle de query hasta encontrar 1 resultado
-  // en cuanto se encuentra1 resultado, se devuleve
+  // en cuanto se encuentra 1 resultado, se devuelve
   // solo se hace return sin resultado cuando se han recorrido todas las paginas
-  const params = {
-    TableName: TABLE_NAME,
-    IndexName: "job_start_time",
-    ScanIndexForward: false,
-    ExpressionAttributeNames: {
-      "#JSTPK": "job_start_time_pk",
-      "#PK": "PK",
-      "#AI": "address_id",
-      "#ST": "status",
-    },
-    ExpressionAttributeValues: {
-      ":aggregator": { N: "1" },
-      ":pk": { S: `customer_${customerId}` },
-      ":address_id": { S: `${addressId}` },
-      ":status": { S: "cancelled" },
-    },
-    FilterExpression: "#PK = :pk AND #AI = address_id AND #ST <> :status",
-    KeyConditionExpression: "#JSTPK = :aggregator",
-  };
+  let ExclusiveStartKey;
 
-  // devolver el primero de la lista, solo su valor de +start.N
+  do {
+    const params = {
+      TableName: TABLE_NAME,
+      IndexName: "job_start_time",
+      ScanIndexForward: false,
+      ExpressionAttributeNames: {
+        "#JSTPK": "job_start_time_pk",
+        "#PK": "PK",
+        "#AI": "address_id",
+        "#ST": "status",
+      },
+      ExpressionAttributeValues: {
+        ":aggregator": { N: "1" },
+        ":pk": { S: `customer_${customerId}` },
+        ":address_id": { S: `${addressId}` },
+        ":status": { S: "cancelled" },
+      },
+      FilterExpression: "#PK = :pk AND #AI = :address_id AND #ST <> :status",
+      KeyConditionExpression: "#JSTPK = :aggregator",
+      ExclusiveStartKey,
+    };
+
+    const command = new QueryCommand(params);
+    const result = await dynamoClient.send(command);
+
+    if (result.Items?.length) {
+      return +result.Items[0].start.N;
+    }
+
+    ExclusiveStartKey = result.LastEvaluatedKey;
+  } while (ExclusiveStartKey);
+
+  return;
 };
 
 const getCustomerBySlug = async (slug) => {
@@ -943,7 +958,6 @@ const addCustomerJob = async (customerId, job, assignedTo) => {
       payment_method: { S: job.paymentMethod || "none" },
     },
   };
-
   const command = new PutItemCommand(params);
   await dynamoClient.send(command);
 
