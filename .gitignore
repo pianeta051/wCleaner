@@ -45,3 +45,9 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+
+# agents docs
+/meta/
+
+# infra build output (aws cloudformation package)
+/.build/
