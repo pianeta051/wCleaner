@@ -252,7 +252,72 @@ aws s3 rb "s3://$BUCKET"
 
 ## Deploying with GitHub Actions
 
-_Not written yet._
+Do this **once per GitHub repo** that deploys (`pianeta051/wCleaner`, and any fork that deploys to its own account). The workflow and the scripts are the same in every repo; only the repo's settings change.
+
+### 1. What the workflow does
+
+`.github/workflows/deploy.yml` (**Deploy infra** in the Actions tab) runs when it's started by hand (Run workflow) and on every push to the `new-infra-scaffolding` branch (temporary, until the workflow is merged). It:
+
+1. Runs `infra/scripts/check-params.sh`, which needs no AWS credentials.
+2. Gets temporary AWS credentials: GitHub issues an OIDC token for the run, and AWS exchanges it for a session of the **deployer role** (`AWS_ROLE_ARN`). The token says which repo and environment the run is for, and the role only accepts the ones listed in the bootstrap's `GitHubSubjects`.
+3. Runs `infra/scripts/deploy.sh dev`, the same script as a deploy by hand. The deployer role uploads the templates and starts the CloudFormation deploy, and CloudFormation creates the resources with the **execution role**.
+
+No AWS keys are stored in GitHub, and the credentials expire when the run ends. For now it only deploys `dev`.
+
+### 2. Prerequisites
+
+- The target account is bootstrapped ([Bootstrapping an AWS account](#bootstrapping-an-aws-account)).
+- Its `GitHubSubjects` includes this repo, for example `repo:pianeta051/wCleaner:environment:*`. Check it with:
+
+  ```sh
+  aws cloudformation describe-stacks --stack-name wcleaner-bootstrap \
+    --query "Stacks[0].Parameters[?ParameterKey=='GitHubSubjects'].ParameterValue" --output text
+  ```
+
+  If the repo isn't there, add it first ([Updating the bootstrap later](#8-updating-the-bootstrap-later)).
+
+- The `DeployerRoleArn` output of the bootstrap stack ([Read the outputs](#6-read-the-outputs)).
+- Admin access to the GitHub repo (to change its settings).
+
+### 3. Connect the repo
+
+**Repository variables.** In the repo on GitHub: Settings → Secrets and variables → Actions → **Variables** tab → New repository variable. Add these two (variables, not secrets: neither is sensitive, and variables show up in the logs, which helps when debugging):
+
+| Name           | Value                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------ |
+| `AWS_ROLE_ARN` | The bootstrap `DeployerRoleArn`, `arn:aws:iam::<account id>:role/wcleaner-github-deployer` |
+| `AWS_REGION`   | `eu-west-2`                                                                                |
+
+**Environments.** Settings → Environments → New environment, create `dev`, and also `prod` (not used by the workflow yet). The job runs in the `dev` environment, which is what puts `environment:dev` in the OIDC token. You can leave the environments without protection rules for now; `prod` will get required reviewers once the workflow deploys it.
+
+If an environment ever needs another account, add an `AWS_ROLE_ARN` (and `AWS_REGION` if different) **environment variable** on that environment (Settings → Environments → the environment → Environment variables). Jobs in that environment use it instead of the repository one, and nothing else changes. That account must be bootstrapped with this repo in its `GitHubSubjects`.
+
+### 4. Run a deploy
+
+Actions → **Deploy infra** → Run workflow → pick the branch → Run workflow. Or push to `new-infra-scaffolding`.
+
+A successful run is green and ends with the `deploy.sh` output: `Successfully created/updated stack - wcleaner-dev` (or `No changes to deploy. Stack wcleaner-dev is up to date` if nothing changed), then a table with the stack outputs (for now, `PlaceholderMessage` = `wcleaner-dev placeholder is deployed`).
+
+In the AWS console (eu-west-2), CloudFormation → Stacks shows `wcleaner-dev` and its nested stack in `CREATE_COMPLETE` or `UPDATE_COMPLETE`.
+
+Runs for the same environment wait for each other, so two pushes in a row don't deploy at the same time. Runs from different repos aren't coordinated: if two repos deploy to the same account, don't run them at the same time.
+
+### 5. Troubleshooting
+
+**`Not authorized to perform sts:AssumeRoleWithWebIdentity`** in the `configure-aws-credentials` step. AWS rejected the OIDC token. Either:
+
+- the repo or environment isn't in `GitHubSubjects` (check it as in step 2; the run's token is for `repo:<owner>/<repo>:environment:dev`). Add it ([Updating the bootstrap later](#8-updating-the-bootstrap-later)).
+- `AWS_ROLE_ARN` is wrong or points at another account. Compare it with the bootstrap `DeployerRoleArn` output.
+
+**`Input required and not supplied: aws-region`**, or `role-to-assume` empty: the `AWS_REGION` / `AWS_ROLE_ARN` variables are missing, or were added as secrets instead of variables (step 3).
+
+**`Credentials could not be loaded`** / `Could not fetch an OIDC token`: the run can't get an OIDC token. This is always the case for `pull_request` runs from forks (GitHub doesn't give them one), which is why deploys only run on push and dispatch in the repo itself.
+
+**`AccessDenied` / `not authorized to perform` while CloudFormation creates a resource.** The deploy reached CloudFormation, but the execution role lacks a permission the templates need. `deploy.sh` prints the failed resources with the reason. Add the permission to `ExecutionRole` in `infra/bootstrap.yaml` (and the [Permissions](#permissions) table), then an admin updates the bootstrap stack ([Updating the bootstrap later](#8-updating-the-bootstrap-later)). CI can't do that itself, on purpose.
+
+**`AccessDenied` for `wcleaner-github-deployer`** itself (before CloudFormation starts, for example on `s3:PutObject` or `cloudformation:CreateChangeSet`): the deployer role is missing a permission. Same fix, in `DeployerRole`.
+
+**`wcleaner-dev is in ROLLBACK_COMPLETE`.** The first create of the stack failed. Fix the cause (the failure printed by the run), then an admin deletes the stack, with the commands `deploy.sh` prints, and you run the workflow again. The deployer role can't delete stacks.
 
 ## Permissions
 
@@ -288,6 +353,7 @@ Only assumable by CloudFormation (`cloudformation.amazonaws.com`). Used for ever
 | Service        | Actions                                                       | Resource                        | Why                                                                                                        |
 | -------------- | ------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | CloudFormation | `CreateStack`, `UpdateStack`, `DeleteStack`, `DescribeStacks` | `wcleaner-*` stacks, any region | Creating, updating and deleting the nested stacks, which CloudFormation does with the parent stack's role. |
+| IAM            | `PassRole`, only to `cloudformation.amazonaws.com`            | The execution role itself       | CloudFormation hands the parent stack's role on to each nested stack it creates.                           |
 | S3             | `GetObject`                                                   | Objects in the artifacts bucket | Reading the nested templates (and later the Lambda code).                                                  |
 
 Each new subsystem adds the permissions its resources need, scoped to `wcleaner-*` names where the service allows it. In particular, IAM permissions (when stacks start creating roles) are limited to `arn:aws:iam::<account id>:role/wcleaner-*`.

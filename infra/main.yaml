@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  wCleaner environment stack (wcleaner-<env>). Only wires the nested stacks
+  together and re-exports the outputs the front-end needs. Deployed with
+  infra/scripts/deploy.sh, with the values from infra/params/<env>.json.
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, prod]
+    Description: Label used in resource names, tags and outputs. Nothing branches on it.
+
+Resources:
+  PlaceholderStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: stacks/placeholder.yaml
+      Parameters:
+        Environment: !Ref Environment
+
+Outputs:
+  PlaceholderMessage:
+    Value: !GetAtt PlaceholderStack.Outputs.Message

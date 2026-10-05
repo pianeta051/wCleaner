@@ -175,6 +175,16 @@ Resources:
                   - cloudformation:DeleteStack
                   - cloudformation:DescribeStacks
                 Resource: !Sub arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/wcleaner-*/*
+              # Nested stacks are created with the parent's role, so CloudFormation
+              # passes this same role on to them. (Built with !Sub: !GetAtt on
+              # itself would be a circular dependency.)
+              - Sid: PassItselfToNestedStacks
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-cfn-execution
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: cloudformation.amazonaws.com
               - Sid: ReadArtifacts
                 Effect: Allow
                 Action: s3:GetObject
