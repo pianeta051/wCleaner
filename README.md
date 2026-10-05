@@ -220,7 +220,7 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM \
   --no-execute-changeset \
   --parameter-overrides \
-    "GitHubSubjects=repo:pianeta051/wCleaner:environment:*,repo:pianeta051/wCleaner:environment:*"
+    "GitHubSubjects=repo:pianeta051/wCleaner:environment:*,repo:<fork owner>/wCleaner:environment:*"
 ```
 
 It prints a `describe-change-set` command with the ARN of the change set it created. Use that ARN to list what it would change:
@@ -279,7 +279,7 @@ Do this **once per GitHub repo** that deploys (`pianeta051/wCleaner`, and any fo
 
 ### 1. What the workflow does
 
-`.github/workflows/deploy.yml` (**Deploy infra** in the Actions tab) runs when it's started by hand (Run workflow) and on every push to the `new-infra-scaffolding` branch (temporary, until the workflow is merged). It:
+`.github/workflows/deploy.yml` (**Deploy infra** in the Actions tab) runs when it's started by hand (Run workflow) and on every push to `main`. (GitHub only offers Run workflow once the workflow file is on the default branch.) It:
 
 1. Runs `infra/scripts/check-params.sh`, which needs no AWS credentials.
 2. Gets temporary AWS credentials: GitHub issues an OIDC token for the run, and AWS exchanges it for a session of the **deployer role** (`AWS_ROLE_ARN`). The token says which repo and environment the run is for, and the role only accepts the ones listed in the bootstrap's `GitHubSubjects`.
@@ -317,7 +317,7 @@ If an environment ever needs another account, add an `AWS_ROLE_ARN` (and `AWS_RE
 
 ### 4. Run a deploy
 
-Actions → **Deploy infra** → Run workflow → pick the branch → Run workflow. Or push to `new-infra-scaffolding`.
+Actions → **Deploy infra** → Run workflow → pick the branch → Run workflow. Or push to `main`.
 
 A successful run is green and ends with the `deploy.sh` output: `Successfully created/updated stack - wcleaner-dev` (or `No changes to deploy. Stack wcleaner-dev is up to date` if nothing changed), then a table with the stack outputs (for now, `PlaceholderMessage` = `wcleaner-dev placeholder is deployed`).
 
@@ -400,6 +400,7 @@ The script:
 What you should see at the end is `Successfully created/updated stack - wcleaner-dev` (or `No changes to deploy. Stack wcleaner-dev is up to date`), and the outputs table. Running it again with no changes is safe: the change set is empty and it doesn't fail.
 
 If the deploy fails, the script lists the failed resources with their reasons, including inside nested stacks; the first one is usually the cause. The fixes are the same as in [the GitHub Actions troubleshooting](#5-troubleshooting): a missing permission goes in `bootstrap.yaml`, and a stack in `ROLLBACK_COMPLETE` is deleted by an admin with the commands the script prints.
+
 ## Permissions
 
 `infra/bootstrap.yaml` is the source of truth; these tables mirror it. Every change to the roles in `bootstrap.yaml` updates them in the same commit.
