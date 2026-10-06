@@ -24,9 +24,23 @@ yarn start
 
 **When:** once per AWS account, before anything can be deployed to it. Needs an admin profile in that account (never root). It creates the artifacts bucket, the GitHub OIDC provider, the deployer role (used by GitHub Actions) and the execution role (used by CloudFormation).
 
-**Requires:** AWS CLI v2, a browser, the repo checked out on `main`. Run everything from the repo root.
+**Requires:** AWS CLI v2, [`jq`](https://jqlang.org/), the repo checked out on `main`. Run everything from the repo root.
 
-1. Point the CLI at the account and the region the stacks will live in, and check it:
+1. List the GitHub repos allowed to deploy to this account in `infra/bootstrap.env` (gitignored, so each admin keeps their own):
+
+   ```sh
+   cp infra/bootstrap.env.example infra/bootstrap.env
+   ```
+
+   Edit it and set `GITHUB_REPOS`, separated by spaces:
+
+   ```sh
+   GITHUB_REPOS="pianeta051/wCleaner"
+   ```
+
+   **Private repos:** the script can't look up their OIDC prefix, so write the prefix instead of `<owner>/<repo>`. It's `repo:<owner>/<repo>`, or `repo:<owner>@<owner id>/<repo>@<repo id>` if the repo uses immutable subject claims. Ask a repo admin if unsure.
+
+2. Point the CLI at the account and the region the stacks will live in, and check it:
 
    ```sh
    export AWS_PROFILE=<profile>
@@ -34,91 +48,20 @@ yarn start
    aws sts get-caller-identity   # Account must be the target one, Arn must not end in :root
    ```
 
-2. Check for an existing GitHub OIDC provider (only one can exist per account):
+3. Deploy:
 
    ```sh
-   aws iam list-open-id-connect-providers \
-     --query "OpenIDConnectProviderList[?ends_with(Arn, '/token.actions.githubusercontent.com')].Arn" \
-     --output text
+   infra/scripts/deploy-bootstrap.sh
    ```
 
-   If it prints an ARN, keep it for step 4, and make sure the provider accepts `sts.amazonaws.com`:
-
-   ```sh
-   aws iam get-open-id-connect-provider --open-id-connect-provider-arn <arn> --query ClientIDList
-   # if sts.amazonaws.com is missing:
-   aws iam add-client-id-to-open-id-connect-provider --open-id-connect-provider-arn <arn> --client-id sts.amazonaws.com
-   ```
-
-3. Build `GitHubSubjects`, the repos allowed to deploy. For each repo, open this URL in your browser:
-
-   ```
-   https://api.github.com/repos/<owner>/<repo>/actions/oidc/customization/sub
-   ```
-
-   For example, https://api.github.com/repos/pianeta051/wCleaner/actions/oidc/customization/sub shows:
-
-   ```json
-   {
-     "use_default": true,
-     "use_immutable_subject": false,
-     "sub_claim_prefix": "repo:pianeta051/wCleaner"
-   }
-   ```
-
-   Take `sub_claim_prefix` exactly as shown and append `:environment:*` (or `:environment:<env>` to allow just one environment). Separate entries with commas, no spaces. For example `repo:pianeta051/wCleaner:environment:*`.
-
-   If the page says `Not Found`, the repo is private. Then the prefix is `repo:<owner>/<repo>`, unless the repo uses immutable subject claims, in which case it's `repo:<owner>@<owner id>/<repo>@<repo id>`. Ask a repo admin if unsure.
-
-4. Deploy the stack (keep the quotes). Add the `ExistingGitHubOidcProviderArn` line only if step 2 printed an ARN:
-
-   ```sh
-   aws cloudformation deploy \
-     --stack-name wcleaner-bootstrap \
-     --template-file infra/bootstrap.yaml \
-     --capabilities CAPABILITY_NAMED_IAM \
-     --parameter-overrides \
-       "GitHubSubjects=repo:pianeta051/wCleaner:environment:*" \
-       "ExistingGitHubOidcProviderArn=<arn from step 2>"
-   ```
-
-   It should end with `Successfully created/updated stack - wcleaner-bootstrap`.
-
-5. Get the outputs. You'll need `DeployerRoleArn` to [connect the GitHub repo](#configure-a-github-repo):
-
-   ```sh
-   aws cloudformation describe-stacks --stack-name wcleaner-bootstrap \
-     --query 'Stacks[0].Outputs' --output table
-   ```
+   It prints the account, region and `GitHubSubjects` first: Ctrl-C if they're wrong. It reuses the account's GitHub OIDC provider if there's one already. It should end with `Successfully created/updated stack - wcleaner-bootstrap` and the stack outputs. You'll need `DeployerRoleArn` to [configure the GitHub repo](#configure-a-github-repo).
 
 ## Update the bootstrap stack
 
-**When:** `infra/bootstrap.yaml` changed (e.g. the execution role needs a new permission), or a repo has to be added to or removed from `GitHubSubjects`. Admin only: CI can't change this stack.
+**When:** `infra/bootstrap.yaml` changed (e.g. the execution role needs a new permission), or a repo has to be added to or removed from the account. Admin only: CI can't change this stack.
 
-Same setup as [step 1 above](#bootstrap-an-aws-account), on the latest `main`. Then preview the change:
-
-```sh
-aws cloudformation deploy \
-  --stack-name wcleaner-bootstrap \
-  --template-file infra/bootstrap.yaml \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --no-execute-changeset
-  # only when changing the repos, add the FULL new list:
-  # --parameter-overrides "GitHubSubjects=<entry>,<entry>"
-
-aws cloudformation describe-change-set --stack-name wcleaner-bootstrap --change-set-name <ARN printed above> \
-  --query 'Changes[].ResourceChange.[Action,LogicalResourceId,Replacement]' --output table
-```
-
-Expect `Modify` on the roles with `Replacement` `False`. If the bucket or the OIDC provider shows `Remove` or `Replacement` `True`, stop. Otherwise apply it:
-
-```sh
-aws cloudformation execute-change-set --stack-name wcleaner-bootstrap --change-set-name <ARN>
-aws cloudformation wait stack-update-complete --stack-name wcleaner-bootstrap
-```
-
-- Parameters you don't pass keep their current value (see them with `aws cloudformation describe-stacks --stack-name wcleaner-bootstrap --query 'Stacks[0].Parameters' --output table`).
-- **Never pass `ExistingGitHubOidcProviderArn` on an update**: it would delete the provider the stack created.
+1. Pull the latest `main`. To change the repos, edit `GITHUB_REPOS` in `infra/bootstrap.env` (it's the full list, not just the new ones).
+2. Do [step 2 above](#bootstrap-an-aws-account) and run `infra/scripts/deploy-bootstrap.sh` again. If nothing changed it says `No changes to deploy`.
 
 ## Configure a GitHub repo
 
