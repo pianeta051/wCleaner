@@ -189,30 +189,6 @@ Resources:
                 Effect: Allow
                 Action: s3:GetObject
                 Resource: !Sub ${ArtifactsBucket.Arn}/*
-        - PolicyName: data
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Sid: DynamoDBTables
-                Effect: Allow
-                Action:
-                  - dynamodb:CreateTable
-                  - dynamodb:DeleteTable
-                  - dynamodb:DescribeTable
-                  - dynamodb:UpdateTable
-                  - dynamodb:DescribeContinuousBackups
-                  - dynamodb:UpdateContinuousBackups
-                  - dynamodb:DescribeTimeToLive
-                  - dynamodb:DescribeContributorInsights
-                  - dynamodb:DescribeKinesisStreamingDestination
-                  - dynamodb:GetResourcePolicy
-                  - dynamodb:TagResource
-                  - dynamodb:UntagResource
-                  - dynamodb:ListTagsOfResource
-                Resource:
-                  - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table
-                  - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table/index/*
-                  - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table/stream/*
 
 Outputs:
   ArtifactsBucketName:
