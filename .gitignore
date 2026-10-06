@@ -51,6 +51,3 @@ amplifytools.xcconfig
 
 # infra build output (aws cloudformation package)
 /.build/
-
-# per-account bootstrap settings (infra/bootstrap.env.example)
-/infra/bootstrap.env
