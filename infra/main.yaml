@@ -11,13 +11,14 @@ Parameters:
     Description: Label used in resource names, tags and outputs. Nothing branches on it.
 
 Resources:
-  PlaceholderStack:
+  DataStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: stacks/placeholder.yaml
+      TemplateURL: stacks/data.yaml
       Parameters:
         Environment: !Ref Environment
 
 Outputs:
-  PlaceholderMessage:
-    Value: !GetAtt PlaceholderStack.Outputs.Message
+  # Not needed by the front-end, but handy in the deploy output.
+  TableName:
+    Value: !GetAtt DataStack.Outputs.TableName
