@@ -45,6 +45,9 @@ import {
 import { useDeleteCustomerAddress } from "../../../hooks/Customers/addresses/useDeleteCustomerAddress";
 
 import { AddressModal } from "../../AddressModal/AddressModal";
+import { Chip } from "@mui/material";
+import { getCleaningDueInfo } from "../../../utils/cleaningDue";
+import { AddressDueDateChip } from "../../AddressDueDateChip/AddressDueDateChip";
 
 export type CustomerFormValues = {
   name: string;
@@ -399,6 +402,7 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                         addr.name ?? `Address ${index + 1}`
                       )}
                     </AddressSummaryTitle>
+                    <AddressDueDateChip dueDate={addr.dueDate} />
 
                     {formik.values.cleaningAddresses.length > 1 && (
                       <AddressDeleteButton

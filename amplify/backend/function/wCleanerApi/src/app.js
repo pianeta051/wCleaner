@@ -25,6 +25,8 @@ const {
   getAddressesForJobs,
   getCleaningAddresses,
   getCustomerJobs,
+  getDueCleaningAddresses,
+  getCustomersByIds,
   getJob,
   getJobs,
   getJobCustomers,
@@ -42,6 +44,7 @@ const {
   editCustomerNote,
   editJobType,
   addFile,
+  updateDueDateForAddress,
 } = require("./db");
 
 const {
@@ -54,14 +57,13 @@ const {
   mapJobTemporalFilters,
   mapJobType,
 } = require("./mappers");
+const dayjs = require("dayjs");
 
 const { generateToken, parseToken } = require("./token");
 const { getAuthData, getJobUsers } = require("./authentication");
 
 const { setCustomerRoutes } = require("./routes/customers");
 const { setInvoicesRoutes } = require("./routes/invoices");
-
-const { calculateDueDate } = require("./utils/addressDueDate");
 
 const MANDATORY_ENV_VARS = ["USER_POOL_ID", "ENV"];
 
@@ -349,6 +351,8 @@ app.post("/customers/:customerId/job", async function (req, res) {
       assignedTo = job.assignedTo;
     }
     const createdJob = await addCustomerJob(customerId, job, assignedTo);
+    await updateDueDateForAddress(customerId, job.addressId);
+
     res.json({
       job: {
         ...createdJob,
@@ -385,6 +389,7 @@ app.put("/customers/:customerId/jobs/:jobId", async function (req, res) {
     let updatedJob = req.body;
     updatedJob = mapJobFromRequestBody(req.body);
     const jobUpdated = await editJobFromCustomer(customerId, jobId, updatedJob);
+    await updateDueDateForAddress(customerId, jobUpdated.addressId);
 
     res.json({ job: { ...jobUpdated, assignedTo: undefined, id: jobId } });
   } catch (error) {
@@ -435,6 +440,7 @@ app.put("/customers/:customerId/jobs/:jobId/status", async function (req, res) {
     }
 
     await updateJobStatus(customerId, jobId, status);
+    await updateDueDateForAddress(customerId, jobFromDb.address_id.S);
 
     res.json({ status });
   } catch (error) {
@@ -450,7 +456,9 @@ app.delete("/customers/:customerId/job/:jobId", async function (req, res) {
   try {
     const customerId = req.params.customerId;
     const jobId = req.params.jobId;
+    const jobFromDb = await getJob(customerId, jobId);
     await deleteJobFromCustomer(customerId, jobId);
+    await updateDueDateForAddress(customerId, jobFromDb.address_id.S);
     res.json({ message: "Job Deleted" });
   } catch (error) {
     if (error.message === "CUSTOMER_NOT_FOUND") {
@@ -739,31 +747,52 @@ app.get("/customers/:customerId/addresses", async function (req, res) {
   const id = req.params.customerId;
   const items = await getCleaningAddresses(id);
 
-  for (let i = 0; i < items.length; i++) {
-    const address = items[i];
-    const addressId = address.SK.S.replace("address_", "");
-    const lastCleaningDate = await getLastCleaningDate(id, addressId);
-
-    if (lastCleaningDate) {
-      items[i].lastCleaningDate = lastCleaningDate;
-
-      if (address.frequency_value && address.frequency_unit) {
-        const dueDate = calculateDueDate(
-          lastCleaningDate,
-          Number(address.frequency_value.N),
-          address.frequency_unit.S
-        );
-
-        if (dueDate) {
-          items[i].dueDate = dueDate;
-        }
-      }
-    }
-  }
-
   const addresses = items.map(mapCleaningAddress);
 
   res.json({ addresses });
+});
+
+app.get("/addresses/due", async function (req, res) {
+  try {
+    const days = Number(req.query.days) || 7;
+
+    const end = dayjs().endOf("day").add(days, "day").valueOf();
+
+    const items = await getDueCleaningAddresses(undefined, end);
+
+    const addresses = items.map(mapCleaningAddress);
+
+    const customerIds = addresses.map((address) => address.customerId);
+
+    const customers = await getCustomersByIds(customerIds);
+
+    const customersById = new Map(
+      customers.map((customer) => [
+        customer.PK.S.replace("customer_", ""),
+        customer,
+      ])
+    );
+
+    const enrichedAddresses = addresses.map((address) => {
+      const customer = customersById.get(address.customerId);
+
+      return {
+        ...address,
+        customerName: customer?.name?.S,
+        customerSlug: customer?.slug?.S,
+      };
+    });
+
+    res.json({
+      addresses: enrichedAddresses,
+    });
+  } catch (error) {
+    console.error("Error getting due cleaning addresses", error);
+
+    res.status(500).json({
+      message: "Error getting due cleaning addresses",
+    });
+  }
 });
 const APP_PORT = process.env.APP_PORT ?? 3000;
 

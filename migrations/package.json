@@ -3,6 +3,7 @@
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.856.0",
+    "dayjs": "^1.11.23",
     "uuid": "^11.1.0"
   },
   "scripts": {

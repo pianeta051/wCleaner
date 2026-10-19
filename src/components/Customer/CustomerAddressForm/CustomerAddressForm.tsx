@@ -1,7 +1,14 @@
 import { FC } from "react";
-import { FormControl, Grid, InputLabel, MenuItem, Select } from "@mui/material";
+import {
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  Typography,
+} from "@mui/material";
 import { Field } from "../CustomerForm/CustomerForm.style";
-
+import dayjs, { Dayjs } from "dayjs";
 export type CleaningFrequencyUnit = "weeks" | "months";
 
 export type CustomerAddressFormValues = {
@@ -13,6 +20,7 @@ export type CustomerAddressFormValues = {
     value: number;
     unit: CleaningFrequencyUnit;
   };
+  dueDate?: string;
 };
 
 type CustomerAddressFormProps = {
@@ -172,6 +180,22 @@ export const CustomerAddressForm: FC<CustomerAddressFormProps> = ({
               </Select>
             </FormControl>
           </Grid>
+          {value?.id && (
+            <Grid size={12}>
+              <Grid container spacing={1}>
+                {value?.id && (
+                  <Grid size={12}>
+                    <Typography variant="body2" color="text.secondary">
+                      Due date:{" "}
+                      {value.dueDate
+                        ? dayjs(value.dueDate).format("DD MMM YYYY")
+                        : "Not scheduled"}
+                    </Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </Grid>
+          )}
         </Grid>
       </Grid>
     </Grid>

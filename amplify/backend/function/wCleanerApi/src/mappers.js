@@ -45,8 +45,8 @@ const mapCleaningAddress = (cleaningAddressFromDb) => ({
   lastCleaningDate: cleaningAddressFromDb.lastCleaningDate
     ? dayjs(cleaningAddressFromDb.lastCleaningDate).format("YYYY-MM-DD")
     : undefined,
-  dueDate: cleaningAddressFromDb.dueDate
-    ? dayjs(cleaningAddressFromDb.dueDate).format("YYYY-MM-DD")
+  dueDate: cleaningAddressFromDb.due_date
+    ? dayjs(+cleaningAddressFromDb.due_date.N).format("YYYY-MM-DD")
     : undefined,
 });
 

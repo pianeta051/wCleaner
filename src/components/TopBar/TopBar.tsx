@@ -106,6 +106,12 @@ export const TopBar: FC = () => {
           exclusiveFor: "Admin",
           icon: <ReceiptIcon fontSize="small" />,
         },
+        {
+          label: "Due Cleaning",
+          url: "/admin/due-cleanings",
+          exclusiveFor: "Admin",
+          icon: <ReceiptIcon fontSize="small" />,
+        },
       ].filter((p) => (p.exclusiveFor ? isInGroup(p.exclusiveFor) : true)),
     [isInGroup]
   );
@@ -128,6 +134,11 @@ export const TopBar: FC = () => {
 
   const toInvoiceSettings = () => {
     navigate("/admin/settings/invoice");
+    closeUserMenu();
+    setMobileOpen(false);
+  };
+  const toDueCleaning = () => {
+    navigate("/admin/due-cleanings");
     closeUserMenu();
     setMobileOpen(false);
   };

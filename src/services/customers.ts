@@ -1,5 +1,9 @@
 import { CustomerFormValues } from "../components/Customer/CustomerForm/CustomerForm";
-import { Customer, CustomerCleaningAddress } from "../types/types";
+import {
+  Customer,
+  CustomerCleaningAddress,
+  DueCleaningAddress,
+} from "../types/types";
 import { isErrorResponse } from "./error";
 import { uploadFile } from "./files";
 import { NoteFormValues } from "../components/NoteForm/NoteForm";
@@ -280,6 +284,20 @@ export const getCustomerById = async (id: string): Promise<Customer> => {
 
     throw "INTERNAL_ERROR";
   }
+};
+
+export const getDueCleaningAddresses = async (
+  days = 7
+): Promise<DueCleaningAddress[]> => {
+  const response = await get("/addresses/due", {
+    days,
+  });
+
+  if (!("addresses" in response) || !Array.isArray(response.addresses)) {
+    throw "INTERNAL_ERROR";
+  }
+
+  return response.addresses as DueCleaningAddress[];
 };
 
 export const getOutcodes = async (): Promise<string[]> => {

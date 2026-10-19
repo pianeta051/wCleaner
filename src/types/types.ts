@@ -58,6 +58,12 @@ export type CustomerNote = {
   updatedBy?: string; // who edited
 };
 
+export type DueCleaningAddress = CustomerCleaningAddress & {
+  customerName: string;
+  customerSlug: string;
+  dueDate: string;
+};
+
 export type Invoice = {
   jobId: string;
   customerId?: string;
