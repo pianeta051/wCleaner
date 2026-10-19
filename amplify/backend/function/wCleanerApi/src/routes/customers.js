@@ -8,6 +8,7 @@ const {
   deleteCustomer,
   editAddress,
   editCustomer,
+  updateDueDateForAddress,
 } = require("../db");
 
 const { mapCleaningAddress, mapCustomer } = require("../mappers");
@@ -131,6 +132,7 @@ const setCustomerRoutes = (app) => {
       if (addressesToBeUpdated?.length) {
         for (const address of addressesToBeUpdated) {
           await editAddress(editedCustomer.id, address);
+          await updateDueDateForAddress(editedCustomer.id, address.id);
         }
       }
       const editedCleaningAddresses = await getCleaningAddresses(

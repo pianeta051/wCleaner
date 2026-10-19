@@ -32,7 +32,6 @@ const {
   getJobCustomers,
   getJobType,
   getJobTypes,
-  getLastCleaningDate,
   getOutcodes,
   deleteCustomerNote,
   deleteJobType,
