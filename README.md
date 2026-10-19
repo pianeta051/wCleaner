@@ -84,6 +84,7 @@ yarn start
    ```
 
 3. Add the repository variables. On the repo's page on github.com:
+
    1. Click **Settings** (top bar, right of Insights; only visible to admins).
    2. In the left sidebar, open **Secrets and variables** → **Actions**.
    3. Pick the **Variables** tab (not Secrets), and click **New repository variable**.
