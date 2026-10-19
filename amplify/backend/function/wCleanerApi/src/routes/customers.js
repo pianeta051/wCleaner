@@ -5,13 +5,10 @@ const {
   getCustomers,
   getCustomerBySlug,
   getCustomerById,
-  getLastCleaningDate,
   deleteCustomer,
   editAddress,
   editCustomer,
 } = require("../db");
-
-const { calculateDueDate } = require("../utils/addressDueDate");
 
 const { mapCleaningAddress, mapCustomer } = require("../mappers");
 
@@ -62,32 +59,7 @@ const setCustomerRoutes = (app) => {
     const customer = mapCustomer(customerFromDb);
     const cleaningAddresses = await getCleaningAddresses(customer.id);
 
-    customer.cleaningAddresses = await Promise.all(
-      cleaningAddresses.map(async (addressFromDb) => {
-        const addressId = addressFromDb.SK.S.replace("address_", "");
-        const lastCleaningDate = await getLastCleaningDate(
-          customer.id,
-          addressId
-        );
-
-        const dueDate =
-          addressFromDb.frequency_value && addressFromDb.frequency_unit
-            ? calculateDueDate(
-                lastCleaningDate,
-                Number(addressFromDb.frequency_value.N),
-                addressFromDb.frequency_unit.S
-              )
-            : undefined;
-
-        const address = mapCleaningAddress({
-          ...addressFromDb,
-          lastCleaningDate,
-          dueDate,
-        });
-
-        return address;
-      })
-    );
+    customer.cleaningAddresses = cleaningAddresses.map(mapCleaningAddress);
 
     res.json({ customer });
   });

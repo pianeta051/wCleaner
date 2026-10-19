@@ -17,6 +17,8 @@ const {
   padInvoice,
 } = require("./utils/invoiceNumber");
 
+const { calculateDueDate } = require("./utils/addressDueDate");
+
 const dynamoClient = new DynamoDBClient({ region: "eu-west-2" });
 const uuid = require("node-uuid");
 
@@ -664,6 +666,7 @@ const getOutcodes = async () => {
   };
 };
 
+//ADDRESESS
 const getCleaningAddress = async (customerId, addressId) => {
   const params = {
     TableName: TABLE_NAME,
@@ -729,7 +732,68 @@ const getCleaningAddresses = async (customerId) => {
   } while (ExclusiveStartKey);
   return items;
 };
+const getDueCleaningAddresses = async (start, end, order = "asc") => {
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "address_due_date",
+    ScanIndexForward: order !== "desc",
 
+    ExpressionAttributeNames: {
+      "#DDPK": "due_date_pk",
+      "#DD": "due_date",
+      "#ST": "status",
+    },
+
+    ExpressionAttributeValues: {
+      ":aggregator": { N: "1" },
+      ":active": { S: "active" },
+    },
+    FilterExpression: "#ST = :active",
+    KeyConditionExpression: "#DDPK = :aggregator",
+  };
+
+  if (start && end) {
+    params.ExpressionAttributeValues[":start"] = {
+      N: start.toString(),
+    };
+
+    params.ExpressionAttributeValues[":end"] = {
+      N: end.toString(),
+    };
+
+    params.KeyConditionExpression += " AND #DD BETWEEN :start AND :end";
+  } else if (start) {
+    params.ExpressionAttributeValues[":start"] = {
+      N: start.toString(),
+    };
+
+    params.KeyConditionExpression += " AND #DD >= :start";
+  } else if (end) {
+    params.ExpressionAttributeValues[":end"] = {
+      N: end.toString(),
+    };
+
+    params.KeyConditionExpression += " AND #DD <= :end";
+  }
+
+  let command = new QueryCommand(params);
+  let result = await dynamoClient.send(command);
+
+  const items = [...(result.Items || [])];
+
+  while (result.LastEvaluatedKey) {
+    command = new QueryCommand({
+      ...params,
+      ExclusiveStartKey: result.LastEvaluatedKey,
+    });
+
+    result = await dynamoClient.send(command);
+
+    items.push(...(result.Items || []));
+  }
+
+  return items;
+};
 const getLastCleaningDate = async (customerId, addressId) => {
   // Busca el job con la date mas alta que no esta cancelled
   if (!customerId || !addressId) {
@@ -776,6 +840,71 @@ const getLastCleaningDate = async (customerId, addressId) => {
   return;
 };
 
+const deleteDueDateForAddress = async (customerId, addressId) => {
+  const params = {
+    TableName: TABLE_NAME,
+
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${addressId}` },
+    },
+
+    UpdateExpression: "REMOVE #DD",
+
+    ExpressionAttributeNames: {
+      "#DD": "due_date",
+    },
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+};
+
+const updateDueDateForAddress = async (customerId, addressId) => {
+  const address = await getCleaningAddress(customerId, addressId);
+
+  if (!address) {
+    return;
+  }
+
+  if (!address.frequency_unit || !address.frequency_value) {
+    await deleteDueDateForAddress(customerId, addressId);
+    return;
+  }
+
+  const unit = address.frequency_unit.S;
+  const value = +address.frequency_value.N;
+  const lastCleaningDate = await getLastCleaningDate(customerId, addressId);
+  const dueDate = calculateDueDate(lastCleaningDate, value, unit);
+  if (!dueDate) {
+    await deleteDueDateForAddress(customerId, addressId);
+    return;
+  }
+  const params = {
+    TableName: TABLE_NAME,
+    Key: {
+      PK: { S: `customer_${customerId}` },
+      SK: { S: `address_${addressId}` },
+    },
+    UpdateExpression: "SET #DDPK = :dueDatePk, #DD = :dueDate",
+    ExpressionAttributeNames: {
+      "#DDPK": "due_date_pk",
+      "#DD": "due_date",
+    },
+    ExpressionAttributeValues: {
+      ":dueDatePk": {
+        N: "1",
+      },
+      ":dueDate": {
+        N: dueDate.toString(),
+      },
+    },
+  };
+
+  const command = new UpdateItemCommand(params);
+  await dynamoClient.send(command);
+};
+
 const getCustomerBySlug = async (slug) => {
   const params = {
     TableName: TABLE_NAME,
@@ -811,6 +940,29 @@ const getCustomerById = async (id) => {
   return customer.Item;
 };
 
+const getCustomersByIds = async (ids) => {
+  const uniqueIds = [...new Set(ids)];
+
+  if (!uniqueIds.length) {
+    return [];
+  }
+
+  const params = {
+    RequestItems: {
+      [TABLE_NAME]: {
+        Keys: uniqueIds.map((id) => ({
+          PK: { S: `customer_${id}` },
+          SK: { S: "profile" },
+        })),
+      },
+    },
+  };
+
+  const command = new BatchGetItemCommand(params);
+  const result = await dynamoClient.send(command);
+
+  return result.Responses?.[TABLE_NAME] || [];
+};
 const getNextCustomer = async (lastEvaluatedKey) => {
   const params = {
     TableName: TABLE_NAME,
@@ -1085,6 +1237,7 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
 
   return { items, lastEvaluatedKey };
 };
+
 const chunk = (arr, size) =>
   Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
     arr.slice(i * size, i * size + size)
@@ -2451,8 +2604,10 @@ module.exports = {
   getCleaningAddresses,
   getCustomerBySlug,
   getCustomerById,
+  getCustomersByIds,
   getCustomers,
   getCustomerJobs,
+  getDueCleaningAddresses,
   getInvoice,
   getInvoiceSettings,
   getInvoices,
@@ -2472,6 +2627,7 @@ module.exports = {
   deleteCustomerNote,
   deleteInvoice,
   editJobFromCustomer,
+  updateDueDateForAddress,
   updateJobStatus,
   updateInvoicePaid,
   updateInvoiceSettings,
