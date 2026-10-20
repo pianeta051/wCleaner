@@ -82,6 +82,7 @@ checkEnvVars();
 
 // declare a new express app
 const app = express();
+
 app.use(bodyParser.json());
 app.use(awsServerlessExpressMiddleware.eventContext());
 

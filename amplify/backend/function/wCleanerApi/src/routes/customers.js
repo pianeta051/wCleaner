@@ -3,6 +3,7 @@ const {
   addCustomerAddress,
   getCleaningAddresses,
   getCustomers,
+  getActiveCustomersCount,
   getCustomerBySlug,
   getCustomerById,
   deleteCustomer,
@@ -35,17 +36,27 @@ const setCustomerRoutes = (app) => {
         ? parseToken(nextToken)
         : undefined;
 
-    const { items, lastEvaluatedKey } = await getCustomers(
-      { searchInput: search, outcodeFilter },
-      { exclusiveStartKey, limit, enabled: paginationEnabled }
-    );
+    const [{ items, lastEvaluatedKey }, totalCustomers] = await Promise.all([
+      getCustomers(
+        { searchInput: search, outcodeFilter },
+        { exclusiveStartKey, limit, enabled: paginationEnabled }
+      ),
+      getActiveCustomersCount(),
+    ]);
 
     const customers = items.map(mapCustomer);
 
-    // genete token only if there is a real lastEvaluatedKey
     const responseToken = generateToken(lastEvaluatedKey);
-
-    res.json({ customers, nextToken: responseToken });
+    console.log("CUSTOMERS DEBUG:", {
+      customersLength: customers.length,
+      totalCustomers,
+      totalCustomersType: typeof totalCustomers,
+    });
+    res.json({
+      customers,
+      nextToken: responseToken,
+      totalCustomers,
+    });
   });
 
   app.get("/customers/:slug", async function (req, res) {
