@@ -36,6 +36,13 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     filters,
     "desc"
   );
+  const { customerJobs: allCustomerJobs } = useCustomerJobs(
+    customer.id,
+    {},
+    "desc"
+  );
+
+  const showFilters = (allCustomerJobs?.length ?? 0) > PAGE_SIZE;
   const handleFiltersChange = (newFilters: JobFilters) => {
     setFilters(newFilters);
     setVisibleCount(PAGE_SIZE);
@@ -101,11 +108,13 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
           New Job
         </Button>
       </HeaderRow>
-      <CustomerJobsFilters
-        customerId={customer.id}
-        onChange={handleFiltersChange}
-        onClear={handleClearFilters}
-      />
+      {showFilters && (
+        <CustomerJobsFilters
+          customerId={customer.id}
+          onChange={handleFiltersChange}
+          onClear={handleClearFilters}
+        />
+      )}
       {customerJobs.length === 0 ? (
         <EmptyJobs onCreateNew={() => openHandler()} />
       ) : (

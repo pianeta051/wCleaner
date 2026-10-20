@@ -7,6 +7,7 @@ import {
   Toolbar,
   useMediaQuery,
   useTheme,
+  Typography,
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -52,6 +53,7 @@ export const Customers: FC = () => {
 
   const {
     customers,
+    totalCustomers,
     error,
     loading,
     moreToLoad,
@@ -137,6 +139,18 @@ export const Customers: FC = () => {
                     >
                       New customer
                     </NewCustomerButton>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        textAlign: "center",
+                        mt: 1,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Total customers: {totalCustomers ?? "—"}
+                    </Typography>
                   </ActionsGrid>
                 </TopBarRow>
               ) : (
@@ -172,6 +186,18 @@ export const Customers: FC = () => {
                     >
                       New customer
                     </NewCustomerButton>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        textAlign: "right",
+                        mt: 1,
+                        ml: 4,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Total customers: {totalCustomers ?? "—"}
+                    </Typography>
                   </ActionsGrid>
                 </TopBarRow>
               )}

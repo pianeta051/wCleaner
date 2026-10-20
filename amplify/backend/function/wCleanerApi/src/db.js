@@ -620,6 +620,41 @@ const getCustomers = async (filters, pagination) => {
 
   return { items, lastEvaluatedKey };
 };
+const getActiveCustomersCount = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "status-index",
+    Select: "COUNT",
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#ST": "status",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: "customer_" },
+      ":sk": { S: "profile" },
+      ":status": { S: "active" },
+    },
+  };
+
+  let total = 0;
+  let lastEvaluatedKey;
+
+  do {
+    const result = await dynamoClient.send(
+      new ScanCommand({
+        ...params,
+        ...(lastEvaluatedKey ? { ExclusiveStartKey: lastEvaluatedKey } : {}),
+      })
+    );
+
+    total += result.Count || 0;
+    lastEvaluatedKey = result.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
+
+  return total;
+};
 
 const getOutcodes = async () => {
   let params = {
@@ -2606,6 +2641,7 @@ module.exports = {
   getCustomerById,
   getCustomersByIds,
   getCustomers,
+  getActiveCustomersCount,
   getCustomerJobs,
   getDueCleaningAddresses,
   getInvoice,
