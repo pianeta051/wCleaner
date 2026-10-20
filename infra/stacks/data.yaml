@@ -1,8 +1,8 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
-  wCleaner data nested stack: the single DynamoDB table. Same keys and indexes
-  as Amplify's (amplify/backend/storage/wcleaner), so the Lambda code and the
-  data copy work unchanged.
+  wCleaner data nested stack: the single DynamoDB table and the files bucket.
+  Same table keys and indexes as Amplify's (amplify/backend/storage/wcleaner),
+  so the Lambda code and the data copy work unchanged.
 
 Parameters:
   Environment:
@@ -79,9 +79,77 @@ Resources:
       Tags:
         - Key: wcleaner:environment
           Value: !Ref Environment
+  FilesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub wcleaner-${Environment}-files-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      # Versioning can only be suspended once enabled, never turned off.
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-old-versions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+            ExpiredObjectDeleteMarker: true
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      # Amplify's default. "*" is safe because every request still needs
+      # credentials or a presigned URL; narrowed to the app's domains later.
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: ["*"]
+            AllowedMethods: [GET, HEAD, PUT, POST, DELETE]
+            AllowedHeaders: ["*"]
+            ExposedHeaders:
+              - ETag
+              - x-amz-request-id
+              - x-amz-id-2
+              - x-amz-server-side-encryption
+            MaxAge: 3000
+      Tags:
+        - Key: wcleaner:environment
+          Value: !Ref Environment
+
+  FilesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FilesBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource:
+              - !GetAtt FilesBucket.Arn
+              - !Sub ${FilesBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
 
 Outputs:
   TableName:
     Value: !Ref Table
   TableArn:
     Value: !GetAtt Table.Arn
+  FilesBucketName:
+    Value: !Ref FilesBucket
+  FilesBucketArn:
+    Value: !GetAtt FilesBucket.Arn

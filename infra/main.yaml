@@ -22,3 +22,5 @@ Outputs:
   # Not needed by the front-end, but handy in the deploy output.
   TableName:
     Value: !GetAtt DataStack.Outputs.TableName
+  FilesBucketName:
+    Value: !GetAtt DataStack.Outputs.FilesBucketName
