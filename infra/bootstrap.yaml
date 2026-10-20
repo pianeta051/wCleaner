@@ -213,6 +213,35 @@ Resources:
                   - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table
                   - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table/index/*
                   - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table/stream/*
+              # Bucket-level actions only: without object actions, a stack delete
+              # can't empty the bucket. Doesn't match the artifacts bucket or
+              # Amplify's. The read handler checks every bucket setting, hence
+              # the read-only wildcard; writes are only what data.yaml sets.
+              - Sid: FilesBuckets
+                Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:DeleteBucket
+                  - s3:ListBucket
+                  - s3:GetBucket*
+                  - s3:GetEncryptionConfiguration
+                  - s3:GetLifecycleConfiguration
+                  - s3:GetAccelerateConfiguration
+                  - s3:GetAnalyticsConfiguration
+                  - s3:GetInventoryConfiguration
+                  - s3:GetMetricsConfiguration
+                  - s3:GetReplicationConfiguration
+                  - s3:GetIntelligentTieringConfiguration
+                  - s3:PutBucketPublicAccessBlock
+                  - s3:PutBucketOwnershipControls
+                  - s3:PutEncryptionConfiguration
+                  - s3:PutBucketVersioning
+                  - s3:PutLifecycleConfiguration
+                  - s3:PutBucketCORS
+                  - s3:PutBucketTagging
+                  - s3:PutBucketPolicy
+                  - s3:DeleteBucketPolicy
+                Resource: !Sub arn:${AWS::Partition}:s3:::wcleaner-*-files-*
 
 Outputs:
   ArtifactsBucketName:
