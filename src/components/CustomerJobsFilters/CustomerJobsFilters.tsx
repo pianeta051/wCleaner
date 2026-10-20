@@ -83,6 +83,7 @@ export const CustomerJobsFilters: FC<CustomerJobsFiltersProps> = ({
           format="DD/MM/YYYY"
           value={filters.start ? dayjs(filters.start) : null}
           onChange={startDateChangeHandler}
+          slotProps={{ textField: { size: "small" } }}
         />
 
         <DateFilterField
@@ -90,6 +91,7 @@ export const CustomerJobsFilters: FC<CustomerJobsFiltersProps> = ({
           format="DD/MM/YYYY"
           value={filters.end ? dayjs(filters.end) : null}
           onChange={endDateChangeHandler}
+          slotProps={{ textField: { size: "small" } }}
           minDate={filters.start ? dayjs(filters.start) : undefined}
         />
 
