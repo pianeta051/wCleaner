@@ -1,9 +1,19 @@
-import { FC, useState } from "react";
-import { Button, CircularProgress, Box } from "@mui/material";
+import { FC, useMemo, useState } from "react";
+import {
+  Button,
+  CircularProgress,
+  Box,
+  Accordion,
+  AccordionSummary,
+  Typography,
+  AccordionDetails,
+  Chip,
+} from "@mui/material";
 import { Wrapper, Title, HeaderRow } from "./CustomerJobs.style";
 
 import { CustomerJobModal } from "../CustomerJobModal/CustomerJobModal";
 import { EmptyJobs } from "../EmptyJobs/EmptyJobs";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { JobsTable } from "../JobTable/JobsTable";
 import { Customer, JobFilters } from "../../types/types";
 import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
@@ -95,6 +105,16 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
     ? customerJobs.find((job) => job.id === editingJobId)
     : undefined;
 
+  const filtersCount = useMemo(() => {
+    let count = 0;
+    for (const [key, value] of Object.entries(filters)) {
+      if (value != undefined) {
+        count++;
+      }
+    }
+    return count;
+  }, [filters]);
+
   return (
     <Wrapper>
       <Title>Jobs</Title>
@@ -108,13 +128,21 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
           New Job
         </Button>
       </HeaderRow>
-      {showFilters && (
-        <CustomerJobsFilters
-          customerId={customer.id}
-          onChange={handleFiltersChange}
-          onClear={handleClearFilters}
-        />
-      )}
+      <Accordion sx={{ marginBottom: "30px" }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography component="span">
+            Filters {filtersCount > 0 && <Chip label={`${filtersCount}`} />}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <CustomerJobsFilters
+            customerId={customer.id}
+            onChange={handleFiltersChange}
+            onClear={handleClearFilters}
+          />
+        </AccordionDetails>
+      </Accordion>
+
       {customerJobs.length === 0 ? (
         <EmptyJobs onCreateNew={() => openHandler()} />
       ) : (
