@@ -39,7 +39,7 @@ Resources:
         - { AttributeName: invoice_number, AttributeType: N }
         - { AttributeName: due_date_pk, AttributeType: N }
         - { AttributeName: due_date, AttributeType: N }
-        # - { AttributeName: status, AttributeType: S }
+         - { AttributeName: status, AttributeType: S }
       KeySchema:
         - { AttributeName: PK, KeyType: HASH }
         - { AttributeName: SK, KeyType: RANGE }
@@ -84,10 +84,10 @@ Resources:
             - { AttributeName: due_date_pk, KeyType: HASH }
             - { AttributeName: due_date, KeyType: RANGE }
           Projection: { ProjectionType: ALL }
-        # - IndexName: status-index
-        #   KeySchema:
-        #     - { AttributeName: status, KeyType: HASH }
-        #   Projection: { ProjectionType: ALL }
+         - IndexName: status-index
+           KeySchema:
+             - { AttributeName: status, KeyType: HASH }
+           Projection: { ProjectionType: ALL }
       Tags:
         - Key: wcleaner:environment
           Value: !Ref Environment
