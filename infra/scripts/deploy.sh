@@ -64,7 +64,11 @@ print_failures() {
       | @tsv' |
     while IFS=$'\t' read -r id type status reason physical; do
       echo "$indent$id ($type) $status: $reason" >&2
-      if [ "$type" = AWS::CloudFormation::Stack ] && [[ $physical == arn:* ]] && [ "$id" != "${stack##*/}" ]; then
+      # Skip the stack's own event: its LogicalResourceId is the stack name (top
+      # level) and its PhysicalResourceId is the stack ARN (nested stacks, which
+      # we're called with by ARN). Recursing into it would never end.
+      if [ "$type" = AWS::CloudFormation::Stack ] && [[ $physical == arn:* ]] &&
+        [ "$id" != "$stack" ] && [ "$physical" != "$stack" ]; then
         print_failures "$physical" "$indent  "
       fi
     done
