@@ -84,10 +84,10 @@ Resources:
             - { AttributeName: due_date_pk, KeyType: HASH }
             - { AttributeName: due_date, KeyType: RANGE }
           Projection: { ProjectionType: ALL }
-         - IndexName: status-index
-           KeySchema:
-             - { AttributeName: status, KeyType: HASH }
-           Projection: { ProjectionType: ALL }
+        - IndexName: status-index
+          KeySchema:
+            - { AttributeName: status, KeyType: HASH }
+          Projection: { ProjectionType: ALL }
       Tags:
         - Key: wcleaner:environment
           Value: !Ref Environment
