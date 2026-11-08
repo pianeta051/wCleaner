@@ -32,6 +32,7 @@ const {
   getJobCustomers,
   getJobType,
   getJobTypes,
+  getOverdueJobs,
   getOutcodes,
   deleteCustomerNote,
   deleteJobType,
@@ -223,6 +224,61 @@ app.get("/jobs", async function (req, res) {
   });
 
   res.json({ jobs, nextToken: responseToken });
+});
+
+// Get overdue jobs
+
+app.get("/jobs/overdue", async function (req, res) {
+  if (!req.authData?.userSub) {
+    return res.status(401).json({
+      error: "Unauthorized",
+    });
+  }
+  try {
+    const groups = req.authData?.groups || [];
+    const userSub = req.authData?.userSub;
+
+    const isAdmin = groups.includes("Admin");
+
+    if (!isAdmin && !userSub) {
+      return res.status(401).json({
+        error: "User unauthorized",
+      });
+    }
+
+    const jobsFromDB = await getOverdueJobs(isAdmin ? undefined : userSub);
+
+    let jobs = jobsFromDB.map(mapJob);
+
+    const [customers, jobUsers, addresses] = await Promise.all([
+      getJobCustomers(jobs),
+      isAdmin ? getJobUsers(jobsFromDB) : {},
+      getAddressesForJobs(jobs),
+    ]);
+
+    jobs = jobs.map((job) => {
+      const address = addresses[`${job.customerId}_${job.addressId}`];
+
+      return {
+        ...job,
+        customer: customers[job.customerId],
+        address: address?.address ?? address?.name ?? "Unknown",
+        postcode: address?.postcode ?? "",
+        assignedTo: jobUsers[job.id],
+      };
+    });
+
+    return res.json({
+      jobs,
+      total: jobs.length,
+    });
+  } catch (error) {
+    console.error("Error getting overdue jobs", error);
+
+    return res.status(500).json({
+      error: "Error getting overdue jobs",
+    });
+  }
 });
 
 app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
