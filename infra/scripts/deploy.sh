@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Packages and deploys one environment: infra/scripts/deploy.sh <env>
+# Builds, packages and deploys one environment: infra/scripts/deploy.sh <env>
 # The only way to deploy wcleaner-<env>, locally and in CI. Parameter values come
 # from infra/params/<env>.json only; extra overrides are refused on purpose.
 # Uses whatever AWS credentials and region the CLI is configured with.
@@ -73,6 +73,11 @@ print_failures() {
       fi
     done
 }
+
+# Build the Lambda code (backend/functions -> .build/functions/<name>); `package`
+# below zips and uploads it. A failed build stops the deploy here.
+yarn --cwd backend/functions install --frozen-lockfile
+yarn --cwd backend/functions build
 
 mkdir -p .build
 aws cloudformation package \
