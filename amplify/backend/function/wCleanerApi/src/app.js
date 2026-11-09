@@ -250,21 +250,12 @@ app.get("/jobs/overdue", async function (req, res) {
 
     let jobs = jobsFromDB.map(mapJob);
 
-    const [customers, jobUsers, addresses] = await Promise.all([
-      getJobCustomers(jobs),
-      isAdmin ? getJobUsers(jobsFromDB) : {},
-      getAddressesForJobs(jobs),
-    ]);
+    const customers = await getJobCustomers(jobs);
 
     jobs = jobs.map((job) => {
-      const address = addresses[`${job.customerId}_${job.addressId}`];
-
       return {
         ...job,
         customer: customers[job.customerId],
-        address: address?.address ?? address?.name ?? "Unknown",
-        postcode: address?.postcode ?? "",
-        assignedTo: jobUsers[job.id],
       };
     });
 
