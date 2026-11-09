@@ -1,1 +1,5 @@
-[{ "ParameterKey": "Environment", "ParameterValue": "prod" }]
+[
+  { "ParameterKey": "Environment", "ParameterValue": "prod" },
+  { "ParameterKey": "AppUrl", "ParameterValue": "https://w-cleaner.com" },
+  { "ParameterKey": "AllowedRedirectOrigins", "ParameterValue": "" }
+]

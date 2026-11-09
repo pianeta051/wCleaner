@@ -9,6 +9,12 @@ Parameters:
     Type: String
     AllowedValues: [dev, prod]
     Description: Label used in resource names, tags and outputs. Nothing branches on it.
+  AppUrl:
+    Type: String
+    Description: Base URL of the front-end, used for the links in the auth emails.
+  AllowedRedirectOrigins:
+    Type: String
+    Description: Comma-separated extra origins the auth emails may link to. Can be empty.
 
 Resources:
   DataStack:
@@ -17,10 +23,19 @@ Resources:
       TemplateURL: stacks/data.yaml
       Parameters:
         Environment: !Ref Environment
+  AuthStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: stacks/auth.yaml
+      Parameters:
+        Environment: !Ref Environment
+        AppUrl: !Ref AppUrl
+        AllowedRedirectOrigins: !Ref AllowedRedirectOrigins
 
 Outputs:
-  # Not needed by the front-end, but handy in the deploy output.
   TableName:
     Value: !GetAtt DataStack.Outputs.TableName
   FilesBucketName:
     Value: !GetAtt DataStack.Outputs.FilesBucketName
+  CustomMessageFunctionArn:
+    Value: !GetAtt AuthStack.Outputs.CustomMessageFunctionArn
