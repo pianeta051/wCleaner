@@ -54,3 +54,6 @@ amplifytools.xcconfig
 
 # per-account bootstrap settings (infra/bootstrap.env.example)
 /infra/bootstrap.env
+
+# lambda build output
+/.build
