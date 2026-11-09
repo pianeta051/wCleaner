@@ -7,7 +7,7 @@ export const useOverdueJobs = () => {
   const { data, error, isLoading, mutate } = useSWR<{
     jobs: Job[];
     total: number;
-  }>("jobs/overdue", getOverdueJobs);
+  }>(["jobs", "overdue"], getOverdueJobs);
 
   return {
     jobs: data?.jobs ?? [],
