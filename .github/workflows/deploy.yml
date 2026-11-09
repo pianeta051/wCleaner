@@ -20,8 +20,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: yarn
+          cache-dependency-path: backend/functions/yarn.lock
+
       - name: Check params files
         run: infra/scripts/check-params.sh
+
+      - name: Typecheck functions
+        run: |
+          yarn --cwd backend/functions install --frozen-lockfile
+          yarn --cwd backend/functions typecheck
 
       - uses: aws-actions/configure-aws-credentials@v6
         with:

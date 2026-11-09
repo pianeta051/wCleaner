@@ -1,0 +1,77 @@
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+export const createUserTemplate = (
+  email: string,
+  password: string,
+  redirectTo: string
+): string => `
+<html style="margin: 0;padding: 0;font-family: &quot;Lucida Sans&quot;, &quot;Lucida Sans Regular&quot;, &quot;Lucida Grande&quot;,
+         &quot;Lucida Sans Unicode&quot;, Geneva, Verdana, sans-serif;text-align: center;background-color: rgb(196, 240, 225);">
+ <head>
+   
+ </head>
+ <h1 class="header" style="margin-top: 10px;width: 70%;text-align: center;background-color: #f9be52;border-radius: 5px;padding: 20px;margin: auto;">Welcome to WCleaner</h1>
+ <div class="body" style="padding: 10px;">
+    <div align="center" class="alignment" style="line-height: 10px;align-items: &quot;center&quot;;">
+        <img alt="Company Logo" src="https://i.imgur.com/GqR4ALC.jpg" title="Company Logo" width="147" style="display: block;height: auto;border: 0;width: 147px;max-width: 100%;margin-bottom: 20px;">
+    </div>
+    <div align="center" class="alignment" style="line-height: 10px;align-items: &quot;center&quot;;">
+        <img alt="Reset Password" src="https://i.imgur.com/M4uqdif.png" width="147" style="display: block;height: auto;border: 0;width: 147px;max-width: 100%;margin-bottom: 20px;">
+    </div>
+
+   <h2 align="center" class="alignment" style="font-size: 1rem;font-weight: normal;width: 100%;">Your temporary credentials are:</h2>
+
+   <div align="center" class="alignment" class="credentials" style="width: 400px;border-collapse: collapse;margin: 0 auto;margin-top: 10px;">
+        <div>
+            <h2>Email:</h2>
+            <p class="email">${escapeHtml(email)}</p>
+        </div>
+        <div>
+            <h2>Password:</h2>
+            <p class="password">${escapeHtml(password)}</p>
+        </div>
+         <div style="margin-top: 20px;">
+        <a href="${redirectTo}/log-in" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Click here to log in
+        </a>
+      </div>
+    </div>
+ </div>
+</html>
+`;
+
+export const forgotPasswordTemplate = (
+  email: string,
+  code: string,
+  redirectTo: string
+): string => `
+<html style="margin: 0;padding: 0;font-family: &quot;Lucida Sans&quot;, &quot;Lucida Sans Regular&quot;, &quot;Lucida Grande&quot;,
+         &quot;Lucida Sans Unicode&quot;, Geneva, Verdana, sans-serif;text-align: center;background-color: rgb(196, 240, 225);">
+ <head>
+   
+ </head>
+ <h1 class="header" style="margin-top: 10px;width: 70%;text-align: center;background-color: #f9be52;border-radius: 5px;padding: 20px;margin: auto;">WCleaner</h1>
+ <div class="body" style="padding: 10px;">
+    <div align="center" class="alignment" style="line-height: 10px;align-items: &quot;center&quot;;">
+        <img alt="Reset Password" src="https://i.imgur.com/UJ2dVz2.gif" width="300" style="display: block;height: auto;border: 0;width: 147px;max-width: 100%;margin-bottom: 20px;">
+    </div>
+
+   <h2 align="center" class="alignment" style="font-size: 1rem;font-weight: normal;width: 100%;">Reset your password following the link:</h2>
+
+      <div align="center" style="margin-top: 20px;">
+        <a href="${redirectTo}/reset-password?email=${encodeURIComponent(
+  email
+)}&code=${encodeURIComponent(
+  code
+)}" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Click here
+        </a>
+      </div>
+ </div>
+</html>`;

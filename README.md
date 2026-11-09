@@ -113,7 +113,7 @@ A successful run ends with `Successfully created/updated stack - wcleaner-dev` (
 
 **When:** while developing a new nested stack, or to deploy an environment the workflow doesn't deploy yet (`prod`). It runs the same script as CI.
 
-**Requires:** AWS CLI v2, [`jq`](https://jqlang.org/), and a profile in the bootstrapped account with at least the deployer role's permissions (an admin profile works).
+**Requires:** AWS CLI v2, [`jq`](https://jqlang.org/), Node 24 and Yarn (`deploy.sh` builds the Lambda code in `backend/functions`), and a profile in the bootstrapped account with at least the deployer role's permissions (an admin profile works).
 
 ```sh
 export AWS_PROFILE=<profile>

@@ -1,1 +1,11 @@
-[{ "ParameterKey": "Environment", "ParameterValue": "dev" }]
+[
+  { "ParameterKey": "Environment", "ParameterValue": "dev" },
+  {
+    "ParameterKey": "AppUrl",
+    "ParameterValue": "https://develop.d2r3wluo8x2tk9.amplifyapp.com"
+  },
+  {
+    "ParameterKey": "AllowedRedirectOrigins",
+    "ParameterValue": "http://localhost:3000"
+  }
+]

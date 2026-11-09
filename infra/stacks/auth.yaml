@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  wCleaner auth nested stack: the Cognito CustomMessage trigger function. The
+  user pool, groups and identity pool join it in the Cognito slice, which also
+  attaches the trigger and adds the invoke permission.
+
+Parameters:
+  Environment:
+    Type: String
+  AppUrl:
+    Type: String
+    Description: >-
+      Base URL of the front-end. Used for the links in the emails when the
+      caller sends no redirectTo, or one that isn't allowed.
+  AllowedRedirectOrigins:
+    Type: String
+    Description: >-
+      Comma-separated extra origins accepted as clientMetadata.redirectTo
+      (e.g. http://localhost:3000). Empty means only AppUrl's origin.
+
+Resources:
+  CustomMessageLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/wcleaner-${Environment}-custom-message
+      RetentionInDays: 30
+      Tags:
+        - Key: wcleaner:environment
+          Value: !Ref Environment
+  CustomMessageRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub wcleaner-${Environment}-custom-message
+      Path: /wcleaner-lambda/
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub ${CustomMessageLogGroup.Arn}:*
+      Tags:
+        - Key: wcleaner:environment
+          Value: !Ref Environment
+  CustomMessageFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub wcleaner-${Environment}-custom-message
+      Runtime: nodejs24.x
+      Architectures: [arm64]
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 5
+      Role: !GetAtt CustomMessageRole.Arn
+      Code: ../../.build/functions/custom-message
+      Environment:
+        Variables:
+          APP_URL: !Ref AppUrl
+          ALLOWED_REDIRECT_ORIGINS: !Ref AllowedRedirectOrigins
+      LoggingConfig:
+        LogGroup: !Ref CustomMessageLogGroup
+      Tags:
+        - Key: wcleaner:environment
+          Value: !Ref Environment
+
+Outputs:
+  CustomMessageFunctionArn:
+    Value: !GetAtt CustomMessageFunction.Arn
