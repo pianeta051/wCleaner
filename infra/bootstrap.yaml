@@ -273,7 +273,10 @@ Resources:
                   - iam:ListAttachedRolePolicies
                   - iam:TagRole
                   - iam:UntagRole
-                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-lambda/*
+                Resource:
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-lambda/*
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-dev-*
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-prod-*
               - Sid: PassLambdaRoles
                 Effect: Allow
                 Action: iam:PassRole
