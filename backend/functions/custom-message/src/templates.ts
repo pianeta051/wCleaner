@@ -1,3 +1,11 @@
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 export const createUserTemplate = (
   email: string,
   password: string,
@@ -22,11 +30,11 @@ export const createUserTemplate = (
    <div align="center" class="alignment" class="credentials" style="width: 400px;border-collapse: collapse;margin: 0 auto;margin-top: 10px;">
         <div>
             <h2>Email:</h2>
-            <p class="email">${email}</p>
+            <p class="email">${escapeHtml(email)}</p>
         </div>
         <div>
             <h2>Password:</h2>
-            <p class="password">${password}</p>
+            <p class="password">${escapeHtml(password)}</p>
         </div>
          <div style="margin-top: 20px;">
         <a href="${redirectTo}/log-in" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
@@ -57,7 +65,11 @@ export const forgotPasswordTemplate = (
    <h2 align="center" class="alignment" style="font-size: 1rem;font-weight: normal;width: 100%;">Reset your password following the link:</h2>
 
       <div align="center" style="margin-top: 20px;">
-        <a href="${redirectTo}/reset-password?email=${email}&code=${code}" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        <a href="${redirectTo}/reset-password?email=${encodeURIComponent(
+  email
+)}&code=${encodeURIComponent(
+  code
+)}" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
           Click here
         </a>
       </div>

@@ -6,12 +6,16 @@ import { fileURLToPath } from "node:url";
 
 const FUNCTIONS = ["custom-message"];
 
-const outRoot = fileURLToPath(new URL("../../.build/functions/", import.meta.url));
+const outRoot = fileURLToPath(
+  new URL("../../.build/functions/", import.meta.url)
+);
 rmSync(outRoot, { recursive: true, force: true });
 
 for (const name of FUNCTIONS) {
   await build({
-    entryPoints: [fileURLToPath(new URL(`${name}/src/index.ts`, import.meta.url))],
+    entryPoints: [
+      fileURLToPath(new URL(`${name}/src/index.ts`, import.meta.url)),
+    ],
     outfile: `${outRoot}${name}/index.js`,
     bundle: true,
     platform: "node",
