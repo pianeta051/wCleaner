@@ -411,6 +411,30 @@ export const getJobs = async (
   }
 };
 
+export const getOverdueJobs = async (): Promise<{
+  jobs: Job[];
+  total: number;
+}> => {
+  try {
+    const response = await get("/jobs/overdue");
+
+    if (
+      !Array.isArray(response.jobs) ||
+      !response.jobs.every(isJob) ||
+      typeof response.total !== "number"
+    ) {
+      throw "INTERNAL_ERROR";
+    }
+
+    return {
+      jobs: response.jobs,
+      total: response.total,
+    };
+  } catch {
+    throw "INTERNAL_ERROR";
+  }
+};
+
 export const getJobTypes = async (): Promise<JobType[]> => {
   try {
     const response = await get("/job-types");

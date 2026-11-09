@@ -6,6 +6,7 @@ import { Customer } from "../../types/types";
 type CustomersResponse = {
   customers: Customer[];
   nextToken?: string;
+  totalCustomers: number;
 };
 
 type CustomersKey = readonly [
@@ -60,10 +61,12 @@ export const useCustomers = (
     mutate,
   } = useSWRInfinite<CustomersResponse, Error>(getKey, fetcher, {
     keepPreviousData: true,
-    revalidateFirstPage: false,
+    revalidateFirstPage: true,
   });
 
   const customers = data?.flatMap((page) => page.customers) ?? [];
+
+  const totalCustomers = data?.[0]?.totalCustomers;
 
   const lastPage = data?.[data.length - 1];
 
@@ -74,11 +77,13 @@ export const useCustomers = (
 
   const loadMore = () => {
     if (!moreToLoad || loadingMore) return;
+
     setSize(size + 1);
   };
 
   return {
     customers,
+    totalCustomers,
     error: extractErrorCode(error),
     loading,
     moreToLoad,

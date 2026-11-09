@@ -10,6 +10,8 @@ import {
   Avatar,
   Typography,
   Collapse,
+  Badge,
+  IconButton,
 } from "@mui/material";
 import { useMediaQuery, useTheme } from "@mui/material";
 
@@ -60,6 +62,7 @@ import {
   UserActionButton,
   UserActionIcon,
 } from "./TopBar.style";
+import { OverdueNotifications } from "../../pages/OverdueNotifications/OverdueNotifications";
 
 type Page = {
   label: string;
@@ -70,6 +73,7 @@ type Page = {
 
 export const TopBar: FC = () => {
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -77,6 +81,7 @@ export const TopBar: FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const { logOut, isInGroup, user } = useAuth();
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -201,7 +206,7 @@ export const TopBar: FC = () => {
               <CalendarMonthIcon />
             </CalendarButton>
           </Tooltip>
-
+          <OverdueNotifications />
           <Tooltip title="Account">
             <UserButton onClick={openUserMenu} aria-label="account">
               <ProfileIcon />

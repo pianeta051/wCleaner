@@ -408,10 +408,6 @@ export const CustomerForm: FC<CustomerFormProps> = ({
                       <AddressDeleteButton
                         size="small"
                         onClick={(e) => {
-                          /*
-                           * Prevent accordion
-                           * from opening.
-                           */
                           e.stopPropagation();
 
                           deleteAddressHandle(index);

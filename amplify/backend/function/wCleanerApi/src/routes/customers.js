@@ -3,11 +3,13 @@ const {
   addCustomerAddress,
   getCleaningAddresses,
   getCustomers,
+  getActiveCustomersCount,
   getCustomerBySlug,
   getCustomerById,
   deleteCustomer,
   editAddress,
   editCustomer,
+  updateDueDateForAddress,
 } = require("../db");
 
 const { mapCleaningAddress, mapCustomer } = require("../mappers");
@@ -34,17 +36,27 @@ const setCustomerRoutes = (app) => {
         ? parseToken(nextToken)
         : undefined;
 
-    const { items, lastEvaluatedKey } = await getCustomers(
-      { searchInput: search, outcodeFilter },
-      { exclusiveStartKey, limit, enabled: paginationEnabled }
-    );
+    const [{ items, lastEvaluatedKey }, totalCustomers] = await Promise.all([
+      getCustomers(
+        { searchInput: search, outcodeFilter },
+        { exclusiveStartKey, limit, enabled: paginationEnabled }
+      ),
+      getActiveCustomersCount(),
+    ]);
 
     const customers = items.map(mapCustomer);
 
-    // genete token only if there is a real lastEvaluatedKey
     const responseToken = generateToken(lastEvaluatedKey);
-
-    res.json({ customers, nextToken: responseToken });
+    console.log("CUSTOMERS DEBUG:", {
+      customersLength: customers.length,
+      totalCustomers,
+      totalCustomersType: typeof totalCustomers,
+    });
+    res.json({
+      customers,
+      nextToken: responseToken,
+      totalCustomers,
+    });
   });
 
   app.get("/customers/:slug", async function (req, res) {
@@ -131,6 +143,7 @@ const setCustomerRoutes = (app) => {
       if (addressesToBeUpdated?.length) {
         for (const address of addressesToBeUpdated) {
           await editAddress(editedCustomer.id, address);
+          await updateDueDateForAddress(editedCustomer.id, address.id);
         }
       }
       const editedCleaningAddresses = await getCleaningAddresses(

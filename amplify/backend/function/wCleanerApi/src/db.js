@@ -16,7 +16,7 @@ const {
   parseInvoiceNumber,
   padInvoice,
 } = require("./utils/invoiceNumber");
-
+const dayjs = require("dayjs");
 const { calculateDueDate } = require("./utils/addressDueDate");
 
 const dynamoClient = new DynamoDBClient({ region: "eu-west-2" });
@@ -619,6 +619,41 @@ const getCustomers = async (filters, pagination) => {
   }
 
   return { items, lastEvaluatedKey };
+};
+const getActiveCustomersCount = async () => {
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "status-index",
+    Select: "COUNT",
+    FilterExpression: "begins_with(#PK, :pk) AND #SK = :sk AND #ST = :status",
+    ExpressionAttributeNames: {
+      "#PK": "PK",
+      "#SK": "SK",
+      "#ST": "status",
+    },
+    ExpressionAttributeValues: {
+      ":pk": { S: "customer_" },
+      ":sk": { S: "profile" },
+      ":status": { S: "active" },
+    },
+  };
+
+  let total = 0;
+  let lastEvaluatedKey;
+
+  do {
+    const result = await dynamoClient.send(
+      new ScanCommand({
+        ...params,
+        ...(lastEvaluatedKey ? { ExclusiveStartKey: lastEvaluatedKey } : {}),
+      })
+    );
+
+    total += result.Count || 0;
+    lastEvaluatedKey = result.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
+
+  return total;
 };
 
 const getOutcodes = async () => {
@@ -1333,6 +1368,57 @@ const getFutureJobsFromAddress = async (addressId) => {
     ExclusiveStartKey = result.LastEvaluatedKey;
     items = [...items, ...(result.Items || [])];
   } while (ExclusiveStartKey);
+
+  return items;
+};
+
+//DUE JOBS
+const getOverdueJobs = async (assignedTo) => {
+  const todayStart = dayjs().startOf("day").valueOf();
+
+  const params = {
+    TableName: TABLE_NAME,
+    IndexName: "job_start_time",
+    ScanIndexForward: false,
+
+    KeyConditionExpression: "#JSTPK = :aggregator AND #START < :todayStart",
+
+    FilterExpression:
+      "begins_with(#SK, :jobPrefix) AND " +
+      "(#STATUS = :pending OR attribute_not_exists(#STATUS))" +
+      (assignedTo ? " AND #AT = :assignedTo" : ""),
+
+    ExpressionAttributeNames: {
+      "#JSTPK": "job_start_time_pk",
+      "#START": "start",
+      "#SK": "SK",
+      "#STATUS": "status",
+      ...(assignedTo ? { "#AT": "assigned_to" } : {}),
+    },
+
+    ExpressionAttributeValues: {
+      ":aggregator": { N: "1" },
+      ":todayStart": { N: todayStart.toString() },
+      ":jobPrefix": { S: "job_" },
+      ":pending": { S: "pending" },
+      ...(assignedTo ? { ":assignedTo": { S: assignedTo } } : {}),
+    },
+  };
+
+  const items = [];
+  let exclusiveStartKey;
+
+  do {
+    const result = await dynamoClient.send(
+      new QueryCommand({
+        ...params,
+        ExclusiveStartKey: exclusiveStartKey,
+      })
+    );
+
+    items.push(...(result.Items || []));
+    exclusiveStartKey = result.LastEvaluatedKey;
+  } while (exclusiveStartKey);
 
   return items;
 };
@@ -2606,6 +2692,7 @@ module.exports = {
   getCustomerById,
   getCustomersByIds,
   getCustomers,
+  getActiveCustomersCount,
   getCustomerJobs,
   getDueCleaningAddresses,
   getInvoice,
@@ -2620,6 +2707,7 @@ module.exports = {
   getJobTypes,
   getLastCleaningDate,
   getNextInvoiceNumber,
+  getOverdueJobs,
   getOutcodes,
   queryCustomersByEmail,
   deleteCustomer,

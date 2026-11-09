@@ -186,6 +186,7 @@ export const getCustomers = async (
 ): Promise<{
   customers: Customer[];
   nextToken?: string;
+  totalCustomers: number;
 }> => {
   const { searchInput, outcodeFilter } = filters;
   const { nextToken, disabled, limit = 10 } = pagination;
@@ -208,11 +209,20 @@ export const getCustomers = async (
     }
   }
 
+  if (
+    !("totalCustomers" in response) ||
+    typeof response.totalCustomers !== "number"
+  ) {
+    throw "INTERNAL_ERROR";
+  }
+
   return {
     customers: response.customers as Customer[],
     nextToken: response.nextToken as string | undefined,
+    totalCustomers: response.totalCustomers,
   };
 };
+
 export const getCustomer = async (slug: string): Promise<Customer> => {
   try {
     const response = await get(`/customers/${slug}`);

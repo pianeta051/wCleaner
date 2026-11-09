@@ -1,78 +1,57 @@
-import { Button, FormControl, Stack, TextField } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { Box, Button, FormControl, TextField } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-import { DateField } from "../JobForm/JobForm.style";
-
-export const FiltersWrapper = styled("div")(({ theme }) => ({
-  marginBottom: theme.spacing(2),
+export const FiltersWrapper = styled(Box)(({ theme }) => ({
+  width: "100%",
+  marginBottom: theme.spacing(3),
 }));
 
-export const FiltersStack = styled(Stack)(({ theme }) => ({
-  width: "100%",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "stretch",
-  flexWrap: "wrap",
+export const FiltersStack = styled(Box)(({ theme }) => ({
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
   gap: theme.spacing(2),
+  alignItems: "center",
 
-  [theme.breakpoints.up("lg")]: {
-    flexDirection: "row",
-    alignItems: "center",
+  [theme.breakpoints.down("md")]: {
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  },
+
+  [theme.breakpoints.down("sm")]: {
+    gridTemplateColumns: "minmax(0, 1fr)",
   },
 }));
 
-export const DateFilterField = styled(DateField)(({ theme }) => ({
+export const DateFilterField = styled(DatePicker)({
   width: "100%",
+  minWidth: 0,
+});
 
-  [theme.breakpoints.up("sm")]: {
-    width: 180,
-  },
-}));
-
-export const PriceTextField = styled(TextField)(({ theme }) => ({
+export const PriceTextField = styled(TextField)({
   width: "100%",
+  minWidth: 0,
+});
 
-  [theme.breakpoints.up("sm")]: {
-    width: 150,
-  },
-}));
-
-export const AssignedToFormControl = styled(FormControl)(({ theme }) => ({
+export const AssignedToFormControl = styled(FormControl)({
   width: "100%",
+  minWidth: 0,
+});
 
-  [theme.breakpoints.up("sm")]: {
-    width: 250,
-  },
-
-  [theme.breakpoints.up("md")]: {
-    width: 220,
-  },
-}));
-
-export const JobTypeFormControl = styled(FormControl)(({ theme }) => ({
+export const JobTypeFormControl = styled(FormControl)({
   width: "100%",
+  minWidth: 0,
+});
 
-  [theme.breakpoints.up("sm")]: {
-    width: 220,
-  },
-}));
-
-export const AddressFormControl = styled(FormControl)(({ theme }) => ({
+export const AddressFormControl = styled(FormControl)({
   width: "100%",
-
-  [theme.breakpoints.up("sm")]: {
-    width: 240,
-  },
-}));
+  minWidth: 0,
+});
 
 export const ClearButton = styled(Button)(({ theme }) => ({
-  width: "100%",
-  height: 40,
+  justifySelf: "start",
   whiteSpace: "nowrap",
-  alignSelf: "stretch",
 
-  [theme.breakpoints.up("lg")]: {
-    width: "auto",
-    alignSelf: "center",
+  [theme.breakpoints.down("sm")]: {
+    width: "100%",
   },
 }));
