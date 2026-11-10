@@ -32,17 +32,18 @@ import { CustomersTable } from "../../../../components/CustomersTable/CustomersT
 import { EmptyCustomers } from "../../../../components/EmptyCustomers/EmptyCustomers";
 import { SearchBar } from "../../../../components/SearchBar/SearchBar";
 import { ErrorMessage } from "../../../../components/ErrorMessage/ErrorMessage";
-
+import { useNavigate } from "react-router-dom";
 import { useCustomers } from "../../../../hooks/Customers/useCustomers";
 import { useOutcodes } from "../../../../hooks/Customers/useOutcodes";
 import { useAddCustomer } from "../../../../hooks/Customers/useAddCustomer";
 
 import { OutcodesSelector } from "../../../../components/OutcodesSelector/OutcodesSelector";
 import { useAuth } from "../../../../context/AuthContext";
+import { Customer } from "../../../../types/types";
 
 export const Customers: FC = () => {
   const { isInGroup } = useAuth();
-
+  const navigate = useNavigate();
   const isAdmin = isInGroup("Admin");
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -80,6 +81,10 @@ export const Customers: FC = () => {
 
   const openNewModalHandler = () => {
     setModalOpen(true);
+  };
+  const customerCreatedHandler = (customer: Customer) => {
+    setModalOpen(false);
+    navigate(`/admin/customers/${customer.slug}`);
   };
 
   const searchHandler = (value: string) => {
@@ -231,7 +236,7 @@ export const Customers: FC = () => {
           <NewCustomerModal
             open={modalOpen}
             onClose={closeNewModalHandler}
-            onSubmit={closeNewModalHandler}
+            onSubmit={customerCreatedHandler}
             addCustomer={addCustomer}
             loading={creating}
             error={createError ?? undefined}
