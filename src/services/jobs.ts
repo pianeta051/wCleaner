@@ -332,7 +332,6 @@ export const editJobType = async (
 export const getCustomerJobs = async (
   customerId: string,
   filters?: JobFilters,
-
   order: "asc" | "desc" = "asc"
 ): Promise<{ items: Job[] }> => {
   try {
