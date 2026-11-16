@@ -14,7 +14,8 @@
     "body-parser": "^1.17.1",
     "dayjs": "^1.11.12",
     "express": "^4.15.2",
-    "node-uuid": "^1.4.8"
+    "node-uuid": "^1.4.8",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.92",

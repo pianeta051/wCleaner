@@ -3,50 +3,94 @@ import useSWRInfinite from "swr/infinite";
 import { getCustomerJobs } from "../../services/jobs";
 import { Job, JobFilters } from "../../types/types";
 
-type KeyFunction = (
-  index: number
-) => readonly [string, string, JobFilters, "desc" | "asc"];
+type CustomerJobsResponse = {
+  items: Job[];
+  nextToken?: string;
+};
 
-export const keyFunctionGenerator: (
+type CustomerJobsKey = readonly [
+  "customer-jobs",
+  string,
+  JobFilters,
+  "desc" | "asc",
+  string | undefined
+];
+
+export const keyFunctionGenerator = (
   customerId: string,
   filters: JobFilters,
-  order?: "desc" | "asc"
-) => KeyFunction =
-  (customerId: string, filters: JobFilters, order: "desc" | "asc" = "asc") =>
-  (_index) =>
-    ["customer-jobs", customerId, filters, order];
+  order: "desc" | "asc" = "asc"
+) => {
+  return (
+    pageIndex: number,
+    previousPageData: CustomerJobsResponse | null
+  ): CustomerJobsKey | null => {
+    if (previousPageData && !previousPageData.nextToken) {
+      return null;
+    }
 
+    return [
+      "customer-jobs",
+      customerId,
+      filters,
+      order,
+      pageIndex === 0 ? undefined : previousPageData?.nextToken,
+    ];
+  };
+};
 export const useCustomerJobs = (
   customerId: string,
   filters: JobFilters,
   order: "desc" | "asc" = "asc"
 ) => {
+  const getKey = keyFunctionGenerator(customerId, filters, order);
+
   const {
     data,
     error,
     isLoading: loading,
+    size,
+    setSize,
+    isValidating,
     mutate,
-  } = useSWRInfinite<
+  } = useSWRInfinite<CustomerJobsResponse, Error, typeof getKey>(
+    getKey,
+    async ([
+      _operation,
+      customerId,
+      filters,
+      order,
+      nextToken,
+    ]: CustomerJobsKey) =>
+      getCustomerJobs(customerId, filters, order, nextToken),
     {
-      items: Job[];
-    },
-    Error,
-    KeyFunction
-  >(
-    keyFunctionGenerator(customerId, filters, order),
-    async ([_operation, customerId, filters, order]) =>
-      getCustomerJobs(customerId, filters, order)
+      keepPreviousData: true,
+      revalidateFirstPage: true,
+    }
   );
 
-  const customerJobs: Job[] =
-    data?.reduce((acc, { items }) => {
-      return [...acc, ...items];
-    }, [] as Job[]) ?? [];
+  const customerJobs: Job[] = data?.flatMap((page) => page.items) ?? [];
+
+  const lastPage = data?.[data.length - 1];
+
+  const moreToLoad =
+    typeof lastPage?.nextToken === "string" && lastPage.nextToken.length > 0;
+
+  const loadingMore = isValidating && !!data && size > 0;
+
+  const loadMore = () => {
+    if (!moreToLoad || loadingMore) return;
+
+    setSize((currentSize) => currentSize + 1);
+  };
 
   return {
     customerJobs,
     error: extractErrorCode(error),
     loading,
+    moreToLoad,
+    loadMore,
+    loadingMore,
     reload: mutate,
   };
 };

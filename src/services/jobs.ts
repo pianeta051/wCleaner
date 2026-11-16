@@ -332,24 +332,28 @@ export const editJobType = async (
 export const getCustomerJobs = async (
   customerId: string,
   filters?: JobFilters,
-  order: "asc" | "desc" = "asc"
-): Promise<{ items: Job[] }> => {
+  order: "asc" | "desc" = "asc",
+  nextToken?: string
+): Promise<{ items: Job[]; nextToken?: string }> => {
   try {
     const response = await get(`/customers/${customerId}/jobs`, {
       ...filters,
       order,
+      nextToken,
     });
 
     if (
       !response.jobs ||
       !Array.isArray(response.jobs) ||
       response.jobs.some((element: unknown) => !isJob(element)) ||
-      response.nextToken !== undefined
+      (response.nextToken !== undefined &&
+        typeof response.nextToken !== "string")
     ) {
       throw "INTERNAL_ERROR";
     }
     return {
       items: response.jobs,
+      nextToken: response.nextToken,
     };
   } catch (error) {
     if (isErrorResponse(error)) {
