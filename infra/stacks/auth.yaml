@@ -1,8 +1,8 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
-  wCleaner auth nested stack: the Cognito CustomMessage trigger function. The
-  user pool, groups and identity pool join it in the Cognito slice, which also
-  attaches the trigger and adds the invoke permission.
+  wCleaner auth nested stack: Cognito user pool, web client, Admin group,
+  identity pool and its roles, and the CustomMessage trigger function. Pool
+  settings are read back from Amplify's live pools (auth/wcleaner).
 
 Parameters:
   Environment:
@@ -17,6 +17,9 @@ Parameters:
     Description: >-
       Comma-separated extra origins accepted as clientMetadata.redirectTo
       (e.g. http://localhost:3000). Empty means only AppUrl's origin.
+  FilesBucketArn:
+    Type: String
+    Description: ARN of the files bucket (data stack). Signed-in users get public/*.
 
 Resources:
   CustomMessageLogGroup:
@@ -73,6 +76,194 @@ Resources:
         - Key: wcleaner:environment
           Value: !Ref Environment
 
+  CustomMessagePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt CustomMessageFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
+      SourceAccount: !Ref AWS::AccountId
+
+  # Frozen: changing UsernameAttributes, UsernameConfiguration or any Schema
+  # entry replaces the pool, and with Retain that leaves the users behind in an
+  # orphaned pool. Custom attributes can be added, never changed or removed.
+  # Check every change set for a Replace on UserPool before executing it.
+  # Standard attributes (name, ...) exist without being listed here.
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: !Sub wcleaner-${Environment}
+      DeletionProtection: ACTIVE
+      UsernameAttributes: [email]
+      UsernameConfiguration:
+        CaseSensitive: false
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: color
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+      AutoVerifiedAttributes: [email]
+      UserAttributeUpdateSettings:
+        AttributesRequireVerificationBeforeUpdate: [email]
+      MfaConfiguration: "OFF"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          TemporaryPasswordValidityDays: 7
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+      LambdaConfig:
+        CustomMessage: !GetAtt CustomMessageFunction.Arn
+      UserPoolTags:
+        wcleaner:environment: !Ref Environment
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub wcleaner-${Environment}-web
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        RefreshToken: days
+      EnableTokenRevocation: true
+      PreventUserExistenceErrors: LEGACY
+
+  AdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: Admin
+      UserPoolId: !Ref UserPool
+      Precedence: 1
+      RoleArn: !GetAtt AdminGroupRole.Arn
+
+  # Frozen like the user pool: the provider list is the pool's identity.
+  # No guest identities: nothing is granted to them (Amplify allowed them, with
+  # an empty unauth role), so there's no unauth role either.
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      IdentityPoolName: !Sub wcleaner_${Environment}
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ProviderName: !GetAtt UserPool.ProviderName
+          ClientId: !Ref UserPoolClient
+      IdentityPoolTags:
+        - Key: wcleaner:environment
+          Value: !Ref Environment
+
+  AuthRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub wcleaner-${Environment}-auth
+      Path: /wcleaner-cognito/
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref IdentityPool
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: authenticated
+      Policies:
+        - PolicyName: files
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub ${FilesBucketArn}/public/*
+      Tags:
+        - Key: wcleaner:environment
+          Value: !Ref Environment
+
+  AdminGroupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub wcleaner-${Environment}-admin
+      Path: /wcleaner-cognito/
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref IdentityPool
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: authenticated
+      Policies:
+        - PolicyName: files
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub ${FilesBucketArn}/public/*
+      Tags:
+        - Key: wcleaner:environment
+          Value: !Ref Environment
+
+  IdentityPoolRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt AuthRole.Arn
+      RoleMappings:
+        userpool:
+          IdentityProvider: !Sub ${UserPool.ProviderName}:${UserPoolClient}
+          Type: Token
+          AmbiguousRoleResolution: AuthenticatedRole
+
 Outputs:
   CustomMessageFunctionArn:
     Value: !GetAtt CustomMessageFunction.Arn
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolArn:
+    Value: !GetAtt UserPool.Arn
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+  IdentityPoolId:
+    Value: !Ref IdentityPool
+  AuthRoleArn:
+    Value: !GetAtt AuthRole.Arn
+  AdminGroupRoleArn:
+    Value: !GetAtt AdminGroupRole.Arn
