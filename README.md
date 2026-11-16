@@ -9,6 +9,7 @@ The app is moving off AWS Amplify (see [meta/refactor-plan.md](meta/refactor-pla
 - [Update the bootstrap stack](#update-the-bootstrap-stack)
 - [Configure a GitHub repo](#configure-a-github-repo)
 - [Deploy an environment](#deploy-an-environment)
+- [Create the first admin user](#create-the-first-admin-user)
 - [Add a parameter](#add-a-parameter)
 
 ## Run the front-end locally
@@ -125,6 +126,20 @@ infra/scripts/deploy.sh <env>   # dev or prod
 ```
 
 The script prints the account and region first: Ctrl-C if they're wrong. It's safe to re-run with no changes.
+
+## Create the first admin user
+
+**When:** once per environment, after its first deploy. The new user pool starts empty, there's no sign-up page, and only an `Admin` can create users from the app. Needs console access to the account.
+
+1. Find the pool: it's the `UserPoolId` output of `wcleaner-<env>` (the pool is named `wcleaner-<env>`; `wcleaner_user_pool` is Amplify's, leave it alone).
+2. In the AWS console, open **Amazon Cognito** → **User pools** → `wcleaner-<env>` → **Users** → **Create user**:
+   - **Invitation message:** Send an email invitation.
+   - **Email address:** the admin's email, and tick **Mark email address as verified**.
+   - **Temporary password:** Generate a password.
+   - **Create user**.
+3. **Groups** tab → `Admin` → **Add user to group** → pick the user → **Add**.
+
+The invitation email has the subject `Welcome to the WCleaner app`, the temporary password and a link to `<AppUrl>/log-in`. The first sign-in asks for a new password.
 
 ## Add a parameter
 

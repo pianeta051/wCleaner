@@ -300,6 +300,104 @@ Resources:
                 Effect: Allow
                 Action: logs:DescribeLogGroups
                 Resource: "*"
+        - PolicyName: auth
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: UserPools
+                Effect: Allow
+                Action:
+                  - cognito-idp:DescribeUserPool
+                  - cognito-idp:UpdateUserPool
+                  - cognito-idp:DeleteUserPool
+                  - cognito-idp:GetUserPoolMfaConfig
+                  - cognito-idp:SetUserPoolMfaConfig
+                  - cognito-idp:AddCustomAttributes
+                  - cognito-idp:ListTagsForResource
+                  - cognito-idp:UntagResource
+                  - cognito-idp:CreateUserPoolClient
+                  - cognito-idp:DescribeUserPoolClient
+                  - cognito-idp:UpdateUserPoolClient
+                  - cognito-idp:DeleteUserPoolClient
+                  - cognito-idp:CreateGroup
+                  - cognito-idp:GetGroup
+                  - cognito-idp:UpdateGroup
+                  - cognito-idp:DeleteGroup
+                Resource: !Sub arn:${AWS::Partition}:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*
+                Condition:
+                  "Null":
+                    aws:ResourceTag/wcleaner:environment: "false"
+              - Sid: CreateUserPools
+                Effect: Allow
+                Action:
+                  - cognito-idp:CreateUserPool
+                  - cognito-idp:TagResource
+                Resource: "*"
+                Condition:
+                  "Null":
+                    aws:RequestTag/wcleaner:environment: "false"
+              - Sid: ListUserPools
+                Effect: Allow
+                Action: cognito-idp:ListUserPools
+                Resource: "*"
+              - Sid: IdentityPools
+                Effect: Allow
+                Action:
+                  - cognito-identity:DescribeIdentityPool
+                  - cognito-identity:UpdateIdentityPool
+                  - cognito-identity:DeleteIdentityPool
+                  - cognito-identity:GetIdentityPoolRoles
+                  - cognito-identity:SetIdentityPoolRoles
+                  - cognito-identity:ListTagsForResource
+                  - cognito-identity:UntagResource
+                Resource: !Sub arn:${AWS::Partition}:cognito-identity:${AWS::Region}:${AWS::AccountId}:identitypool/*
+                Condition:
+                  "Null":
+                    aws:ResourceTag/wcleaner:environment: "false"
+              - Sid: CreateIdentityPools
+                Effect: Allow
+                Action:
+                  - cognito-identity:CreateIdentityPool
+                  - cognito-identity:TagResource
+                Resource: "*"
+                Condition:
+                  "Null":
+                    aws:RequestTag/wcleaner:environment: "false"
+              - Sid: ListIdentityPools
+                Effect: Allow
+                Action: cognito-identity:ListIdentityPools
+                Resource: "*"
+              - Sid: CognitoRoles
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:UpdateRole
+                  - iam:UpdateAssumeRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:GetRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:TagRole
+                  - iam:UntagRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-cognito/*
+              - Sid: PassCognitoRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-cognito/*
+                Condition:
+                  StringEquals:
+                    iam:PassedToService:
+                      - cognito-identity.amazonaws.com
+                      - cognito-idp.amazonaws.com
+              - Sid: LambdaInvokePermissions
+                Effect: Allow
+                Action:
+                  - lambda:AddPermission
+                  - lambda:RemovePermission
+                Resource: !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:wcleaner-*
 
 Outputs:
   ArtifactsBucketName:

@@ -31,6 +31,7 @@ Resources:
         Environment: !Ref Environment
         AppUrl: !Ref AppUrl
         AllowedRedirectOrigins: !Ref AllowedRedirectOrigins
+        FilesBucketArn: !GetAtt DataStack.Outputs.FilesBucketArn
 
 Outputs:
   TableName:
@@ -39,3 +40,15 @@ Outputs:
     Value: !GetAtt DataStack.Outputs.FilesBucketName
   CustomMessageFunctionArn:
     Value: !GetAtt AuthStack.Outputs.CustomMessageFunctionArn
+  UserPoolId:
+    Value: !GetAtt AuthStack.Outputs.UserPoolId
+  UserPoolArn:
+    Value: !GetAtt AuthStack.Outputs.UserPoolArn
+  UserPoolClientId:
+    Value: !GetAtt AuthStack.Outputs.UserPoolClientId
+  IdentityPoolId:
+    Value: !GetAtt AuthStack.Outputs.IdentityPoolId
+  AuthRoleArn:
+    Value: !GetAtt AuthStack.Outputs.AuthRoleArn
+  AdminGroupRoleArn:
+    Value: !GetAtt AuthStack.Outputs.AdminGroupRoleArn
