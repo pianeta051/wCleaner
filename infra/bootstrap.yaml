@@ -389,9 +389,16 @@ Resources:
                 Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-cognito/*
                 Condition:
                   StringEquals:
-                    iam:PassedToService:
-                      - cognito-identity.amazonaws.com
-                      - cognito-idp.amazonaws.com
+                    iam:PassedToService: cognito-identity.amazonaws.com
+              # CreateGroup's PassRole check for the group's RoleArn matches
+              # neither Cognito principal in iam:PassedToService (Cognito only
+              # stores the ARN), so it can't take a service condition. Limited to
+              # the group roles; their trust policy only lets Cognito Identity
+              # assume them anyway.
+              - Sid: PassGroupRoles
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wcleaner-cognito/wcleaner-*-admin
               - Sid: LambdaInvokePermissions
                 Effect: Allow
                 Action:
