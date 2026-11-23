@@ -611,6 +611,17 @@ module.exports = function (webpackEnv) {
       // during a production build.
       // Otherwise React will be compiled in the very slow development mode.
       new webpack.DefinePlugin(env.stringified),
+      // The app reads its configuration from Vite's `import.meta.env.VITE_*`,
+      // which webpack doesn't define. Take the same vars from the environment.
+      new webpack.DefinePlugin({
+        "import.meta.env": JSON.stringify(
+          Object.fromEntries(
+            Object.entries(process.env).filter(([key]) =>
+              key.startsWith("VITE_")
+            )
+          )
+        ),
+      }),
       // Experimental hot reloading for React .
       // https://github.com/facebook/react/tree/main/packages/react-refresh
       isEnvDevelopment &&
