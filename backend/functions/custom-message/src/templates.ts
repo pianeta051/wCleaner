@@ -46,6 +46,11 @@ export const createUserTemplate = (
 </html>
 `;
 
+// `code` is not the real code: in a CustomMessage trigger it's the literal
+// placeholder `{####}`, which Cognito replaces after the function returns. It
+// has to stay exactly that in the message (so no encoding or escaping): if
+// `{####}` isn't found, Cognito drops the whole custom message and sends its
+// default one. The email is a real value and is encoded.
 export const forgotPasswordTemplate = (
   email: string,
   code: string,
@@ -67,9 +72,7 @@ export const forgotPasswordTemplate = (
       <div align="center" style="margin-top: 20px;">
         <a href="${redirectTo}/reset-password?email=${encodeURIComponent(
   email
-)}&code=${encodeURIComponent(
-  code
-)}" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+)}&code=${code}" target="_blank" style="display: inline-block; background-color: #f9be52; color: black; padding: 10px 18px; text-decoration: none; border-radius: 5px; font-weight: bold;">
           Click here
         </a>
       </div>

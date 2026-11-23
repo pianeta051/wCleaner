@@ -14,5 +14,6 @@
     "types": ["node"]
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules"]
+  // Tests run with the root vitest, which isn't installed where this is typechecked in CI.
+  "exclude": ["node_modules", "**/*.test.ts"]
 }
