@@ -12,7 +12,7 @@ export default defineConfig({
     outDir: "build",
   },
   test: {
-    exclude: [...configDefaults.exclude, "backend/**", ".build/**"],
+    exclude: [...configDefaults.exclude, ".build/**"],
   },
   server: {
     port: 3000,

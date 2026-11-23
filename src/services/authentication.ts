@@ -1,19 +1,9 @@
 import * as AdminQueries from "./adminQueries";
 import { UserFormValues } from "../components/UserForm/UserForm";
 import { isErrorResponse } from "./error";
-import {
-  AuthUser,
-  getCurrentUser,
-  resetPassword as amplifyResetPassword,
-  signIn,
-  fetchUserAttributes,
-  fetchAuthSession,
-  confirmSignIn,
-  signOut,
-  confirmResetPassword,
-  updatePassword as amplifyUpdatePassword,
-  updateUserAttributes,
-} from "aws-amplify/auth";
+import { authClient, CognitoUserWithAttributes } from "./auth";
+
+export type { CognitoUserWithAttributes } from "./auth";
 
 type UserAttribute = { Name: string; Value: string };
 
@@ -33,13 +23,6 @@ export type User = {
 
 type GroupResponse = {
   GroupName: string;
-};
-
-export type CognitoUserWithAttributes = AuthUser & {
-  attributes?: {
-    [key: string]: string;
-  };
-  groups?: string[];
 };
 
 export const createUser = async (formValues: UserFormValues): Promise<void> => {
@@ -77,18 +60,7 @@ export const createUser = async (formValues: UserFormValues): Promise<void> => {
 export const getAuthenticatedUser =
   async (): Promise<CognitoUserWithAttributes | null> => {
     try {
-      const user: CognitoUserWithAttributes = await getCurrentUser();
-      if (!user) {
-        return null;
-      }
-      const attributes = await fetchUserAttributes();
-      user.attributes = attributes as Record<string, string>;
-      const authSession = await fetchAuthSession();
-      const groups = authSession.tokens?.accessToken?.payload?.[
-        "cognito:groups"
-      ] as string[];
-      user.groups = groups ?? [];
-      return user;
+      return await authClient.getCurrentUser();
     } catch (e) {
       return null;
     }
@@ -96,8 +68,7 @@ export const getAuthenticatedUser =
 
 export const getAccessToken = async (): Promise<string | null> => {
   try {
-    const authSession = await fetchAuthSession();
-    return authSession.tokens?.accessToken?.toString() ?? null;
+    return await authClient.getAccessToken();
   } catch (e) {
     return null;
   }
@@ -134,12 +105,7 @@ const findAttributeValue = (user: UserResponse, attribute: string) =>
 
 export const forgotPassword = async (email: string) => {
   try {
-    await amplifyResetPassword({
-      username: email,
-      options: {
-        redirectTo: import.meta.env.VITE_HOST || "",
-      },
-    });
+    await authClient.forgotPassword(email, import.meta.env.VITE_HOST || "");
   } catch (error) {
     if (hasName(error)) {
       if (error.name === "UserNotFoundException") {
@@ -244,11 +210,8 @@ export const logIn = async (
   password: string
 ): Promise<CognitoUserWithAttributes> => {
   try {
-    const response = await signIn({ username: email, password });
-    if (
-      response.nextStep?.signInStep ===
-      "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED"
-    ) {
+    const result = await authClient.signIn(email, password);
+    if (result === "NEW_PASSWORD_REQUIRED") {
       throw { name: "NEW_PASSWORD_REQUIRED" };
     }
     const user = await getAuthenticatedUser();
@@ -288,7 +251,7 @@ export const makeUserAdmin = async (id: string) => {
 
 export const logOut = async () => {
   try {
-    await signOut();
+    await authClient.signOut();
   } catch {
     throw "INTERNAL_ERROR";
   }
@@ -346,11 +309,7 @@ export const resetPassword = async (
   newPassword: string
 ) => {
   try {
-    await confirmResetPassword({
-      username: email,
-      confirmationCode: code,
-      newPassword,
-    });
+    await authClient.confirmForgotPassword(email, code, newPassword);
   } catch (error) {
     if (hasName(error)) {
       if (error.name === "UserNotFoundException") {
@@ -376,7 +335,7 @@ export const resetPassword = async (
 
 export const setPassword = async (newPassword: string) => {
   try {
-    await confirmSignIn({ challengeResponse: newPassword });
+    await authClient.completeNewPassword(newPassword);
     const user = await getAuthenticatedUser();
     if (!user) {
       throw "INTERNAL_ERROR";
@@ -398,7 +357,7 @@ export const updateColor = async (
   newColor: string
 ): Promise<CognitoUserWithAttributes> => {
   try {
-    updateUserAttributes({ userAttributes: { "custom:color": newColor } });
+    authClient.updateAttributes({ "custom:color": newColor });
     const newUser: CognitoUserWithAttributes = user;
     newUser.attributes = {
       ...user.attributes,
@@ -414,7 +373,7 @@ export const updateName = async (
   newName: string
 ): Promise<CognitoUserWithAttributes> => {
   try {
-    updateUserAttributes({ userAttributes: { name: newName } });
+    authClient.updateAttributes({ name: newName });
     const newUser: CognitoUserWithAttributes = user;
     newUser.attributes = {
       ...user.attributes,
@@ -432,7 +391,7 @@ export const updatePassword = async (
   newPassword: string
 ) => {
   try {
-    amplifyUpdatePassword({ oldPassword, newPassword });
+    authClient.changePassword(oldPassword, newPassword);
   } catch (error) {
     if (hasName(error)) {
       if (error.name === "NotAuthorizedException") {

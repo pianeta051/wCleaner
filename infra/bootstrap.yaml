@@ -77,8 +77,9 @@ Resources:
         - 6938fd4d98bab03faadb97b34396831e3780aea1
         - 1c58a3a8518e8759bf075b76b750d4f2df264fcd
 
-  # Assumed by GitHub Actions. Can only drive CloudFormation on wcleaner-* stacks
-  # and hand over the execution role; it can't create resources itself.
+  # Assumed by GitHub Actions. Can drive CloudFormation on wcleaner-* stacks,
+  # hand over the execution role, and publish the front-end (upload to the web
+  # buckets, invalidate CloudFront); it can't create resources itself.
   DeployerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -142,6 +143,25 @@ Resources:
                 Effect: Allow
                 Action: s3:ListBucket
                 Resource: !GetAtt ArtifactsBucket.Arn
+              - Sid: PublishFrontend
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub arn:${AWS::Partition}:s3:::wcleaner-*-web-*/*
+              - Sid: ListFrontend
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !Sub arn:${AWS::Partition}:s3:::wcleaner-*-web-*
+              - Sid: InvalidateFrontend
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetInvalidation
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  "Null":
+                    aws:ResourceTag/wcleaner:environment: "false"
               - Sid: PassExecutionRole
                 Effect: Allow
                 Action: iam:PassRole
@@ -213,10 +233,6 @@ Resources:
                   - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table
                   - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table/index/*
                   - !Sub arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/wcleaner-*-table/stream/*
-              # Bucket-level actions only: without object actions, a stack delete
-              # can't empty the bucket. Doesn't match the artifacts bucket or
-              # Amplify's. The read handler checks every bucket setting, hence
-              # the read-only wildcard; writes are only what data.yaml sets.
               - Sid: FilesBuckets
                 Effect: Allow
                 Action:
@@ -241,7 +257,53 @@ Resources:
                   - s3:PutBucketTagging
                   - s3:PutBucketPolicy
                   - s3:DeleteBucketPolicy
-                Resource: !Sub arn:${AWS::Partition}:s3:::wcleaner-*-files-*
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::wcleaner-*-files-*
+                  - !Sub arn:${AWS::Partition}:s3:::wcleaner-*-web-*
+        - PolicyName: hosting
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: CreateDistributions
+                Effect: Allow
+                # Creating with tags needs TagResource too (next statement).
+                Action: cloudfront:CreateDistribution
+                Resource: "*"
+                Condition:
+                  "Null":
+                    aws:RequestTag/wcleaner:environment: "false"
+              - Sid: TagDistributions
+                Effect: Allow
+                Action: cloudfront:TagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  "Null":
+                    aws:RequestTag/wcleaner:environment: "false"
+              - Sid: Distributions
+                Effect: Allow
+                Action:
+                  - cloudfront:GetDistribution
+                  - cloudfront:GetDistributionConfig
+                  - cloudfront:UpdateDistribution
+                  - cloudfront:DeleteDistribution
+                  - cloudfront:ListTagsForResource
+                  - cloudfront:UntagResource
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*
+                Condition:
+                  "Null":
+                    aws:ResourceTag/wcleaner:environment: "false"
+              # Origin access controls can't be tagged.
+              - Sid: CreateOriginAccessControls
+                Effect: Allow
+                Action: cloudfront:CreateOriginAccessControl
+                Resource: "*"
+              - Sid: OriginAccessControls
+                Effect: Allow
+                Action:
+                  - cloudfront:GetOriginAccessControl
+                  - cloudfront:UpdateOriginAccessControl
+                  - cloudfront:DeleteOriginAccessControl
+                Resource: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:origin-access-control/*
         - PolicyName: functions
           PolicyDocument:
             Version: "2012-10-17"
