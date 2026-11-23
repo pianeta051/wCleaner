@@ -22,6 +22,7 @@ import { InvoicePreviewPage } from "../pages/admin/invoices/InvoicePreviewPage/I
 import { InvoicesList } from "../pages/admin/invoices/InvoicesList/InvoicesList";
 import { InvoiceSettingsPage } from "../pages/admin/invoices/InvoiceSettingsPage/InvoiceSettingsPage";
 import { DueCleanings } from "../pages/admin/customers/addresses/DueCleanings";
+import { Billing } from "../pages/admin/Billing/Billing";
 
 export const AppRoutes: FC = () => {
   const { isInGroup } = useAuth();
@@ -103,6 +104,7 @@ export const AppRoutes: FC = () => {
           <Route index element={<JobsPage />} />
           <Route path="new" element={<JobsPage />} />
         </Route>
+
         <Route
           path="due-cleanings"
           element={
@@ -113,6 +115,18 @@ export const AppRoutes: FC = () => {
         >
           <Route index element={<DueCleanings />} />
         </Route>
+
+        <Route
+          path="billing"
+          element={
+            <AdminRoute>
+              <AdminLayoutFullWidth />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<Billing />} />
+        </Route>
+
         <Route
           path="invoices"
           element={

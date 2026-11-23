@@ -1,5 +1,14 @@
 import { InvoiceFormValues } from "../components/InvoiceForm/InvoiceForm";
 
+export type BillingSummary = {
+  totalPaidJobs: number;
+  totalUnpaidJobs: number;
+};
+
+export type BillingFilters = {
+  start: string;
+  end: string;
+};
 export type CompanySettings = {
   name: string;
   address: string;

@@ -26,7 +26,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ReceiptIcon from "@mui/icons-material/Receipt";
-
+import PaymentsIcon from "@mui/icons-material/Payments";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ProfileIcon } from "../ProfileIcon/ProfileIcon";
@@ -114,6 +114,12 @@ export const TopBar: FC = () => {
           url: "/admin/due-cleanings",
           exclusiveFor: "Admin",
           icon: <ReceiptIcon fontSize="small" />,
+        },
+        {
+          label: "Billing",
+          url: "/admin/billing",
+          exclusiveFor: "Admin",
+          icon: <PaymentsIcon fontSize="small" />,
         },
       ].filter((p) => (p.exclusiveFor ? isInGroup(p.exclusiveFor) : true)),
     [isInGroup]

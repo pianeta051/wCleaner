@@ -1260,7 +1260,7 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
       lastEvaluatedKey = result.LastEvaluatedKey;
     }
   } else {
-    while (result.LastEvaluatedKey && result.Items.length > 0) {
+    while (result.LastEvaluatedKey) {
       command = new QueryCommand({
         ...params,
         ExclusiveStartKey: result.LastEvaluatedKey,
@@ -2704,12 +2704,48 @@ const makeFreeItemKey = (rawNumber) => ({
   SK: { S: `free_${padInvoice(rawNumber)}` },
 });
 
+const calculateTotalFromPaidJobs = async (filters) => {
+  const { items } = await getJobs(filters, "asc", undefined, false);
+
+  return items.reduce((total, job) => {
+    const paymentMethod = job.payment_method?.S ?? "none";
+    const price = Number(job.price?.N ?? 0);
+
+    const isPaid = paymentMethod !== "none" && paymentMethod !== "";
+
+    if (isPaid) {
+      return total + price;
+    }
+
+    return total;
+  }, 0);
+};
+
+const calculateTotalFromUnpaidJobs = async (filters) => {
+  const { items } = await getJobs(filters, "asc", undefined, false);
+
+  return items.reduce((total, job) => {
+    const paymentMethod = job.payment_method?.S ?? "none";
+    const price = Number(job.price?.N ?? 0);
+
+    const isUnpaid = paymentMethod === "none" || paymentMethod === "";
+
+    if (isUnpaid) {
+      return total + price;
+    }
+
+    return total;
+  }, 0);
+};
+
 module.exports = {
   addCustomer,
   addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  calculateTotalFromPaidJobs,
+  calculateTotalFromUnpaidJobs,
   createInvoice,
   deleteAddress,
   editAddress,

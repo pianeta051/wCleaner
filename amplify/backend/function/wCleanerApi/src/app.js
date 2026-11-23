@@ -64,6 +64,7 @@ const { getAuthData, getJobUsers } = require("./authentication");
 
 const { setCustomerRoutes } = require("./routes/customers");
 const { setInvoicesRoutes } = require("./routes/invoices");
+const { setBillingRoutes } = require("./routes/billing");
 
 const MANDATORY_ENV_VARS = ["USER_POOL_ID", "ENV"];
 
@@ -98,6 +99,7 @@ app.use(async function (req, res, next) {
 
 setCustomerRoutes(app);
 setInvoicesRoutes(app);
+setBillingRoutes(app);
 
 // Get outcodes
 app.get("/outcodes", async function (req, res) {

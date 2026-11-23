@@ -1,4 +1,6 @@
 import {
+  BillingFilters,
+  BillingSummary,
   Job,
   JobAssignation,
   JobFilters,
@@ -448,6 +450,30 @@ export const getJobTypes = async (): Promise<JobType[]> => {
       throw "INTERNAL_ERROR";
     }
     return response.jobTypes;
+  } catch {
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const getBillingSummary = async (
+  filters: BillingFilters
+): Promise<BillingSummary> => {
+  try {
+    const response = await get("/billing/summary", filters);
+
+    if (
+      typeof response.totalPaidJobs !== "number" ||
+      !Number.isFinite(response.totalPaidJobs) ||
+      typeof response.totalUnpaidJobs !== "number" ||
+      !Number.isFinite(response.totalUnpaidJobs)
+    ) {
+      throw "INTERNAL_ERROR";
+    }
+
+    return {
+      totalPaidJobs: response.totalPaidJobs,
+      totalUnpaidJobs: response.totalUnpaidJobs,
+    };
   } catch {
     throw "INTERNAL_ERROR";
   }
