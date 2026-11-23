@@ -73,6 +73,8 @@ declare module "*.module.sass" {
 interface ImportMetaEnv {
   readonly VITE_HOST: string;
   readonly VITE_SWITCH_TO_NEW_INFRA?: string;
+  readonly VITE_COGNITO_USER_POOL_ID?: string;
+  readonly VITE_COGNITO_CLIENT_ID?: string;
 }
 
 interface ImportMeta {
