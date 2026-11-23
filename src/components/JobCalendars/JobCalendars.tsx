@@ -27,6 +27,7 @@ import {
   CheckCircle,
   CheckWrapper,
 } from "./JobCalendar.style";
+import { MobileWeekSelector } from "../MobileWeekSelector/MobileWeekSelector";
 
 moment.updateLocale("en", { week: { dow: 1 } });
 
@@ -216,6 +217,10 @@ export const JobCalendars: FC<JobCalendarsProps> = ({
 
   return (
     <>
+      {isMobile && view === Views.DAY && (
+        <MobileWeekSelector date={date} onNavigate={onNavigate} />
+      )}
+
       <CalendarWrapper className={loading ? "filtering" : undefined}>
         {!error ? (
           <Calendar<CalendarEvent>

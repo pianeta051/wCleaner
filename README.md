@@ -9,6 +9,7 @@ The app is moving off AWS Amplify (see [meta/refactor-plan.md](meta/refactor-pla
 - [Update the bootstrap stack](#update-the-bootstrap-stack)
 - [Configure a GitHub repo](#configure-a-github-repo)
 - [Deploy an environment](#deploy-an-environment)
+- [Deploy the front-end](#deploy-the-front-end)
 - [Create the first admin user](#create-the-first-admin-user)
 - [Add a parameter](#add-a-parameter)
 
@@ -20,6 +21,25 @@ The front-end still reads its backend config from `src/amplifyconfiguration.json
 yarn install
 yarn start
 ```
+
+### Against our own Cognito pool (no Amplify)
+
+The app has a second mode that talks to a `wcleaner-<env>` user pool directly, with no Amplify library and no `amplifyconfiguration.json`. It's chosen at build time by `VITE_SWITCH_TO_NEW_INFRA`: anything other than exactly `true` (including not setting it) keeps the Amplify mode above, which is what Amplify Hosting builds.
+
+**Requires:** the environment's infra deployed ([Deploy an environment](#deploy-an-environment)) and a user in its pool ([Create the first admin user](#create-the-first-admin-user)). Create `.env.local` (not committed):
+
+```
+VITE_SWITCH_TO_NEW_INFRA=true
+VITE_COGNITO_USER_POOL_ID=<UserPoolId output of wcleaner-<env>>
+VITE_COGNITO_CLIENT_ID=<UserPoolClientId output of wcleaner-<env>>
+VITE_HOST=http://localhost:3000
+VITE_API_URL=https://api.invalid/
+VITE_ADMIN_QUERIES_URL=https://admin-queries.invalid/
+```
+
+The two outputs are in the AWS console: **CloudFormation** → `wcleaner-<env>` → **Outputs**. Then `yarn start`.
+
+If one of the pool variables is missing the app stops at startup and says which. Sign-in, sign-out, forgot password and the profile work. The data API, AdminQueries and file storage aren't deployed yet, so the screens that use them show errors: the two `.invalid` URLs are on purpose. `VITE_HOST=http://localhost:3000` is an allowed link origin for `dev` only (`AllowedRedirectOrigins` in `infra/params/dev.json`): the emails still link to the deployed front-end unless the request comes from localhost.
 
 ## Bootstrap an AWS account
 
@@ -108,7 +128,7 @@ To deploy an environment to a different account, set `AWS_ROLE_ARN` (and `AWS_RE
 
 **When:** automatically on every push to `main`, or by hand from Actions → **Deploy infra** → Run workflow. It only deploys `dev` for now.
 
-A successful run ends with `Successfully created/updated stack - wcleaner-dev` (or `No changes to deploy`) and the stack outputs.
+A run has two steps: **Deploy** (the infra) and **Deploy front-end** ([below](#deploy-the-front-end)). The first ends with `Successfully created/updated stack - wcleaner-dev` (or `No changes to deploy`) and the stack outputs; the second with `Front-end published: <AppUrl>`.
 
 ### Locally
 
@@ -127,6 +147,29 @@ infra/scripts/deploy.sh <env>   # dev or prod
 
 The script prints the account and region first: Ctrl-C if they're wrong. It's safe to re-run with no changes.
 
+This deploys the infra only. To publish the front-end too, see [Deploy the front-end](#deploy-the-front-end).
+
+## Deploy the front-end
+
+**When:** after the infra of the environment is deployed, and every time the front-end code changes. The workflow does it right after the infra; locally it's a separate script.
+
+The front-end is a static build served from a private S3 bucket through CloudFront. `infra/scripts/deploy-frontend.sh <env>` is the only way to publish it:
+
+1. Reads `UserPoolId`, `UserPoolClientId`, `AppUrl`, `WebBucketName` and `DistributionId` from the `wcleaner-<env>` outputs (and stops with "Deploy the infra first" if one is missing).
+2. Builds the app with `VITE_SWITCH_TO_NEW_INFRA=true` and those values (see [Against our own Cognito pool](#against-our-own-cognito-pool-no-amplify)), so the build talks to this environment's pool.
+3. Uploads `build/` to the web bucket: the hashed files in `assets/` first, cached for a year; everything else (`index.html`, ...) with `no-cache`, deleting what's gone. Old `assets/` files are left on purpose, so a tab still open on the previous build keeps working.
+4. Invalidates the CloudFront cache (`/*`) and prints the URL. The invalidation takes a few minutes; the new version can take that long to show up.
+
+**`AppUrl`** is the front-end's URL: `https://<something>.cloudfront.net`, an output of `wcleaner-<env>` (`aws cloudformation describe-stacks --stack-name wcleaner-<env> --query "Stacks[0].Outputs[?OutputKey=='AppUrl'].OutputValue" --output text`). It is **not** a parameter: the stack creates the CloudFront distribution and passes its URL to the auth stack, so the links in the invitation and password reset emails point at the front-end that uses that pool. There's no custom domain yet (`w-cleaner.com` still points at Amplify). Until the API and AdminQueries are deployed, the screens that use them show errors.
+
+**Locally** (same requirements as [deploying locally](#locally), and permissions to upload to the web bucket and invalidate the distribution, which the deployer role has):
+
+```sh
+export AWS_PROFILE=<profile>
+export AWS_DEFAULT_REGION=<bootstrap region>
+infra/scripts/deploy-frontend.sh dev
+```
+
 ## Create the first admin user
 
 **When:** once per environment, after its first deploy. The new user pool starts empty, there's no sign-up page, and only an `Admin` can create users from the app. Needs console access to the account.
@@ -139,11 +182,13 @@ The script prints the account and region first: Ctrl-C if they're wrong. It's sa
    - **Create user**.
 3. **Groups** tab → `Admin` → **Add user to group** → pick the user → **Add**.
 
-The invitation email has the subject `Welcome to the WCleaner app`, the temporary password and a link to `<AppUrl>/log-in`. The first sign-in asks for a new password.
+The invitation email has the subject `Welcome to the WCleaner app`, the temporary password and a link to `<AppUrl>/log-in`, the front-end of the same environment ([Deploy the front-end](#deploy-the-front-end)). The first sign-in asks for a new password.
 
 ## Add a parameter
 
 Everything that differs between `dev` and `prod` is a parameter in `infra/params/<env>.json`; the templates never check which environment they're in.
+
+`AppUrl` isn't one of them: it's an output of the hosting stack.
 
 1. Add it to `Parameters` in `infra/main.yaml` (and pass it to the nested stacks that need it). No default if the value differs between environments.
 2. Add the key to **every** `infra/params/*.json` in the same commit. No secrets: store the name of an SSM parameter / Secrets Manager secret instead.

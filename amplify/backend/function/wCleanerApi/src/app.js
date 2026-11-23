@@ -64,6 +64,7 @@ const { getAuthData, getJobUsers } = require("./authentication");
 
 const { setCustomerRoutes } = require("./routes/customers");
 const { setInvoicesRoutes } = require("./routes/invoices");
+const { setBillingRoutes } = require("./routes/billing");
 
 const MANDATORY_ENV_VARS = ["USER_POOL_ID", "ENV"];
 
@@ -98,6 +99,7 @@ app.use(async function (req, res, next) {
 
 setCustomerRoutes(app);
 setInvoicesRoutes(app);
+setBillingRoutes(app);
 
 // Get outcodes
 app.get("/outcodes", async function (req, res) {
@@ -321,6 +323,10 @@ app.get("/customers/:customerId/jobs/:jobId", async function (req, res) {
 // Get a single customer's Job
 app.get("/customers/:customerId/jobs", async function (req, res) {
   const id = req.params.customerId;
+  const nextToken = req.query?.nextToken;
+  const limit = req.query?.limit;
+
+  const exclusiveStartKey = nextToken ? parseToken(nextToken) : undefined;
   const startParameter = req.query?.start;
   const endParameter = req.query?.end;
   const minPriceParameter = req.query?.minPrice;
@@ -339,8 +345,7 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
 
   const maxPrice =
     maxPriceParameter !== undefined ? Number(maxPriceParameter) : undefined;
-
-  const { items } = await getCustomerJobs(
+  const { items, lastEvaluatedKey } = await getCustomerJobs(
     id,
     {
       start,
@@ -351,8 +356,12 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
       jobTypeId: jobTypeIdParameter,
       addressId: addressIdParameter,
     },
-    order
+    order,
+    exclusiveStartKey,
+    limit
   );
+
+  const responseToken = generateToken(lastEvaluatedKey);
   let jobs = items.map(mapCustomerJobs);
   let jobUsers = {};
   if (isAdmin) {
@@ -370,7 +379,10 @@ app.get("/customers/:customerId/jobs", async function (req, res) {
   });
 
   try {
-    res.json({ jobs });
+    res.json({
+      jobs,
+      nextToken: responseToken,
+    });
   } catch (e) {
     if (e.message === "Customer not found") {
       res.status(404).json({ error: e.message });

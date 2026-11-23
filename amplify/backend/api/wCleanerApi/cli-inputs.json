@@ -189,6 +189,27 @@
           ]
         }
       }
+    },
+    "/billing": {
+      "name": "/billing",
+      "lambdaFunction": "wCleanerApi",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
+        "groups": {
+          "Admin": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        }
+      }
     }
   }
 }

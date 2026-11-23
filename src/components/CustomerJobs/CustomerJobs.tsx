@@ -29,38 +29,31 @@ type CustomerJobsProps = {
   customer: Customer;
 };
 
-const PAGE_SIZE = 10;
-
 export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   const [filters, setFilters] = useState<JobFilters>({});
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
   const jobId = searchParams.get("jobId");
 
-  const { customerJobs, error, loading, reload } = useCustomerJobs(
-    customer.id,
-    filters,
-    "desc"
-  );
-  const { customerJobs: allCustomerJobs } = useCustomerJobs(
-    customer.id,
-    {},
-    "desc"
-  );
-
-  const showFilters = (allCustomerJobs?.length ?? 0) > PAGE_SIZE;
+  const {
+    customerJobs,
+    error,
+    loading,
+    reload,
+    moreToLoad,
+    loadMore,
+    loadingMore,
+  } = useCustomerJobs(customer.id, filters, "desc");
   const handleFiltersChange = (newFilters: JobFilters) => {
     setFilters(newFilters);
-    setVisibleCount(PAGE_SIZE);
   };
 
   const handleClearFilters = () => {
     setFilters({});
-    setVisibleCount(PAGE_SIZE);
   };
   const closeHandler = () => {
     setModalOpen(false);
@@ -97,9 +90,6 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
   const sortedJobs = [...customerJobs].sort(
     (a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf()
   );
-
-  const displayedJobs = sortedJobs.slice(0, visibleCount);
-  const canLoadMore = visibleCount < sortedJobs.length;
 
   const editingJob = editingJobId
     ? customerJobs.find((job) => job.id === editingJobId)
@@ -148,20 +138,24 @@ export const CustomerJobs: FC<CustomerJobsProps> = ({ customer }) => {
       ) : (
         <>
           <JobsTable
-            jobs={displayedJobs}
+            jobs={sortedJobs}
             jobIdSelected={jobId}
             customer={customer}
             onEditClick={openHandler}
             onDelete={reload}
           />
 
-          {canLoadMore && (
+          {moreToLoad && (
             <Box textAlign="center" mt={2}>
               <Button
                 variant="outlined"
-                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                onClick={loadMore}
+                disabled={loadingMore}
+                startIcon={
+                  loadingMore ? <CircularProgress size={16} /> : undefined
+                }
               >
-                Load more
+                {loadingMore ? "Loading..." : "Load more"}
               </Button>
             </Box>
           )}

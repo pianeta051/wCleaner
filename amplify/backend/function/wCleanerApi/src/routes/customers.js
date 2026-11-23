@@ -19,7 +19,7 @@ const { generateToken, parseToken } = require("../token");
 const setCustomerRoutes = (app) => {
   app.get("/customers", async function (req, res) {
     const nextToken = req.query?.nextToken;
-    const limit = req.query?.limit ? +req.query?.limit : 50;
+    const limit = req.query?.limit ? +req.query?.limit : 100;
 
     const search = req.query?.search;
     const outcodeFilter = req.query?.outcodeFilter

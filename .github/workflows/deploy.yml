@@ -24,7 +24,9 @@ jobs:
         with:
           node-version: 24
           cache: yarn
-          cache-dependency-path: backend/functions/yarn.lock
+          cache-dependency-path: |
+            backend/functions/yarn.lock
+            yarn.lock
 
       - name: Check params files
         run: infra/scripts/check-params.sh
@@ -39,5 +41,8 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Deploy
+      - name: Deploy infra
         run: infra/scripts/deploy.sh dev
+
+      - name: Deploy front-end
+        run: infra/scripts/deploy-frontend.sh dev

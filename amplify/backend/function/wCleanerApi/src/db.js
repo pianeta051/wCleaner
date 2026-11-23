@@ -26,6 +26,7 @@ const TABLE_NAME = `wcleaner-${process.env.ENV}`;
 const PAGE_SIZE = process.env.PAGE_SIZE ?? 50;
 const INVOICE_ALLOCATOR_PK = "invoice_allocator";
 const INVOICE_ALLOCATOR_CONFIG_SK = "minimum_invoice_number";
+const CUSTOMER_JOB_PAGE_SIZE = 10;
 
 const generateSlug = async (email, name) => {
   const nameSlug = name
@@ -1259,7 +1260,7 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
       lastEvaluatedKey = result.LastEvaluatedKey;
     }
   } else {
-    while (result.LastEvaluatedKey && result.Items.length > 0) {
+    while (result.LastEvaluatedKey) {
       command = new QueryCommand({
         ...params,
         ExclusiveStartKey: result.LastEvaluatedKey,
@@ -1551,7 +1552,13 @@ const editJobType = async (jobTypeId, updatedJobType) => {
 };
 
 // GET CUSTOMER JOBS
-const getCustomerJobs = async (customerId, filters, order) => {
+const getCustomerJobs = async (
+  customerId,
+  filters,
+  order,
+  exclusiveStartKey,
+  limit = CUSTOMER_JOB_PAGE_SIZE
+) => {
   const { start, end, assignedTo, jobTypeId, addressId, minPrice, maxPrice } =
     filters;
   const DEFAULT_FILTER_EXPRESSION = "#PK = :pk AND begins_with(#SK, :sk)";
@@ -1645,17 +1652,17 @@ const getCustomerJobs = async (customerId, filters, order) => {
       .join(" AND ");
   }
 
-  let items = [];
-  let ExclusiveStartKey;
+  const items = [];
+  let lastEvaluatedKey = exclusiveStartKey;
 
   do {
-    const command = new QueryCommand({
-      ...params,
-      ExclusiveStartKey,
-    });
-
-    const result = await dynamoClient.send(command);
-    ExclusiveStartKey = result.LastEvaluatedKey;
+    const result = await dynamoClient.send(
+      new QueryCommand({
+        ...params,
+        ExclusiveStartKey: lastEvaluatedKey,
+        Limit: limit - items.length,
+      })
+    );
 
     const normalized = (result.Items || []).map((job) => ({
       ...job,
@@ -1663,10 +1670,37 @@ const getCustomerJobs = async (customerId, filters, order) => {
       payment_method: job.payment_method ?? { S: "none" },
     }));
 
-    items = [...items, ...normalized];
-  } while (ExclusiveStartKey);
+    items.push(...normalized);
+    lastEvaluatedKey = result.LastEvaluatedKey;
+  } while (lastEvaluatedKey && items.length < limit);
+  if (lastEvaluatedKey) {
+    let nextKey = lastEvaluatedKey;
+    let hasMore = false;
 
-  return { items };
+    while (nextKey && !hasMore) {
+      const result = await dynamoClient.send(
+        new QueryCommand({
+          ...params,
+          ExclusiveStartKey: nextKey,
+          Limit: 1,
+        })
+      );
+
+      if (result.Items?.length) {
+        hasMore = true;
+      }
+
+      nextKey = result.LastEvaluatedKey;
+    }
+
+    if (!hasMore) {
+      lastEvaluatedKey = undefined;
+    }
+  }
+  return {
+    items,
+    lastEvaluatedKey,
+  };
 };
 
 //EDIT JOB
@@ -2670,12 +2704,48 @@ const makeFreeItemKey = (rawNumber) => ({
   SK: { S: `free_${padInvoice(rawNumber)}` },
 });
 
+const calculateTotalFromPaidJobs = async (filters) => {
+  const { items } = await getJobs(filters, "asc", undefined, false);
+
+  return items.reduce((total, job) => {
+    const paymentMethod = job.payment_method?.S ?? "none";
+    const price = Number(job.price?.N ?? 0);
+
+    const isPaid = paymentMethod !== "none" && paymentMethod !== "";
+
+    if (isPaid) {
+      return total + price;
+    }
+
+    return total;
+  }, 0);
+};
+
+const calculateTotalFromUnpaidJobs = async (filters) => {
+  const { items } = await getJobs(filters, "asc", undefined, false);
+
+  return items.reduce((total, job) => {
+    const paymentMethod = job.payment_method?.S ?? "none";
+    const price = Number(job.price?.N ?? 0);
+
+    const isUnpaid = paymentMethod === "none" || paymentMethod === "";
+
+    if (isUnpaid) {
+      return total + price;
+    }
+
+    return total;
+  }, 0);
+};
+
 module.exports = {
   addCustomer,
   addCustomerAddress,
   addCustomerJob,
   addCustomerNote,
   addJobType,
+  calculateTotalFromPaidJobs,
+  calculateTotalFromUnpaidJobs,
   createInvoice,
   deleteAddress,
   editAddress,

@@ -1,4 +1,6 @@
 import {
+  BillingFilters,
+  BillingSummary,
   Job,
   JobAssignation,
   JobFilters,
@@ -332,24 +334,28 @@ export const editJobType = async (
 export const getCustomerJobs = async (
   customerId: string,
   filters?: JobFilters,
-  order: "asc" | "desc" = "asc"
-): Promise<{ items: Job[] }> => {
+  order: "asc" | "desc" = "asc",
+  nextToken?: string
+): Promise<{ items: Job[]; nextToken?: string }> => {
   try {
     const response = await get(`/customers/${customerId}/jobs`, {
       ...filters,
       order,
+      nextToken,
     });
 
     if (
       !response.jobs ||
       !Array.isArray(response.jobs) ||
       response.jobs.some((element: unknown) => !isJob(element)) ||
-      response.nextToken !== undefined
+      (response.nextToken !== undefined &&
+        typeof response.nextToken !== "string")
     ) {
       throw "INTERNAL_ERROR";
     }
     return {
       items: response.jobs,
+      nextToken: response.nextToken,
     };
   } catch (error) {
     if (isErrorResponse(error)) {
@@ -444,6 +450,30 @@ export const getJobTypes = async (): Promise<JobType[]> => {
       throw "INTERNAL_ERROR";
     }
     return response.jobTypes;
+  } catch {
+    throw "INTERNAL_ERROR";
+  }
+};
+
+export const getBillingSummary = async (
+  filters: BillingFilters
+): Promise<BillingSummary> => {
+  try {
+    const response = await get("/billing/summary", filters);
+
+    if (
+      typeof response.totalPaidJobs !== "number" ||
+      !Number.isFinite(response.totalPaidJobs) ||
+      typeof response.totalUnpaidJobs !== "number" ||
+      !Number.isFinite(response.totalUnpaidJobs)
+    ) {
+      throw "INTERNAL_ERROR";
+    }
+
+    return {
+      totalPaidJobs: response.totalPaidJobs,
+      totalUnpaidJobs: response.totalUnpaidJobs,
+    };
   } catch {
     throw "INTERNAL_ERROR";
   }
