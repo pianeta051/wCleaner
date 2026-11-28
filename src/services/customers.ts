@@ -173,6 +173,27 @@ export const editCustomer = async (
   }
 };
 
+export const searchCustomers = async (
+  searchInput: string
+): Promise<Customer[]> => {
+  const response = await get("/customers", {
+    mode: "search",
+    search: searchInput,
+  });
+
+  if (
+    !response ||
+    typeof response !== "object" ||
+    !("customers" in response) ||
+    !Array.isArray(response.customers) ||
+    !response.customers.every(isCustomer)
+  ) {
+    throw "INTERNAL_ERROR";
+  }
+
+  return response.customers;
+};
+
 export const getCustomers = async (
   filters: {
     searchInput?: string;

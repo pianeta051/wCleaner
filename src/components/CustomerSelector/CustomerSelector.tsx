@@ -1,10 +1,11 @@
 import { FC, useState } from "react";
-import { Customer } from "../../types/types";
-import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
-import { useCustomers } from "../../hooks/Customers/useCustomers";
-import { Alert, Button, Stack, TextField, Grid, Skeleton } from "@mui/material";
-import { ModalBox, SkeletonWrapper } from "./CustomerSelector.style";
+import Autocomplete from "@mui/material/Autocomplete";
+import { Alert, Button, Stack, TextField } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+
+import { useCustomerSearch } from "../../hooks/Customers/useCustomerSearch";
+import { Customer } from "../../types/types";
+import { ModalBox } from "./CustomerSelector.style";
 
 type CustomerSelectorProps = {
   onSelectCustomer: (customer: Customer) => void;
@@ -13,56 +14,45 @@ type CustomerSelectorProps = {
 export const CustomerSelector: FC<CustomerSelectorProps> = ({
   onSelectCustomer,
 }) => {
-  const { customers, loading } = useCustomers(undefined, undefined, true);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
-  const [buttonDisabled, setButtonDisabled] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
   const navigate = useNavigate();
-
-  const filterOptions = createFilterOptions({
-    matchFrom: "any",
-    stringify: (option: Customer) =>
-      `${option.name} - ${option.address} - ${option.email} - ${option.postcode}`,
-  });
-
-  const nextHandler = () => {
-    if (selectedCustomer) {
-      onSelectCustomer(selectedCustomer);
-    }
-  };
-
-  if (loading) {
-    return (
-      <SkeletonWrapper>
-        <Grid container spacing={2}>
-          <Grid size={12}>
-            <Skeleton variant="text" height={56} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              md: 6,
-            }}
-          >
-            <Skeleton variant="text" height={56} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              md: 6,
-            }}
-          >
-            <Skeleton variant="text" height={56} />
-          </Grid>
-        </Grid>
-      </SkeletonWrapper>
-    );
-  }
-
+  const { customers, loading, error } = useCustomerSearch(searchInput);
+  const hasNoCustomers =
+    searchInput.trim() === "" && !loading && !error && customers.length === 0;
   return (
     <ModalBox>
-      {!customers || customers.length === 0 ? (
+      <Autocomplete
+        options={customers}
+        value={selectedCustomer}
+        onChange={(_event, customer) => setSelectedCustomer(customer)}
+        onInputChange={(_event, value, reason) => {
+          if (reason === "input" || reason === "clear") {
+            setSearchInput(value);
+          }
+        }}
+        getOptionLabel={(customer) => customer.name}
+        isOptionEqualToValue={(option, value) => option.id === value.id}
+        filterOptions={(customers) => customers}
+        loading={loading}
+        loadingText="Searching customers..."
+        noOptionsText={
+          error ? "Could not load customers" : "No matching customers"
+        }
+        sx={{ width: "94%" }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Select Customer"
+            sx={{ p: 2, mt: 2 }}
+            fullWidth
+          />
+        )}
+      />
+
+      {hasNoCustomers && (
         <Stack spacing={2} sx={{ p: 2 }}>
           <Alert severity="warning">
             There is no customer to assign a job. Please create a customer
@@ -70,56 +60,38 @@ export const CustomerSelector: FC<CustomerSelectorProps> = ({
           </Alert>
           <Button
             variant="contained"
-            color="primary"
             onClick={() => navigate("/admin/customers")}
             sx={{ alignSelf: "flex-start" }}
           >
             Create Customer
           </Button>
         </Stack>
-      ) : (
-        <>
-          <Autocomplete
-            options={customers}
-            onChange={(_event, value) => {
-              setSelectedCustomer(value ?? null);
-              setButtonDisabled(!value);
-            }}
-            getOptionLabel={(option) => option.name}
-            filterOptions={filterOptions}
-            sx={{ width: "94%" }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Select Customer"
-                sx={{ p: 2, mt: 2 }}
-                fullWidth
-              />
-            )}
-          />
-
-          <TextField
-            disabled
-            label="Address"
-            value={selectedCustomer?.address ?? ""}
-            sx={{ p: 2 }}
-          />
-          <TextField
-            disabled
-            label="Postcode"
-            value={selectedCustomer?.postcode ?? ""}
-            sx={{ p: 2 }}
-          />
-          <Button
-            variant="contained"
-            onClick={nextHandler}
-            disabled={buttonDisabled}
-            sx={{ m: 2 }}
-          >
-            Next
-          </Button>
-        </>
       )}
+
+      <TextField
+        disabled
+        label="Address"
+        value={selectedCustomer?.address ?? ""}
+        sx={{ p: 2 }}
+      />
+      <TextField
+        disabled
+        label="Postcode"
+        value={selectedCustomer?.postcode ?? ""}
+        sx={{ p: 2 }}
+      />
+      <Button
+        variant="contained"
+        onClick={() => {
+          if (selectedCustomer) {
+            onSelectCustomer(selectedCustomer);
+          }
+        }}
+        disabled={!selectedCustomer}
+        sx={{ m: 2 }}
+      >
+        Next
+      </Button>
     </ModalBox>
   );
 };
