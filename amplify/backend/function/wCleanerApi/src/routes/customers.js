@@ -22,6 +22,17 @@ const setCustomerRoutes = (app) => {
     const limit = req.query?.limit ? +req.query?.limit : 100;
 
     const search = req.query?.search;
+    if (req.query?.mode === "search") {
+      const searchInput = typeof search === "string" ? search.trim() : "";
+
+      const { items: searchResults } = await getCustomers(
+        { searchInput },
+        { limit: 10, firstPageOnly: true }
+      );
+
+      return res.json({ customers: searchResults.map(mapCustomer) });
+    }
+
     const outcodeFilter = req.query?.outcodeFilter
       ? req.query.outcodeFilter
           .split(",")

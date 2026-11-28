@@ -502,7 +502,14 @@ const findAddressesByName = async (customerId, addressName) => {
 };
 
 const getCustomers = async (filters, pagination) => {
-  const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
+  // const { exclusiveStartKey, limit = PAGE_SIZE, enabled = true } = pagination;
+  const {
+    exclusiveStartKey,
+    limit = PAGE_SIZE,
+    enabled = true,
+    firstPageOnly = false,
+  } = pagination;
+
   const { searchInput, outcodeFilter } = filters;
 
   const filterExpressions = [
@@ -572,6 +579,27 @@ const getCustomers = async (filters, pagination) => {
   }
 
   params.FilterExpression = filterExpressions.join(" AND ");
+
+  if (firstPageOnly) {
+    const scanBatchSize = 100;
+    const items = [];
+    let lastEvaluatedKey;
+
+    do {
+      const result = await dynamoClient.send(
+        new ScanCommand({
+          ...params,
+          Limit: scanBatchSize,
+          ExclusiveStartKey: lastEvaluatedKey,
+        })
+      );
+
+      items.push(...(result.Items ?? []));
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    } while (lastEvaluatedKey && items.length < limit);
+
+    return { items: items.slice(0, limit) };
+  }
 
   let command = new ScanCommand(params);
   let result = await dynamoClient.send(command);
@@ -1178,7 +1206,7 @@ const getJob = async (customerId, jobId) => {
   return item;
 };
 const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
-  const { start, end, assignedTo } = filters;
+  const { start, end, assignedTo, isPaid } = filters;
   const DEFAULT_FILTER_EXPRESSION = "begins_with(#SK, :sk)";
   const params = {
     TableName: TABLE_NAME,
@@ -1202,6 +1230,16 @@ const getJobs = async (filters, order, exclusiveStartKey, paginate) => {
   }
 
   const filterExpressions = [];
+
+  if (isPaid !== undefined) {
+    params.ExpressionAttributeNames["#PM"] = "payment_method";
+    params.ExpressionAttributeValues[":none"] = { S: "none" };
+    if (isPaid) {
+      filterExpressions.push("#PM <> :none");
+    } else {
+      filterExpressions.push("#PM = :none");
+    }
+  }
 
   if (assignedTo) {
     params.ExpressionAttributeNames["#AT"] = "assigned_to";
@@ -2705,36 +2743,30 @@ const makeFreeItemKey = (rawNumber) => ({
 });
 
 const calculateTotalFromPaidJobs = async (filters) => {
-  const { items } = await getJobs(filters, "asc", undefined, false);
+  const { items } = await getJobs(
+    { ...filters, isPaid: true },
+    "asc",
+    undefined,
+    false
+  );
 
   return items.reduce((total, job) => {
-    const paymentMethod = job.payment_method?.S ?? "none";
     const price = Number(job.price?.N ?? 0);
-
-    const isPaid = paymentMethod !== "none" && paymentMethod !== "";
-
-    if (isPaid) {
-      return total + price;
-    }
-
-    return total;
+    return total + price;
   }, 0);
 };
 
 const calculateTotalFromUnpaidJobs = async (filters) => {
-  const { items } = await getJobs(filters, "asc", undefined, false);
+  const { items } = await getJobs(
+    { ...filters, isPaid: false },
+    "asc",
+    undefined,
+    false
+  );
 
   return items.reduce((total, job) => {
-    const paymentMethod = job.payment_method?.S ?? "none";
     const price = Number(job.price?.N ?? 0);
-
-    const isUnpaid = paymentMethod === "none" || paymentMethod === "";
-
-    if (isUnpaid) {
-      return total + price;
-    }
-
-    return total;
+    return total + price;
   }, 0);
 };
 
